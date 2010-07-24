@@ -20,6 +20,7 @@ CVS/
 ^pod2htm.\.tmp$
 ^Standalone.PL$
 \.swp$
+(^|/).svn/
 ^t/appulse\.tle$
 ^TODO$
 ^usual.dat$
