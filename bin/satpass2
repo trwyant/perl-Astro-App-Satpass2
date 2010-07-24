@@ -1,0 +1,10 @@
+#!/usr/local/bin/perl
+
+use 5.006;
+
+use strict;
+use warnings;
+
+use App::Satpass2;
+
+App::Satpass2->run(@ARGV);

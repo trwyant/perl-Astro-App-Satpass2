@@ -1,0 +1,8 @@
+This is the examples directory. It contains the following files:
+
+README - this file
+
+almanac - A simple almanac program, displaying sun and moon rise and
+	set for the given day (defaulting to today), and the quarters of
+	the moon, solstices and equinoxes for the next 30 days after the
+	given day.

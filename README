@@ -1,0 +1,57 @@
+App-Satpass2
+
+This package contains an application to predict satellite visibility,
+using the Astro::Coord::ECI classes. The following classes are included:
+
+App::Satpass2 - The application class;
+Astro::Coord::ECI::Format - An output formatter.
+
+In addition, a 'satpass2' script is included, which simply uses
+App::Satpass2 and passes @ARGV to its run() method.
+
+There were several motivations for this package:
+
+* There was no good way to test the 'satpass' script that was included
+  in the Astro-satpass package. Restructuring it as an object made
+  testing easier; in fact, several bugs were found in 'satpass' while
+  writing this module.
+
+* Making a break with the old 'satpass' script gave the opportunity to
+  rethink a couple implementation decisions in the light of experience,
+  and drop obsolete functionality such as the SIMBAD 3 interface and the
+  associated setting to determine which SIMBAD interface to use. This
+  means that 'satpass2' is not quite command-compatable with 'satpass'.
+  The App::Satpass2 documentation describes the differences.
+
+* The output formatting of the 'satpass' script is not very flexable.
+  Astro::Coord::ECI::Format provides a huge amount of freedom to
+  custom-format output, though it turned out that you need to learn your
+  way around a fairly complex format specification mechanism to take
+  advantage of this flexability.
+
+* The dependencies of the 'satpass' script are significantly different
+  than those of the Astro::Coord::ECI classes. Separating the two (with
+  eventual abandonment of the Astro-satpass package in favor of an
+  Astro-Coord-ECI package without the 'satpass' script) means that
+  people only interested in the Astro::Coord::ECI classes will not have
+  to drag along the dependencies of the script.
+
+This package is installable by the usual incantation:
+
+    gunzip App-Satpass2-9.999.tar.gz
+    tar -xf App-Satpass2-9.999.tar
+    perl Makefile.PL
+    make
+    make test
+    make install
+
+You should substitute the appropriate program name for 'make', eg nmake
+(typically) under MSWin32, or mms or mmk under VMS. See
+ftp://ftp.microsoft.com/Softlib/MSLFILES/nmake15.exe for a copy of
+nmake for MSWin32 if you need it.
+
+Of course, since it's pure Perl, you can just expand the kit and drop
+the .pm files into the App/Satpass2 directory (creating it if necessary)
+in the appropriate place in your @INC directories.
+
+Tom Wyant
