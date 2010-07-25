@@ -15,7 +15,7 @@ use POSIX qw{ floor };
 use Text::Abbrev;
 use Text::Wrap qw{ wrap };
 
-our $VERSION = '0.000_01';
+our $VERSION = '0.000_02';
 
 my %mutator = (
     almanac	=> \&_set_almanac,

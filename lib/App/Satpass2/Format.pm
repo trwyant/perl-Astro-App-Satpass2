@@ -9,7 +9,7 @@ use Carp;
 use Clone ();
 use App::Satpass2::FormatTime;
 
-our $VERSION = '0.000_01';
+our $VERSION = '0.000_02';
 
 # Note that the fact that new() works when called from
 # App::Satpass2::Test is unsupported and undocumented, and the
