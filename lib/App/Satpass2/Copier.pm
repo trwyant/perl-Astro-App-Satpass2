@@ -6,6 +6,8 @@ use warnings;
 use Carp;
 use Clone ();
 
+our $VERSION = '0.000_01';
+
 sub attributes {
     return ();
 }

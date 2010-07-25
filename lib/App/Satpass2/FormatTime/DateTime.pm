@@ -12,6 +12,8 @@ use DateTime;
 use DateTime::TimeZone;
 use Params::Util 0.025 qw{ _INSTANCE };
 
+our $VERSION = '0.000_01';
+
 sub strftime {
     my ( $self, $tplt, $time, $gmt ) = @_;
     if ( _INSTANCE( $time, 'DateTime' ) ) {

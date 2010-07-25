@@ -5,6 +5,8 @@ use warnings;
 
 use Carp;
 
+our $VERSION = '0.000_01';
+
 my $delegate;
 
 eval {

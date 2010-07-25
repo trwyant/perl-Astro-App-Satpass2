@@ -10,6 +10,8 @@ use base qw{ App::Satpass2::FormatTime };
 use Carp;
 use POSIX ();
 
+our $VERSION = '0.000_01';
+
 sub strftime {
     my ( $self, $tplt, $time, $gmt ) = @_;
     defined $gmt or $gmt = $self->gmt();

@@ -8,6 +8,8 @@ use base qw{ App::Satpass2::Copier };
 use Carp;
 use Astro::Coord::ECI::Utils qw{ looks_like_number };
 
+our $VERSION = '0.000_01';
+
 sub new {
     my ( $class, @args ) = @_;
     ref $class and $class = ref $class;

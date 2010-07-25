@@ -9,6 +9,8 @@ use base qw{ App::Satpass2::Copier };
 
 use Carp;
 
+our $VERSION = '0.000_01';
+
 my $delegate = eval {
     require App::Satpass2::FormatTime::DateTime;
     'App::Satpass2::FormatTime::DateTime';
