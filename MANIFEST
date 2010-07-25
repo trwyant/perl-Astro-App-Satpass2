@@ -1,5 +1,6 @@
 bin/satpass2
 Build.PL
+Changes
 eg/almanac
 eg/README
 inc/App/Satpass2/Build.pm
