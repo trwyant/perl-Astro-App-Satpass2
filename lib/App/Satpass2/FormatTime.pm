@@ -34,15 +34,21 @@ sub attributes {
 
 sub strftime_width {
     my ( $self, $tplt ) = @_;
-    my ( $time, $wid ) = $self->_strftime_width_try( $tplt, undef,
-	year => 2100 );
-    ( $time, $wid ) = $self->_strftime_width_try( $tplt, $time,
-	month => 1 .. 12 );
-    ( $time, $wid ) = $self->_strftime_width_try( $tplt, $time,
-	day => 1 .. 7 );
-    ( $time, $wid ) = $self->_strftime_width_try( $tplt, $time,
-	hour => 6, 18 );
-    return $wid;
+    if ( $tplt =~ m/ (?: \A | (?<= [^%] ) ) % (?: \z | (?= [^%] ) ) /smx
+	) {
+	my ( $time, $wid ) = $self->_strftime_width_try( $tplt, undef,
+	    year => 2100 );
+	( $time, $wid ) = $self->_strftime_width_try( $tplt, $time,
+	    month => 1 .. 12 );
+	( $time, $wid ) = $self->_strftime_width_try( $tplt, $time,
+	    day => 1 .. 7 );
+	( $time, $wid ) = $self->_strftime_width_try( $tplt, $time,
+	    hour => 6, 18 );
+	return $wid;
+    } else {
+	$tplt =~ s/ %% /%/smxg;
+	return length $tplt;
+    }
 }
 
 sub _strftime_width_try {
