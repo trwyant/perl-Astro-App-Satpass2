@@ -1299,6 +1299,8 @@ SATPASS2_EXECUTE:
 	    $self->_execute( $in, $buffer );
 	}
     }
+    $self->_execute( q{echo ''} );	# The lazy way to be sure we
+					# have a newline before exit.
     return;
 }
 
