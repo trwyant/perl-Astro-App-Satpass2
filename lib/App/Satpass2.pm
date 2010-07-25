@@ -472,38 +472,27 @@ sub execute {
 	# flushed.
 
 	$self->{frame}[-1]{localout} = $stdout;
-	if ( ref $stdout ) {
-	    weaken ($self->{frame}[-1]{localout});
-	} else {
-	    $stdout = \$accum;
+	ref $stdout and weaken ($self->{frame}[-1]{localout});
+
+	my $output = $self->dispatch(@$args);
+
+	if ( defined $output ) {
+	    $output =~ m/ \n \z /smx or $output .= "\n";
+	    my $ref = ref $stdout;
+	    if ( !defined $stdout ) {
+		$accum .= $output;
+	    } elsif ( $ref eq 'SCALAR' ) {
+		$$stdout .= $output;
+	    } elsif ( $ref eq 'CODE' ) {
+		$stdout->( $output );
+	    } elsif ( $ref eq 'ARRAY' ) {
+		push @$stdout, split qr{ (?<=\n) }smx, $output;
+	    } else {
+		$stdout->print( $output );
+	    }
 	}
-
-	my $output = $self->dispatch( @$args );
-
-	$self->_output( $output, $stdout );
     }
     return $accum;
-}
-
-sub _output {
-    my ( $self, $output, $stdout ) = @_;
-    if ( defined $output ) {
-	defined $stdout or $stdout = $self->{frame}[-1]{stdout};
-	$output =~ m/ \n \z /smx or $output .= "\n";
-	my $ref = ref $stdout;
-	if ( !defined $stdout ) {
-	    confess 'Programming error - $stdout undefined';
-	} elsif ( $ref eq 'SCALAR' ) {
-	    $$stdout .= $output;
-	} elsif ( $ref eq 'CODE' ) {
-	    $stdout->( $output );
-	} elsif ( $ref eq 'ARRAY' ) {
-	    push @$stdout, split qr{ (?<=\n) }smx, $output;
-	} else {
-	    $stdout->print( $output );
-	}
-    }
-    return;
 }
 
 #	$satpass2->_execute(...);
@@ -1310,7 +1299,6 @@ SATPASS2_EXECUTE:
 	    $self->_execute( $in, $buffer );
 	}
     }
-    $self->_output( "\n" );
     return;
 }
 
