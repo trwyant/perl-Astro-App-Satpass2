@@ -436,12 +436,19 @@ sub end : Verb() {
     return;
 }
 
+# Tokenize and execute one or more commands. Optionally (and
+# unsupportedly) you can pass a code reference as the first argument.
+# This code reference will be used to fetch commands when the arguments
+# are exhausted. IF you pass your own code reference, we return after
+# the first command, since the code reference is presumed to manage the
+# input stream itself.
 sub execute {
     my ($self, @args) = @_;
     my $accum;
     my $in;
+    my $extern;
     if ( ref $args[0] eq 'CODE' ) {
-	my $extern = shift @args;
+	$extern = shift @args;
 	$in = sub {
 	    my ( $prompt ) = @_;
 	    @args and return shift @args;
@@ -474,7 +481,7 @@ sub execute {
 	$self->{frame}[-1]{localout} = $stdout;
 	ref $stdout and weaken ($self->{frame}[-1]{localout});
 
-	my $output = $self->dispatch(@$args);
+	my $output = $self->dispatch( @$args );
 
 	if ( defined $output ) {
 	    $output =~ m/ \n \z /smx or $output .= "\n";
@@ -491,6 +498,8 @@ sub execute {
 		$stdout->print( $output );
 	    }
 	}
+
+	$extern and last;
     }
     return $accum;
 }
@@ -1280,7 +1289,7 @@ sub run {
 	version},
     )
 	or $self->_wail("See the help method for valid options");
-    if ($opt{version}) {
+    if ( $opt{version} ) {
 	print $self->version();
 	return;
     }
@@ -2244,16 +2253,29 @@ sub _get_interactive {
 	# We're still missing the *ARGV logic, but that's OK too, since
 	# we use the contents of @ARGV as commands, not as file names.
 	return do {
+	    my $buffer = '';
 	    if ($self->_get_interactive()) {
 		eval {
 		    require Term::ReadLine;
 		    $rl ||= Term::ReadLine->new("satpass2");
-		    sub {$rl->readline($_[0])}
+		    sub {
+			defined $buffer or return $buffer;
+			return ( $buffer = $rl->readline($_[0]) );
+		    }
 		} || sub {
-		    print STDERR $_[0]; <STDIN>;
+		    defined $buffer or return $buffer;
+		    print STDERR $_[0];
+		    return (
+			$buffer = <STDIN>	## no critic (ProhibitExplicitStdin)
+		    );
 		};
 	    } else {
-		sub {scalar <STDIN>};
+		sub {
+		    defined $buffer or return $buffer;
+		    return (
+			$buffer = <STDIN>	## no critic (ProhibitExplicitStdin)
+		    );
+		};
 	    }
 	};
     }
