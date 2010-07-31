@@ -1,10 +1,21 @@
-App-Satpass2
+App-Satpass2 is Copyright (C) 2009-2010 Thomas R. Wyant, III
 
 This package contains an application to predict satellite visibility,
 using the Astro::Coord::ECI classes. The following classes are included:
 
 App::Satpass2 - The application class;
-Astro::Coord::ECI::Format - An output formatter.
+App::Satpass2::ParseTime - Base class for time parsing;
+App::Satpass2::ParseTime::ISO8601 - Standalone ISO-8601-ish parser;
+App::Satpass2::ParseTime::Date::Manip - Date::Manip parser base;
+App::Satpass2::ParseTime::Date::Manip::v5 - Used with Date::Manip 5;
+App::Satpass2::ParseTime::Date::Manip::v6 - Used with Date::Manip 6;
+App::Satpass2::Copier - Base class for helper classes;
+App::Satpass2::Format - Base class for formatter;
+App::Satpass2::Format::Classic - Format kind of like old satpass script;
+App::Satpass2::Format::Dump - Dump output (for debugging);
+App::Satpass2::FormatTime - Base class for formatting times;
+App::Satpass2::FormatTime::DateTime - Format times using DateTime;
+App::Satpass2::FormatTime::POSIX - Format times using strftime().
 
 In addition, a 'satpass2' script is included, which simply uses
 App::Satpass2 and passes @ARGV to its run() method.
@@ -24,8 +35,8 @@ There were several motivations for this package:
   The App::Satpass2 documentation describes the differences.
 
 * The output formatting of the 'satpass' script is not very flexable.
-  Astro::Coord::ECI::Format provides a huge amount of freedom to
-  custom-format output, though it turned out that you need to learn your
+  App::Satpass2::Format::Classic provides a huge amount of freedom to
+  custom-format output, though it turns out that you need to learn your
   way around a fairly complex format specification mechanism to take
   advantage of this flexability.
 
@@ -36,22 +47,56 @@ There were several motivations for this package:
   people only interested in the Astro::Coord::ECI classes will not have
   to drag along the dependencies of the script.
 
-This package is installable by the usual incantation:
+INSTALLATION
 
-    gunzip App-Satpass2-9.999.tar.gz
-    tar -xf App-Satpass2-9.999.tar
+Most Perl users will want to install using their favorite of either
+'cpan' or 'cpanp'. For either of these, installing App::Satpass2 gets
+you everything. ActivePerl users will want to use ActiveState's 'ppi',
+and install App-Satpass2.
+
+If for some reason neither of these works for you, you can download the
+distribution and expand it using something like
+
+    tar -xzf App-Satpass2-9.999.tar.gz
+
+Users of MSWin32 (and perhaps other operating systems) may need to
+convert the line endings in the expanded files from Unix to their native
+system before proceeding.
+
+Then, issue one of the following two incantations:
+
     perl Makefile.PL
     make
     make test
-    make install
+    sudo make install
+
+or
+
+    perl Build.PL
+    ./Build
+    ./Build test
+    sudo ./Build install
 
 You should substitute the appropriate program name for 'make', eg nmake
 (typically) under MSWin32, or mms or mmk under VMS. See
 ftp://ftp.microsoft.com/Softlib/MSLFILES/nmake15.exe for a copy of
 nmake for MSWin32 if you need it.
 
-Of course, since it's pure Perl, you can just expand the kit and drop
-the .pm files into the App/Satpass2 directory (creating it if necessary)
-in the appropriate place in your @INC directories.
+Unix users may want to use 'su' rather than 'sudo' for the install.
+Non-unix users may need to be logged in to an administrative or
+otherwise privileged accout, and turn on privileges (if applicable) for
+the install.
 
-Tom Wyant
+Of course, since it's pure Perl, you can just expand the kit and drop
+the .pm files into the App directory (creating it if necessary) in the
+appropriate place in your @INC directories.
+
+LICENSING INFORMATION
+
+This package is free software; you can redistribute it and/or modify it
+under the same terms as Perl 5.10.0. For more details, see the full text
+of the licenses in the directory LICENSES.
+
+This program is distributed in the hope that it will be useful, but
+without any warranty; without even the implied warranty of
+merchantability or fitness for a particular purpose.
