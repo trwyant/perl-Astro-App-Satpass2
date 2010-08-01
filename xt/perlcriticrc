@@ -9,6 +9,12 @@ allow_includes	= 1
 
 spell_command = spell
 
+[Perl::Critic::Policy::ErrorHandling::RequireCheckingReturnValueOfEval]
+
+# The default is 3 ('harsh'), but I think this is more severe than that.
+
+severity	= stern
+
 [Perl::Critic::Policy::InputOutput::ProhibitInteractiveTest]
 
 # Perl::Critic and Perl Best Practices prefer the IO::Interactive

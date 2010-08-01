@@ -516,8 +516,10 @@ sub _execute {
 	@args };
     while ( @args ) {
 	local $SIG{INT} = sub {die "\n$interrupted\n"};
-	eval { $self->execute( $in, shift @args ) };
-	$@ and warn $@;	# Not _whinge, since presumably we already did.
+	eval {
+	    $self->execute( $in, shift @args );
+	    1;
+	} or warn $@;	# Not _whinge, since presumably we already did.
     }
     return;
 }
@@ -527,7 +529,7 @@ sub exit : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
 
     $self->_frame_pop(1);	# Leave only the inital frame.
 
-    eval {
+    eval {	## no critic (RequireCheckingReturnValueOfEval)
 	no warnings qw{exiting};
 	last SATPASS2_EXECUTE
     };
@@ -602,11 +604,13 @@ Verb(algorithm=s,am,choose=s@,day,dump,pm,questionable|spare,quiet) {
 	$opt->{debug}
 	    and $output .= join ("\t", $tle->get ('id'), $tle->get
 		('name'), ref $tle) . "\n";
-	push @flares, eval {$tle->flare ($sta, $pass_start, $pass_end)};
-	if ($@) {
+	eval {
+	    push @flares, $tle->flare ($sta, $pass_start, $pass_end);
+	    1;
+	} or do {
 	    $@ =~ m/$interrupted/o and $self->_wail($@);
 	    $opt->{quiet} or $self->_whinge($@);
-	}
+	};
     }
 
     my $fmt = $self->_get_formatter_object( $opt );
@@ -970,7 +974,8 @@ sub load : Verb(verbose!) {
     @names or $self->_wail( 'No files found' );
     foreach my $fn ( @names ) {
 	$opt->{verbose} and warn "Loading $fn\n";
-	open (my $fh, '<', $fn) or $self->_wail("Unable to open $fn: $!");
+	my $fh = IO::File->new( $fn, '<' )
+	    or $self->_wail("Unable to open $fn: $!");
 	push @{$self->{bodies}}, Astro::Coord::ECI::TLE->parse(<$fh>);
 	close $fh;
     }
@@ -1298,8 +1303,10 @@ sub run {
 	and $self->set(filter => delete ($opt{filter}));
     (!$self->get('filter') && $self->_get_interactive())
 	and print $self->version();
-    eval { $self->init( delete $opt{initialization_file} ) };
-    $@ and warn $@;	# Not _whinge, since presumably we already did.
+    eval {
+	$self->init( delete $opt{initialization_file} );
+	1;
+    } or warn $@;	# Not _whinge, since presumably we already did.
     %opt and $self->set(%opt);
 SATPASS2_EXECUTE:
     {
@@ -1409,10 +1416,8 @@ sub _make_stringable {
 	}
 	push @args, substr $val, $base;
 	my $pkg = shift @args;
-	do {
-	    local $@;
-	    eval "require $pkg; 1"
-	} or $self->_wail( "Unable to load $pkg: $@" );
+	eval "require $pkg; 1"
+	    or $self->_wail( "Unable to load $pkg: $@" );
 	$obj = $pkg->new( map { split qr{ = }smx, $_, 2 } @args )
 	    or $self->_wail( $msg ||
 	    "Can not instantiate object from '$val'" );
@@ -1730,18 +1735,20 @@ sub source : Verb(optional) {
     (my $opt, @args) = $self->_getopt(@args);
     my $output;
     my $fn = shift @args or $self->_wail("File name required");
-    if (open (my $fh, '<', $fn)) {
+    if ( my $fh = IO::File->new( $fn, '<' ) ) {
 	my $frames = $self->_frame_push( source => [@args] );
-	eval { while ( <$fh> ) {
+	my $err;
+	my $ok = eval { while ( <$fh> ) {
 		if ( defined ( my $buffer = $self->execute( sub { return
 				<$fh> }, $_ ) ) ) {
 		    $output .= $buffer;
 		}
-	    } };
-	my $err = $@;
+	    }
+	    1;
+	} or $err = $@;
 	close $fh;
 	$self->_frame_pop( $frames );
-	$err and $self->_whinge( $err );
+	$ok or $self->_whinge( $err );
     } else {
 	$opt->{optional}
 	    or $self->_wail("Failed to open $fn: $!");
@@ -2529,16 +2536,17 @@ sub _macro {
     my $macro = $self->{frame}[-1]{macro}{$name} =
 	delete $self->{macro}{$name};
     my $output;
-    eval {
+    my $err;
+    my $ok = eval {
 	foreach (@$macro) {
 	    if (defined (my $buffer = $self->execute($_))) {
 		$output .= $buffer;
 	    }
 	}
-    };
-    my $err = $@;
+	1;
+    } or $err = $@;
     $self->_frame_pop($frames);
-    $err and $self->_wail($err);
+    $ok or $self->_wail($err);
     return $output;
 }
 

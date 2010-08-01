@@ -9,7 +9,7 @@ our $VERSION = '0.000_02';
 
 my $delegate;
 
-eval {
+eval {	## no critic (RequireCheckingReturnValueOfEval)
     require Date::Manip;
     my $ver = Date::Manip->VERSION();
     $ver =~ s/ _ //smxg;
