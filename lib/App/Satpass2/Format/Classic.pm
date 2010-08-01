@@ -1788,7 +1788,8 @@ sub pass {
 
 	    if ( ! $line++ ) {
 		my $hdr = $self->_format_execute( format => 'pass_oid' );
-		if ( $hdr eq $self->{_pass_oid_header} ) {
+		if ( defined $self->{_pass_oid_header} &&
+			$hdr eq $self->{_pass_oid_header} ) {
 		    # We use this ad-hocery to supress the leading blank
 		    # line for convenience in testing.
 		    $pass->{body} and $output .= "\n";
@@ -1805,7 +1806,7 @@ sub pass {
 	}
 	return $output;
     } else {
-	$self->{_pass_oid_header} = '';
+	delete $self->{_pass_oid_header};
 	return $self->_format_execute( header => 'pass' );
     }
 }
