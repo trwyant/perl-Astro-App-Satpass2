@@ -124,7 +124,8 @@ my @pass = ( {		# pass
 	],
     } );
 
-$tst->method( template => pass_oid => '' );	# Supress OID and date.
+$tst->method( template => pass_oid => '' );	# Supress pass OID.
+$tst->method( template => pass_date => '' );	# Supress pass date.
 $tst->method( template => pass_appulse => '' );	# Supress appulse.
 $tst->method( 'pass' );				# Initialize
 

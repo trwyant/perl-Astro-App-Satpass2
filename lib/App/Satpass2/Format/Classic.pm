@@ -815,9 +815,10 @@ Location: %*name%n
 EOD
     pass =>
     '%time %local_coord %latitude %longitude %altitude %-illumination %-event%n',
-    pass_oid => '%n%id; - %-*name;  %date%n',
     pass_appulse =>
     '%time %local_coord(appulse)       %angle(appulse) degrees from %-name(appulse)%n',
+    pass_date => '%n%date%n',
+    pass_oid => '%n%id - %-*name%n%n',
     phase => '%date %time %8name %phase(title=phase angle) %-16phase(units=phase) %.0fraction_lit(units=percent)%n',
     position	=>
 	'%16name(missing=oid) %local_coord %epoch %illumination%n',
@@ -1780,23 +1781,18 @@ sub _macro_expand {
 
 sub pass {
     my ( $self, $pass ) = @_;
-    if ( defined $pass ) {
+    if ( embodies( $pass, 'Astro::Coord::ECI::TLE' ) ) {
+	$self->_set( body => $pass );
+	delete $self->{_pass_internal_header};
+	delete $self->{_pass_internal_header_merge};
+	return $self->_format_execute( format => 'pass_oid' ) .
+	    $self->_format_execute( header => 'pass' );
+    } elsif ( defined $pass ) {
 	my $output;
-	my $line = 0;
 	foreach my $event ( @{ $pass->{events} } ) {
 	    $self->_set( phenomenon => $event );
 
-	    if ( ! $line++ ) {
-		my $hdr = $self->_format_execute( format => 'pass_oid' );
-		if ( defined $self->{_pass_oid_header} &&
-			$hdr eq $self->{_pass_oid_header} ) {
-		    # We use this ad-hocery to supress the leading blank
-		    # line for convenience in testing.
-		    $pass->{body} and $output .= "\n";
-		} else {
-		    $output .= $self->{_pass_oid_header} = $hdr;
-		}
-	    }
+	    $output .= $self->_pass_internal_header();
 
 	    $event->{body}->universal( $event->{time} );
 	    $output .= $self->_format_execute( format => 'pass' );
@@ -1806,9 +1802,25 @@ sub pass {
 	}
 	return $output;
     } else {
-	delete $self->{_pass_oid_header};
+	delete $self->{_pass_internal_header};
+	$self->{_pass_internal_header_merge} = 1;
 	return $self->_format_execute( header => 'pass' );
     }
+}
+
+sub _pass_internal_header {
+    my ( $self ) = @_;
+    my $hdr = $self->_format_execute( format => 'pass_date' );
+    if ( $self->{_pass_internal_header_merge} ) {
+	$hdr =~ s/ \A \n+ //smx;
+	( my $hdr2 = $self->_format_execute( format => 'pass_oid' ) ) =~
+	    s/ \n+ \z //smx;
+	$hdr = join '  ', grep { $_ ne '' } $hdr2, $hdr;
+    }
+    defined $self->{_pass_internal_header}
+	and $self->{_pass_internal_header} eq $hdr
+	and return '';
+    return( $self->{_pass_internal_header} = $hdr );
 }
 
 sub phase {
@@ -2545,25 +2557,36 @@ The above template is wrapped to fit on the page.
 
 =head3 pass
 
- print $fmt->pass();
- print $fmt->pass( $body );
+ print $fmt->pass();			# Headings
+ print $fmt->pass( $body );		# OID and headings
+ print $fmt->pass( $pass_hash );	# Pass data
 
 This method overrides the L<App::Satpass2::Format|App::Satpass2::Format>
 L<pass()|App::Satpass2::Format/pass> method, and performs the same
-function. It uses template C<pass>, which defaults to
+function.
+
+There are two possible formats for pass output. If you initialize with
+C<< $fmt->pass() >>, the headings are printed at the top, and the OID is
+displayed with the date in the body of the report. If you initialize
+with C<< $fmt->pass( $body ) >>, the OID is displayed with the headings.
+
+It uses template C<pass>, which defaults to
 
  %time %local_coord %latitude %longitude %altitude %-illumination %-event%n
 
-to display the events of individual passes. It uses template
-C<pass_oid>, which defaults to
+to display the events of individual passes. Template C<pass_oid>, which
+defaults to
 
- %n%id - %-*name  %date%n
+ %n%id - %-*name%n%n
 
-to identify the satellite and the date at the beginning of each pass;
-but only if they have changed between passes. If they have not, you just
-get a blank line between  passes.
+is used to identify the satellite. Template C<pass_date> which defaults
+to
 
-It uses template C<pass_appulse> to display the body the satellite
+ %n%date%n
+
+is used to display the date.
+
+Template C<pass_appulse> to display the body the satellite
 appulses with, if any. This defaults to
 
  %time %local_coord(appulse)       %angle(appulse) degrees from

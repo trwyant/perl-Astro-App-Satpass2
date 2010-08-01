@@ -1117,7 +1117,6 @@ sub pass : Verb(choose=s@,dump,quiet) {
 
 #	Foreach body to be modelled
 
-    my $headings;	# Control heading print.
     foreach my $tle (_aggregate(\@bodies)) {
 
 	{
@@ -1148,7 +1147,7 @@ sub pass : Verb(choose=s@,dump,quiet) {
 	};
 	@passes or next;
 
-	$headings++ or $output .= $fmt->pass();
+	$output .= $fmt->pass( $tle );
 
 	foreach my $pass (@passes) {
 	    $output .= $fmt->pass( $pass );

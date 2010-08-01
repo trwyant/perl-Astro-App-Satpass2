@@ -286,99 +286,127 @@ _app('say horizon', '20', 'Check argument indirection');
 
 _app('clear', undef, 'Ensure we have no TLEs loaded');
 _app('load t/data.tle', undef, 'Load our usual set of TLEs');
-_app("pass '19801012T000000Z'", <<'EOD', 'Calculate passes over Greenwich');
+_app("pass '19801012T000000Z'", <<'EOD',
+
+ 88888 -
+
     time eleva  azimuth      range latitude longitude altitud illum event
 
- 88888 -   1980/10/13
+1980/10/13
 05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
 05:42:43  55.9 115.6 SE      255.5  50.9259    1.7791   213.1 lit   max
 05:46:37   0.0  29.7 NE     1778.5  64.0515   17.6896   224.9 lit   set
 
- 88888 -   1980/10/14
+1980/10/14
 05:32:49   0.0 204.8 SW     1691.2  37.6261   -7.7957   205.5 lit   rise
 05:36:32  85.6 111.4 E       215.0  51.4245    0.2141   214.4 lit   max
 05:40:27   0.0  27.3 NE     1782.5  64.5101   16.6694   226.8 lit   set
 
- 88888 -   1980/10/15
+1980/10/15
 05:26:29   0.0 210.3 SW     1693.5  38.1313   -9.4884   206.3 shdw  rise
 05:27:33   4.7 212.0 SW     1220.1  42.1574   -7.5648   208.7 lit   lit
 05:30:12  63.7 297.6 NW      239.9  51.8981   -1.3250   215.8 lit   max
 05:34:08   0.0  25.1 NE     1789.5  64.9426   15.6750   228.8 lit   set
 
- 88888 -   1980/10/16
+1980/10/16
 05:20:01   0.0 215.7 SW     1701.4  38.6745  -11.1244   207.2 shdw  rise
 05:22:20  14.8 228.1 SW      701.8  47.3322   -6.4800   213.2 lit   lit
 05:23:44  43.5 299.4 NW      310.4  52.4061   -2.7900   217.4 lit   max
 05:27:40   0.0  23.0 NE     1798.7  65.3494   14.7032   230.8 lit   set
 
- 88888 -   1980/10/17
+1980/10/17
 05:13:26   0.0 221.0 SW     1706.4  39.3182  -12.6738   208.3 shdw  rise
 05:16:45  28.6 273.8 W       433.1  51.5795   -5.3038   217.8 lit   lit
 05:17:08  31.7 301.4 NW      400.0  52.9477   -4.1788   219.1 lit   max
 05:21:03   0.0  21.0 N      1809.7  65.7310   13.7503   232.9 lit   set
 
- 88888 -   1980/10/18
+1980/10/18
 05:06:44   0.0 226.2 SW     1708.2  40.0617  -14.1335   209.7 shdw  rise
 05:10:23  24.5 302.6 NW      495.7  53.4634   -5.5405   220.8 shdw  max
 05:10:50  22.3 327.2 NW      537.6  55.0439   -4.0816   222.4 lit   lit
 05:14:16   0.0  19.0 N      1814.7  66.0412   12.6971   234.9 lit   set
 EOD
+    'Calculate passes over Greenwich' );
 _app('set local_coord equatorial_rng', undef, 'Specify equatorial + range');
-_app("pass '19801013T000000Z' +1", <<'EOD', 'Ensure we get equatorial + range');
+_app("pass '19801013T000000Z' +1", <<'EOD',
+
+ 88888 -
+
             right
     time ascensio decli      range latitude longitude altitud illum event
 
- 88888 -   1980/10/13
+1980/10/13
 05:39:02 05:30:58 -36.6     1687.8  37.2228   -6.0197   204.9 lit   rise
 05:42:43 09:33:08  29.8      255.5  50.9259    1.7791   213.1 lit   max
 05:46:37 16:51:14  32.2     1778.5  64.0515   17.6896   224.9 lit   set
 EOD
+    'Ensure we get equatorial + range' );
 _app('set local_coord azel_rng', undef, 'Specify azel + range');
-_app("pass '19801013T000000Z' +1", <<'EOD', 'Ensure we get azel + range');
+_app("pass '19801013T000000Z' +1", <<'EOD',
+
+ 88888 -
+
     time eleva  azimuth      range latitude longitude altitud illum event
 
- 88888 -   1980/10/13
+1980/10/13
 05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
 05:42:43  55.9 115.6 SE      255.5  50.9259    1.7791   213.1 lit   max
 05:46:37   0.0  29.7 NE     1778.5  64.0515   17.6896   224.9 lit   set
 EOD
+    'Ensure we get azel + range' );
 _app('set local_coord azel', undef, 'Specify azel only');
-_app("pass '19801013T000000Z' +1", <<'EOD', 'Ensure we get azel only');
+_app("pass '19801013T000000Z' +1", <<'EOD',
+
+ 88888 -
+
     time eleva  azimuth latitude longitude altitud illum event
 
- 88888 -   1980/10/13
+1980/10/13
 05:39:02   0.0 199.0 S   37.2228   -6.0197   204.9 lit   rise
 05:42:43  55.9 115.6 SE  50.9259    1.7791   213.1 lit   max
 05:46:37   0.0  29.7 NE  64.0515   17.6896   224.9 lit   set
 EOD
-_app('set local_coord az_rng', undef, 'Specify azimugh + range');
-_app("pass '19801013T000000Z' +1", <<'EOD', 'Ensure we get azimuth + range');
+    'Ensure we get azel only' );
+_app('set local_coord az_rng', undef, 'Specify azimuth + range');
+_app("pass '19801013T000000Z' +1", <<'EOD',
+
+ 88888 -
+
     time  azimuth      range latitude longitude altitud illum event
 
- 88888 -   1980/10/13
+1980/10/13
 05:39:02 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
 05:42:43 115.6 SE      255.5  50.9259    1.7791   213.1 lit   max
 05:46:37  29.7 NE     1778.5  64.0515   17.6896   224.9 lit   set
 EOD
+    'Ensure we get azimuth + range' );
 _app('set local_coord equatorial', undef, 'Specify equatorial only');
-_app("pass '19801013T000000Z' +1", <<'EOD', 'Ensure we get equatorial only');
+_app("pass '19801013T000000Z' +1", <<'EOD',
+
+ 88888 -
+
             right
     time ascensio decli latitude longitude altitud illum event
 
- 88888 -   1980/10/13
+1980/10/13
 05:39:02 05:30:58 -36.6  37.2228   -6.0197   204.9 lit   rise
 05:42:43 09:33:08  29.8  50.9259    1.7791   213.1 lit   max
 05:46:37 16:51:14  32.2  64.0515   17.6896   224.9 lit   set
 EOD
+    'Ensure we get equatorial only');
 _app('set local_coord', undef, 'Clear local coordinates');
-_app("pass '19801013T000000Z' +1", <<'EOD', 'Ensure we get old coordinates back');
+_app("pass '19801013T000000Z' +1", <<'EOD',
+
+ 88888 -
+
     time eleva  azimuth      range latitude longitude altitud illum event
 
- 88888 -   1980/10/13
+1980/10/13
 05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
 05:42:43  55.9 115.6 SE      255.5  50.9259    1.7791   213.1 lit   max
 05:46:37   0.0  29.7 NE     1778.5  64.0515   17.6896   224.9 lit   set
 EOD
+    'Ensure we get old coordinates back');
 _app("phase '20090401T000000 UT'", <<eod, 'Phase of moon April 1 2009');
                              phas                  fract
       date     time     name angl phase              lit
@@ -481,9 +509,12 @@ SKIP: {
 	    $app->pass('20090401T000000Z', '+1')
 	} || $@,
 	<<'EOD',
+
+ 25544 - ISS (ZARYA)
+
     time eleva  azimuth      range latitude longitude altitud illum event
 
- 25544 - ISS (ZARYA)  2009/04/01
+2009/04/01
 19:33:00  20.1 297.2 NW      883.9  43.8855  -14.4029   355.3 lit   rise
 19:34:39  62.9 243.8 SW      393.9  40.2759   -7.4548   353.9 lit   apls
 19:34:39  63.4 244.2 SW   364322.7        0.5 degrees from Moon
