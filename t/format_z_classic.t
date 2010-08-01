@@ -58,7 +58,7 @@ my $body = Astro::Coord::ECI::TLE->new(
 
 my $tst = App::Satpass2::Test::Format->new( 'App::Satpass2::Format::Classic' );
 
-$tst->plan( tests => 414 );
+$tst->plan( tests => 416 );
 
 $tst->require_ok();
 
@@ -108,7 +108,7 @@ $tst->format_fail( '%almanac(station);', '%almanac(station) is not allowed',
     'Station almanac is not allowed' );
 
 my @pass = ( {		# pass
-##	body => $body,
+	body => $body,
 	events => [
 	    {		# appulse with Moon
 		appulse => {
@@ -1090,10 +1090,26 @@ $tst->method_is( 'pass', <<'EOD', 'Pass title' );
 EOD
 $tst->method_is( 'pass', @pass, <<'EOD', 'Pass' );
 
- 25544 - ISS  2008-10-09
+2008-10-09
+
+ 25544 - ISS
 23:23:41  27.5 153.8 SE      703.5  34.0765  -74.2084   353.9 lit   apls
 23:23:41  29.2 151.2 SE   389093.9        2.9 degrees from Moon
 EOD
+
+$tst->method_is( pass => $body, <<'EOD', 'Pass title with OID' );
+
+ 25544 - ISS
+
+    time eleva  azimuth      range latitude longitude altitud illum event
+EOD
+$tst->method_is( pass => @pass, <<'EOD', 'Pass with OID in title' );
+
+2008-10-09
+23:23:41  27.5 153.8 SE      703.5  34.0765  -74.2084   353.9 lit   apls
+23:23:41  29.2 151.2 SE   389093.9        2.9 degrees from Moon
+EOD
+
 
 $tst->method_is( 'phase', <<'EOD', 'Phase title' );
                              phas                  fract

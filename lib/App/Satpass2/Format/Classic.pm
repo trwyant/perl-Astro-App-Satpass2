@@ -1781,46 +1781,67 @@ sub _macro_expand {
 
 sub pass {
     my ( $self, $pass ) = @_;
+
+    # If initializing with a satellite
     if ( embodies( $pass, 'Astro::Coord::ECI::TLE' ) ) {
-	$self->_set( body => $pass );
+
+	# Initialize to not display OID every pass.
 	delete $self->{_pass_internal_header};
-	delete $self->{_pass_internal_header_merge};
+	delete $self->{_pass_oid_every_pass};
+
+	# Return OID and headers.
+	$self->_set( body => $pass );
 	return $self->_format_execute( format => 'pass_oid' ) .
 	    $self->_format_execute( header => 'pass' );
+
+    # elsif we have the (presumptive) pass data
     } elsif ( defined $pass ) {
 	my $output;
+
+	# Output the headers if we have events to go with them.
+	if ( @{ $pass->{events} } ) {
+	    $self->_set( phenomenon => $pass->{events}[0] );
+	    my $hdr = $self->_format_execute(
+		format => 'pass_date' );
+	    if ( ! defined $self->{_pass_internal_header}
+		|| $hdr ne $self->{_pass_internal_header} ) {
+		$output .= $hdr;
+		$self->{_pass_internal_header} = $hdr;
+	    }
+	    if ( $self->{_pass_oid_every_pass} ) {
+		$output .= $self->_format_execute(
+		    format => 'pass_oid' );
+		$output =~ s/ \n+ \z /\n/smx;
+	    }
+	}
+
+	# Foreach event in the pass
 	foreach my $event ( @{ $pass->{events} } ) {
+
+	    # Accumulate the individual pass event.
 	    $self->_set( phenomenon => $event );
-
-	    $output .= $self->_pass_internal_header();
-
 	    $event->{body}->universal( $event->{time} );
 	    $output .= $self->_format_execute( format => 'pass' );
+
+	    # For appulses, append the appulse data.
 	    if ( $event->{appulse} ) {
 		$output .= $self->_format_execute( format => 'pass_appulse' );
 	    }
 	}
+
+	# Return the formatted pass.
 	return $output;
+
+    # Else we're initializing with no data
     } else {
+
+	# Set up to display the OID for every pass
 	delete $self->{_pass_internal_header};
-	$self->{_pass_internal_header_merge} = 1;
+	$self->{_pass_oid_every_pass} = 1;
+
+	# Return the headers only
 	return $self->_format_execute( header => 'pass' );
     }
-}
-
-sub _pass_internal_header {
-    my ( $self ) = @_;
-    my $hdr = $self->_format_execute( format => 'pass_date' );
-    if ( $self->{_pass_internal_header_merge} ) {
-	$hdr =~ s/ \A \n+ //smx;
-	( my $hdr2 = $self->_format_execute( format => 'pass_oid' ) ) =~
-	    s/ \n+ \z //smx;
-	$hdr = join '  ', grep { $_ ne '' } $hdr2, $hdr;
-    }
-    defined $self->{_pass_internal_header}
-	and $self->{_pass_internal_header} eq $hdr
-	and return '';
-    return( $self->{_pass_internal_header} = $hdr );
 }
 
 sub phase {

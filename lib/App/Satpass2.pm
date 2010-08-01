@@ -1076,7 +1076,7 @@ sub location : Verb() {
 
 }
 
-sub pass : Verb(choose=s@,dump,quiet) {
+sub pass : Verb(choose=s@,chronological!,dump!,quiet!) {
     my ($self, @args) = @_;
 
     (my $opt, @args) = $self->_getopt(@args);
@@ -1117,6 +1117,7 @@ sub pass : Verb(choose=s@,dump,quiet) {
 
 #	Foreach body to be modelled
 
+    my @accumulate;	# For chronological output.
     foreach my $tle (_aggregate(\@bodies)) {
 
 	{
@@ -1147,9 +1148,21 @@ sub pass : Verb(choose=s@,dump,quiet) {
 	};
 	@passes or next;
 
-	$output .= $fmt->pass( $tle );
+	if ( $opt->{chronological} ) {
+	    push @accumulate, @passes;
+	} else {
+	    $output .= $fmt->pass( $tle );
 
-	foreach my $pass (@passes) {
+	    foreach my $pass (@passes) {
+		$output .= $fmt->pass( $pass );
+	    }
+	}
+    }
+
+    if ( @accumulate ) {
+	$output .= $fmt->pass();
+	foreach my $pass ( sort { $a->{time} <=> $b->{time} }
+	    @accumulate ) {
 	    $output .= $fmt->pass( $pass );
 	}
     }
@@ -4149,6 +4162,11 @@ bodies can be chosen either by providing a comma-delimited list as an
 argument, specifying C<-choose> multiple times, or both. The choice is
 made in the same way as by the L<choose()|/choose> method, but the
 observing list is not affected.
+
+C<-chronological> causes the output to be in chronological order by
+pass. If this option is not asserted (or is explicitly negated using
+C<-nochronological>) the order is by satellite, though it remains
+chronological for a particular satellite.
 
 C<-dump> is a debugging tool. It is unsupported in the sense that the
 author reserves the right to change or revoke its functionality without
