@@ -42,7 +42,8 @@ foreach my $file (@check) {
     local $_ = <$fh>;
     close $fh;
     my @stat = stat $file;
-    my $executable = $stat[2] & oct( 111 ) || m/ \A \# ! .* perl /smx;
+    my $executable = $stat[2] & oct( 111 ) ||
+	defined $_ && m/ \A \# ! .* perl /smx;
     ok( !$executable, "File $file is not executable" );
 }
 
