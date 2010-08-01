@@ -666,7 +666,7 @@ sub fmtr : Verb() {
 	my $rslt = eval {$soap->geocode ($loc)->result};
 	my $err = $@;
 	$opt->{debug} and SOAP::Trace->import ('-all');
-	$err and $self->_wail("Failed to access geocode.us: $err");
+	$rslt or $self->_wail("Failed to access geocode.us: $err");
 
 	$opt->{debug} and $self->_whinge($self->_get_dumper()->($rslt));
 
@@ -1137,13 +1137,15 @@ sub pass : Verb(choose=s@,dump,quiet) {
 	    );
 	}
 
-	my @passes = eval {$tle->pass (
-		$sta, $pass_start, $pass_end, $self->{sky})};
-	if ($@) {
+	my @passes;
+	eval { @passes = $tle->pass (
+		$sta, $pass_start, $pass_end, $self->{sky});
+	    1;
+	} or do {
 	    $@ =~ m/$interrupted/o and $self->_wail($@);
 	    $opt->{quiet} or $self->_whinge($@);
 	    next;
-	}
+	};
 	@passes or next;
 
 	$headings++ or $output .= $fmt->pass();
