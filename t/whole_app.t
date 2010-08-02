@@ -19,7 +19,7 @@ BEGIN {
 
 $| = 1;
 
-plan( tests => 160 );
+plan( tests => 164 );
 
 require_ok( 'App::Satpass2' )
     or BAIL_OUT( "Can not continue without loading App::Satpass2" );
@@ -29,9 +29,43 @@ isa_ok($app, 'App::Satpass2')
     or BAIL_OUT("Can not continue without App::Satpass2 object");
 $app->set(
     autoheight => undef,
-    gmt => 1,
+    gmt => 0,
     stdout => undef,
 );
+
+# NOTICE
+#
+# The execute_filter attribute is undocumented and unsupported. It
+# exists only so I can scavenge the user's initialization file for the
+# (possible) Space Track username and password, to be used in testing,
+# without being subject to any other undesired side effects, such as
+# running a prediction and exiting. If I change my mind on how or
+# whether to do this, execute_filter will be altered or retracted
+# without warning, much less a deprecation cycle. If you have a
+# legitimate need for this functionality, contact me.
+#
+# YOU HAVE BEEN WARNED.
+
+$app->set( execute_filter => sub {
+	my ( $self, $args ) = @_;
+	@{ $args } > 2
+	    and $args->[0] eq 'set'
+	    and $args->[1] eq 'gmt'
+	    and return;
+	return 1;
+    }
+);
+
+my $can_filter = 1;
+_app( 'set gmt 1', undef, 'Attempt to set gmt with filter in place' );
+ok( ! $app->get( 'gmt' ), 'Confirm gmt still false' )
+    or $can_filter = 0;
+# NOTICE
+# The execute_filter attribute is undocumented and unsupported.
+$app->set( execute_filter => sub { return 1 } );
+_app( 'set gmt 1', undef, 'Attempt to set gmt with no filter in place' );
+ok( $app->get( 'gmt' ), 'Confirm gmt now true' );
+
 
 {
     my $fh = File::Temp->new();
@@ -677,13 +711,21 @@ sub _do_test {
 
 	# If we do not have a Space Track username or password, try to
 	# scavenge one from the user's profile.
-	if ($app->st(qw{show username password}) eq <<eod
-st set username ''
-st set password ''
-eod
-	) {
+	if ( $can_filter && ! _have_spacetrack_info( $app ) ) {
 	    eval {
 		my $app2 = App::Satpass2->new();
+		# NOTICE
+		# The execute_filter attribute is undocumented and
+		# unsupported.
+		$app2->set( execute_filter => sub {
+			my ( $self, $args ) = @_;
+			return @{ $args } > 2
+			    && $args->[0] eq 'st'
+			    && $args->[1] eq 'set'
+			    || @{ $args } > 1
+			    && $args->[0] eq 'source'
+			    ;
+		    } );
 		$app2->init();
 		$app->execute(
 		    $app2->st(qw{show username password})
@@ -694,11 +736,7 @@ eod
 	# If we _still_ do not have a Space Track username and password,
 	# give up if we're doing automated testing. Otherwise prompt the
 	# user for them.
-	if ($app->st(qw{show username password}) eq <<eod
-st set username ''
-st set password ''
-eod
-	) {
+	if ( ! _have_spacetrack_info( $app ) ) {
 	    $ENV{AUTOMATED_TESTING}
 		and return (
 		$bypass = "Automated testing and SPACETRACK_USER not set"
@@ -746,6 +784,19 @@ eod
 	}
 	return;
     }
+
+    sub _have_spacetrack_info {
+	my ( $app ) = @_;
+	my $sp = $app->get( 'spacetrack' ) or return;
+	foreach my $name ( qw{ username password } ) {
+	    my $value = $sp->get( $name );
+	    defined $value or return;
+	    $value = $value->content();
+	    defined $value and $value ne ''
+		or return;
+	}
+	return 1;
+    }
 }
 
 sub _prompt {
@@ -758,3 +809,5 @@ sub _prompt {
 }
 
 1;
+
+# ex: set textwidth=72 :

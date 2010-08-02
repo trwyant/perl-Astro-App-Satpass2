@@ -126,6 +126,7 @@ my %mutator = (
     ellipsoid => \&_set_ellipsoid,
     error_out => \&_set_unmodified,
     exact_event => \&_set_unmodified,
+    execute_filter => \&_set_code_ref,	# Undocumented and unsupported
     explicit_macro_delete => \&_set_unmodified,
     extinction => \&_set_unmodified,
     filter => \&_set_unmodified,
@@ -195,6 +196,7 @@ foreach ( keys %accessor ) { $shower{$_} ||= \&_show_unmodified }
 #	interactively or in the initialization file).
 
 my %nointeractive = map {$_ => 1} qw{
+    execute_filter
     spacetrack
     stdout
 };
@@ -219,6 +221,7 @@ my %static = (
     ellipsoid => Astro::Coord::ECI->get ('ellipsoid'),
     error_out => 0,
     exact_event => 1,
+    execute_filter => sub { return 1 },	# Undocumented and unsupported
 ##  explicit_macro_delete => 1,			# Deprecated
     extinction => 1,
     filter => undef,
@@ -464,6 +467,20 @@ sub execute {
 	my $stdout = $self->{frame}[-1]{stdout};
 	my ($args, $redirect) = $self->_tokenize(
 	    { in => $in }, $_, $self->{frame}[-1]{args});
+	# NOTICE
+	#
+	# The execute_filter attribute is undocumented and unsupported.
+	# It exists only so I can scavenge the user's initialization
+	# file for the (possible) Space Track username and password, to
+	# be used in testing, without being subject to any other
+	# undesired side effects, such as running a prediction and
+	# exiting. If I change my mind on how or whether to do this, it
+	# will be altered or retracted without warning, much less a
+	# deprecation cycle. If you have a legitimate need for this
+	# functionality, contact me.
+	#
+	# YOU HAVE BEEN WARNED.
+	$self->{execute_filter}->( $self, $args ) or next;
 	@{ $args } or next;
 	if ($redirect->{'>'}) {
 	    my ($mode, $name) = map {$redirect->{'>'}{$_}} qw{mode name};
@@ -1450,6 +1467,12 @@ sub _make_stringable {
 
 sub _set_angle {
     return ($_[0]{$_[1]} = _parse_angle ($_[2]));
+}
+
+sub _set_code_ref {
+    'CODE' eq ref $_[2]
+	or $_[0]->_wail( "Attribute $_[1] must be a code reference" );
+    return( $_[0]{$_[1]} = $_[2] );
 }
 
 sub _set_desired_equinox_dynamical {
@@ -4755,6 +4778,15 @@ interested in measured brightness, and false if you are interested in
 estimating magnitudes versus nearby stars.
 
 The default is 1 (i.e. true).
+
+=head2 filter
+
+Setting this boolean attribute true suppresses the front matter that is
+normally output by the L<run()|/run> method if standard input is a
+terminal. If standard input is not a terminal, the front matter is not
+provided anyway.
+
+The default is undef (i.e. false).
 
 =head2 flare_mag_day
 
