@@ -1658,6 +1658,8 @@ sub _format_time_since_epoch {
     my @names = sort keys %check;
     sub format_effector {
 	my ($self, $action, @args) = @_;
+	defined $action
+	    or croak 'No format effector specified';
 	$template{$action}
 	    or croak "No such format effector as '$action'";
 	if (@args) {
@@ -1665,8 +1667,11 @@ sub _format_time_since_epoch {
 		my ( $name, $val ) = splice @args, 0, 2;
 		$check{$name}
 		    or croak "No such format effector attribute as '$name'";
+		$template{$action}{forbid}
+		    and $template{$action}{forbid}{$name}
+		    and croak "Argument $name forbidden on %$action";
 		delete $self->{_template_cache};
-		if (defined $val) {
+		if (defined $val && $val ne 'undef') {
 		    $check{$name}->( $action, $name, $val );
 		    $self->{formatter}{$action}{$name} = $val;
 		} else {
@@ -2807,20 +2812,21 @@ formatter object the method is called on. The $name argument specifies
 the format effector to change (no abbreviations allowed here), and the
 $attr => $value pairs specify the new defaults.
 
-The valid $attr values are 'missing', 'places', 'title', 'units', and
-'width', to change the default replacement text, number of decimal
-places, title, units of measure, and field width respectively.  The
-'places' and 'width' settings must be whole numbers or ''. Setting
-'places' or 'width' to '' specifies that no restriction be imposed on
-these attributes, and is equivalent to specifying '*' in the template.
-Attempting to set 'units' on a format effector that does not support
-units will result in an exception.
+The valid $attr values are C<'missing'>, C<'places'>, C<'title'>,
+C<'units'>, and C<'width'>, to change the default replacement text,
+number of decimal places, title, units of measure, and field width
+respectively. The C<'places'> and C<'width'> settings must be whole
+numbers or C<''>. Setting C<'places'> or C<'width'> to C<''> specifies
+that no restriction be imposed on these attributes, and is equivalent to
+specifying C<'*'> in the template.  Attempting to set a default on a
+format effector that does not support it will result in an exception.
 
-Setting any attribute to C<undef> restores its previous default.
+Setting any attribute to C<undef> (or to C<'undef'>) restores its
+previous default.
 
 If called without any $attr => $value pairs, the return is a reference
-to a hash containing the current default settings for the object. Global
-defaults will not be represented in the hash.
+to an array containing the current default settings for the object.
+Global defaults will not be represented in the hash.
 
 If called with at least one $attr => $value pair, the return is the
 formatter object itself, to allow call chaining.
