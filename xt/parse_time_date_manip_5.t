@@ -17,3 +17,5 @@ BEGIN {
 }
 
 require 't/parse_time_date_manip_5.t';
+
+# ex: set textwidth=72 :

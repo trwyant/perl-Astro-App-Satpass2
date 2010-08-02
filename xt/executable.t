@@ -48,3 +48,5 @@ foreach my $file (@check) {
 }
 
 1;
+
+# ex: set textwidth=72 :

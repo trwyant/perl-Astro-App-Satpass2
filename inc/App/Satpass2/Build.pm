@@ -99,6 +99,10 @@ use $hider qw{
 };
 
 require '$ip';
+
+__END__
+
+# ex: set textwidth=72 :
 EOD
 	close $oh;
     }

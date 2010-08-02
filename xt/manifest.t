@@ -30,3 +30,5 @@ eod
 }
 
 1;
+
+# ex: set textwidth=72 :

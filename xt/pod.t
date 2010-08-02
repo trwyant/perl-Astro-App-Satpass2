@@ -30,3 +30,5 @@ eod
 all_pod_files_ok ();
 
 1;
+
+# ex: set textwidth=72 :

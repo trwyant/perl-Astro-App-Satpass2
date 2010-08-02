@@ -31,3 +31,5 @@ all_pod_coverage_ok ({
     });
 
 1;
+
+# ex: set textwidth=72 :

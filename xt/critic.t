@@ -31,3 +31,5 @@ BEGIN {
 all_critic_ok();
 
 1;
+
+# ex: set textwidth=72 :

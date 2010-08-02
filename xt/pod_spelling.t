@@ -1,5 +1,7 @@
 package main;
 
+# ex: set textwidth=72 :
+
 use strict;
 use warnings;
 
