@@ -631,8 +631,13 @@ sub fmtr : Verb() {
     my ( $self, $method, @args ) = @_;
     my $fmtr = $self->get( 'formatter' );
     my $rslt = $fmtr->$method( @args );
-    ref $rslt eq ref $fmtr or return $rslt;
-    return;
+    ref $rslt eq ref $fmtr and return;
+    if ( 'format_effector' eq $method && 'ARRAY' eq ref $rslt ) {
+	@{ $rslt } or return "# fmtr $method @args not set\n";
+	return join( ' ', map { _quoter( $_ ) } 'fmtr', $method, @args,
+	    @{ $rslt } ) . "\n";
+    }
+    return $rslt;
 }
 
 {
