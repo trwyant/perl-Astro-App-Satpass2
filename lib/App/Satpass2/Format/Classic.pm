@@ -214,7 +214,7 @@ my %template = (
 	    station => 1,
 	},
 	formatter => undef,	# Overridden by the units
-	title => 'almanac',
+	title => 'Almanac',
 	units => 'almanac_dimension',
 	width => 40,
     },
@@ -225,7 +225,7 @@ my %template = (
 	},
 	formatter => \&_format_number,
 	places => 1,
-	title => 'altitude',
+	title => 'Altitude',
 	units => 'length',
 	width => 7,
     },
@@ -241,7 +241,7 @@ my %template = (
 		sub {$_[0]{angle}};
 	},
 	places => 1,
-	title => 'angle',
+	title => 'Angle',
 	units => 'angle',
 	width => 4,
     },
@@ -262,7 +262,7 @@ my %template = (
 	    }
 	},
 	places => 0,
-	title => 'apoapsis',
+	title => 'Apoapsis',
 	units => 'length',
 	width => 6,
     },
@@ -271,7 +271,7 @@ my %template = (
 	fetch => sub {return _fetch_tle_attr($_[1], 'argumentofperigee')},
 	formatter => \&_format_number,
 	places => 4,
-	title => 'argument of perigee',
+	title => 'Argument of Perigee',
 	units => 'angle',
 	width => 9,
     },
@@ -279,7 +279,7 @@ my %template = (
 	fetch => sub {return _fetch_tle_attr($_[1], 'ascendingnode')},
 	formatter => \&_format_number,
 	places => 2,
-	title => 'ascending node',
+	title => 'Ascending Node',
 	units => 'angle',
 	unit_default => 'rightascension',
 	width => 11,
@@ -294,7 +294,7 @@ my %template = (
 	},
 	formatter => \&_format_azimuth,
 	places => 1,
-	title => 'azimuth',
+	title => 'Azimuth',
 	units => 'angle',
 	width => 5,
     },
@@ -302,7 +302,7 @@ my %template = (
 	fetch => sub {return _fetch_tle_attr($_[1], 'bstardrag')},
 	formatter => \&_format_number_scientific,
 	places => 4,
-	title => 'B* drag',
+	title => 'B* Drag',
 	width => 11,
     },
     classification => {	# Classification
@@ -319,7 +319,7 @@ my %template = (
 	},
 	format => [qw{date_format}],
 	formatter => \&_format_time,
-	title => 'date',
+	title => 'Date',
 	units => 'date',
 	width => 11,
     },
@@ -341,7 +341,7 @@ my %template = (
 			    equatorial => $_[1], $_[2] ) )[1] };
 	},
 	places => 1,
-	title => 'declination',
+	title => 'Declination',
 	units => 'angle',
 	width => 5,
     },
@@ -349,7 +349,7 @@ my %template = (
 	fetch => sub {return _fetch_tle_attr($_[1], 'eccentricity')},
 	formatter => \&_format_number,
 	places => 5,
-	title => 'eccentricity',
+	title => 'Eccentricity',
 	width => 8,
     },
     eci_x	=> {
@@ -361,7 +361,7 @@ my %template = (
 	},
 	formatter => \&_format_number,
 	places => 1,
-	title => 'eci x',
+	title => 'ECI x',
 	units => 'length',
 	width => 10,
     },
@@ -374,7 +374,7 @@ my %template = (
 	},
 	formatter => \&_format_number,
 	places => 1,
-	title => 'eci y',
+	title => 'ECI y',
 	units => 'length',
 	width => 10,
     },
@@ -386,7 +386,7 @@ my %template = (
 	},
 	formatter => \&_format_number,
 	places => 1,
-	title => 'eci z',
+	title => 'ECI z',
 	units => 'length',
 	width => 10,
     },
@@ -394,14 +394,14 @@ my %template = (
 	fetch => sub {return _fetch_tle_attr($_[1], 'effective')},
 	format => [qw{date_format time_format}],
 	formatter => \&_format_time,
-	title => 'effective date',
+	title => 'Effective Date',
 	units => 'date',
 	width => 20,
     },
     elementnumber => {	# Element set number
 	fetch => sub {return _fetch_tle_attr($_[1], 'elementnumber')},
 	formatter => \&_format_integer,
-	title => 'element set number',
+	title => 'Element Set Number',
 	width => 4,
     },
     elevation	=> {	# elevation of object (was 'E')
@@ -411,14 +411,14 @@ my %template = (
 	},
 	formatter => \&_format_number,
 	places => 1,
-	title => 'elevation',
+	title => 'Elevation',
 	units => 'angle',
 	width => 5,
     },
     ephemeristype => {	# Ephemeris type
 	fetch => sub {return _fetch_tle_attr($_[1], 'ephemeristype')},
 	formatter => \&_format_integer,
-	title => 'ephemeris type',
+	title => 'Ephemeris Type',
 	width => 1,
     },
     epoch	=> {	# epoch (was 'p')
@@ -428,7 +428,7 @@ my %template = (
 	},
 	format => [qw{date_format time_format}],
 	formatter => \&_format_time,
-	title => 'epoch',
+	title => 'Epoch',
 	units => 'date',
 	width => 20,
     },
@@ -440,14 +440,14 @@ my %template = (
 	    station => 1,
 	},
 	formatter => \&_format_event,
-	title => 'event',
+	title => 'Event',
 	width => 5,
     },
     firstderivative => {	# First derivative of mean motion
 	fetch => sub {return _fetch_tle_attr($_[1], 'firstderivative')},
 	formatter => \&_format_number_scientific,
 	places => 10,
-	title => 'first derivative of mean motion',
+	title => 'First Derivative of Mean Motion',
 	units => 'angle',
 	width => 17,
     },
@@ -459,7 +459,7 @@ my %template = (
 	},
 	formatter => \&_format_number,
 	places => 2,
-	title => 'fraction lit',
+	title => 'Fraction Lit',
 	units => 'dimensionless',
 	width => 4,
     },
@@ -469,7 +469,7 @@ my %template = (
 	    return $_[1]->get('id')
 	},
 	formatter => \&_format_string,
-	title => 'oid',
+	title => 'OID',
 	width => 6,
     },
     illumination => {	# Lighting / illumination (lit/shdw/day) (was 'l')
@@ -480,21 +480,21 @@ my %template = (
 	    station => 1,
 	},
 	formatter => \&_format_event,
-	title => 'illumination',
+	title => 'Illumination',
 	width => 5,
     },
     inclination => {	# Inclination of orbit
 	fetch => sub {return _fetch_tle_attr($_[1], 'inclination')},
 	formatter => \&_format_number,
 	places => 4,
-	title => 'inclination',
+	title => 'Inclination',
 	units => 'angle',
 	width => 8,
     },
     international => {	# International launch designator
 	fetch => sub {return _fetch_tle_attr($_[1], 'international')},
 	formatter => \&_format_string,
-	title => 'international launch designator',
+	title => 'International Launch Designator',
 	width => 8,
     },
     latitude => {	# latitude (was 't')
@@ -504,7 +504,7 @@ my %template = (
 	},
 	formatter => \&_format_number,
 	places => 4,
-	title => 'latitude',
+	title => 'Latitude',
 	units => 'angle',
 	width => 8,
     },
@@ -515,7 +515,7 @@ my %template = (
 	},
 	formatter => \&_format_number,
 	places => 4,
-	title => 'longitude',
+	title => 'Longitude',
 	units => 'angle',
 	width => 9,
     },
@@ -530,14 +530,14 @@ my %template = (
 	    sub {$_[0]{magnitude}}
 	},
 	places => 1,
-	title => 'magnitude',
+	title => 'Magnitude',
 	width => 4,
     },
     meananomaly => {	# Mean anomaly
 	fetch => sub {return _fetch_tle_attr($_[1], 'meananomaly')},
 	formatter => \&_format_number,
 	places => 4,
-	title => 'mean anomaly',
+	title => 'Mean Anomaly',
 	units => 'angle',
 	width => 9,
     },
@@ -545,7 +545,7 @@ my %template = (
 	fetch => sub {return _fetch_tle_attr($_[1], 'meanmotion')},
 	formatter => \&_format_number,
 	places => 10,
-	title => 'mean motion',
+	title => 'Mean Motion',
 	units => 'angle',
 	width => 12,
     },
@@ -557,7 +557,7 @@ my %template = (
 	    station => 1,
 	},
 	formatter => \&_format_string,
-	title => 'mma',
+	title => 'MMA',
 	width => 3,
     },
     n => {	# newline
@@ -586,7 +586,7 @@ my %template = (
 		return $_[1]->get('name');
 	    }
 	},
-	title => 'name',
+	title => 'Name',
 	width => 24,	# Per http://celestrak.com/NORAD/documentation/tle-fmt.asp
     },
     operational	=> {	# 'status' attribute of Iridium object.
@@ -627,7 +627,7 @@ my %template = (
 	    }
 	},
 	places => 0,
-	title => 'periapsis',
+	title => 'Periapsis',
 	units => 'length',
 	width => 6,
     },
@@ -639,7 +639,7 @@ my %template = (
 	    return $_[1]->period();
 	},
 	formatter => \&_format_period,
-	title => 'period',
+	title => 'Period',
 	units => 'duration',
 	width => 12,
     },
@@ -651,7 +651,7 @@ my %template = (
 	},
 	formatter => \&_format_number,
 	places => 0,
-	title => 'phase',
+	title => 'Phase',
 	units => 'angle',
 	width => 4,
     },
@@ -669,14 +669,14 @@ my %template = (
 	},
 	formatter => \&_format_number,
 	places => 1,
-	title => 'range',
+	title => 'Range',
 	units => 'length',
 	width => 10,
     },
     revolutionsatepoch => {	# Revolutions at epoch
 	fetch => sub {return _fetch_tle_attr($_[1], 'revolutionsatepoch')},
 	formatter => \&_format_integer,
-	title => 'revolutions at epoch',
+	title => 'Revolutions at Epoch',
 	width => 6,
     },
     right_ascension => {
@@ -696,7 +696,7 @@ my %template = (
 			$_[1], $_[2] ) )[0] }
 	},
 	places => 0,
-	title => 'right ascension',
+	title => 'Right Ascension',
 	unit_default => 'rightascension',
 	units => 'angle',
 	width => 8,
@@ -705,7 +705,7 @@ my %template = (
 	fetch => sub {return _fetch_tle_attr($_[1], 'secondderivative')},
 	formatter => \&_format_number_scientific,
 	places => 10,
-	title => 'second derivative of mean motion',
+	title => 'Second Derivative of Mean Motion',
 	units => 'angle',
 	width => 17,
     },
@@ -717,7 +717,7 @@ my %template = (
 	},
 	formatter => \&_format_number,
 	places => 0,
-	title => 'semimajor axis',
+	title => 'Semimajor Axis',
 	units => 'length',
 	width => 6,
     },
@@ -729,7 +729,7 @@ my %template = (
 	},
 	formatter => \&_format_number,
 	places => 0,
-	title => 'semiminor axis',
+	title => 'Semiminor Axis',
 	units => 'length',
 	width => 6,
     },
@@ -754,7 +754,7 @@ my %template = (
 	    station => 1,
 	},
 	formatter => \&_format_string,
-	title => 'status',
+	title => 'Status',
 	width => 60,
     },
     time	=> {	# time of day. (was 'h')
@@ -765,7 +765,7 @@ my %template = (
 	},
 	format => [qw{time_format}],
 	formatter => \&_format_time,
-	title => 'time',
+	title => 'Time',
 	units => 'date',
 	width => 8,
     },
@@ -778,8 +778,8 @@ my %template = (
 
 # Clone %apogee and %perigee from %apoapsis and %periapsis,
 # respectively.
-$template{apogee} = _clone_template('apoapsis', title => 'apogee');
-$template{perigee} = _clone_template('periapsis', title => 'perigee');
+$template{apogee} = _clone_template('apoapsis', title => 'Apogee');
+$template{perigee} = _clone_template('periapsis', title => 'Perigee');
 
 # Explicitly forbid the 'units' argument in format effectors that have
 # no associated units.
@@ -789,9 +789,9 @@ foreach my $fmtr ( keys %template ) {
 }
 
 my %template_title_modifier = (
-    appulse => 'appulse %s',
-    center => 'center %s',
-    station => 'station %s',
+    appulse => 'Appulse %s',
+    center => 'Center %s',
+    station => 'Station %s',
 );
 
 my %format_macro_definitions = (
@@ -819,7 +819,7 @@ EOD
     '%time %local_coord(appulse)       %angle(appulse) degrees from %-name(appulse)%n',
     pass_date => '%n%date%n',
     pass_oid => '%n%id - %-*name%n%n',
-    phase => '%date %time %8name %phase(title=phase angle) %-16phase(units=phase) %.0fraction_lit(units=percent)%n',
+    phase => '%date %time %8name %phase(title=Phase Angle) %-16phase(units=phase) %.0fraction_lit(units=percent)%n',
     position	=>
 	'%16name(missing=oid) %local_coord %epoch %illumination%n',
     position_nomma	=> '%30space;%-status%n',
@@ -2624,7 +2624,7 @@ This method overrides the L<App::Satpass2::Format|App::Satpass2::Format>
 L<phase()|App::Satpass2::Format/phase> method, and performs the same
 function. It uses template C<phase>, which defaults to
 
- %date %time %8name %phase(title=phase angle)
+ %date %time %8name %phase(title=Phase Angle)
    %-16phase(units=phase) %.0fraction_lit(units=percent)%n
 
 to display the phase of the given body. The above format has been
@@ -2923,6 +2923,12 @@ unless otherwise stated in the documentation for a given effector:
  title - overrides the title of the field;
  units - specifies the units to display the data in.
 
+The C<appulse>, C<center>, and C<station> arguments, in addition to
+selecting a data source, modify the default title of the field by
+prepending 'Appulse', 'Center', or 'Station', respectively. There is
+currently no way to modify this, other than to explicitly specify
+C<title=...> in any relevant template.
+
 Other arguments may be legal for specific effectors; these are
 documented with the individual format effectors.
 
@@ -2979,7 +2985,7 @@ The dimension is L</almanac_dimension>, which really sort of subverts
 the dimension mechanism to let you display either the text description
 of the almanac event, the event type, or the event code number.
 
-The default field width is 40, and the default title is 'almanac'.
+The default field width is 40, and the default title is 'Almanac'.
 
 =head2 %altitude
 
@@ -2991,7 +2997,7 @@ All standard arguments are supported.
 The dimension is L<length|/length>. The default units are kilometers.
 
 The default field width is 7, the default number of decimal places is 1,
-and the default title is 'altitude'.
+and the default title is 'Altitude'.
 
 =head2 %angle
 
@@ -3005,7 +3011,7 @@ standard arguments are supported.
 The dimension is L<angle|/angle>. The default units are degrees.
 
 The default field width is 4, the default number of decimal places is 1,
-and the default title is 'angle'.
+and the default title is 'Angle'.
 
 =head2 %apoapsis
 
@@ -3024,12 +3030,12 @@ center of the Earth; otherwise the equatorial radius of the Earth is
 subtracted, to give (approximate) altitude.
 
 The default field width is 6, the default number of decimal places is 0,
-and the default title is 'apoapsis'.
+and the default title is 'Apoapsis'.
 
 =head2 %apogee
 
 This format effector is a synonym for C<apoapsis>. The only difference
-is that the default title is 'apogee'.
+is that the default title is 'Apogee'.
 
 =head2 %argumentofperigee
 
@@ -3043,7 +3049,7 @@ All standard arguments are supported.
 The dimension is L<angle|/angle>. The default units are degrees.
 
 The default field width is 9, the default number of decimal places is 4,
-and the default title is 'argument of perigee'.
+and the default title is 'Argument of Perigee'.
 
 =head2 %ascendingnode
 
@@ -3057,7 +3063,7 @@ All standard arguments are supported.
 The dimension is L<angle|/angle>. The default units are rightascension.
 
 The default field width is 9, the default number of decimal places is 4,
-and the default title is 'ascending node'.
+and the default title is 'Ascending Node'.
 
 =head2 %azimuth
 
@@ -3073,7 +3079,7 @@ width of the %azimuth field itself when laying out the output.
 The dimension is L<angle|/angle>. The default units are degrees.
 
 The default field width is 5, the default number of decimal places is 1,
-and the default title is 'azimuth'.
+and the default title is 'Azimuth'.
 
 =head2 %bstardrag
 
@@ -3087,7 +3093,7 @@ supported.
 There is no associated dimension.
 
 The default field width is 11, the default number of decimal places is
-4, and the default title is 'B* drag'.
+4, and the default title is 'B* Drag'.
 
 =head2 %classification
 
@@ -3123,6 +3129,8 @@ locale, you can always specify an explicit field width. You will
 definitely have to specify a field width if you also specified
 C<units=julian> or C<units=days_since_epoch>.
 
+The default title is 'Date'.
+
 If the date is being displayed as an interval since the epoch, the
 'appulse' or 'body' arguments specify the source of the epoch. If no
 epoch is available from the specified source, the field will be empty.
@@ -3142,7 +3150,7 @@ from the observing station.
 The dimension is L<angle|/angle>. The default units are degrees.
 
 The default field width is 5, the default number of decimal places is 1,
-and the default title is 'declination'.
+and the default title is 'Declination'.
 
 =head2 eccentricity
 
@@ -3157,7 +3165,7 @@ The dimension is L<dimensionless|/dimensionless>. The default units are
 unity.
 
 The default field width is 8, the default number of decimal places is
-5, and the default title is 'eccentricity'.
+5, and the default title is 'Eccentricity'.
 
 =head2 %eci_x
 
@@ -3169,7 +3177,7 @@ All standard arguments are supported.
 The dimension is L<length|/length>. The default units are kilometers.
 
 The default field width is 10, the default number of decimal places is
-1, and the default title is 'eci x'.
+1, and the default title is 'ECI x'.
 
 =head2 %eci_y
 
@@ -3181,7 +3189,7 @@ All standard arguments are supported.
 The dimension is L<length|/length>. The default units are kilometers.
 
 The default field width is 10, the default number of decimal places is
-1, and the default title is 'eci x'.
+1, and the default title is 'ECI y'.
 
 =head2 %eci_z
 
@@ -3193,7 +3201,7 @@ All standard arguments are supported.
 The dimension is L<length|/length>. The default units are kilometers.
 
 The default field width is 10, the default number of decimal places is
-1, and the default title is 'eci x'.
+1, and the default title is 'ECI z'.
 
 =head2 %effective
 
@@ -3213,6 +3221,8 @@ The default field width is computed whenever the L</date_format> or
 L</time_format> attributes is set. If you specify 'units=julian' you
 should specify an explicit field width and number of decimal places.
 
+The default title is 'Effective Date'.
+
 =head2 %elementnumber
 
 This format effector displays the value of the 'elementnumber' attribute
@@ -3225,8 +3235,8 @@ supported.
 
 There is no associated dimension.
 
-The default field width is 4, and the default title is 'element set
-number'.
+The default field width is 4, and the default title is 'Element Set
+Number'.
 
 =head2 %elevation
 
@@ -3239,7 +3249,7 @@ All standard arguments are supported.
 The dimension is L<angle|/angle>. The default units are degrees.
 
 The default field width is 5, the default number of decimal places is 1,
-and the default title is 'elevation'.
+and the default title is 'Elevation'.
 
 =head2 %ephemeristype
 
@@ -3253,7 +3263,7 @@ supported.
 
 There is no associated dimension.
 
-The default field width is 1, and the default title is 'ephemeris type'.
+The default field width is 1, and the default title is 'Ephemeris Type'.
 
 =head2 %epoch
 
@@ -3273,6 +3283,8 @@ The default field width is computed whenever the L</date_format> or
 L</time_format> attributes is set. If you specify C<units=julian> you
 should specify an explicit field width and number of decimal places.
 
+The default title is 'Date'.
+
 =head2 %event
 
 This format effector displays the L<pass()|/pass> event. This is
@@ -3287,7 +3299,7 @@ forbidden. All other standard arguments are supported.
 
 There is no associated dimension.
 
-The default field width is 5, and the default title is 'event'.
+The default field width is 5, and the default title is 'Event'.
 
 =head2 %firstderivative
 
@@ -3306,8 +3318,8 @@ second squared, since there is no mechanism to specify the units of the
 denominator.
 
 The default field width is 17, the default number of decimal places is
-10, and the default title is as much of 'first derivative of mean
-motion' as will fit.
+10, and the default title is as much of 'First Derivative of Mean
+Motion' as will fit.
 
 =head2 %fraction_lit
 
@@ -3321,7 +3333,7 @@ The dimension is L<dimensionless|/dimensionless>. The default units are
 unity.
 
 The default field width is 4, the default number of decimal places is 2,
-and the default title is 'fraction lit'.
+and the default title is 'Fraction Lit'.
 
 =head2 %id
 
@@ -3333,7 +3345,7 @@ allowed.
 
 There is no associated dimension.
 
-The default field width is 6, and the default title is 'id'.
+The default field width is 6, and the default title is 'OID'.
 
 =head2 %illumination
 
@@ -3348,7 +3360,7 @@ other standard arguments are supported.
 The dimension is L<dimensionless|/dimensionless>. The default units are
 unity.
 
-The default field width is 5, and the default title is 'illumination'.
+The default field width is 5, and the default title is 'Illumination'.
 
 =head2 %inclination
 
@@ -3362,7 +3374,7 @@ All standard arguments are supported.
 The dimension is L<angle|/angle>. The default units are degrees.
 
 The default field width is 8, the default number of decimal places is 4,
-and the default title is 'inclination'.
+and the default title is 'Inclination'.
 
 =head2 %international
 
@@ -3377,7 +3389,7 @@ supported.
 There is no associated dimension.
 
 The default field width is 8, and the default title is as much of
-'international launch designator' as will fit.
+'International Launch Designator' as will fit.
 
 =head2 %latitude
 
@@ -3389,7 +3401,7 @@ All standard arguments are supported.
 The dimension is L<angle|/angle>. The default units are degrees.
 
 The default field width is 8, the default number of decimal places is 4,
-and the default title is 'latitude'.
+and the default title is 'Latitude'.
 
 =head2 %longitude
 
@@ -3401,7 +3413,7 @@ All standard arguments are supported.
 The dimension is L<angle|/angle>. The default units are degrees.
 
 The default field width is 9, the default number of decimal places is 4,
-and the default title is 'latitude'.
+and the default title is 'Longitude'.
 
 =head2 %magnitude
 
@@ -3414,7 +3426,7 @@ other standard arguments are supported.
 There is no associated dimension.
 
 The default field width is 4, the default number of decimal places is 1,
-and the default title is 'magnitude'.
+and the default title is 'Magnitude'.
 
 =head2 %meananomaly
 
@@ -3428,7 +3440,7 @@ All standard arguments are supported.
 The dimension is L<angle|/angle>. The default units are degrees.
 
 The default field width is 9, the default number of decimal places is 4,
-and the default title is 'meananomaly'.
+and the default title is 'Mean Anomaly'.
 
 =head2 %meanmotion
 
@@ -3445,7 +3457,7 @@ radians per minute should you so desire, but not degrees per second,
 since there is no mechanism to specify the units of the denominator.
 
 The default field width is 12, the default number of decimal places is
-10, and the default title is 'mean motion'.
+10, and the default title is 'Mean Motion'.
 
 =head2 %mma
 
@@ -3458,7 +3470,7 @@ forbidden. All other standard arguments are supported.
 
 There is no associated dimension.
 
-The default field width is 3, and the default title is 'mma'.
+The default field width is 3, and the default title is 'MMA'.
 
 =head2 %name
 
@@ -3472,7 +3484,7 @@ will be used verbatim if the name is not available.
 
 There is no associated dimension.
 
-The default field width is 24, and the default title is 'name'.
+The default field width is 24, and the default title is 'Name'.
 
 =head2 %operational
 
@@ -3495,12 +3507,12 @@ needed in a context where the percent sign would otherwise be
 interpreted as introducing a format effector. The decimal places
 specification is ignored.
 
-The C<appulse>, C<center>, C<station>, and C<units> arguments are
-forbidden. All other standard arguments are supported.
+The C<appulse>, C<center>, C<station>, C<title>, and C<units> arguments
+are forbidden. All other standard arguments are supported.
 
 There is no associated dimension.
 
-The default field width is 1, and the default title is blank.
+The default field width is 1, and the title is blank.
 
 =head2 %periapsis
 
@@ -3516,12 +3528,12 @@ subtracted, to give (approximate) altitude.
 The dimension is L<length|/length>. The default units are kilometers.
 
 The default field width is 6, the default number of decimal places is 0,
-and the default title is 'periapsis'.
+and the default title is 'Periapsis'.
 
 =head2 %perigee
 
 This format effector is a synonym for C<periapsis>. The only difference
-is that the default title is 'perigee'.
+is that the default title is 'Perigee'.
 
 =head2 %period
 
@@ -3533,7 +3545,7 @@ All standard arguments are supported.
 
 The dimension is L<duration|/duration>. The default units are composite.
 
-The default field width is 12, and the default title is 'period'.
+The default field width is 12, and the default title is 'Period'.
 
 =head2 %phase
 
@@ -3546,7 +3558,7 @@ All standard arguments are supported.
 The dimension is L<angle|/angle>. The default units are degrees.
 
 The default field width is 4, the default number of decimal places is 0,
-and the default title is 'phase'.
+and the default title is 'Phase'.
 
 =head2 %provider
 
@@ -3556,7 +3568,7 @@ formatter object. The decimal places specification is ignored.
 The C<units> argument is forbidden. All other standard arguments are
 supported.
 
-The default field width is 0.
+The default field width is 0, and the default title is blank.
 
 =head2 %range
 
@@ -3570,7 +3582,7 @@ number.
 The dimension is L<length|/length>. The default units are kilometers.
 
 The default field width is 10, the default number of decimal places is
-1, and the default title is 'range'.
+1, and the default title is 'Range'.
 
 =head2 %revolutionsatepoch
 
@@ -3584,8 +3596,8 @@ supported.
 
 There is no associated dimension.
 
-The default field width is 6, and the default title is 'revolutions at
-epoch'.
+The default field width is 6, and the default title is 'Revolutions at
+Epoch'.
 
 =head2 %right_ascension
 
@@ -3606,7 +3618,7 @@ ascension, so %10.1right_ascension; would display something like (e.g.)
 '10:23:45.3'.
 
 The default field width is 8, the default number of decimal places is 0,
-and the default title is 'right ascension'.
+and the default title is 'Right Ascension'.
 
 =head2 %secondderivative
 
@@ -3625,8 +3637,8 @@ second cubed, since there is no mechanism to specify the units of the
 denominator.
 
 The default field width is 17, the default number of decimal places is
-10, and the default title is as much of 'second derivative of mean
-motion' as will fit.
+10, and the default title is as much of 'Second Derivative of Mean
+Motion' as will fit.
 
 =head2 %semimajor
 
@@ -3639,7 +3651,7 @@ All standard arguments are supported.
 The dimension is L<length|/length>. The default units are kilometers.
 
 The default field width is 6, the default number of decimal places is 0,
-and the default title is 'semimajor axis'.
+and the default title is 'Semimajor Axis'.
 
 =head2 %semiminor
 
@@ -3652,7 +3664,7 @@ All standard arguments are supported.
 The dimension is L<length|/length>. The default units are kilometers.
 
 The default field width is 6, the default number of decimal places is 0,
-and the default title is 'semimajor axis'.
+and the default title is 'Semiminor Axis'.
 
 =head2 %space
 
@@ -3664,7 +3676,7 @@ are forbidden. All other standard arguments are supported.
 
 There is no associated dimension.
 
-The default field width is 1, and the default title is blank.
+The default field width is 1, and the title is blank.
 
 =head2 %status
 
@@ -3678,7 +3690,7 @@ forbidden. All other standard arguments are supported.
 
 There is no associated dimension.
 
-The default field width is 60, and the default title is 'status'.
+The default field width is 60, and the default title is 'Status'.
 
 =head2 %time
 
@@ -3700,6 +3712,8 @@ the output.  This should be sufficient in most cases, but if it does not
 in your locale, you can always specify an explicit field width. You will
 definitely have to specify a field width if you also specified
 C<units=julian> or C<units=days_since_epoch>.
+
+The default title is 'Time'.
 
 If the time is being displayed as an interval since the epoch, the
 C<appulse> or C<body> arguments specify the source of the epoch. If no

@@ -826,22 +826,22 @@ $tst->note( 'titles' );
 
 $tst->format_setup( position => 'position' );
 
-$tst->format_is('%-almanac;', 'almanac', 'Title of almanac description');
+$tst->format_is('%-almanac;', 'Almanac', 'Title of almanac description');
 
-$tst->format_is('%altitude;', 'altitud', 'Title of satellite altitude');
-$tst->format_is('%altitude();', 'altitud', 'Title of satellite altitude ()');
-$tst->format_is('%*altitude();', 'altitude', 'Title of satellite altitude (*)');
-$tst->format_is('%*.*altitude();', 'altitude',
+$tst->format_is('%altitude;', 'Altitud', 'Title of satellite altitude');
+$tst->format_is('%altitude();', 'Altitud', 'Title of satellite altitude ()');
+$tst->format_is('%*altitude();', 'Altitude', 'Title of satellite altitude (*)');
+$tst->format_is('%*.*altitude();', 'Altitude',
     'Title of satellite altitude (*.*)');
-$tst->format_is('%altitude(body);', 'altitud',
+$tst->format_is('%altitude(body);', 'Altitud',
     'Title of satellite altitude (body)');
-$tst->format_is('%altitude(center);', " center\naltitud",
+$tst->format_is('%altitude(center);', " Center\nAltitud",
     'Title of flare center altitude');
-$tst->format_is('%*altitude(center);', 'center altitude',
+$tst->format_is('%*altitude(center);', 'Center Altitude',
     'Title of flare center altitude (*)');
-$tst->format_is('%8altitude(appulse);', " appulse\naltitude",
+$tst->format_is('%8altitude(appulse);', " Appulse\nAltitude",
     'Title of appulsed body altitude');
-$tst->format_is('%altitude(station);', "station\naltitud",
+$tst->format_is('%altitude(station);', "Station\nAltitud",
     'Title of station altitude');
 $tst->format_is('%altitude(title=How high);', "    How\n   high",
     'Title of satellite altitude (title=How high)');
@@ -852,112 +852,112 @@ $tst->format_is('%-altitude(center,title=How high is the center);',
     "How\nhigh is\nthe\ncenter",
     'Title of center altitude (ditto, left-justified)');
 
-$tst->format_is('%angle;', 'angl', 'Title of angle');
-$tst->format_is('%angle(appulse);', "appu\nangl", 'Title of appulse angle');
+$tst->format_is('%angle;', 'Angl', 'Title of angle');
+$tst->format_is('%angle(appulse);', "Appu\nAngl", 'Title of appulse angle');
 
-$tst->format_is('%apoapsis;', 'apoaps', 'Title of apoapsis');
+$tst->format_is('%apoapsis;', 'Apoaps', 'Title of apoapsis');
 
-$tst->format_is('%apogee;', 'apogee', 'Title of apogee');
+$tst->format_is('%apogee;', 'Apogee', 'Title of apogee');
 
-$tst->format_is('%argumentofperigee;', " argument\n       of\n  perigee",
+$tst->format_is('%argumentofperigee;', " Argument\n       of\n  Perigee",
     'Title of argument of perigee');
 
-$tst->format_is('%ascendingnode;', "  ascending\n       node",
+$tst->format_is('%ascendingnode;', "  Ascending\n       Node",
     'Title of ascending node');
 
-$tst->format_is('%azimuth;', 'azimu', 'Title of azimuth');
+$tst->format_is('%azimuth;', 'Azimu', 'Title of azimuth');
 
-$tst->format_is('%bstardrag;', '    B* drag', 'Title of B* drag');
+$tst->format_is('%bstardrag;', '    B* Drag', 'Title of B* drag');
 
 $tst->format_is('%classification;', '', 'Title of classification');
 
-$tst->format_is('%date;', '      date', 'Title of date');
+$tst->format_is('%date;', '      Date', 'Title of date');
 
-$tst->format_is('%declination;', 'decli', 'Title of declination');
+$tst->format_is('%declination;', 'Decli', 'Title of declination');
 
-$tst->format_is('%eccentricity;', 'eccentri', 'Title of eccentricity');
+$tst->format_is('%eccentricity;', 'Eccentri', 'Title of eccentricity');
 
-$tst->format_is('%eci_x;', '     eci x', 'Title of ECI X');
+$tst->format_is('%eci_x;', '     ECI x', 'Title of ECI X');
 
-$tst->format_is('%eci_y;', '     eci y', 'Title of ECI Y');
+$tst->format_is('%eci_y;', '     ECI y', 'Title of ECI Y');
 
-$tst->format_is('%eci_z;', '     eci z', 'Title of ECI Z');
+$tst->format_is('%eci_z;', '     ECI z', 'Title of ECI Z');
 
-$tst->format_is('%effective;', '     effective date',
+$tst->format_is('%effective;', '     Effective Date',
     'Title of effective date');
 
-$tst->format_is('%elementnumber;', "elem\n set\nnumb",
+$tst->format_is('%elementnumber;', "Elem\n Set\nNumb",
     'Title of element set number');
 
-$tst->format_is('%elevation;', 'eleva', 'Title of elevation');
+$tst->format_is('%elevation;', 'Eleva', 'Title of elevation');
 
-$tst->format_is('%ephemeristype;', "e\nt", 'Title of ephemeris type');
+$tst->format_is('%ephemeristype;', "E\nT", 'Title of ephemeris type');
 
-$tst->format_is('%epoch', '              epoch', 'Title of epoch');
+$tst->format_is('%epoch', '              Epoch', 'Title of epoch');
 
-$tst->format_is('%event;', 'event', 'Title of event');
+$tst->format_is('%event;', 'Event', 'Title of event');
 
-$tst->format_is('%firstderivative;', " first derivative\n   of mean motion",
+$tst->format_is('%firstderivative;', " First Derivative\n   of Mean Motion",
     'Title of first derivative');
 
-$tst->format_is('%fraction_lit;', "frac\n lit", 'Title of fraction lit');
+$tst->format_is('%fraction_lit;', "Frac\n Lit", 'Title of fraction lit');
 
-$tst->format_is('%id;', '   oid', 'Title of id');
+$tst->format_is('%id;', '   OID', 'Title of id');
 
-$tst->format_is('%illumination;', 'illum', 'Title of illumination');
+$tst->format_is('%illumination;', 'Illum', 'Title of illumination');
 
-$tst->format_is('%inclination;', 'inclinat', 'Title of inclination');
+$tst->format_is('%inclination;', 'Inclinat', 'Title of inclination');
 
-$tst->format_is('%international;', "internat\n  launch\ndesignat",
+$tst->format_is('%international;', "Internat\n  Launch\nDesignat",
     'Title of international launch designator');
 
-$tst->format_is('%latitude;', 'latitude', 'Title of latitude');
+$tst->format_is('%latitude;', 'Latitude', 'Title of latitude');
 
-$tst->format_is('%longitude;', 'longitude', 'Title of longitude');
+$tst->format_is('%longitude;', 'Longitude', 'Title of longitude');
 
-$tst->format_is('%magnitude;', 'magn', 'Title of magnitude');
+$tst->format_is('%magnitude;', 'Magn', 'Title of magnitude');
 
-$tst->format_is('%meananomaly;', "     mean\n  anomaly",
+$tst->format_is('%meananomaly;', "     Mean\n  Anomaly",
     'Title of mean anomaly');
 
-$tst->format_is('%meanmotion;', ' mean motion', 'Title of mean motion');
+$tst->format_is('%meanmotion;', ' Mean Motion', 'Title of mean motion');
 
-$tst->format_is('%mma', 'mma', 'Title of mma');
+$tst->format_is('%mma', 'MMA', 'Title of mma');
 
-$tst->format_is('%name', '                    name', 'Title of name');
+$tst->format_is('%name', '                    Name', 'Title of name');
 
 $tst->format_is('%operational', '', 'Title of operational');
 
 $tst->format_is('%percent', '', 'Title of percent');
 
-$tst->format_is('%periapsis', 'periap', 'Title of periapsis');
+$tst->format_is('%periapsis', 'Periap', 'Title of periapsis');
 
-$tst->format_is('%perigee', 'perige', 'Title of perigee');
+$tst->format_is('%perigee', 'Perige', 'Title of perigee');
 
-$tst->format_is('%period', '      period', 'Title of period');
+$tst->format_is('%period', '      Period', 'Title of period');
 
-$tst->format_is('%phase', 'phas', 'Title of phase');
+$tst->format_is('%phase', 'Phas', 'Title of phase');
 
-$tst->format_is('%range', '     range', 'Title of range');
+$tst->format_is('%range', '     Range', 'Title of range');
 
-$tst->format_is('%revolutionsatepoch', "revolu\n    at\n epoch",
+$tst->format_is('%revolutionsatepoch', "Revolu\n    at\n Epoch",
     'Title of revolutionsatepoch');
 
-$tst->format_is('%right_ascension', "   right\nascensio",
+$tst->format_is('%right_ascension', "   Right\nAscensio",
     'Title of right_ascension');
 
-$tst->format_is('%secondderivative', "second derivative\n   of mean motion",
+$tst->format_is('%secondderivative', "Second Derivative\n   of Mean Motion",
     'Title of secondderivative');
 
-$tst->format_is('%semimajor', "semima\n  axis", 'Title of semimajor');
+$tst->format_is('%semimajor', "Semima\n  Axis", 'Title of semimajor');
 
-$tst->format_is('%semiminor', "semimi\n  axis", 'Title of semiminor');
+$tst->format_is('%semiminor', "Semimi\n  Axis", 'Title of semiminor');
 
 $tst->format_is('%space', '', 'Title of space');
 
-$tst->format_is('%status', ((' ' x 54) . 'status'), 'Title of status');
+$tst->format_is('%status', ((' ' x 54) . 'Status'), 'Title of status');
 
-$tst->format_is('%time', '    time', 'Title of time');
+$tst->format_is('%time', '    Time', 'Title of time');
 
 $tst->format_is('%tle', '', 'Title of tle');
 
@@ -978,7 +978,7 @@ $tst->method_ok( format_effector => altitude => title => undef,
     'Clear object-level default title' );
 $tst->method_is( format_effector => 'altitude', [],
     'Check that object level settings are cleared' );
-$tst->format_is('%altitude;', 'altitud',
+$tst->format_is('%altitude;', 'Altitud',
     'Check that original default title is restored.');
 
 # Macro titles
@@ -997,10 +997,10 @@ $tst->method_is( macro => 'azel', '%elevation %azimuth(bearing)',
 $tst->method_is (macro => equatorial => '%right_ascension %declination',
     'Verify definition of macro equatorial');
 $tst->format_is('%azel',
-    'eleva  azimuth',
+    'Eleva  Azimuth',
     'Expand macro azel (title)');
 $tst->format_is('%equatorial',
-    "   right\nascensio decli",
+    "   Right\nAscensio Decli",
     'Expand macro equatorial (title)');
 
 # Macro data expansion better with pass
@@ -1050,7 +1050,7 @@ $tst->method_is( almanac => '', 'Almanac has no headings' );
 # TODO flare
 
 $tst->method_is( list => <<'EOD', 'List title' );
-   oid name                     epoch               period
+   OID Name                     Epoch               Period
 EOD
 # We use a new object here because the 'inertial' setting appears to be
 # sticky. Will have to look into this in Astro::Coord::ECI::TLE.
@@ -1086,7 +1086,7 @@ Location: 1600 Pennsylvania Ave NW, Washington DC 20502
 EOD
 
 $tst->method_is( 'pass', <<'EOD', 'Pass title' );
-    time eleva  azimuth      range latitude longitude altitud illum event
+    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 EOD
 $tst->method_is( 'pass', @pass, <<'EOD', 'Pass' );
 
@@ -1101,7 +1101,7 @@ $tst->method_is( pass => $body, <<'EOD', 'Pass title with OID' );
 
  25544 - ISS
 
-    time eleva  azimuth      range latitude longitude altitud illum event
+    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 EOD
 $tst->method_is( pass => @pass, <<'EOD', 'Pass with OID in title' );
 
@@ -1112,15 +1112,15 @@ EOD
 
 
 $tst->method_is( 'phase', <<'EOD', 'Phase title' );
-                             phas                  fract
-      date     time     name angl phase              lit
+                             Phas                  Fract
+      Date     Time     Name Angl Phase              Lit
 EOD
 $tst->method_is( 'phase', $moon, <<'EOD', 'Phase' );
 2008-10-09 23:23:41     Moon  119 waxing gibbous     74%
 EOD
 
 $tst->method_is( 'position', <<'EOD', 'Position title' );
-            name eleva  azimuth      range               epoch illum
+            Name Eleva  Azimuth      Range               Epoch Illum
 EOD
 $tst->method_is( 'position', {
 	body => $moon,

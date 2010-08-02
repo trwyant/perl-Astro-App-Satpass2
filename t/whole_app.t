@@ -184,13 +184,13 @@ _app('load t/missing.dat', 'No files found',
     'Attempt to load non-existing file');
 _app('load t/data.tle', undef, 'Load a TLE file');
 _app('list', <<eod, 'List the loaded items');
-   oid name                     epoch               period
+   OID Name                     Epoch               Period
  88888                          1980/10/01 23:41:24 01:29:37
  11801                          1980/08/17 07:06:40 10:30:08
 eod
 _app('choose 88888', undef, 'Keep OID 88888, losing all others');
 _app('list', <<eod, 'Check that the list now includes only 88888');
-   oid name                     epoch               period
+   OID Name                     Epoch               Period
  88888                          1980/10/01 23:41:24 01:29:37
 eod
 _app('tle', <<eod, 'List the TLE for object 888888');
@@ -290,7 +290,7 @@ _app('pass 19801012T000000Z', <<'EOD',
 
  88888 -
 
-    time eleva  azimuth      range latitude longitude altitud illum event
+    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13
 05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
@@ -332,8 +332,8 @@ _app('pass 19801013T000000Z +1', <<'EOD',
 
  88888 -
 
-            right
-    time ascensio decli      range latitude longitude altitud illum event
+            Right
+    Time Ascensio Decli      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13
 05:39:02 05:30:58 -36.6     1687.8  37.2228   -6.0197   204.9 lit   rise
@@ -346,7 +346,7 @@ _app('pass 19801013T000000Z +1', <<'EOD',
 
  88888 -
 
-    time eleva  azimuth      range latitude longitude altitud illum event
+    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13
 05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
@@ -359,7 +359,7 @@ _app('pass 19801013T000000Z +1', <<'EOD',
 
  88888 -
 
-    time eleva  azimuth latitude longitude altitud illum event
+    Time Eleva  Azimuth Latitude Longitude Altitud Illum Event
 
 1980/10/13
 05:39:02   0.0 199.0 S   37.2228   -6.0197   204.9 lit   rise
@@ -372,7 +372,7 @@ _app('pass 19801013T000000Z +1', <<'EOD',
 
  88888 -
 
-    time  azimuth      range latitude longitude altitud illum event
+    Time  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13
 05:39:02 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
@@ -385,8 +385,8 @@ _app('pass 19801013T000000Z +1', <<'EOD',
 
  88888 -
 
-            right
-    time ascensio decli latitude longitude altitud illum event
+            Right
+    Time Ascensio Decli Latitude Longitude Altitud Illum Event
 
 1980/10/13
 05:39:02 05:30:58 -36.6  37.2228   -6.0197   204.9 lit   rise
@@ -399,7 +399,7 @@ _app('pass 19801013T000000Z +1', <<'EOD',
 
  88888 -
 
-    time eleva  azimuth      range latitude longitude altitud illum event
+    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13
 05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
@@ -408,7 +408,7 @@ _app('pass 19801013T000000Z +1', <<'EOD',
 EOD
     'Ensure we get old coordinates back');
 _app('pass -chronological 19801013T000000Z +1', <<'EOD',
-    time eleva  azimuth      range latitude longitude altitud illum event
+    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13
 
@@ -419,8 +419,8 @@ _app('pass -chronological 19801013T000000Z +1', <<'EOD',
 EOD
     'Pass in chronological format' );
 _app("phase '20090401T000000 UT'", <<eod, 'Phase of moon April 1 2009');
-                             phas                  fract
-      date     time     name angl phase              lit
+                             Phas                  Fract
+      Date     Time     Name Angl Phase              Lit
 2009/04/01 00:00:00     Moon   69 waxing crescent    32%
 eod
 {
@@ -430,7 +430,7 @@ eod
     _app('load t/data.tle', undef, 'Load observing list');
     _app('choose 88888', undef, 'Restrict ourselves to body 88888');
     _app("position '20090401T000000Z'", <<eod,
-            name eleva  azimuth      range               epoch illum
+            Name Eleva  Azimuth      Range               Epoch Illum
 2009/04/01 00:00:00
              Sun -34.0 358.8 N   1.495e+08
             Moon   8.3 302.0 NW   369373.2
@@ -441,8 +441,8 @@ eod
     _app('set local_coord equatorial_rng', undef,
 	'Set local_coord to \'equatorial_rng\'');
     _app("position '20090401T000000Z'", <<eod,
-                    right
-            name ascensio decli      range               epoch illum
+                    Right
+            Name Ascensio Decli      Range               Epoch Illum
 2009/04/01 00:00:00
              Sun 00:41:56   4.5  1.495e+08
             Moon 05:13:53  26.0   369373.2
@@ -450,7 +450,7 @@ eod
 	'Position of things in sky on 01-Apr-2009 midnight UT, equatorial');
     _app('set local_coord', undef, 'Clear local_coord');
     _app("position '20090401T000000Z'", <<eod,
-            name eleva  azimuth      range               epoch illum
+            Name Eleva  Azimuth      Range               Epoch Illum
 2009/04/01 00:00:00
              Sun -34.0 358.8 N   1.495e+08
             Moon   8.3 302.0 NW   369373.2
@@ -523,7 +523,7 @@ SKIP: {
 
  25544 - ISS (ZARYA)
 
-    time eleva  azimuth      range latitude longitude altitud illum event
+    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 2009/04/01
 19:33:00  20.1 297.2 NW      883.9  43.8855  -14.4029   355.3 lit   rise
@@ -543,13 +543,13 @@ EOD
 _app('clear', undef, 'Clear the observing list for validate() check');
 _app('load t/data.tle', undef, 'Load a TLE file for validate() check');
 _app('list', <<eod, 'List the loaded items');
-   oid name                     epoch               period
+   OID Name                     Epoch               Period
  88888                          1980/10/01 23:41:24 01:29:37
  11801                          1980/08/17 07:06:40 10:30:08
 eod
 _app('validate -quiet "19810101T120000Z"', undef, 'Validate for 01-Jan-1981');
 _app('list', <<eod, 'List the valid items');
-   oid name                     epoch               period
+   OID Name                     Epoch               Period
  88888                          1980/10/01 23:41:24 01:29:37
 eod
 
