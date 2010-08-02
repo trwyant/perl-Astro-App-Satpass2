@@ -474,10 +474,10 @@ sub execute {
 	# file for the (possible) Space Track username and password, to
 	# be used in testing, without being subject to any other
 	# undesired side effects, such as running a prediction and
-	# exiting. If I change my mind on how or whether to do this, it
-	# will be altered or retracted without warning, much less a
-	# deprecation cycle. If you have a legitimate need for this
-	# functionality, contact me.
+	# exiting. If I change my mind on how or whether to do this,
+	# execute_filter will be altered or retracted without warning,
+	# much less a deprecation cycle. If you have a legitimate need
+	# for this functionality, contact me.
 	#
 	# YOU HAVE BEEN WARNED.
 	$self->{execute_filter}->( $self, $args ) or next;
