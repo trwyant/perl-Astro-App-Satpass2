@@ -19,7 +19,7 @@ BEGIN {
 
 $| = 1;
 
-plan( tests => 159 );
+plan( tests => 160 );
 
 require_ok( 'App::Satpass2' )
     or BAIL_OUT( "Can not continue without loading App::Satpass2" );
@@ -286,7 +286,7 @@ _app('say horizon', '20', 'Check argument indirection');
 
 _app('clear', undef, 'Ensure we have no TLEs loaded');
 _app('load t/data.tle', undef, 'Load our usual set of TLEs');
-_app("pass '19801012T000000Z'", <<'EOD',
+_app('pass 19801012T000000Z', <<'EOD',
 
  88888 -
 
@@ -328,7 +328,7 @@ _app("pass '19801012T000000Z'", <<'EOD',
 EOD
     'Calculate passes over Greenwich' );
 _app('set local_coord equatorial_rng', undef, 'Specify equatorial + range');
-_app("pass '19801013T000000Z' +1", <<'EOD',
+_app('pass 19801013T000000Z +1', <<'EOD',
 
  88888 -
 
@@ -342,7 +342,7 @@ _app("pass '19801013T000000Z' +1", <<'EOD',
 EOD
     'Ensure we get equatorial + range' );
 _app('set local_coord azel_rng', undef, 'Specify azel + range');
-_app("pass '19801013T000000Z' +1", <<'EOD',
+_app('pass 19801013T000000Z +1', <<'EOD',
 
  88888 -
 
@@ -355,7 +355,7 @@ _app("pass '19801013T000000Z' +1", <<'EOD',
 EOD
     'Ensure we get azel + range' );
 _app('set local_coord azel', undef, 'Specify azel only');
-_app("pass '19801013T000000Z' +1", <<'EOD',
+_app('pass 19801013T000000Z +1', <<'EOD',
 
  88888 -
 
@@ -368,7 +368,7 @@ _app("pass '19801013T000000Z' +1", <<'EOD',
 EOD
     'Ensure we get azel only' );
 _app('set local_coord az_rng', undef, 'Specify azimuth + range');
-_app("pass '19801013T000000Z' +1", <<'EOD',
+_app('pass 19801013T000000Z +1', <<'EOD',
 
  88888 -
 
@@ -381,7 +381,7 @@ _app("pass '19801013T000000Z' +1", <<'EOD',
 EOD
     'Ensure we get azimuth + range' );
 _app('set local_coord equatorial', undef, 'Specify equatorial only');
-_app("pass '19801013T000000Z' +1", <<'EOD',
+_app('pass 19801013T000000Z +1', <<'EOD',
 
  88888 -
 
@@ -395,7 +395,7 @@ _app("pass '19801013T000000Z' +1", <<'EOD',
 EOD
     'Ensure we get equatorial only');
 _app('set local_coord', undef, 'Clear local coordinates');
-_app("pass '19801013T000000Z' +1", <<'EOD',
+_app('pass 19801013T000000Z +1', <<'EOD',
 
  88888 -
 
@@ -407,6 +407,17 @@ _app("pass '19801013T000000Z' +1", <<'EOD',
 05:46:37   0.0  29.7 NE     1778.5  64.0515   17.6896   224.9 lit   set
 EOD
     'Ensure we get old coordinates back');
+_app('pass -chronological 19801013T000000Z +1', <<'EOD',
+    time eleva  azimuth      range latitude longitude altitud illum event
+
+1980/10/13
+
+ 88888 -
+05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
+05:42:43  55.9 115.6 SE      255.5  50.9259    1.7791   213.1 lit   max
+05:46:37   0.0  29.7 NE     1778.5  64.0515   17.6896   224.9 lit   set
+EOD
+    'Pass in chronological format' );
 _app("phase '20090401T000000 UT'", <<eod, 'Phase of moon April 1 2009');
                              phas                  fract
       date     time     name angl phase              lit
