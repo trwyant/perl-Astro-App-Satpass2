@@ -9,7 +9,7 @@ use base qw{ App::Satpass2::Copier };
 
 use Carp;
 
-our $VERSION = '0.000_02';
+our $VERSION = '0.000_03';
 
 my $delegate = eval {
     require App::Satpass2::FormatTime::DateTime;
