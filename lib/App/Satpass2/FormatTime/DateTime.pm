@@ -11,6 +11,7 @@ use Carp;
 use DateTime;
 use DateTime::TimeZone;
 use Params::Util 0.025 qw{ _INSTANCE };
+use POSIX ();
 
 our $VERSION = '0.000_03';
 
@@ -20,7 +21,8 @@ sub strftime {
 	return $time->strftime( $tplt );
     } else {
 	# Oh, for 5.010 and the // operator.
-	my $dt = DateTime->from_epoch( epoch => $time,
+	my $dt = DateTime->from_epoch(
+	    epoch => POSIX::floor( $time + 0.5),
 	    time_zone => $self->_get_zone( defined $gmt ? $gmt :
 		$self->gmt() ) );
 	return $dt->strftime( $tplt );

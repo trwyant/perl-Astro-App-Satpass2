@@ -19,7 +19,7 @@ sub strftime {
     if ( ref $time eq 'ARRAY' ) {
 	@parts = @{ $time };
     } elsif ( $gmt ) {
-	@parts = gmtime $time;
+	@parts = gmtime POSIX::floor( $time + 0.5 );
     } else {
 	my $tz = $self->tz();
 	defined $tz and $tz ne '' and local $ENV{TZ} = $tz;
