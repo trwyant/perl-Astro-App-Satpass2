@@ -19,7 +19,7 @@ BEGIN {
 	require Test::Perl::Critic;
 	# TODO package profile.
 	Test::Perl::Critic->import(
-	    -profile => File::Spec->catfile(qw{xt perlcriticrc}),
+	    -profile => File::Spec->catfile(qw{xt author perlcriticrc}),
 	);
     };
     if ($@) {

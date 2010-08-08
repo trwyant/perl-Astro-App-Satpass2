@@ -8,7 +8,7 @@ use base qw{ Module::Build };
 use Carp;
 use File::Spec;
 
-my @optionals_dir = qw{ xt optionals };
+my @optionals_dir = qw{ xt author optionals };
 my @hide = qw{ Astro::SIMBAD::Client Astro::SpaceTrack Date::Manip
     DateTime DateTime::TimeZone Geo::WebService::Elevation::USGS
     SOAP::Lite Time::HiRes Time::y2038 };
@@ -114,7 +114,7 @@ sub ACTION_authortest {
     my @depends_on = ( qw{ build make_optional_modules_tests } );
     -e 'META.yml' or push @depends_on, 'distmeta';
     $self->depends_on( @depends_on );
-    my @test_files = qw{ t xt };
+    my @test_files = qw{ t xt/author };
     my $optdir = File::Spec->catdir( @optionals_dir );
     -d $optdir and push @test_files, $optdir;
     $self->test_files( @test_files );
