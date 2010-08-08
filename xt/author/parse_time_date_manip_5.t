@@ -16,6 +16,8 @@ BEGIN {
 
 }
 
-require 't/parse_time_date_manip_5.t';
+do 't/parse_time_date_manip_5.t';
+
+1;
 
 # ex: set textwidth=72 :

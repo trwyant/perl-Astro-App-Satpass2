@@ -133,8 +133,9 @@ SKIP:{
 
 }
 
-$ENV{foo} = 'bar';
-$ENV{bar} = 'baz';
+local $ENV{foo} = 'bar';
+local $ENV{bar} = 'baz';
+local @ENV{ qw{ fooz yehudi } };
 delete $ENV{fooz};
 delete $ENV{yehudi};
 
@@ -383,7 +384,7 @@ tokenize( '$$', [ [ $$ ], {} ] )
 	return;
     }
 
-    sub new {
+    sub new {	## no critic (RequireArgUnpacking)
 	my @args = @_;
 	@got = ();
 	my $name = _format_method_args( new => @args );
@@ -428,7 +429,7 @@ tokenize( '$$', [ [ $$ ], {} ] )
 	$escape_re = qr{ [$escape_re] }smx;
     }
 
-    sub tokenize {
+    sub tokenize {	## no critic (RequireArgUnpacking)
 	my @args = @_;
 	my $opt = ref $args[0] eq 'HASH' ? shift @args : {};
 	my ( $source, $tokens, $name ) = @args;
@@ -453,12 +454,13 @@ tokenize( '$$', [ [ $$ ], {} ] )
 		goto &fail;
 	    }
 	}
+	return;
     }
 
-    sub tokenize_fail {
+    sub tokenize_fail {	## no critic (RequireArgUnpacking)
 	my @args = @_;
 	my $opt = ref $args[0] eq 'HASH' ? shift @args : {};
-	my ( $source, $message, $name ) = @_;
+	my ( $source, $message, $name ) = @args;
 	@got = ();
 	if ( ! defined $name ) {
 	    ( $name = $source ) =~ s/ ( $escape_re ) / $escape_char{$1}
@@ -480,6 +482,7 @@ tokenize( '$$', [ [ $$ ], {} ] )
 		goto &like;
 	    }
 	}
+	return;
     }
 
 }

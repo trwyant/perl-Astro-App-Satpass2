@@ -8,7 +8,8 @@ use Test::More 0.40;
 BEGIN {
     my @failures;
     foreach my $module ( qw{ Cwd File::Spec File::Temp IO::File } ) {
-	eval "require $module; $module->import(); 1"
+	eval "require $module; 1"
+	    and eval { $module->import(); 1 }
 	    or push @failures, $module;
     }
     if ( @failures ) {
@@ -17,7 +18,7 @@ BEGIN {
     }
 }
 
-$| = 1;
+$| = 1;	## no critic (RequireLocalizedPunctuationVars)
 
 plan( tests => 164 );
 
@@ -68,32 +69,45 @@ ok( $app->get( 'gmt' ), 'Confirm gmt now true' );
 
 
 {
+    my $got;
+
     my $fh = File::Temp->new();
     my $fn = $fh->filename;
-    eval {$app->execute("echo Madam, I\\'m Adam >$fn")};
-    my $got = $@ || do {
+    eval {
+	$app->execute("echo Madam, I\\'m Adam >$fn");
 	local $/ = undef;
 	$fh->seek(0, 0);
-	<$fh>;
-    };
+	$got = <$fh>;
+	1;
+    } or $got = ( $@ || 'Failed: no exception recorded' );
     chomp $got;
     is($got, "Madam, I'm Adam", "Redirect output to a file");
+
     my $buffer;
-    eval {$app->set(stdout => \$buffer);
-	$app->execute("echo There was a young lady named Bright")};
-    $got = $@ || $buffer;
+    eval {
+	$app->set(stdout => \$buffer);
+	$app->execute("echo There was a young lady named Bright");
+	$got = $buffer;
+    } or $got = ( $@ || 'Failed: no exception recorded' );
     chomp $got;
     is($got, "There was a young lady named Bright", "Output to a scalar ref");
+
     $buffer = undef;
-    eval {$app->set(stdout => sub {$buffer .= $_[0]});
-	$app->execute("echo Who could travel much faster than light.")};
+    eval {
+	$app->set(stdout => sub {$buffer .= $_[0]});
+	$app->execute("echo Who could travel much faster than light.");
+	$got = $buffer;
+	1;
+    } or $got = ( $@ || 'Failed: no exception recorded' );
     $got = $@ || $buffer;
     chomp $got;
     is($got, "Who could travel much faster than light.", "Output to code");
     $buffer = [];
-    eval {$app->set(stdout => $buffer);
-	$app->execute("echo '    She set out one day'")};
-    $got = $@ || join ('', @$buffer);
+    $got = eval {
+	$app->set(stdout => $buffer);
+	$app->execute("echo '    She set out one day'");
+	join '', @{ $buffer };
+    } || $@ || 'Failed: no exception recorded';
     chomp $got;
     is($got, "    She set out one day", "Output to an array ref");
     $got = eval {$app->set(stdout => undef);
@@ -110,9 +124,8 @@ ok( $app->get( 'gmt' ), 'Confirm gmt now true' );
 
     SATPASS2_EXECUTE:
     {
-	$got = undef;
-	eval {$app->execute('exit')};
-	$got = $@ || 'Failed to exit; no exception thrown';
+	$got = eval { $app->execute( 'exit' ); 1 } ? undef :
+	    $@ || 'Failed to exit; no exception thrown';
     }
     is($got, undef, "Ability to exit.");
 
@@ -590,15 +603,21 @@ eod
 SKIP: {
     -d 't' or skip ("No t directory found", 1);
     my $t = File::Spec->catfile(&getcwd, 't');
-    eval {$app->execute('cd t')};
-    is($@ || &getcwd, $t, "Change to t directory (cd with argument)");
+    if ( eval { $app->execute('cd t'); 1 } ) {
+	is( &getcwd, $t, "Change to t directory (cd with argument)");
+    } else {
+	fail( "'cd t' failed: $@" );
+    }
 }
 
 SKIP: {
     my $home = eval {(getpwuid($<))[7]}
 	or skip ("Can not execute getpwuid", 1);
-    eval {$app->execute('cd')};
-    is($@ || &getcwd, $home, "Change to home directory (cd without argument)");
+    if ( eval { $app->execute('cd'); 1 } ) {
+	is( &getcwd, $home, "Change to home directory (cd without argument)");
+    } else {
+	fail( "'cd' failed: $@" );
+    }
 }
 
 SKIP: {
@@ -712,7 +731,7 @@ sub _do_test {
 	# If we do not have a Space Track username or password, try to
 	# scavenge one from the user's profile.
 	if ( $can_filter && ! _have_spacetrack_info( $app ) ) {
-	    eval {
+	    eval {	## no critic (RequireCheckingReturnValueOfEval)
 		my $app2 = App::Satpass2->new();
 		# NOTICE
 		# The execute_filter attribute is undocumented and

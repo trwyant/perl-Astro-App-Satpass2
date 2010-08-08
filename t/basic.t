@@ -16,7 +16,7 @@ BEGIN {
 }
 
 my $date_manip_delegate;
-eval {
+eval {	## no critic (RequireCheckingReturnValueOfEval)
     require Date::Manip;
     $date_manip_delegate = 'App::Satpass2::ParseTime::Date::Manip::v5';
     Date::Manip->VERSION( 6.0 );
@@ -84,7 +84,7 @@ isa_ok( 'App::Satpass2::ParseTime', 'App::Satpass2::Copier' );
 require_ok( 'App::Satpass2::ParseTime::Date::Manip' )
     or BAIL_OUT();
 
-is( eval { App::Satpass2::ParseTime::Date::Manip->delegate() },
+is( eval { App::Satpass2::ParseTime::Date::Manip->delegate() },	## no critic (RequireCheckingReturnValueOfEval)
     $date_manip_delegate,
     'Date::Manip delegate is ' . (
 	defined $date_manip_delegate ? $date_manip_delegate : 'undef' ),
@@ -108,7 +108,7 @@ require_ok( 'App::Satpass2::ParseTime::ISO8601' )
 isa_ok( 'App::Satpass2::ParseTime::ISO8601',
     'App::Satpass2::ParseTime' );
 
-is( eval { App::Satpass2::ParseTime::ISO8601->delegate() },
+is( eval { App::Satpass2::ParseTime::ISO8601->delegate() },	## no critic (RequireCheckingReturnValueOfEval)
     'App::Satpass2::ParseTime::ISO8601',
     'ISO8601 delegate is App::Satpass2::ParseTime::ISO8601' );
 
