@@ -13,7 +13,7 @@ use DateTime::TimeZone;
 use Params::Util 0.025 qw{ _INSTANCE };
 use POSIX ();
 
-our $VERSION = '0.000_03';
+our $VERSION = '0.000_04';
 
 sub strftime {
     my ( $self, $tplt, $time, $gmt ) = @_;

@@ -9,7 +9,7 @@ use Time::Local;
 
 use base qw{ App::Satpass2::ParseTime };
 
-our $VERSION = '0.000_03';
+our $VERSION = '0.000_04';
 
 my $invalid;
 
