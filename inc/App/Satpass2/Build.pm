@@ -98,7 +98,9 @@ use $hider qw{
 @{[ my_wrap( @hide ) ]}
 };
 
-require '$ip';
+do '$ip';
+
+1;
 
 __END__
 
@@ -192,9 +194,9 @@ F<META.yml>.
 
 =item make_optional_modules_tests
 
-This action creates the tests in the F<xt/optionals> directory. These
-generally duplicate the tests in the F<t> directory, but the optional
-modules are made unavailable using either
+This action creates the tests in the F<xt/author/optionals> directory.
+These generally duplicate the tests in the F<t> directory, but the
+optional modules are made unavailable using either
 L<Test::Without::Module|Test::Without::Module> or
 L<Devel::Hide|Devel::Hide>, in that order. If neither of these modules
 is available, nothing is done.

@@ -26,7 +26,7 @@ my %attr = (
         'Test::More'	=> 0.400,
     },
     script_files => [ qw{bin/satpass2} ],
-    add_to_cleanup => [ qw{ xt/optionals } ],
+    add_to_cleanup => [ qw{ xt/author/optionals } ],
     dynamic_config => 1,
 );
 
