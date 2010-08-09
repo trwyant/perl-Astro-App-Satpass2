@@ -1955,6 +1955,14 @@ sub tle : Verb(celestia,verbose) {
     return $output;
 }
 
+sub unexport : Verb() {
+    my ( $self, @args ) = @_;
+    foreach my $name ( @args ) {
+	delete $self->{exported}{$name};
+    }
+    return;
+}
+
 sub validate : Verb(quiet!) {
     my ($self, @args) = @_;
 
@@ -3162,10 +3170,10 @@ sub _user_home_dir {
 
 		    } elsif ($flag eq '=') {
 			$value = $mod;
-			if ($special{$name}) {
+			if ( $special{$name} || $name !~ m/ \D /smx ) {
 			    $self->_wail("Cannot assign to \$$name");
-			} elsif ($name !~ m/\D/) {
-			    $args->[$name - 1] = $value;
+##			} elsif ($name !~ m/\D/) {
+##			    $args->[$name - 1] = $value;
 			} elsif (exists $mutator{$name}) {
 			    $self->set($name => $value);
 			} else {
@@ -4546,6 +4554,14 @@ The following option is allowed:
 
  -verbose produces an expanded list, with data labeled.
 
+=head2 unexport
+
+ $satpass2->unexport( $name, ... );
+
+This interactive method undoes the effects of L<export()|/export>.
+Unlike that method, multiple things can be unexported with a single
+call. It is not an error to unexport something that was never exported.
+
 =head2 validate
 
  $satpass2->validate( $options, $start_time, $end_time );
@@ -5310,10 +5326,10 @@ C<${parameter:-text}> causes the given text to be substituted if the
 parameter is undefined.
 
 C<${parameter:=text}> is the same as above, but also causes the text to
-be assigned to the parameter if it is unassigned. Unlike bash, this
-assignment can take place on numbered parameters. If done on an
-attribute or environment variable, it causes that attribute or
-environment variable to be set to the given value.
+be assigned to the parameter if it is unassigned. Like C<bash(1)>, this
+assignment can not take place on numbered parameters or special
+variables. If done on an attribute or environment variable, it causes
+that attribute or environment variable to be set to the given value.
 
 C<${parameter:?text}> causes the parse to fail with the error 'text' if
 the parameter is undefined.
@@ -5363,6 +5379,12 @@ appeared to need rethinking.
 
 The following differences from F<satpass> are known to exist:
 
+=head2 Tokenization
+
+Assigning a new value to an undefined positional parameter is no longer
+allowed. The F<satpass> script allowed C<${1:=Foo}>, but this package
+does not. The idea was to be consistent with C<bash(1)>.
+
 =head2 Added commands/methods
 
 Some methods have been added which do not appear as commands in
@@ -5379,7 +5401,14 @@ explicit localization blocks, which I kind of wanted all along.
 
 It was decided to have an explicit method to display the location,
 rather than have certain methods (e.g. 'pass') display it, and others
-(e.g. 'flare') not.
+(e.g. 'flare') not. In other words, I decided I was not smart enough to
+know when a user would want the location displayed.
+
+=item time
+
+The F<satpass> script had a C<-time> option whenever I wanted to time
+something. The architecture of this package made it simpler to just have
+a separate interactive method.
 
 =back
 
@@ -5483,7 +5512,7 @@ supported, and this attribute is ignored and deprecated.
 
 =item explicit_macro_delete
 
-This attribute is ignored and deprecated, since the App::Satpass2
+This attribute is ignored and deprecated, since the C<App::Satpass2>
 macro() functionality always requires an explicit C<delete> to delete a
 macro.
 
@@ -5493,7 +5522,12 @@ macro.
 
 C<SATPASS2INI> can be used to specify an initialization file to use in
 lieu of the default. This can still be overridden by the
--initialization_file command option.
+C<-initialization_file> command option.
+
+C<SATPASSINI> will be used in a last-ditch effort to find an
+initialization file, if C<-initialization_file> is not specified,
+C<SATPASS2INI> does not exist, and the initialization file was not found
+in its default location.
 
 =head1 BUGS
 

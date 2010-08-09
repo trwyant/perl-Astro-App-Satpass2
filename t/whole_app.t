@@ -20,7 +20,7 @@ BEGIN {
 
 $| = 1;	## no critic (RequireLocalizedPunctuationVars)
 
-plan( tests => 164 );
+plan( tests => 165 );
 
 require_ok( 'App::Satpass2' )
     or BAIL_OUT( "Can not continue without loading App::Satpass2" );
@@ -299,10 +299,15 @@ _app('macro define say \'echo ${1:-Uncle Albert}\'', undef,
     'Redefine macro with argument and default');
 _app('say cheese', 'cheese', 'Execute macro with explicit argument');
 _app('say', 'Uncle Albert', 'Execute macro defaulting argument');
-_app('macro define say \'echo ${1:=Cheezburger} $1\'', undef,
-    'Redefine doubletalk macro with := default');
-_app('say cheese', 'cheese cheese', 'Execute doubletalk macro');
-_app('say', 'Cheezburger Cheezburger', 'Execute doubletalk with default');
+{
+    local $ENV{fubar} = 'cheese';
+    _app('macro define say \'echo ${fubar:=Cheezburger} $fubar\'', undef,
+	'Redefine doubletalk macro with := default');
+    _app('say cheese', 'cheese cheese', 'Execute doubletalk macro');
+    delete $ENV{fubar};
+    _app('say', 'Cheezburger Cheezburger', 'Execute doubletalk with default');
+    _app( 'unexport fubar', undef, 'Undo the export' );
+}
 _app('macro define say \'echo ${1:?Nothing to say}\'', undef,
     'Redefine macro with error');
 _app('say cheese', 'cheese', 'Execute macro, no error');
