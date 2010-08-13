@@ -895,7 +895,7 @@ sub init {
 
     my $init_file;
 
-    sub initfile {
+    sub initfile : Verb() {
 	my ( $self ) = @_;
 	defined $init_file and return $init_file;
 
@@ -3562,6 +3562,14 @@ code sets the object up for the White House, Washington DC, USA:
  $satpass2->set( latitude => 38.898748, longitude => -77.037684 );
  $satpass2->set( height => 16.68 );   # Meters
 
+or, equivalently in the satpass2 script,
+
+ $ satpass2
+ ... front matter ...
+ $satpass2> set location '1600 Pennsylvania Ave, Washington DC'
+ $satpass2> set latitude 38.898748 longitude -77.037684
+ $satpass2> set height 16.68
+
 The C<latitude> and C<longitude> are specified in decimal degrees by
 default, with south latitude and west longitude being negative. See
 L</SPECIFYING ANGLES> for other ways to specify angles.
@@ -3597,6 +3605,14 @@ If you do not have a username and password, you will want to
 
  $satpass2->st( set => direct => 1 );
 
+The equivalents in the F<satpass2> script are
+
+ satpass2> st set username your_username password your_password
+
+or
+
+ satpass2> st set direct 1
+
 The reason for this is that some data sources (e.g.
 L<http://celestrak.com/>) maintain their own data, but can also be used
 to fetch data from Space Track. Setting L</direct> true tells
@@ -3608,6 +3624,8 @@ For example, you can get data from NASA's Human Space Flight web site
 flying) by:
 
  $satpass2->st( qw{ spaceflight -all -effective } );
+ or
+ satpass2> st spaceflight -all -effective
 
 Unlike most other sources, this source contains predicted orbital
 elements for about the next week. The C<-all> requests all data;
@@ -3617,6 +3635,8 @@ not available from other sources and is kluged into the name line of the
 TLE. You can then forecast visibility using
 
  $satpass2->pass();
+ or
+ satpass2> pass
 
 which forecasts visibility for the next week, starting at noon on the
 current day. You can also give an explicit start and end date for the
@@ -3636,11 +3656,15 @@ the orbital data for satellites in the Iridium constellation, and then
 predict the flares. You can get Iridium satellite data from Celestrak by
 
  $satpass2->st( qw{ celestrak iridium } );
+ or
+ satpass2> st celestrak iridium
 
 and then predict flares for the next week, starting at noon on the
 current day, with
 
  $satpass2->flare();
+ or
+ satpass2> flare
 
 Like the L</pass> method, the L</flare> method takes start time and end
 time as arguments; see L<SPECIFYING TIMES|/SPECIFYING TIMES> for the
@@ -3732,6 +3756,7 @@ Any arguments are passed to the L<set()|/set> method.
 =head2 alias
 
  $output = $satpass2->alias();
+ satpass2> alias
 
 This interactive method just wraps the
 L<Astro::Coord::ECI::TLE alias()|Astro::Coord::ECI::TLE/alias> method,
@@ -3746,6 +3771,7 @@ exists, is deleted.
 =head2 almanac
 
  $output = $satpass2->almanac(...);
+ satpass2> almanac
 
 This interactive method returns almanac data for the current location.
 This consists of all data returned by the C<almanac()> method for all
@@ -3786,6 +3812,7 @@ macro. Nothing is returned.
 =head2 cd
 
  $satpass2->cd();
+ satpass2> begin
 
 This interactive method changes to the users' home directory, or to the
 given directory if one is specified as an argument. Tilde expansion is
@@ -3793,7 +3820,8 @@ done on the argument if appropriate. Nothing is returned.
 
 =head2 choose
 
- $satpass2->choose(...)
+ $satpass2->choose( 25544, 'hst' )
+ satpass2> choose 25544 hst
 
 This interactive method drops from the observing list any objects that
 do not meet the given selection criteria. Numbers greater than 999 are
@@ -3810,6 +3838,7 @@ Nothing is returned.
 =head2 clear
 
  $satpass2->clear();
+ satpass2> clear
 
 This interactive method clears the observing list. It takes no
 arguments. Nothing is returned.
@@ -3827,7 +3856,8 @@ interactively.
 
 =head2 drop
 
- $satpass2->drop(...)
+ $satpass2->drop( 25544, 'hst' );
+ satpass2> drop 25544 hst
 
 This interactive method inverts the sense of L<choose()|/choose>,
 removing from the observing list all bodies that match the selection
@@ -3836,6 +3866,7 @@ criteria. Nothing is returned.
 =head2 dump
 
  $output = $satpass2->dump();
+ satpass2> dump
 
 This interactive method is unsupported, and is used for debugging
 purposes. It may disappear, or its functionality change, without notice.
@@ -3845,7 +3876,8 @@ C<Data::Dumper>) and returns a dump of the C<App::Satpass2> object.
 
 =head2 echo
 
- $output = $satpass2->echo(...);
+ $output = $satpass2->echo( 'Hello, sailor!' );
+ satpass2> echo 'Hello, sailor!'
 
 This interactive method joins its arguments with spaces, appends a
 newline, and returns the result. It is so named because it is
@@ -3854,6 +3886,7 @@ anticipated that the caller will print the result.
 =head2 end
 
  $satpass2->end();
+ satpass2> end
 
 This interactive method ends a localization block. Nothing is returned.
 It is an error to have an end without a corresponding L<begin()|/begin>.
@@ -3878,6 +3911,7 @@ Blank lines, and lines beginning with '#' (comments) are ignored.
 =head2 exit
 
  $satpass2->exit();
+ satpass2> exit
 
 This interactive method is used to unwind the context stack and
 terminate execution. If executed in a block labeled SATPASS2_EXECUTE
@@ -3887,7 +3921,8 @@ returned.
 
 =head2 export
 
- $satpass2->export($name [, $value]);
+ $satpass2->export( $name [, $value] );
+ satpass2> export name [ value ]
 
 This interactive method exports the value of the named attribute to an
 environment variable having the same name. If the optional value
@@ -3905,7 +3940,8 @@ changes, but those made as a result of leaving a localization block.
 
 =head2 flare
 
- $output = $satpass2->flare(...);
+ $output = $satpass2->flare( 'today 18:00', '+1' );
+ satpass2> flare 'today 18:00' +1
 
 This interactive method predicts flares from any bodies in the observing
 list capable of flaring. The optional arguments are the start time of
@@ -3941,6 +3977,7 @@ Bodies that produce errors will not be included in the output.
 =head2 fmtr
 
  $satpass2->fmtr( macro => local_coord => 'azel' );
+ satpass2> fmtr macro local_coord azel
 
 This interactive method modifies the current formatter object. The first
 argument is the name of the method to call. Subsequent arguments are
@@ -3953,6 +3990,7 @@ The results of the formatter call are returned.
 =head2 geocode
 
  $output = $satpass2->geocode('1600 Pennsylvania Ave, Washington DC');
+ satpass2> geocode '1600 Pennsylvania Ave, Washington DC'
 
 This interactive method looks up its argument at L<http://geocoder.us/>.
 If exactly one match is found, the location, latitude, and longitude
@@ -3970,7 +4008,8 @@ The results of the lookup are returned.
 
 =head2 geodetic
 
- $satpass2->geodetic( $name, $lat, $lon, $elev );
+ $satpass2->geodetic( $name, $latitude, $longitude, $elevation );
+ satpass2> geodetic name latitude longitude elevation
 
 This interactive method adds a geodetic position to the observing list.
 The arguments are the name of the object, the latitude and longitude of
@@ -3993,6 +4032,7 @@ See L<show()|/show> for the corresponding interactive method.
 =head2 height
 
  $output = $satpass2->height( $latitude, $longitude );
+ satpass2> height latitude longitude
 
 This interactive method queries the USGS online database for the height
 of the ground above sea level at the given latitude and longitude. If
@@ -4009,6 +4049,7 @@ module can not be loaded.
 =head2 help
 
  $output =  $satpass2->help(...)
+ satpass2> help
 
 This interactive method can be used to get usage help. Without
 arguments, it displays the documentation for this class (hint: you are
@@ -4039,9 +4080,9 @@ In any case, nothing is returned.
 
  $output = $satpass2->init();
 
-This method computes the name of the initialization file, and executes
-it if it is present. The output (if any) is the output of the individual
-commands executed by the initialization file.
+This non-interactive method computes the name of the initialization
+file, and executes it if it is present. The output (if any) is the
+output of the individual commands executed by the initialization file.
 
 If you pass a defined value as an argument, that value will be taken as
 a file name, and that file will be executed if possible.  That is, this
@@ -4065,6 +4106,7 @@ not found.
 =head2 initfile
 
  $output = $satpass2->initfile();
+ satpass2> initfile
 
 This interactive method simply returns the name of the default
 initialization file, which is heavily OS-specific. This method is
@@ -4102,6 +4144,7 @@ home directory.
 =head2 list
 
  $output = $satpass2->list(...);
+ satpass2> list
 
 This interactive method returns a listing of all bodies in the observing
 list. If the observing list is empty and the L</warn_on_empty> attribute
@@ -4115,6 +4158,7 @@ the option multiple times, separate the choices with commas, or both.
 =head2 load
 
  $satpass2->load( $filename, ... );
+ satpass2> load filename
 
 This interactive method does glob and bracket expansion on its arguments
 (which have already been tilde-expanded by the tokenizer) by running
@@ -4130,7 +4174,8 @@ Nothing is returned.
 
 =head2 localize
 
- $satpass2->localize(...);
+ $satpass2->localize( 'date_format', 'time_format', 'horizon' );
+ satpass2> localize date_format time_format horizon
 
 This interactive method localizes the values of the attributes given in
 the argument list to the current macro, source file, or begin block.
@@ -4142,12 +4187,14 @@ same scope will be ignored. Nothing is returned.
 =head2 location
 
  $output = $satpass2->location();
+ satpass2> location
 
 This interactive method returns the current location.
 
 =head2 macro
 
  $output = $satpass2->macro( $subcommand, $arg ...);
+ satpass2> macro subcommand arg ...
 
 This interactive method manipulates macros. The following subcommands
 are available:
@@ -4183,7 +4230,8 @@ C<delete> and C<define> subcommands return nothing.
 
 =head2 pass
 
- $output = $satpass2->pass(...);
+ $output = $satpass2->pass( 'today 12:00:00', '+7' );
+ satpass2> pass 'today 12:00:00' +7
 
 This interactive method computes and returns the visible passes of any
 bodies in the observing list. The optional arguments are the start time of
@@ -4215,6 +4263,7 @@ Bodies that produce errors will not be included in the output.
 =head2 phase
 
  $output = $satpass2->phase();
+ satpass2> phase
 
 This interactive method computes and returns the phase of any bodies in
 the sky which support this. The optional argument is the time of the
@@ -4224,6 +4273,7 @@ for how to specify times.
 =head2 position
 
  $output = $satpass2->position(...);
+ satpass2> position ...
 
 This interactive method computes and returns the positions of all bodies
 in the observing list and in the sky. For bodies on the observing list
@@ -4261,6 +4311,7 @@ contact the author.
 =head2 quarters
 
  $output = $satpass2->quarters($start_time, $end_time, ...);
+ satpass2> quarters start_time end_time ...
 
 This interactive method computes and returns the quarters for any
 objects in the sky that have this functionality.
@@ -4346,6 +4397,7 @@ This method can also be called on an App::Satpass2 object. For example:
 =head2 save
 
  $satpass2->save( $file_name );
+ satpass2> save file_name
 
 This interactive method saves your current settings to the named file.
 If no file is named, they are saved to the default configuration file.
@@ -4372,6 +4424,7 @@ the same name (if any) without getting confirmation from the user.
 =head2 set
 
  $satpass2->set($name => $value ...);
+ satpass2> set name value ...
 
 This interactive method sets the values of the given
 L<attributes|/ATTRIBUTES>. More than one attribute can be set at a time.
@@ -4384,7 +4437,8 @@ to represent the undefined value.
 
 =head2 show
 
- $output = $satpass2->show(...);
+ $output = $satpass2->show( $name, ... );
+ satpass2> show name ...
 
 This interactive method returns the values of the given attributes,
 formatted as 'set' commands. If no arguments are given, the values of
@@ -4397,6 +4451,7 @@ changed from the default are returned.
 =head2 sky
 
  $output = $satpass2->sky( $subcommand ...);
+ satpass2> sky subcommand ...
 
 This interactive method manipulates the background objects. The
 $subcommand argument determines what manipulation is done, and the
@@ -4440,7 +4495,8 @@ Nothing is returned.
 
 =head2 source
 
- $output = $satpass2->source($filename);
+ $output = $satpass2->source( $file_name );
+ satpass2> source file_name
 
 This interactive method takes commands from the given file and runs
 them. The concatenated output is returned.
@@ -4452,6 +4508,7 @@ return C<undef>.
 =head2 st
 
  $output = $satpass2->st( $method ...);
+ satpass2> st method ...
 
 This interactive method calls L<Astro::SpaceTrack|Astro::SpaceTrack>
 (which must be installed) to load satellite data. The arguments are the
@@ -4485,6 +4542,7 @@ module can not be loaded.
 =head2 status
 
  $output = $satpass2->status( $subcommand, ... );
+ satpass2> status subcommand ...
 
 This interactive method manipulates the satellite status cache. This
 currently only covers Iridium satellites. The arguments are a subcommand
@@ -4517,6 +4575,8 @@ for that for more details.
 =head2 system
 
  $output = $satpass2->system(...);
+ satpass2> system ...
+ satpass2> !...
 
 This interactive method does glob and bracket expansion on its arguments
 (which have already been tilde-expanded by the tokenizer) by running
@@ -4532,6 +4592,7 @@ captured and returned.
 =head2 time
 
  $output = $satpass2->time( $method ...);
+ satpass2> time method ...
 
 This interactive method times the given method. The arguments are the
 name of an interactive method and the arguments to that method. The
@@ -4544,6 +4605,7 @@ be loaded.
 =head2 tle
 
  $output = $satpass2->tle(...);
+ satpass2> tle ...
 
 This interactive method returns the actual TLE data for the observing
 list. If any arguments are passed, they select the items to be
@@ -4557,6 +4619,7 @@ The following option is allowed:
 =head2 unexport
 
  $satpass2->unexport( $name, ... );
+ satpass2> unexport name ...
 
 This interactive method undoes the effects of L<export()|/export>.
 Unlike that method, multiple things can be unexported with a single
@@ -4565,6 +4628,7 @@ call. It is not an error to unexport something that was never exported.
 =head2 validate
 
  $satpass2->validate( $options, $start_time, $end_time );
+ satpass2> validate [ options ] start_time end_time
 
 This interactive method validates the current observing list in the
 given time range by performing position calculations at relevant times
@@ -4585,6 +4649,7 @@ appropriate.
 =head2 version
 
  $output = $satpass2->version();
+ satpass2> version
 
 This interactive method simply returns C<App::Satpass2> version
 information.
