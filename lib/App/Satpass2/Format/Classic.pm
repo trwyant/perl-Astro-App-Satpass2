@@ -806,7 +806,9 @@ my %format_macro_definitions = (
 my %format_template_definitions = (
     almanac	=> '%date %time %*almanac%n',
     date_time	=> '%date %time%n',
-    flare => '%-date %-time %-12name %local_coord %magnitude %5angle(appulse,title=degrees from sun,missing=night) %azimuth(center,bearing) %6.1range(center)%n',
+    flare => '%-date %-time %-12name %local_coord %magnitude
+ %5angle(appulse,title=Degrees From Sun,missing=night)
+ %azimuth(center,bearing) %6.1range(center)%n',
     list_inertial => '%id %-name %-epoch %-period%n',
     list_fixed => '%id %name %latitude %longitude %altitude%n',
     location	=> <<'EOD',
