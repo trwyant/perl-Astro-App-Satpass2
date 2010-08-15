@@ -1327,12 +1327,16 @@ sub run {
     my $in;
     ref $ARGV[0] eq 'CODE' and $in = shift @ARGV;
     my %opt;
-    GetOptions(\%opt, qw{filter! initialization_file|initfile=s gmt!
-	version},
+    GetOptions( \%opt, qw{ filter! initialization_file|initfile=s gmt!
+	help version },
     )
-	or $self->_wail("See the help method for valid options");
+	or $self->_wail( "See the help method for valid options" );
     if ( $opt{version} ) {
 	print $self->version();
+	return;
+    }
+    if ( $opt{help} ) {
+	$self->help();
 	return;
     }
     $in ||= $self->_get_readline();
@@ -3582,6 +3586,9 @@ other ways to specify distances.
 
 The C<location> is informational only, and thus optional.
 
+In practice, you might want to make the above settings in an
+L</Initialization File>.
+
 =head2 Satellite Passes
 
 Before you can predict the location of a satellite you must load data on
@@ -3613,7 +3620,7 @@ or
 
  satpass2> st set direct 1
 
-The reason for this is that some data sources (e.g.
+The reason for setting C<direct> true is that some data sources (e.g.
 L<http://celestrak.com/>) maintain their own data, but can also be used
 to fetch data from Space Track. Setting L</direct> true tells
 L<Astro::SpaceTrack|Astro::SpaceTrack> to use the local data from such
@@ -3677,8 +3684,8 @@ You can see the L<flare()|/flare> for the details of these.
 It would probably be more convenient to place the settings like your
 position and your Space Track username and password in an
 initialization file, so that they are executed automatically whenever
-you run the F<satpass2> script, invoke the L</run> method, or otherwise
-cause the initialization file to be run.
+you run the F<satpass2> script, invoke the L<run()|/run> method, or
+otherwise cause the initialization file to be run.
 
 The initialization file may contain blank lines, comments (beginning
 with C<#>), or commands. Commands are actually the names of interactive
@@ -3705,13 +3712,14 @@ default location, it will look for the F<satpass> initialization file
 and execute it if found. This is found either through the C<SATPASSINI>
 environment variable, or in the user's home directory as either
 satpass.ini (under MSWin32, VMS, or MacOS (i.e. classic)) or .satpass
-(under any other OS).
+(under any other OS). You should expect this functionality to be retired
+when the C<satpass> script is withdrawn.
 
 The initialization file is read and executed under two circumstances:
 
-1) the user calls the L</run> method, or
+1) the user calls the L<run()|/run> method, or
 
-2) the user explicitly calls the L</init> method.
+2) the user explicitly calls the L<init()|/init> method.
 
 =head1 METHODS
 
