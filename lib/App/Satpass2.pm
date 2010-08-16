@@ -3550,10 +3550,10 @@ L<time_formatter|/time_formatter> attribute to do this.
 =head1 OVERVIEW
 
 This class implements an application to predict satellite visibility and
-related phenomena. It is a mostly-compatible rewrite of the F<satpass>
-script in distribution C<Astro-satpass>, aimed at making it easier to
-test, and removing some of the odder cruft that has accumulated in the
-F<satpass> script.
+related phenomena. It is a mostly-compatible rewrite and eventual
+replacement of the F<satpass> script in distribution C<Astro-satpass>,
+aimed at making it easier to test, and removing some of the odder cruft
+that has accumulated in the F<satpass> script.
 
 =head2 Setup
 
