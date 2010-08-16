@@ -1,6 +1,11 @@
-bin/satpass2
 Build.PL
 Changes
+Makefile.PL
+MANIFEST			This list of files
+MANIFEST.SKIP
+META.yml
+README
+bin/satpass2
 eg/almanac
 eg/README
 inc/App/Satpass2/Build.pm
@@ -24,11 +29,6 @@ lib/App/Satpass2/FormatTime/DateTime.pm
 lib/App/Satpass2/FormatTime/POSIX.pm
 LICENSES/Artistic
 LICENSES/Copying
-Makefile.PL
-MANIFEST			This list of files
-MANIFEST.SKIP
-META.yml
-README
 t/basic.t
 t/data.tle
 t/format_time.t
