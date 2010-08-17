@@ -10,7 +10,6 @@ use Astro::Coord::ECI::Utils qw{
     deg2rad embodies julianday PI rad2deg TWOPI
 };
 use Carp;
-use Params::Util 0.25 qw{ _INSTANCE };
 use POSIX qw{ floor };
 use Text::Abbrev;
 use Text::Wrap qw{ wrap };

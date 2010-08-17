@@ -2,8 +2,10 @@ package App::Satpass2;
 
 use 5.006;
 
-use strict; use warnings;
+use strict;
+use warnings;
 
+use App::Satpass2::Copier qw{ _instance };
 use App::Satpass2::ParseTime;
 use Astro::Coord::ECI;
 use Astro::Coord::ECI::Moon;
@@ -23,7 +25,6 @@ use Getopt::Long;
 use IO::File;
 use IO::Handle;
 use IPC::System::Simple qw{ capturex };
-use Params::Util 0.25 qw{ _INSTANCE };
 use POSIX qw{ floor strftime };
 use Scalar::Util qw{ blessed openhandle weaken };
 use Text::Abbrev;
@@ -1534,7 +1535,7 @@ sub _set_model {
 sub _set_spacetrack {
     my ($self, $name, $val) = @_;
     if (defined $val) {
-	_INSTANCE($val, 'Astro::SpaceTrack')
+	_instance($val, 'Astro::SpaceTrack')
 	    or $self->_wail("$name must be an Astro::SpaceTrack instance");
     }
     return ($self->{$name} = $val);

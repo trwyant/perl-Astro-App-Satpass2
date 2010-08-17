@@ -7,17 +7,17 @@ use warnings;
 
 use base qw{ App::Satpass2::FormatTime };
 
+use App::Satpass2::Copier qw{ _instance };
 use Carp;
 use DateTime;
 use DateTime::TimeZone;
-use Params::Util 0.025 qw{ _INSTANCE };
 use POSIX ();
 
 our $VERSION = '0.000_04';
 
 sub strftime {
     my ( $self, $tplt, $time, $gmt ) = @_;
-    if ( _INSTANCE( $time, 'DateTime' ) ) {
+    if ( _instance( $time, 'DateTime' ) ) {
 	return $time->strftime( $tplt );
     } else {
 	# Oh, for 5.010 and the // operator.
