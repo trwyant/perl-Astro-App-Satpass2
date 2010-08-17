@@ -26,18 +26,27 @@ my %attr = (
 
 $mmv >= 6.31 and $attr{LICENSE} = 'perl';
 
-$mmv >= 6.4501 and $attr{META_MERGE} = {
-    build_requires => {
-	'Test::More'	=> 0.400,
-    },
-    dynamic_config => 1,
-    resources => {
-	bugtracker => 'https://rt.cpan.org/Public/Dist/Display.html?Name=App-Satpass2',
-	license => 'http://dev.perl.org/licenses/',
-    },
-};
+if ( $mmv >= 6.4501 ) {
+    $attr{META_ADD} = {
+	no_index => {
+	    directory => [ qw{ inc t xt } ],
+	},
+    };
+    $attr{META_MERGE} = {
+	build_requires => {
+	    'Test::More'	=> 0.400,
+	},
+	dynamic_config => 1,
+	resources => {
+	    bugtracker => 'https://rt.cpan.org/Public/Dist/Display.html?Name=App-Satpass2',
+	    license => 'http://dev.perl.org/licenses/',
+	},
+    };
+} else {
+    $attr{PREREQ_PM}{'Test::More'} = 0.40;
+}
 
-$mmv >= 6.4701 and $attr{MIN_PERL_VERSION} = 5.006;
+$mmv >= 6.4701 and $attr{MIN_PERL_VERSION} = $meta->requires_perl();
 
 App::Satpass2::Recommend->recommend();
 
