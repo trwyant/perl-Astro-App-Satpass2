@@ -96,7 +96,10 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 	my ($pkg, $code, @args) = @_;
 	my @rslt;
 	foreach (@args) {
-	    m/([^\(]*)(?:\((.*)\))?$/ or do {push @rslt, $_; next};
+	    m{ ( [^(]* ) (?: [(] (.*) [)] )? \z }smx or do {
+		push @rslt, $_;
+		next;
+	    };
 	    if ($want{$1}) {
 		$attr{$code}{$1} = defined $2 ? [split ',', $2] : [];
 	    } else {
@@ -320,7 +323,6 @@ sub almanac : Verb(dump,horizon|rise|set,transit,twilight,quarter) {
 	"$self->{twilight} twilight (@{[rad2deg $self->{_twilight}]} degrees)";
 
     my @almanac;
-    my %done;
     my $output;
 
 #	Iterate through the background bodies, accumulating data or
@@ -342,7 +344,6 @@ sub almanac : Verb(dump,horizon|rise|set,transit,twilight,quarter) {
 
 #	Sort the almanac data by date, and display the results.
 
-    my $last = '';
     my $fmt = $self->_get_formatter_object( $opt );
     $output .= $fmt->almanac();
     foreach (sort {$a->{time} <=> $b->{time}} @almanac) {
@@ -376,12 +377,11 @@ sub choose : Verb(epoch=s) {
     (my $opt, @args) = $self->_getopt(@args);
     if ($opt->{epoch}) {
 	my $epoch = $self->_parse_time($opt->{epoch});
-	local $Astro::Coord::ECI::TLE::Set::Singleton = 1;
 	$self->{bodies} = [
 	map {
 	    $_->select($epoch);
 	}
-	_aggregate($self->{bodies})
+	$self->_aggregate( $self->{bodies} )
 	];
     }
     @args and $self->{bodies} = _choose(\@args, $self->{bodies});
@@ -589,15 +589,13 @@ Verb(algorithm=s,am,choose=s@,day,dump,pm,questionable|spare,quiet) {
 
     my $model = $self->{model};
 
-#	Tell aggregate() how to work.
-
-    local $Astro::Coord::ECI::TLE::Set::Singleton = $self->{singleton};
-
 #	Select only the bodies capable of flaring.
 
     my @active;
-    foreach my $tle (_aggregate($opt->{choose} ? _choose($opt->{choose},
-		$self->{bodies}) : $self->{bodies})) {
+    foreach my $tle ( $self->_aggregate( $opt->{choose} ?
+	    _choose( $opt->{choose}, $self->{bodies} ) : $self->{bodies}
+	) )
+    {
 	$tle->can_flare ($opt->{questionable}) or next;
 	$tle->set (
 	    algorithm => $opt->{algorithm} || 'fixed',
@@ -626,7 +624,7 @@ Verb(algorithm=s,am,choose=s@,day,dump,pm,questionable|spare,quiet) {
 	    push @flares, $tle->flare ($sta, $pass_start, $pass_end);
 	    1;
 	} or do {
-	    $@ =~ m/$interrupted/o and $self->_wail($@);
+	    $@ =~ m/ $interrupted /smxo and $self->_wail($@);
 	    $opt->{quiet} or $self->_whinge($@);
 	};
     }
@@ -778,31 +776,27 @@ sub get {
     return $accessor{$name}->($self, $name);
 }
 
-{
+sub height : Verb(debug) {
+    my ($self, @args) = @_;
+    return _height_us($self, $self->_getopt(@args));
+}
 
-    sub height : Verb(debug) {
-	my ($self, @args) = @_;
-	return _height_us($self, $self->_getopt(@args));
-    }
-
-    sub _height_us {
-	my ($self, $opt, @args) = @_;
-	$self->_load_module ('Geo::WebService::Elevation::USGS');
-	my $eq = Geo::WebService::Elevation::USGS->new(
-	    places => 2,	# Service returns unreasonable precision
-	    source => undef,	# 'best' data set
-	    units => 'METERS',	# default for service is 'FEET'
-	);
-	@args or push @args, $self->get('latitude'), $self->get('longitude');
-	my $output;
-	my ($rslt) = $eq->elevation(@args);
-	$eq->is_valid($rslt)
-	    or $self->_wail("No valid result found");
-	$self->set(height => $rslt->{Elevation});
-	$output .= $self->show('height');
-	return $output;
-    }
-
+sub _height_us {
+    my ($self, $opt, @args) = @_;
+    $self->_load_module ('Geo::WebService::Elevation::USGS');
+    my $eq = Geo::WebService::Elevation::USGS->new(
+	places => 2,	# Service returns unreasonable precision
+	source => undef,	# 'best' data set
+	units => 'METERS',	# default for service is 'FEET'
+    );
+    @args or push @args, $self->get('latitude'), $self->get('longitude');
+    my $output;
+    my ($rslt) = $eq->elevation(@args);
+    $eq->is_valid($rslt)
+	or $self->_wail("No valid result found");
+    $self->set(height => $rslt->{Elevation});
+    $output .= $self->show('height');
+    return $output;
 }
 
 {
@@ -828,7 +822,7 @@ sub get {
 	    my @ha;
 	    if (my $fn = $help_module{$arg}) {
 		$self->_load_module($fn);
-		$fn =~ s{::}{/}g;
+		$fn =~ s{ :: }{/}smxg;
 		$fn .= '.pm';
 		@ha = ('-input' => $INC{$fn});
 
@@ -845,9 +839,9 @@ sub get {
 		Pod::Usage::pod2usage (
 		    -verbose => 2, -exitval => 'NOEXIT', @ha);
 	    } else {
-		return <<eod
+		return <<'EOD'
 No help available; Pod::Usage can not be loaded.
-eod
+EOD
 	    }
 	}
 	return;
@@ -867,17 +861,17 @@ EOD
 }
 
 sub init {
-    my ( $self, $fn ) = @_;
+    my ( $self, $init_file ) = @_;
 
     $self->{initfile} = undef;
 
-    if (defined $fn && $fn ne '') {
+    if (defined $init_file && $init_file ne '') {
 
-	if (-f $fn) {
-	    $self->{initfile} = $fn;
-	    return $self->source($fn);
+	if (-f $init_file) {
+	    $self->{initfile} = $init_file;
+	    return $self->source($init_file);
 	} else {
-	    $self->_wail("Initialization file $fn not found");
+	    $self->_wail("Initialization file $init_file not found");
 	}
     } else {
 	foreach (sub {$ENV{SATPASS2INI}}, \&initfile, sub
@@ -896,26 +890,10 @@ sub init {
 
     my $init_file;
 
-    sub initfile : Verb() {
-	my ( $self ) = @_;
-	defined $init_file and return $init_file;
-
-	my @path;
-	local $@;
-
-	if ($^O eq 'MSWin32') {
-	    eval {
-		require Win32;
-		push @path, Win32::GetFolderPath(
-		    Win32::CSIDL_LOCAL_APPDATA(), 1 );
-		1;
-	    } or push @path, $self->_home_dir();
-	    push @path, 'satpass2.ini';
-	} elsif ( $^O eq 'VMS' ) {
-	    @path = ( $self->_home_dir(), 'satpass2.ini' );
-	} elsif ( $^O eq 'MacOS' ) {
-	    @path = ( 'satpass2.ini' );
-	} elsif ( $^O eq 'darwin' ) {
+    my %os_specific = (
+	darwin	=> sub {
+	    my ( $self ) = @_;
+	    my @path;
 	    eval {
 		require Mac::SystemDirectory;
 		push @path, Mac::SystemDirectory::FindDirectory(
@@ -941,7 +919,40 @@ sub init {
 	    } else {
 		@path = ( $self->_home_dir(), '.satpass2rc' );
 	    }
-	} elsif ( push @path, $self->_xdg_config_dir() ) {
+	    return @path;
+	},
+	MacOS	=> sub {
+	    my ( $self ) = @_;
+	    return 'satpass2.ini';
+	},
+	MSWin32	=> sub {
+	    my ( $self ) = @_;
+	    my @path;
+	    eval {
+		require Win32;
+		push @path, Win32::GetFolderPath(
+		    Win32::CSIDL_LOCAL_APPDATA(), 1 );
+		1;
+	    } or push @path, $self->_home_dir();
+	    push @path, 'satpass2.ini';
+	    return @path;
+	},
+	VMS	=> sub {
+	    my ( $self ) = @_;
+	    return ( $self->_home_dir(), 'satpass2.ini' );
+	},
+    );
+
+    sub initfile : Verb() {
+	my ( $self ) = @_;
+	defined $init_file and return $init_file;
+
+	my @path;
+	local $@ = undef;
+
+	if ( my $code = $os_specific{$^O} ) {
+	    @path = $code->( $self );
+	} elsif ( @path = $self->_xdg_config_dir() ) {
 	    push @path, 'satpass2rc';
 	} else {
 	    @path = ( $self->_home_dir(), '.satpass2rc' );
@@ -1091,8 +1102,7 @@ sub location : Verb() {
 	    $name !~ m/ \W /smx
 		and $name !~ m/ \A _ /smx
 		or $self->_wail("Invalid macro name '$name'");
-	    $self->{macro}{$name} = [map {
-		(my $s = $_) =~s/\\(.)/$1/g; $s} @args];
+	    $self->{macro}{$name} = [ _unescape( @args ) ];
 	}
 	return $output;
     }
@@ -1128,11 +1138,8 @@ sub pass : Verb(choose=s@,chronological!,dump!,quiet!) {
     my $horizon = deg2rad ($self->{horizon});
     my $appulse = deg2rad ($self->{appulse});
 
-#	Tell aggregate() how to work.
-
-    local $Astro::Coord::ECI::TLE::Set::Singleton = $self->{singleton};
     if ($opt->{debug}) {
-	foreach my $tle (_aggregate (\@bodies)) {
+	foreach my $tle ( $self->_aggregate (\@bodies)) {
 	    $output .= join ("\t", $tle->get ('id'),
 		$tle->get ('name'), ref $tle) . "\n";
 	}
@@ -1141,7 +1148,7 @@ sub pass : Verb(choose=s@,chronological!,dump!,quiet!) {
 #	Foreach body to be modelled
 
     my @accumulate;	# For chronological output.
-    foreach my $tle (_aggregate(\@bodies)) {
+    foreach my $tle ( $self->_aggregate( \@bodies ) ) {
 
 	{
 	    my $mdl = $tle->get('inertial') ? $model :
@@ -1165,7 +1172,7 @@ sub pass : Verb(choose=s@,chronological!,dump!,quiet!) {
 		$sta, $pass_start, $pass_end, $self->{sky});
 	    1;
 	} or do {
-	    $@ =~ m/$interrupted/o and $self->_wail($@);
+	    $@ =~ m/ $interrupted /smxo and $self->_wail($@);
 	    $opt->{quiet} or $self->_whinge($@);
 	    next;
 	};
@@ -1241,11 +1248,8 @@ sub position : Verb(choose=s@,questionable|spare,quiet,realtime) {
     my $output;
     my $fmt = $self->_get_formatter_object( $opt );
 
-#	Tell aggregate() how to work.
 
-    local $Astro::Coord::ECI::TLE::Set::Singleton = $self->{singleton};
-
-    my @list = (_aggregate($self->{bodies}), @{$self->{sky}});
+    my @list = ( $self->_aggregate( $self->{bodies} ), @{$self->{sky}});
     $opt->{choose}
 	and @list = @{_choose($opt->{choose}, \@list)};
 
@@ -1269,7 +1273,7 @@ sub position : Verb(choose=s@,questionable|spare,quiet,realtime) {
 	foreach my $body (@list) {
 	    eval {$body->universal ($time); 1;}
 		or do {
-		$@ =~ m/$interrupted/o and $self->_wail($@);
+		$@ =~ m/ $interrupted /smxo and $self->_wail($@);
 		$opt->{quiet} or $self->_whinge($@);
 		next;
 	    };
@@ -1417,7 +1421,7 @@ EOD
     return $output;
 }
 
-sub set : Verb() {
+sub set : Verb() {	## no critic (ProhibitAmbiguousNames)
     my ($self, @args) = @_;
     $self->{time_parser} and $self->_parse_time_reset();
     while (@args) {
@@ -1520,9 +1524,9 @@ sub _set_local_coord {
     return $val;
 }
 
-sub _set_lowercase {
-    return ($_[0]{$_[1]} = lc $_[2]);
-}
+#sub _set_lowercase {
+#    return ($_[0]{$_[1]} = lc $_[2]);
+#}
 
 sub _set_model {
     my ( $self, $name, $val ) = @_;
@@ -1661,121 +1665,125 @@ sub _show_unmodified {
 
 use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 
-sub sky : Verb() {
-    my ($self, @args) = @_;
-    my $output;
-    my $verb = lc (shift @args || '');
+{
 
-#	If no subcommand given, display the background bodies.
-
-    if (!$verb || $verb eq 'list') {
-	foreach my $body (
-	    map {$_->[1]}
-	    sort {$a->[0] cmp $b->[0]}
-	    map {[lc $_->get('name'), $_]}
-	    @{$self->{sky}}) {
-	    if ($body->isa ('Astro::Coord::ECI::Star')) {
-		my ($ra, $dec, $rng, $pmra, $pmdec, $vr) = $body->position ();
-		$rng /= PARSEC;
-		$pmra = rad2deg ($pmra / 24 * 360 * cos ($ra)) * SPY2DPS;
-		$pmdec = rad2deg ($pmdec) * SPY2DPS;
-		$output .= sprintf (
-		    "sky add %s %s %7.3f %.2f %.4f %.5f %s\n",
-		    _quoter ($body->get ('name')), _rad2hms ($ra),
-		    rad2deg ($dec), $rng, $pmra, $pmdec, $vr);
-	    } else {
-		$output .= "sky add " . _quoter (
-		    $body->get ('name')) . "\n";
+    my %handler = (
+	list	=> sub {
+	    my ( $self, @args ) = @_;
+	    my $output;
+	    foreach my $body (
+		map {$_->[1]}
+		sort {$a->[0] cmp $b->[0]}
+		map {[lc $_->get('name'), $_]}
+		@{$self->{sky}}) {
+		if ($body->isa ('Astro::Coord::ECI::Star')) {
+		    my ($ra, $dec, $rng, $pmra, $pmdec, $vr) = $body->position ();
+		    $rng /= PARSEC;
+		    $pmra = rad2deg ($pmra / 24 * 360 * cos ($ra)) * SPY2DPS;
+		    $pmdec = rad2deg ($pmdec) * SPY2DPS;
+		    $output .= sprintf (
+			"sky add %s %s %7.3f %.2f %.4f %.5f %s\n",
+			_quoter ($body->get ('name')), _rad2hms ($ra),
+			rad2deg ($dec), $rng, $pmra, $pmdec, $vr);
+		} else {
+		    $output .= "sky add " . _quoter (
+			$body->get ('name')) . "\n";
+		}
 	    }
+	    unless (@{$self->{sky}}) {
+		$self->{warn_on_empty}
+		    and $self->_whinge("The sky is empty");
+	    }
+	    return $output;
+	},
+	add	=> sub {
+	    my ( $self, @args ) = @_;
+	    my $name = shift @args
+		or $self->_wail("You did not specify what to add");
+	    my $lcn = lc $name;
+	    my $special = $lcn eq 'sun' || $lcn eq 'moon';
+	    my $class = 'Astro::Coord::ECI::' .
+		($special ? ucfirst ($lcn) : 'Star');
+	    foreach my $body (@{$self->{sky}}) {
+		return if $body->isa ($class) &&
+			($special || $lcn eq lc $body->get ('name'));
+	    }
+	    my $body = $class->new (debug => $self->{debug});
+	    unless ($special) {
+		$body->set (name => $name);
+		@args >= 2 
+		    or $self->_wail(
+		    "You must give at least right ascension and declination");
+		my $ra = deg2rad (_parse_angle (shift @args));
+		my $dec = deg2rad (_parse_angle (shift @args));
+		my $rng = @args ?
+		    $self->_parse_distance (shift @args, '1pc') :
+		    10000 * PARSEC;
+		my $pmra = @args ? do {
+		    my $angle = shift @args;
+		    $angle =~ s/ s \z //smxi
+			or $angle *= 24 / 360 / cos ($ra);
+		    deg2rad ($angle / SPY2DPS);
+		} : 0;
+		my $pmdec = @args ? deg2rad (shift (@args) / SPY2DPS) : 0;
+		my $pmrec = @args ? shift @args : 0;
+		$body->position ($ra, $dec, $rng, $pmra, $pmdec, $pmrec);
+	    }
+	    push @{$self->{sky}}, $body;
+	    return;
+	},
+	clear	=> sub {
+	    my ( $self, @args ) = @_;
+	    @{ $self->{sky} } = ();
+	    return;
+	},
+	drop	=> sub {
+	    my ( $self, @args ) = @_;
+	    @args or $self->_wail(
+		"You must specify at least one name to drop");
+	    my $match = qr< @{[ join '|', map {quotemeta $_} @args ]} >smxi;
+	    @{$self->{sky}} = grep {
+		$_->get ('name') !~ m/ $match /smx } @{$self->{sky}};
+	    return;
+	},
+	lookup	=> sub {
+	    my ( $self, @args ) = @_;
+	    my $output;
+	    my $name = shift @args;
+	    my $lcn = lc $name;
+	    foreach my $body (@{$self->{sky}}) {
+		next unless $body->isa ('Astro::Coord::ECI::Star') &&
+			$lcn eq lc $body->get ('name');
+		$self->_wail( "Duplicate sky entry '$name'" );
+	    }
+	    my ($ra, $dec, $rng, $pmra, $pmdec, $pmrec) =
+		$self->_simbad4 ($name);
+	    $rng = sprintf '%.2f', $rng;
+	    $output .= "sky add " . _quoter ($name) .
+		" $ra $dec $rng $pmra $pmdec $pmrec\n";
+	    $ra = deg2rad (_parse_angle ($ra));
+	    my $body = Astro::Coord::ECI::Star->new (name => $name);
+	    $body->position ($ra, deg2rad (_parse_angle ($dec)),
+		$rng * PARSEC, deg2rad ($pmra * 24 / 360 / cos ($ra) / SPY2DPS),
+		deg2rad ($pmdec / SPY2DPS), $pmrec);
+	    push @{$self->{sky}}, $body;
+	    return $output;
+	},
+
+    );
+
+    sub sky : Verb() {
+	my ($self, @args) = @_;
+	my $verb = lc ( shift @args || 'list' );
+
+	if ( my $code = $handler{$verb} ) {
+	    return $code->( $self, @args );
+	} else {
+	    $self->_wail("'sky' subcommand '$verb' not known");
 	}
-	unless (@{$self->{sky}}) {
-	    $self->{warn_on_empty}
-		and $self->_whinge("The sky is empty");
-	}
-
-#	If the subcommand is 'add', add the given body. Stars are a
-#	special case, since we can have more than one, and we need to
-#	specify position. No matter what we're adding we check for
-#	duplicates first and silently no-op the request if one is
-#	found.
-
-    } elsif ($verb eq 'add') {
-	my $name = shift @args
-	    or $self->_wail("You did not specify what to add");
-	my $lcn = lc $name;
-	my $special = $lcn eq 'sun' || $lcn eq 'moon';
-	my $class = 'Astro::Coord::ECI::' .
-	    ($special ? ucfirst ($lcn) : 'Star');
-	foreach my $body (@{$self->{sky}}) {
-	    return if $body->isa ($class) &&
-		    ($special || $lcn eq lc $body->get ('name'));
-	}
-	my $body = $class->new (debug => $self->{debug});
-	unless ($special) {
-	    $body->set (name => $name);
-	    @args >= 2 
-		or $self->_wail(
-		"You must give at least right ascension and declination");
-	    my $ra = deg2rad (_parse_angle (shift @args));
-	    my $dec = deg2rad (_parse_angle (shift @args));
-	    my $rng = @args ?
-		$self->_parse_distance (shift @args, '1pc') :
-		10000 * PARSEC;
-	    my $pmra = @args ? do {
-		my $angle = shift @args;
-		$angle =~ s/s$//i or $angle *= 24 / 360 / cos ($ra);
-		deg2rad ($angle / SPY2DPS);
-	    } : 0;
-	    my $pmdec = @args ? deg2rad (shift (@args) / SPY2DPS) : 0;
-	    my $pmrec = @args ? shift @args : 0;
-	    $body->position ($ra, $dec, $rng, $pmra, $pmdec, $pmrec);
-	}
-	push @{$self->{sky}}, $body;
-
-#	If the subcommand is 'clear', we empty the background.
-
-    } elsif ($verb eq 'clear') {
-	@{$self->{sky}} = ();
-
-#	If the subcommand is 'drop', we iterate over the background,
-#	dropping any bodies whose name matches any of the given
-#	names.
-
-    } elsif ($verb eq 'drop') {
-	@args or $self->_wail(
-	    "You must specify at least one name to drop");
-	my $match = qr{@{[join '|', map {quotemeta $_} @args]}}i;
-	@{$self->{sky}} = grep {
-	    $_->get ('name') !~ m/$match/} @{$self->{sky}};
-
-#	If the subcommand is 'lookup', we take the next argument to
-#	be the name of the star to look up, and try to look it up
-#	on line. If we find it, we add it to the background.
-
-    } elsif ($verb eq 'lookup') {
-	my $name = shift @args;
-	my $lcn = lc $name;
-	foreach my $body (@{$self->{sky}}) {
-	    next unless $body->isa ('Astro::Coord::ECI::Star') &&
-		    $lcn eq lc $body->get ('name');
-	    $self->_wail( "Duplicate sky entry '$name'" );
-	}
-	my ($ra, $dec, $rng, $pmra, $pmdec, $pmrec) =
-	    $self->_simbad4 ($name);
-	$rng = sprintf '%.2f', $rng;
-	$output .= "sky add " . _quoter ($name) .
-	    " $ra $dec $rng $pmra $pmdec $pmrec\n";
-	$ra = deg2rad (_parse_angle ($ra));
-	my $body = Astro::Coord::ECI::Star->new (name => $name);
-	$body->position ($ra, deg2rad (_parse_angle ($dec)),
-	    $rng * PARSEC, deg2rad ($pmra * 24 / 360 / cos ($ra) / SPY2DPS),
-	    deg2rad ($pmdec / SPY2DPS), $pmrec);
-	push @{$self->{sky}}, $body;
-    } else {
-	$self->_wail("'sky' subcommand '$verb' not known");
+	return;	# We can't get here, but Perl::Critic does not know this.
     }
 
-    return $output;
 }
 
 sub source : Verb(optional) {
@@ -1834,7 +1842,7 @@ sub st : Verb(all,changes,descending,last5,sort=s,end=s,start=s,verbose) {
 		$st->get ($key)->content
 	}
     } else {
-	($func !~ m/^_/ && $st->can ($func))
+	($func !~ m/ \A _ /smx && $st->can ($func))
 	    or $self->_wail("No such st function as '$func'");
 	$opt->{all} and unshift @args, '-all';
 	$opt->{descending} and unshift @args, '-descending';
@@ -1983,14 +1991,10 @@ sub validate : Verb(quiet!) {
     my @bodies = @{ $self->{bodies} }
 	or $self->_wail("No bodies selected");
 
-#	Tell aggregate() how to work.
-
-    local $Astro::Coord::ECI::TLE::Set::Singleton = $self->{singleton};
-
 #	Validate each body.
 
     my @valid;
-    foreach my $tle ( _aggregate( $self->{bodies} ) ) {
+    foreach my $tle ( $self->_aggregate( $self->{bodies} ) ) {
 	$tle->validate( $opt, $pass_start, $pass_end )
 	    and push @valid, $tle->members();
     }
@@ -2001,24 +2005,26 @@ sub validate : Verb(quiet!) {
 }
 
 sub version : Verb() {
-    return <<eod;
+    return <<"EOD";
 
 @{[__PACKAGE__]} $VERSION - Satellite pass predictor
 based on Astro::Coord::ECI @{[Astro::Coord::ECI->VERSION]}
 Copyright (C) 2009-2010 by Thomas R. Wyant, III
 
-eod
+EOD
 }
 
 ########################################################################
 
-#	_aggregate ($list_ref);
+#	$self->_aggregate( $list_ref );
 
 #	This is just a wrapper for
 #	Astro::Coord::ECI::TLE::Set->aggregate.
 
 sub _aggregate {
-    return Astro::Coord::ECI::TLE::Set->aggregate (@{$_[0]});
+    my ( $self, $bodies ) = @_;
+    local $Astro::Coord::ECI::TLE::Set::Singleton = $self->{singleton};	## no critic (ProhibitPackageVars)
+    return Astro::Coord::ECI::TLE::Set->aggregate ( @{ $bodies } );
 }
 
 #	$chosen = _choose($opt, $choice, $list)
@@ -2050,10 +2056,10 @@ sub _choose {
     my %oid;
     foreach (@$choice) {
 	foreach (split ',', $_) {
-	    if (m/\D/) {
-		push @regex, qr/@{[quotemeta $_]}/i;
+	    if (m/ \D /smx) {
+		push @regex, qr/ @{[ quotemeta $_ ]} /smxi;
 	    } elsif ($_ < 1000) {
-		push @regex, qr/$_/;
+		push @regex, qr/ $_ /smx;
 	    } else {
 		$oid{$_} = 1;
 	    }
@@ -2067,7 +2073,7 @@ sub _choose {
 	} else {
 	    my $name = ref $tle eq 'ARRAY' ? $tle->[1] : $tle->get('name');
 	    foreach my $re (@regex) {
-		$name =~ m/$re/ or next;
+		$name =~ m/ $re /smx or next;
 		$match = !$match;
 		last;
 	    }
@@ -2227,7 +2233,7 @@ sub _frame_pop {
 	return $dumper ||= do {
 	    foreach (qw{YAML::Dump YAML::Syck::Dump YAML::Tiny::Dump
 		Data::Dumper::Dumper}) {
-		my ($module, $routine) = m/(.*)::(.*)/;
+		my ($module, $routine) = m/ (.*) :: (.*) /smx;
 		push @mod, $module;
 		$dmpr{$module} = $routine;
 	    }
@@ -2615,7 +2621,7 @@ sub _macro {
 sub _parse_angle {
     my $angle = shift;
     defined $angle or return;
-    if ($angle =~ m/:/) {
+    if ( $angle =~ m/ : /smx ) {
 	my ($h, $m, $s) = split ':', $angle;
 	$s ||= 0;
 	$m ||= 0;
@@ -2623,7 +2629,11 @@ sub _parse_angle {
 	$m += $s / 60;
 	$h += $m / 60;
 	$angle = $h * 360 / 24;
-    } elsif ($angle =~ m/^([+\-])?(\d*)d(\d*(?:\.\d*)?)(?:m(\d*(?:\.\d*)?)s?)?$/i) {
+    } elsif ( $angle =~
+	m{ \A ( [-+] )? (\d*) d
+	    ( \d* (?: [.] \d*)? ) (?: m
+	    ( \d* (?: [.] \d* )? ) s? )? \z
+	}smxi ) {
 	$angle = ((($4 || 0) / 60) + ($3 || 0)) / 60 + ($2 || 0);
 	$angle = -$angle if $1 && $1 eq '-';
     }
@@ -2701,8 +2711,8 @@ sub _quoter {
     my $string = shift;
     return $string if looks_like_number ($string);
     return "''" unless $string;
-    return $string unless $string =~ m/[\s'"]/;
-    $string =~ s/([\\'])/\\$1/g;
+    return $string unless $string =~ m/ [\s'"] /smx;
+    $string =~ s/ ( [\\'] ) /\\$1/smxg;
     return "'$string'";
 }
 
@@ -2816,9 +2826,22 @@ sub _soapdish {
 
 sub _tilde_expand {
     my ( $self, $fn ) = @_;
-    $fn =~ s{ \A ~ ( [^/]* ) (?= / | \z ) }{
-	$self->_user_home_dir( $1 )}smxe;
+    $fn =~ m{ \A ~ ( [^/]* ) }smx or return $fn;
+    substr $fn, 0, $+[0], $self->_user_home_dir( $1 );
     return $fn;
+}
+
+#	@result = _unescape( @args );
+#
+#	Remove back slash escapes. Nothing fancy is done here; in
+#	particular, '\n' does not become a new line, it becomes "n".
+
+sub _unescape {
+    my ( @args ) = @_;
+    foreach ( @args ) {
+	s/ \\ (.) /$1/smxg;
+    }
+    return @args;
 }
 
 #	$dir = $self->_user_home_dir( $user );
@@ -2974,7 +2997,8 @@ sub _user_home_dir {
 
 	    if ( $absquote ) {
 		if ( $char eq '\\' ) {
-		    if ((my $next = substr $buffer, $inx, 1) =~ m/['\\]/) {
+		    if ( (my $next = substr $buffer, $inx, 1) =~
+			m/ ['\\] /smx ) {
 			$inx++;
 			$rslt[-1]{token} .= $next;
 		    } else {
@@ -3032,7 +3056,7 @@ sub _user_home_dir {
 	    # It is possible that we generate redundant tokens this way,
 	    # but the unused ones are eliminated later.
 
-	    } elsif ($char =~ m/\s/ && !$relquote && !$opt->{single}) {
+	    } elsif ($char =~ m/ \s /smx && !$relquote && !$opt->{single}) {
 		push @rslt, {};
 
 	    # If we have a dollar sign, it introduces parameter
@@ -3083,7 +3107,7 @@ sub _user_home_dir {
 		# If we find a colon and/or one of the other cabbalistic
 		# characters, we need to do some default processing.
 
-		if ($name =~ m/(.*?)(\:?[\-\+\=\?]|\:)(.*)/) {
+		if ($name =~ m/ (.*?) ( [:]? [\-\+\=\?] | [:] ) (.*) /smx) {
 		    my ($name, $flag, $rest) = ($1, $2, $3);
 
 		    # First we do indirection if that was required.
@@ -3141,9 +3165,12 @@ sub _user_home_dir {
 			    @pos > 2
 				and $self->_wail(
 				"Substring expansion has extra arguments" );
-			    grep { $_ !~ m/ \A [-+]? \d+ \z /smx } @pos
-				and $self->_wail(
-				"Substring expansion argument non-numeric" );
+			    foreach ( @pos ) {
+				m/ \A [-+]? \d+ \z /smx
+				    or $self->_wail(
+				    "Substring expansion argument non-numeric"
+				);
+			    }
 			    if (ref $value) {
 				if (@pos > 1) {
 				    $pos[1] += $pos[0] - 1;
@@ -3259,7 +3286,7 @@ sub _user_home_dir {
 	    # name. Note that redirect tokens always get tilde
 	    # expansion.
 
-	    } elsif ($char =~ m/[<>|]/) {
+	    } elsif ( $char =~ m/ [<>|] /smx ) {
 		push @rslt, {
 		    redirect => 1,
 		    type => ($char eq '<' ? '<' : '>'),
@@ -3268,7 +3295,7 @@ sub _user_home_dir {
 		};
 		while ($inx < $len) {
 		    my $next = substr $buffer, $inx++, 1;
-		    $next =~ m/\s/ and next;
+		    $next =~ m/ \s /smx and next;
 		    if ($next eq $char) {
 			$rslt[-1]{mode} .= $next;
 			length $rslt[-1]{mode} > 2
@@ -3366,20 +3393,25 @@ sub _user_home_dir {
 
     sub _tokenize_var {
 	my ($self, $name, $args, $relquote, $indirect) = @_;
-	if (!defined $name || $name eq '') {
-	    return $indirect ? '' : undef;
-	} elsif ($special{$name}) {
+
+	defined $name and $name ne ''
+	    or return $indirect ? '' : undef;
+
+	$special{$name} and do {
 	    my $val = $special{$name}->($args, $relquote);
 	    return ($indirect && ref $val) ? '' : $val;
-	} elsif ($name !~ m/\D/) {
-	    return $args->[$name - 1];
-	} elsif (exists $accessor{$name}) {
-	    return $self->get($name);
-	} elsif ( exists $self->{exported}{$name} ) {
-	    return $self->{exported}{$name};
-	} else {
-	    return $ENV{$name};
-	}
+	};
+
+	$name !~ m/ \D /smx
+	    and return $args->[$name - 1];
+
+	exists $accessor{$name}
+	    and return $self->get($name);
+
+	exists $self->{exported}{$name}
+	    and return $self->{exported}{$name};
+
+	return $ENV{$name};
     }
 }
 
@@ -3436,14 +3468,14 @@ sub _whinge {
 #	directory, it's XDG_CONFIG_HOME and '.config' (not
 #	'.config/share').
 
-sub _xdg_data_dir {
-    my ( $self ) = @_;
-    my $dir = $ENV{XDG_DATA_HOME} || File::Spec->catdir(
-	$self->_home_dir(), '.local', 'share' );
-    -d $dir or return;
-
-    return $dir;
-}
+#sub _xdg_data_dir {
+#    my ( $self ) = @_;
+#    my $dir = $ENV{XDG_DATA_HOME} || File::Spec->catdir(
+#	$self->_home_dir(), '.local', 'share' );
+#    -d $dir or return;
+#
+#    return $dir;
+#}
 
 #	If we decide to use the data directory, it's XDG_DATA_HOME and
 #	'.local/share'.

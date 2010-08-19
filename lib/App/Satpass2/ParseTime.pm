@@ -76,7 +76,7 @@ sub delegate {
 	    $string =~ s/ \A \s+ //smx;
 	    $string =~ s/ \s+ \z //smx;
 	    my $sign = substr $string, 0, 1;
-	    substr( $string, 0, 1 ) = '';
+	    substr( $string, 0, 1, '' );
 	    my @delta = split qr{ \s* : \s* | \s+ }smx, $string;
 	    @delta > 4 and return;
 	    push @delta, ( 0 ) x ( 4 - @delta );
@@ -149,7 +149,7 @@ sub use_perltime {
 		next;
 	    };
 
-	    local $@;
+	    local $@ = undef;
 	    $trial{$try} = eval "require $try; 1" or next;
 
 	    my $delegate = $trial{$try} = eval { $try->delegate() }

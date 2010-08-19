@@ -53,7 +53,7 @@ sub delegate {
 		)?
 		\z
 	    }smx ) {
-	    @date = ( $1, $2, $3, $4, $5, $6, $7, undef );
+	    @date = ( 0, $1, $2, $3, $4, $5, $6, $7 );
 
 	# special-case 'yesterday', 'today', and 'tomorrow'.
 	} elsif ( $string =~ m{ \A
@@ -67,8 +67,8 @@ sub delegate {
 	    )?
 	    \z }smx ) {
 	    my @today = @zone ? gmtime : localtime;
-	    @date = ( $today[5] + 1900, $today[4] + 1, $today[3], $2, $3,
-		$4, $5, $special_day_offset{ lc $1 } );
+	    @date = ( $special_day_offset{ lc $1 }, $today[5] + 1900,
+		$today[4] + 1, $today[3], $2, $3, $4, $5 );
 
 	} else {
 
@@ -76,7 +76,7 @@ sub delegate {
 
 	}
 
-	my $offset = pop @date || 0;
+	my $offset = shift @date || 0;
 	if ( @zone && ! $zone[0] ) {
 	    my ( $zulu, $sign, $hr, $min ) = @zone;
 	    $offset -= $sign . ( ( $hr * 60 + ( $min || 0 ) ) * 60 )
@@ -99,15 +99,12 @@ sub delegate {
 	    defined $_ or $_ = 0;
 	}
 
-	my $time;
-	if ( @zone ) {
-	    $time = timegm( reverse @date );
-	} else {
-	    $time = timelocal( reverse @date );
-	}
+	my $time = @zone ?
+	    timegm( reverse @date ) :
+	    timelocal( reverse @date );
 
 	if ( defined $frc  && $frc ne '') {
-	    my $denom = 1 . ( 0 x length $frc );
+	    my $denom = '1' . ( '0' x length $frc );
 	    $time += $frc / $denom;
 	}
 
@@ -121,7 +118,7 @@ sub tz {
     if ( @args ) {
 	if ( defined $args[0] && $args[0] ne '' ) {
 	    $args[0] =~ m/ \A $zone_re \z /smx
-		or carp "Invalid zone '$args[0]'";
+		or croak "Invalid zone '$args[0]'";
 	    $self->{+__PACKAGE__}{tz} = [ $1, $2, $3, $4 ];
 	} else {
 	    delete $self->{+__PACKAGE__}{tz};

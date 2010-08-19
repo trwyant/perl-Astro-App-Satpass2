@@ -805,9 +805,11 @@ my %format_macro_definitions = (
 my %format_template_definitions = (
     almanac	=> '%date %time %*almanac%n',
     date_time	=> '%date %time%n',
-    flare => '%-date %-time %-12name %local_coord %magnitude
+    flare => <<'EOD',	# Note that leading spaces on line are significant
+%-date %-time %-12name %local_coord %magnitude
  %5angle(appulse,title=Degrees From Sun,missing=night)
- %azimuth(center,bearing) %6.1range(center)%n',
+ %azimuth(center,bearing) %6.1range(center)%n
+EOD
     list_inertial => '%id %-name %-epoch %-period%n',
     list_fixed => '%id %name %latitude %longitude %altitude%n',
     location	=> <<'EOD',
@@ -1246,9 +1248,9 @@ sub _format_compiler {
 	exists $self->{formatter}{$action}{units}
 	    and $args{units} = $self->{formatter}{$action}{units};
 	if (defined $meta) {
-	    foreach (split ',', $meta) {
-		s/^\s+//;
-		s/\s+$//;
+	    foreach (split qr{ , }smx, $meta) {
+		s/ \A \s+ //smx;
+		s/ \s+ \z //smx;
 		my ($name, $arg) = split '=', $_, 2;
 		defined $name or next;	# Might not have any arguments.
 		defined $tplt_args{$name}
@@ -1285,58 +1287,67 @@ sub _format_compiler {
 	    ($body, $station) = ($station, $body);
 	    $args{selected} = 'station';
 	}
-	if ($args{units}) {
-	    $type
-		or croak "%$action does not allow units= specification";
-	    my $to;
-	    exists $units{$type}{factor}{$args{units}}
-		and $to = $args{units};
-	    unless ($to) {
-		my $units;
-		my $re = qr/@{[quotemeta $args{units}]}/;
-		foreach (keys %{$units{$type}{factor}}) {
-		    m/$re/ or next;
-		    $units
-			and croak "%$action units abbreviation '$to' ",
-			    "not unique";
-		    $units = $_;
-		}
-		$units
-		    or croak "%$action units '$args{units}' not valid";
-		$to = $units;
-	    }
-	    $info->{forbid_units}{$to}
-		and croak "%$action units '$args{units}' not valid";
-	    my $factor;
-	    {	# Using as single-iteration loop.
-		$factor = $units{$type}{factor}{$to};
-		if (my $ref = ref $factor) {
-		    if ($ref eq 'SCALAR') {
-			$to = $$factor;
-			redo;
-		    } elsif ($ref eq 'HASH') {
-			foreach (keys %$factor) {
-			    $args{$_} = $factor->{$_};
-			}
-			$factor = delete $args{factor};
-			defined $factor
-			    or confess "Programming error - undefined ",
-				"factor in $type $to";
-			ref $factor and redo;
-		    } elsif ($ref eq 'CODE') {
-			$args{formatter} = $factor;
-			$factor = 1;
-		    } else {
-			confess "Programming error - Unknown reference",
-			    " $ref in $type $to";
-		    }
-		}
-	    }
-	    $args{units} = $to;
-	    $args{unit_factor} = $factor;
-	}
+	$self->_format_args_meta_units( $action, $info, $meta, \%args );
 	defined $args{append} or $args{append} = '';
 	return ($body, $station, \%args);
+    }
+
+    # The units turned out to be a real mess, so they get pulled out of
+    # general argument processing.
+    sub _format_args_meta_units {
+	my ( $self, $action, $info, $meta, $args ) = @_;
+	$args->{units} or return;
+
+	my $type = $info->{units}
+	    or croak "%$action does not allow units= specification";
+	my $to;
+	exists $units{$type}{factor}{$args->{units}}
+	    and $to = $args->{units};
+	unless ($to) {
+	    my $units;
+	    my $re = qr/ @{[ quotemeta $args->{units} ]} /smx;
+	    foreach (keys %{$units{$type}{factor}}) {
+		m/ $re /smx or next;
+		$units
+		    and croak "%$action units abbreviation '$to' ",
+			"not unique";
+		$units = $_;
+	    }
+	    $units
+		or croak "%$action units '$args->{units}' not valid";
+	    $to = $units;
+	}
+	$info->{forbid_units}{$to}
+	    and croak "%$action units '$args->{units}' not valid";
+	my $factor;
+	{	# Using as single-iteration loop.
+	    $factor = $units{$type}{factor}{$to};
+	    if (my $ref = ref $factor) {
+		if ($ref eq 'SCALAR') {
+		    $to = $$factor;
+		    redo;
+		} elsif ($ref eq 'HASH') {
+		    foreach (keys %$factor) {
+			$args->{$_} = $factor->{$_};
+		    }
+		    $factor = delete $args->{factor};
+		    defined $factor
+			or confess "Programming error - undefined ",
+			    "factor in $type $to";
+		    ref $factor and redo;
+		} elsif ($ref eq 'CODE') {
+		    $args->{formatter} = $factor;
+		    $factor = 1;
+		} else {
+		    confess "Programming error - Unknown reference",
+			" $ref in $type $to";
+		}
+	    }
+	}
+	$args->{units} = $to;
+	$args->{unit_factor} = $factor;
+
+	return;
     }
 }
 
@@ -1375,8 +1386,8 @@ sub _format_execute_header {
 	if (!defined $wd || $wd eq '') {
 	    push @lines, $txt;
 	} elsif ($lt > $wd) {
-	    local $Text::Wrap::columns = $wd + 1;
-	    local $Text::Wrap::huge = 'overflow';
+	    local $Text::Wrap::columns = $wd + 1;	## no critic (ProhibitPackageVars)
+	    local $Text::Wrap::huge = 'overflow';	## no critic (ProhibitPackageVars)
 	    my $wrapped = wrap ('', '', $txt);
 	    chomp $wrapped;
 	    @lines = reverse map {substr (sprintf ("%$aln${wd}s", $_), 0, $wd)}
@@ -1425,7 +1436,7 @@ sub _format_azimuth {
 	my $bearing_width = $opt->{bearing} || 2;
 	$width and $width -= $bearing_width + 1;
 	my $bearing_align = $align;
-	$bearing_align =~ m/-/
+	$bearing_align =~ m/ - /smx
 	    or $bearing_align .= '-';
 	return $self->_format_number(
 	    $align, $width, $places, $info, $value, $opt) . ' ' .
@@ -1513,10 +1524,11 @@ sub _format_number {
     # '-0.0'. This may not be a bug, given what 'perldoc -f sprintf'
     # says, but it sure looks like a wart to me.
     $buffer =~ s/ \A ( \s* ) - ( 0* [.]? 0* \s* ) \z /$1 $2/smx;
-    ($places eq '' && $buffer =~ m/\./) and $buffer =~ s/ 0+ \z //smx;
+    ( $places eq '' && $buffer =~ m/ [.] /smx )
+	and $buffer =~ s/ 0+ \z //smx;
     if ($fwid && length $buffer > $fwid && $fwid >= 7) {
 	$buffer = sprintf "%$align$fwid.@{[$fwid - 7]}e", $value;
-	$buffer =~ s/e([-+]?)0(\d\d)$/e$1$2/;	# Normalize
+	$buffer =~ s/ e ( [-+]? ) 0 (\d\d) \z /e$1$2/smx;	# Normalize
     }
     $buffer .= $append;
 
@@ -1536,7 +1548,7 @@ sub _format_number_scientific {
     my $fwid = $width ? ($width - length $append) : '';
     my $ps = $places eq '' ? '' : ".$places";
     my $buffer = sprintf "%$align$fwid${ps}e", $value;
-    $buffer =~ s/e([-+]?)0(\d\d)$/e$1$2/;	# Normalize
+    $buffer =~ s/ e ( [-+]? ) 0 (\d\d) \z /e$1$2/smx;	# Normalize
     $buffer .= $append;
     ($width && length $buffer > $width)
 	and $buffer = '*' x $width;
@@ -1644,9 +1656,11 @@ sub _format_time_since_epoch {
 
     my %check = (
 	missing => sub {},
-	places => sub {$_[2] =~ m/\D/ and croak "Places must be an integer"},
+	places => sub {$_[2] =~ m/ \D /smx
+		and croak "Places must be an integer"},
 	title => sub {},
-	width => sub {$_[2] =~ m/\D/ and croak "Width must be an integer"},
+	width => sub {$_[2] =~ m/ \D /smx
+		and croak "Width must be an integer"},
 	units => sub {
 	    my ( $action, $name, $val ) = @_;
 	    my $units = $template{$action}{units}
@@ -1778,7 +1792,7 @@ sub _macro_expand {
 	    $args =~ s/ \A \( //smx;
 	    $args =~ s/ \) \z //smx;
 	    ( my $expand = $self->{macro}{$name} ) =~ s/ \$ \* /$args/smxg;
-	    substr( $string, $base, length $replace ) = $expand;
+	    substr( $string, $base, length $replace, $expand );
 	}
 	@replace or last;
     }
@@ -2230,7 +2244,7 @@ sub tle {
 
 # TODO when we get the code right, _tle_celestia loses its leading
 # underscore and gets documented.
-sub _tle_celestia {
+sub _tle_celestia {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $body ) = @_;
     if ( defined $body ) {
 	return $self->_set( body => $body )->_format_execute(
@@ -2306,77 +2320,6 @@ sub _fetch_precessed_coordinates {
     }
     my $body = pop @args;
     return $body->$method( @args );
-}
-
-#	@names = _names($type);
-#
-#	This subroutine returns all names of the given type. This has
-#	nothing to do with formatting, but helps me test to see what
-#	abbreviations are unique.
-#
-#	The valid types are:
-#
-#	    argument - the names of valid format effector arguments;
-#	    format - the names of valid format effectors;
-#	    unit=... - the names of valid units for the given dimension.
-
-sub _names {
-    my ($type) = @_;
-    if (!defined $type) {
-	return (sort qw{argument format}, map {"unit=$_"} keys %units);
-    } elsif ($type eq 'argument') {
-	return _format_args_list();
-    } elsif ($type eq 'format') {
-	return (sort keys %template);
-    } elsif ($type =~ m/^unit=(.+)/) {
-	$units{$1}
-	    or croak "Illegal _names type '$type'";
-	return (sort keys %{$units{$1}{factor}});
-    } else {
-	croak "Illegal _names type '$type'";
-    }
-}
-
-#	$abbrev = _shortest_abbrev($type,$name)
-#
-#	This subroutine returns the shortest abbreviation of the given
-#	name of the given type. The types are as for _names(). This has
-#	nothing to do with formatting, but since abbreviations are
-#	allowed, I wanted to test to know when the shortest unique one
-#	changed.
-#
-#	You get an exception if the type is invalid, and undef if the
-#	name is.
-
-{
-    my %abbrs;
-    sub _shortest_abbrev {
-	my ($type, $name) = @_;
-	unless ($abbrs{$type}) {
-	    my @data = _names($type);
-	    my %abbrev;
-	    foreach my $word (@data) {
-		foreach my $len (1 .. length $word) {
-		    my $short = substr $word, 0, $len;
-		    push @{$abbrev{$short} ||= []}, $word;
-		}
-	    }
-	    my %expand;
-	    foreach my $short (sort keys %abbrev) {
-		if (@{$abbrev{$short}} == 1) {
-		    my $word = $abbrev{$short}[0];
-		    exists $expand{$word}
-			or $expand{$word} = $short;
-		}
-	    }
-	    foreach my $word (@data) {
-		exists $expand{$word}
-		    or $expand{$word} = $word;
-	    }
-	    $abbrs{$type} = \%expand;
-	}
-	return $abbrs{$type}{$name};
-    }
 }
 
 1;
