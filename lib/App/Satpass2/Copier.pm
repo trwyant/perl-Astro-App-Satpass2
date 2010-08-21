@@ -9,7 +9,7 @@ use Scalar::Util qw{ blessed };
 
 use base qw{ Exporter };
 
-our @EXPORT_OK = qw{ _instance };
+our @EXPORT_OK = qw{ __instance };
 
 our $VERSION = '0.000_04';
 
@@ -50,12 +50,12 @@ sub create_attribute_methods {
     return;
 }
 
-#	_instance( $object, $class );
+#	__instance( $object, $class );
 #
 #	Returns true if $object is an instance of $class, and false
 #	otherwise. $object must be a reference.
 
-sub _instance {
+sub __instance {
     my ( $object, $class ) = @_;
     ref $object or return;
     blessed( $object ) or return;

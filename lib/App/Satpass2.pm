@@ -5,7 +5,7 @@ use 5.006002;
 use strict;
 use warnings;
 
-use App::Satpass2::Copier qw{ _instance };
+use App::Satpass2::Copier qw{ __instance };
 use App::Satpass2::ParseTime;
 use Astro::Coord::ECI;
 use Astro::Coord::ECI::Moon;
@@ -1539,7 +1539,7 @@ sub _set_model {
 sub _set_spacetrack {
     my ($self, $name, $val) = @_;
     if (defined $val) {
-	_instance($val, 'Astro::SpaceTrack')
+	__instance($val, 'Astro::SpaceTrack')
 	    or $self->_wail("$name must be an Astro::SpaceTrack instance");
     }
     return ($self->{$name} = $val);
