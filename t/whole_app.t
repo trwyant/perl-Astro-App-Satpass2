@@ -141,27 +141,27 @@ _app('foo ${1', 'Missing right curly bracket',
 _app('foo >>>bar', 'Syntax error near >>>',
 	'Bad command - invalid redirect');
 _app('foo', 'Unknown interactive method \'foo\'', 'Unknown interactive method');
-_app('alias', <<eod, 'Default aliases');
+_app('alias', <<'EOD', 'Default aliases');
 iridium => Astro::Coord::ECI::TLE::Iridium
 moon => Astro::Coord::ECI::Moon
 sun => Astro::Coord::ECI::Sun
 tle => Astro::Coord::ECI::TLE
-eod
+EOD
 _app('alias fubar iridium', undef, 'Add an alias');
-_app('alias', <<eod, 'Confirm addition of alias');
+_app('alias', <<'EOD', 'Confirm addition of alias');
 fubar => Astro::Coord::ECI::TLE::Iridium
 iridium => Astro::Coord::ECI::TLE::Iridium
 moon => Astro::Coord::ECI::Moon
 sun => Astro::Coord::ECI::Sun
 tle => Astro::Coord::ECI::TLE
-eod
+EOD
 _app('alias fubar \'\'', undef, 'Remove new alias');
-_app('alias', <<eod, 'Confirm alias removal');
+_app('alias', <<'EOD', 'Confirm alias removal');
 iridium => Astro::Coord::ECI::TLE::Iridium
 moon => Astro::Coord::ECI::Moon
 sun => Astro::Coord::ECI::Sun
 tle => Astro::Coord::ECI::TLE
-eod
+EOD
 _app('set warn_on_empty 0', undef, 'No warning for empty lists');
 _app('show appulse', 'set appulse 0', 'Default appulse value');
 _app('set appulse 10', undef, 'Change appulse value to 10');
@@ -190,7 +190,7 @@ _app('set date_format %Y/%m/%d time_format %H:%M:%S',
 _app('show date_format', 'set date_format %Y/%m/%d', 'Show date format');
 _app('show time_format', 'set time_format %H:%M:%S', 'Show time format');
 _app("almanac '20090401T000000 UT'",
-    <<eod, 'Almanac for April Fools 2009');
+    <<'EOD', 'Almanac for April Fools 2009');
 2009/04/01 00:04:00 local midnight
 2009/04/01 01:17:47 Moon set
 2009/04/01 05:01:29 begin twilight
@@ -200,7 +200,7 @@ _app("almanac '20090401T000000 UT'",
 2009/04/01 17:21:29 Moon transits meridian
 2009/04/01 18:33:28 Sunset
 2009/04/01 19:07:26 end twilight
-eod
+EOD
 _app('begin', undef, 'Begin local block');
 _app('show horizon', 'set horizon 20', 'Confirm horizon setting');
 _app('localize horizon', undef, 'Localize horizon');
@@ -230,35 +230,35 @@ _app('list', undef, 'The list command, with an empty list');
 _app('load t/missing.dat', 'No files found',
     'Attempt to load non-existing file');
 _app('load t/data.tle', undef, 'Load a TLE file');
-_app('list', <<eod, 'List the loaded items');
+_app('list', <<'EOD', 'List the loaded items');
    OID Name                     Epoch               Period
  88888                          1980/10/01 23:41:24 01:29:37
  11801                          1980/08/17 07:06:40 10:30:08
-eod
+EOD
 _app('choose 88888', undef, 'Keep OID 88888, losing all others');
-_app('list', <<eod, 'Check that the list now includes only 88888');
+_app('list', <<'EOD', 'Check that the list now includes only 88888');
    OID Name                     Epoch               Period
  88888                          1980/10/01 23:41:24 01:29:37
-eod
-_app('tle', <<eod, 'List the TLE for object 888888');
+EOD
+_app('tle', <<'EOD', 'List the TLE for object 888888');
 1 88888U          80275.98708465  .00073094  13844-3  66816-4 0    8
 2 88888  72.8435 115.9689 0086731  52.6988 110.5714 16.05824518  105
-eod
+EOD
 _app('clear', undef, 'Remove all items from the list');
 _app('list', undef, 'Confirm that the list is empty again');
 _app('load t/data.tle', undef, 'Load the TLE file again');
-_app('tle', <<eod, 'List the loaded TLEs');
+_app('tle', <<'EOD', 'List the loaded TLEs');
 1 88888U          80275.98708465  .00073094  13844-3  66816-4 0    8
 2 88888  72.8435 115.9689 0086731  52.6988 110.5714 16.05824518  105
 1 11801U          80230.29629788  .01431103  00000-0  14311-1
 2 11801  46.7916 230.4354 7318036  47.4722  10.4117  2.28537848
-eod
+EOD
 _app('drop 88888', undef, 'Drop object 88888');
-_app('tle', <<eod, 'List the TLEs for object 11801');
+_app('tle', <<'EOD', 'List the TLEs for object 11801');
 1 11801U          80230.29629788  .01431103  00000-0  14311-1
 2 11801  46.7916 230.4354 7318036  47.4722  10.4117  2.28537848
-eod
-_app('tle -verbose', <<eod, 'Verbose TLE for object 11801');
+EOD
+_app('tle -verbose', <<'EOD', 'Verbose TLE for object 11801');
 NORAD ID: 11801
     Name:
     International launch designator:
@@ -281,15 +281,15 @@ NORAD ID: 11801
     Semimajor axis (derived): 24347.281726148 kilometers
     Perigee altitude (derived): 151.716308738674 kilometers
     Apogee altitude (derived): 35786.5731435573 kilometers
-eod
+EOD
 _app('macro brief', undef, 'Brief macro listing, without macros');
 _app('macro define place location', undef, "Define 'place' macro");
 _app('macro brief', 'place', 'Brief macro listing, with a macro');
 _app('macro list', 'macro define place location', 'Normal macro listing');
-_app('place', <<eod, 'Execute place macro');
+_app('place', <<'EOD', 'Execute place macro');
 Location: Royal Observatory, Greenwich England
           Latitude 51.4772, longitude 0.0000, height 2 m
-eod
+EOD
 _app('macro delete place', undef, 'Delete place macro');
 _app('macro brief', undef, 'Prove place macro went away');
 _app('macro define say \'echo $1\'', undef, 'Define macro with argument');
@@ -470,65 +470,66 @@ _app('pass -chronological 19801013T000000Z +1', <<'EOD',
 05:46:37   0.0  29.7 NE     1778.5  64.0515   17.6896   224.9 lit   set
 EOD
     'Pass in chronological format' );
-_app("phase '20090401T000000 UT'", <<eod, 'Phase of moon April 1 2009');
+_app("phase '20090401T000000 UT'", <<'EOD', 'Phase of moon April 1 2009');
                              Phas                  Fract
       Date     Time     Name Angl Phase              Lit
 2009/04/01 00:00:00     Moon   69 waxing crescent    32%
-eod
+EOD
 {
     my $warning;
     local $SIG{__WARN__} = sub {$warning = $_[0]};
     _app('clear', undef, 'Clear observing list');
     _app('load t/data.tle', undef, 'Load observing list');
     _app('choose 88888', undef, 'Restrict ourselves to body 88888');
-    _app("position '20090401T000000Z'", <<eod,
+    _app("position '20090401T000000Z'", <<'EOD',
             Name Eleva  Azimuth      Range               Epoch Illum
 2009/04/01 00:00:00
              Sun -34.0 358.8 N   1.495e+08
             Moon   8.3 302.0 NW   369373.2
-eod
+EOD
 	'Position of things in sky on 01-Apr-2009 midnight UT');
-    _do_test($warning, qr{Mean eccentricity < 0 or > 1},
+    _do_test($warning,
+	qr{ Mean \s eccentricity \s < \s 0 \s or \s > \s 1 }smx,
 	'Expect warning on 888888');
     _app('set local_coord equatorial_rng', undef,
 	'Set local_coord to \'equatorial_rng\'');
-    _app("position '20090401T000000Z'", <<eod,
+    _app("position '20090401T000000Z'", <<'EOD',
                     Right
             Name Ascensio Decli      Range               Epoch Illum
 2009/04/01 00:00:00
              Sun 00:41:56   4.5  1.495e+08
             Moon 05:13:53  26.0   369373.2
-eod
+EOD
 	'Position of things in sky on 01-Apr-2009 midnight UT, equatorial');
     _app('set local_coord', undef, 'Clear local_coord');
-    _app("position '20090401T000000Z'", <<eod,
+    _app("position '20090401T000000Z'", <<'EOD',
             Name Eleva  Azimuth      Range               Epoch Illum
 2009/04/01 00:00:00
              Sun -34.0 358.8 N   1.495e+08
             Moon   8.3 302.0 NW   369373.2
-eod
+EOD
 	'Position of things in sky on 01-Apr-2009 midnight UT, in azel again');
 }
-_app("quarters '20090301T000000 UT'", <<eod,
+_app("quarters '20090301T000000 UT'", <<'EOD',
 2009/03/04 07:45:18 First quarter Moon
 2009/03/11 02:37:41 Full Moon
 2009/03/18 17:47:34 Last quarter Moon
 2009/03/20 11:40:07 Spring equinox
 2009/03/26 16:05:47 New Moon
-eod
+EOD
     'Quarters of Moon and Sun, Mar 1 2009');
-_app('sky list', <<eod, "List what's in the sky");
+_app('sky list', <<'EOD', "List what's in the sky");
 sky add Moon
 sky add Sun
-eod
+EOD
 
 _app('sky drop moon', undef, 'Get rid of the Moon');
 _app('sky list', 'sky add Sun', 'Confirm the Moon is gone');
 _app('sky add moon', undef, 'Add the Moon back again');
-_app('sky list', <<eod, 'Confirm that both sun and moon are in the sky');
+_app('sky list', <<'EOD', 'Confirm that both sun and moon are in the sky');
 sky add Moon
 sky add Sun
-eod
+EOD
 _app('sky clear', undef, 'Remove all bodies from the sky');
 _app('sky list', undef, 'Confirm that there is nothing in the sky');
 _app('sky add sun', undef, 'Add the sun back again');
@@ -538,11 +539,11 @@ _app('sky add fubar',
     'Add unknown body (fails)');
 _app('sky add Arcturus 213.9153000 +19.1824103 11.25 -1.09343 -1.99943 -5.2',
     undef, 'Add Arcturus');
-_app('sky list', <<eod, 'Confirm Sun, Moon, and Arcturus are in the sky');
+_app('sky list', <<'EOD', 'Confirm Sun, Moon, and Arcturus are in the sky');
 sky add Arcturus 14:15:40  19.182 11.25 -1.0934 -1.99943 -5.2
 sky add Moon
 sky add Sun
-eod
+EOD
 _app('source t/source.dat Able was I, ere I saw Elba',
     'Able was I, ere I saw Elba', 'Echo from a source file');
 _app('source -optional t/source.dat There was a young lady named Bright,',
@@ -594,16 +595,16 @@ EOD
 
 _app('clear', undef, 'Clear the observing list for validate() check');
 _app('load t/data.tle', undef, 'Load a TLE file for validate() check');
-_app('list', <<eod, 'List the loaded items');
+_app('list', <<'EOD', 'List the loaded items');
    OID Name                     Epoch               Period
  88888                          1980/10/01 23:41:24 01:29:37
  11801                          1980/08/17 07:06:40 10:30:08
-eod
+EOD
 _app('validate -quiet "19810101T120000Z"', undef, 'Validate for 01-Jan-1981');
-_app('list', <<eod, 'List the valid items');
+_app('list', <<'EOD', 'List the valid items');
    OID Name                     Epoch               Period
  88888                          1980/10/01 23:41:24 01:29:37
-eod
+EOD
 
 SKIP: {
     -d 't' or skip ("No t directory found", 1);
@@ -636,12 +637,12 @@ SKIP: {
     $rslt = eval {$app->execute(
 	    "geocode '1600 Pennsylvania Ave, Washington DC'")};
     ok(!$@, "geocode of White House succeeded");
-    is($rslt, <<eod, "Geocode of White House returned expected data");
+    is($rslt, <<'EOD', "Geocode of White House returned expected data");
 
 set location '1600 Pennsylvania Ave NW Washington DC 20502'
 set latitude 38.898748
 set longitude -77.037684
-eod
+EOD
     is($app->get('location'),
 	'1600 Pennsylvania Ave NW Washington DC 20502',
 	'Geocode of White House returned expected address');
@@ -693,7 +694,7 @@ sub _do_test {
     defined $want and chomp $want;
     if ($@) {
 	chomp $@;
-	@_ = ($@, qr/^@{[quotemeta $want]}/, $title);
+	@_ = ($@, qr/ \A @{[ quotemeta $want ]} /smx, $title);
 	goto &like;
     } else {
 	defined $got and chomp $got;
@@ -714,11 +715,11 @@ sub _do_test {
     }
 
     sub _get_satellite_data {
-	my ($app, $fn, @stcmd) = @_;
+	my ($app_obj, $fn, @stcmd) = @_;
 
 	# If the file has already been created, just load it and return.
 	eval {
-	    $app->load($fn);
+	    $app_obj->load($fn);
 	    1;
 	} and return;
 
@@ -731,11 +732,11 @@ sub _do_test {
 	    require Astro::SpaceTrack;
 	    1;
 	} or return ($bypass = "Astro::SpaceTrack not available");
-	$app->st(qw{set with_name 1});
+	$app_obj->st(qw{set with_name 1});
 
 	# If we do not have a Space Track username or password, try to
 	# scavenge one from the user's profile.
-	if ( $can_filter && ! _have_spacetrack_info( $app ) ) {
+	if ( $can_filter && ! _have_spacetrack_info( $app_obj ) ) {
 	    eval {	## no critic (RequireCheckingReturnValueOfEval)
 		my $app2 = App::Satpass2->new();
 		# NOTICE
@@ -751,7 +752,7 @@ sub _do_test {
 			    ;
 		    } );
 		$app2->init();
-		$app->execute(
+		$app_obj->execute(
 		    $app2->st(qw{show username password})
 		);
 	    };
@@ -760,30 +761,30 @@ sub _do_test {
 	# If we _still_ do not have a Space Track username and password,
 	# give up if we're doing automated testing. Otherwise prompt the
 	# user for them.
-	if ( ! _have_spacetrack_info( $app ) ) {
+	if ( ! _have_spacetrack_info( $app_obj ) ) {
 	    $ENV{AUTOMATED_TESTING}
 		and return (
 		$bypass = "Automated testing and SPACETRACK_USER not set"
 	    );
 	    {
-		warn <<eod;
+		warn <<'EOD';
 
 In order to do the following test we need orbital data from the Space
 Track web side. You need to give your Space Track username and password
 to retrieve this data. If you do not have a Space Track username and
 password, or if you do not wish to run this test, simply hit <return>.
 
-eod
+EOD
 		my $user = _prompt('Enter Space Track username: ')
 		    or return ($bypass = $message);
 		my $pass = _prompt('Enter Space Track password: ')
 		    or return ($bypass = $message);
-		$app->st('set', username => $user, password => $pass);
+		$app_obj->st('set', username => $user, password => $pass);
 		eval {
-		    $app->st('login');
+		    $app_obj->st('login');
 		    1;
 		} and last;
-		$app->st('set', username => '', password => '');
+		$app_obj->st('set', username => '', password => '');
 		$@ =~ m/401/ and do {
 		    warn $@, "\n";
 		    redo;
@@ -796,7 +797,7 @@ eod
 	# password, retrieve the desired data, returning a failure
 	# message if we fail.
 	eval {
-	    $app->st(@stcmd);
+	    $app_obj->st(@stcmd);
 	    1;
 	} or return "Failed to retrieve data from Space Track: $@";
 
@@ -804,14 +805,14 @@ eod
 	# can skip this whole mess the next time around.
 	if ($ENV{SATPASS2_TEST_PRESERVE_DATA}) {
 	    my $fh = IO::File->new($fn, '>') or return;
-	    print {$fh} $app->tle();
+	    print { $fh } $app_obj->tle();
 	}
 	return;
     }
 
     sub _have_spacetrack_info {
-	my ( $app ) = @_;
-	my $sp = $app->get( 'spacetrack' ) or return;
+	my ( $app_obj ) = @_;
+	my $sp = $app_obj->get( 'spacetrack' ) or return;
 	foreach my $name ( qw{ username password } ) {
 	    my $value = $sp->get( $name );
 	    defined $value or return;

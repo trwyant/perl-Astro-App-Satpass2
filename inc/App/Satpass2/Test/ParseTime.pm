@@ -31,6 +31,7 @@ sub time_is {
 	goto &fail;
     } else {
 	@_ = ( $got, $want, $name );
+	no warnings qw{ uninitialized };
 	$got == $want or diag(
 	    " got $got => " . scalar gmtime( $got ) .
 	    " GMT\nwant => " . scalar gmtime( $want ) . " GMT\n" );

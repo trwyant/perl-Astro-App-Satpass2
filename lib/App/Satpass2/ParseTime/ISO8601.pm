@@ -26,7 +26,7 @@ sub delegate {
 	tomorrow => SECSPERDAY(),
     );
 
-    sub parse_time_absolute {
+    sub parse_time_absolute {	## no critic (ProhibitExcessComplexity)
 	my ( $self, $string ) = @_;
 
 	my @zone;
@@ -41,40 +41,36 @@ sub delegate {
 	if ( $string =~ m{ \A
 		( \d{4} \D? | \d{2} \D )			# year: $1
 		(?: ( \d{1,2} ) \D?				# month: $2
-		    (?: ( \d{1,2} ) (?: \s* | \D? )		# day: $3
-			(?: ( \d{1,2} ) \D?			# hour: $4
-			    (?: ( \d{1,2} ) \D?			# minute: $5
-				(?: ( \d{1,2} ) \D?		# second: $6
-				    ( \d* )			# fract: $7
-				)?
-			    )?
-			)?
+		    (?: ( \d{1,2} ) \D*				# day: $3
 		    )?
 		)?
-		\z
-	    }smx ) {
-	    @date = ( 0, $1, $2, $3, $4, $5, $6, $7 );
+	    }smxg ) {
+	    @date = ( 0, $1, $2, $3 );
 
 	# special-case 'yesterday', 'today', and 'tomorrow'.
 	} elsif ( $string =~ m{ \A
-	    ( (?i: yesterday | today | tomorrow ) )	# day: $1
-	    (?: \D* ( \d{1,2} ) \D?			# hour: $2
-		(?: ( \d{1,2} ) \D?			# minute: $3
-		    (?: ( \d{1,2} ) \D?		# second: $4
-			( \d* )			# fract: $5
-		    )?
-		)?
-	    )?
-	    \z }smx ) {
+	    ( (?i: yesterday | today | tomorrow ) ) \D*		# day: $1
+	    }smxg ) {
 	    my @today = @zone ? gmtime : localtime;
 	    @date = ( $special_day_offset{ lc $1 }, $today[5] + 1900,
-		$today[4] + 1, $today[3], $2, $3, $4, $5 );
+		$today[4] + 1, $today[3] );
 
 	} else {
 
 	    return;
 
 	}
+
+	$string =~ m{ \G
+	    (?: ( \d{1,2} ) \D?			# hour: $1
+		(?: ( \d{1,2} ) \D?		# minute: $2
+		    (?: ( \d{1,2} ) \D?		# second: $3
+			( \d* )			# fract: $4
+		    )?
+		)?
+	    )?
+	    \z }smx or return;
+	push @date, $1, $2, $3, $4;
 
 	my $offset = shift @date || 0;
 	if ( @zone && ! $zone[0] ) {
@@ -91,7 +87,7 @@ sub delegate {
 	} elsif ( $date[0] >= 100 ) {
 	    $date[0] -= 1900;
 	}
-	defined $date[1] and --$date[1];
+	$date[1] = defined $date[1] ? $date[1] - 1 : 0;
 	defined $date[2] or $date[2] = 1;
 	my $frc = pop @date;
 
