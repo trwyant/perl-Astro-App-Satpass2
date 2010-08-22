@@ -20,7 +20,7 @@ BEGIN {
 
 $| = 1;	## no critic (RequireLocalizedPunctuationVars)
 
-plan( tests => 165 );
+plan( tests => 172 );
 
 require_ok( 'App::Satpass2' )
     or BAIL_OUT( "Can not continue without loading App::Satpass2" );
@@ -203,16 +203,27 @@ _app("almanac '20090401T000000 UT'",
 EOD
 _app('begin', undef, 'Begin local block');
 _app('show horizon', 'set horizon 20', 'Confirm horizon setting');
-_app('localize horizon', undef, 'Localize horizon');
+_app('show twilight', 'set twilight civil', 'Confirm twilight setting');
+_app( sub { _raw_attr( _twilight => '%.6f' ) }, '-0.104720',
+    'Confirm civil twilight in radians' );
+_app('localize horizon twilight', undef, 'Localize horizon and twilight');
 _app('export horizon 15', undef, 'Export horizon, setting its value');
 _app('show horizon', 'set horizon 15', 'Check that the horizon was set');
 _app(sub {$ENV{horizon}}, '15', 'Check that the horizon setting was exported');
 _app('set horizon 25', undef, 'Set horizon to 20' );
-_app( 'show horizon', 'set horizon 25', 'Check new horizon value' );
+_app('show horizon', 'set horizon 25', 'Check new horizon value');
 _app( sub {$ENV{horizon}}, '25', 'Check new horizon exported' );
+_app('set twilight astronomical', undef, 'Set twilight to astronomical');
+_app('show twilight', 'set twilight astronomical',
+    'Check that twilight was set');
+_app( sub { _raw_attr( _twilight => '%.6f' ) }, '-0.314159',
+    'Confirm astronomical twilight in radians' );
 _app('end', undef, 'End local block');
 _app( 'show horizon', 'set horizon 20', 'Check horizon back to 20' );
 _app( sub {$ENV{horizon}}, '20', 'Check exported horizon at 20 also' );
+_app('show twilight', 'set twilight civil', 'Check twilight back at civil');
+_app( sub { _raw_attr( _twilight => '%.6f' ) }, '-0.104720',
+    'Confirm back at civil twilight in radians' );
 _app('export BOGUS', 'You must specify a value',
     'Export of environment variable needs a value');
 _app('export BOGUS froboz', undef, 'Export environment variable');
@@ -831,6 +842,11 @@ sub _prompt {
     return unless defined (my $input = <STDIN>);	## no critic (ProhibitExplicitStdin)
     chomp $input;
     return $input;
+}
+
+sub _raw_attr {
+    my ( $name, $tplt ) = @_;
+    return $tplt ? sprintf $tplt, $app->{$name} : $app->{$name};
 }
 
 1;

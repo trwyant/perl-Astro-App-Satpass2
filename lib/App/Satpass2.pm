@@ -419,12 +419,19 @@ sub drop : Verb() {
 }
 
 sub dump : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
-    my $self = shift;
-    my $tp = delete $self->{time_parser};
-    $self->{time_parser} = ref $tp;
-    my $dump = $self->_get_dumper()->( $self );
-    $self->{time_parser} = $tp;
-    return $dump;
+    my ( $self, $arg ) = @_;
+    if ( 'twilight' eq $arg ) {
+	return <<"EOD";
+twilight => @{[ $self->{twilight} ]}
+_twilight => @{[ $self->{_twilight} ]}
+EOD
+    } else {
+	my $tp = delete $self->{time_parser};
+	$self->{time_parser} = ref $tp;
+	my $dump = $self->_get_dumper()->( $self );
+	$self->{time_parser} = $tp;
+	return $dump;
+    }
 }
 
 sub echo : Verb() {
@@ -1576,6 +1583,10 @@ sub _set_time_parser_attribute {
     return $val;
 }
 
+_frame_pop_force_set ( 'twilight' );	# Force use of the set() method
+					# in _frame_pop(), because we
+					# need to set {twilight} as
+					# well.
 sub _set_twilight {
     my ($self, $name, $val) = @_;
     if (my $key = $twilight_abbr{lc $val}) {
@@ -2180,34 +2191,52 @@ sub _frame_push {
 #	all required frames are popped, an exception is thrown if the
 #	pop was done with a continued input line pending.
 
-sub _frame_pop {
-    my ($self, @args) = @_;
-    my $type = @args > 1 ? shift @args : undef;
-    my $frames = @args ? shift @args : @{$self->{frame}} - 1;
-    while (@{$self->{frame}} > $frames) {
-	my $frame = pop @{$self->{frame}}
-	    or confess "Programming error - no frame to pop.";
-	my $local = $frame->{local} || {};
-	while (my ( $name, $value) = each %{ $local } ) {
-	    if ( exists $self->{$name} ) {
-		$self->{$name} = $value;
-	    } else {
-		$self->set( $name, $value );
+{
+
+    my %force_set;	# If true, the named attribute is set with the
+			# set() method even if a hash key of the same
+			# name exists. This is set with
+			# _frame_pop_force_set(), typically where the
+			# mutator is defined.
+
+    sub _frame_pop {
+	my ($self, @args) = @_;
+	my $type = @args > 1 ? shift @args : undef;
+	my $frames = @args ? shift @args : @{$self->{frame}} - 1;
+	while (@{$self->{frame}} > $frames) {
+	    my $frame = pop @{$self->{frame}}
+		or confess "Programming error - no frame to pop.";
+	    my $local = $frame->{local} || {};
+	    while (my ( $name, $value) = each %{ $local } ) {
+		if ( exists $self->{$name} && !$force_set{$name} ) {
+		    $self->{$name} = $value;
+		} else {
+		    $self->set( $name, $value );
+		}
 	    }
-	}
-	foreach my $key (qw{macro}) {
-	    my $info = $frame->{$key} || {};
-	    while (my ($name, $value) = each %$info) {
-		$self->{$key}{$name} = $value;
+	    foreach my $key (qw{macro}) {
+		my $info = $frame->{$key} || {};
+		while (my ($name, $value) = each %$info) {
+		    $self->{$key}{$name} = $value;
+		}
 	    }
+	    ($frame->{spacetrack} && %{$frame->{spacetrack}})
+		and $self->_get_spacetrack()->set(%{$frame->{spacetrack}});
 	}
-	($frame->{spacetrack} && %{$frame->{spacetrack}})
-	    and $self->_get_spacetrack()->set(%{$frame->{spacetrack}});
+	if (delete $self->{pending}) {
+	    $self->_wail("Input ended on continued line");
+	}
+	return;
     }
-    if (delete $self->{pending}) {
-	$self->_wail("Input ended on continued line");
+
+    # Force use of the set() method even if there is an attribute of the
+    # same name.
+    sub _frame_pop_force_set {
+	foreach my $name ( @_ ) {
+	    $force_set{$name} = 1;
+	}
+	return;
     }
-    return;
 }
 
 #	$dumper = $self->_get_dumper();
