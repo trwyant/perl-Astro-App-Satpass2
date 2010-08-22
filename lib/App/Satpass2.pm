@@ -5257,8 +5257,8 @@ than nothing.
 =head2 twilight
 
 This attribute specifies the elevation of the Sun at which day becomes
-night or vice versa, in degrees. This will normally be a negative
-number, since a positive number says the Sun is above the horizon.
+night or vice versa, in degrees. B<This will normally be a negative
+number>, since a positive number says the Sun is above the horizon.
 
 The words C<'civil'>, C<'nautical'>, or C<'astronomical'> are also
 acceptable, as is any unique abbreviation of these words. They specify
@@ -5650,6 +5650,12 @@ supported, and this attribute is ignored and deprecated.
 This attribute is ignored and deprecated, since the C<App::Satpass2>
 macro() functionality always requires an explicit C<delete> to delete a
 macro.
+
+=item twilight
+
+The F<satpass> mutator forced the sign to be negative. The
+C<App::Satpass2> mutator does not. Note that a positive setting means
+the Sun is above the horizon.
 
 =back
 
