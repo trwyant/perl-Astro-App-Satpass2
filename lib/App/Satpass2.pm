@@ -1585,7 +1585,7 @@ sub _set_time_parser_attribute {
 
 _frame_pop_force_set ( 'twilight' );	# Force use of the set() method
 					# in _frame_pop(), because we
-					# need to set {twilight} as
+					# need to set {_twilight} as
 					# well.
 sub _set_twilight {
     my ($self, $name, $val) = @_;
