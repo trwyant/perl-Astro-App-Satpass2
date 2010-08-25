@@ -139,7 +139,7 @@ support all attributes the original supports.
 
 =head2 create_attribute_methods
 
- __PACKAGE->create_attribute_methods();
+ __PACKAGE__->create_attribute_methods();
 
 This method may be called exactly once by the subclass to create
 accessor/mutator methods. This method assumes that the object is based
