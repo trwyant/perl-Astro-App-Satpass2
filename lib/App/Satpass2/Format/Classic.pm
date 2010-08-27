@@ -311,6 +311,9 @@ my %template = (
 	width => 1,
     },
     date	=> {	# Date (was 'j')
+	allow => {
+	    zone => 1,
+	},
 	fetch => sub {return $_[0]{time}},
 	forbid => {
 	    center => 1,
@@ -390,6 +393,9 @@ my %template = (
 	width => 10,
     },
     effective	=> {	# effective date
+	allow => {
+	    zone => 1,
+	},
 	fetch => sub {return _fetch_tle_attr($_[1], 'effective')},
 	format => [qw{date_format time_format}],
 	formatter => \&_format_time,
@@ -421,6 +427,9 @@ my %template = (
 	width => 1,
     },
     epoch	=> {	# epoch (was 'p')
+	allow => {
+	    zone => 1,
+	},
 	fetch => sub {return _fetch_tle_attr($_[1], 'epoch')},
 	forbid_units => {
 	    days_since_epoch => 1,
@@ -757,6 +766,9 @@ my %template = (
 	width => 60,
     },
     time	=> {	# time of day. (was 'h')
+	allow => {
+	    zone => 1,
+	},
 	fetch => sub {return $_[0]{time}},
 	forbid => {
 	    center => 1,
@@ -821,7 +833,7 @@ EOD
     pass_appulse =>
     '%time %local_coord(appulse)       %angle(appulse) degrees from %-name(appulse)%n',
     pass_date => '%n%date%n',
-    pass_oid => '%n%id - %-*name%n%n',
+    pass_start => '%n%id - %-*name%n%n',
     phase => '%date %time %8name %phase(title=Phase Angle) %-16phase(units=phase) %.0fraction_lit(units=percent)%n',
     position	=>
 	'%16name(missing=oid) %local_coord %epoch %illumination%n',
@@ -1230,6 +1242,9 @@ sub _format_compiler {
 	units	=> {
 	    standard => 1,
 	},
+	zone	=> {
+	    standard => 0,
+	},
     );
     my %tplt_args = abbrev( keys %argument_def );
 
@@ -1375,6 +1390,7 @@ sub _format_execute_format {
 
 sub _format_execute_header {
     my ($self, $tx) = @_;
+    $self->header() or return '';
     my @columns;
     my $max = 1;
     foreach my $field (@$tx) {
@@ -1408,6 +1424,7 @@ sub _format_execute_header {
 	}
 	$max and $output .= "\n";
     }
+    $output =~ s/ (?<! \n ) \z /\n/smx;
     return $output;
 }
 
@@ -1637,8 +1654,9 @@ sub _format_time {
     my ($self, $align, $width, $places, $info, $value, $opt) = @_;
     my $fmt = join (' ', map {$self->$_()} @{$info->{format}});
     my $gmt = $opt->{gmt} || $self->gmt();
-    my $buffer = $self->time_formatter()->strftime(
-	$fmt, $value, $opt->{gmt} || undef );
+    my $fmtr = $self->time_formatter();
+    $fmtr->tz( $opt->{zone} || $self->tz() );
+    my $buffer = $fmtr->strftime( $fmt, $value, $opt->{gmt} || undef );
     return _format_string($self, $align, $width, $places, $info,
 	$buffer, $opt);
 }
@@ -1811,7 +1829,7 @@ sub pass {
 
 	# Return OID and headers.
 	$self->_set( body => $pass );
-	return $self->_format_execute( format => 'pass_oid' ) .
+	return $self->_format_execute( format => 'pass_start' ) .
 	    $self->_format_execute( header => 'pass' );
 
     # elsif we have the (presumptive) pass data
@@ -1830,8 +1848,7 @@ sub pass {
 	    }
 	    if ( $self->{_pass_oid_every_pass} ) {
 		$output .= $self->_format_execute(
-		    format => 'pass_oid' );
-		$output =~ s/ \n+ \z /\n/smx;
+		    format => 'pass_start' );
 	    }
 	}
 
@@ -1848,6 +1865,11 @@ sub pass {
 		$output .= $self->_format_execute( format => 'pass_appulse' );
 	    }
 	}
+
+	@{ $pass->{events} }
+	    and defined $self->{template}{pass_finish}
+	    and $output .= $self->_format_execute(
+		format => 'pass_finish' );
 
 	# Return the formatted pass.
 	return $output;
@@ -2202,7 +2224,7 @@ sub _set_phenomenon {
 sub template {
     my ( $self, $name, @value ) = @_;
     if ( @value ) {
-	if ( defined $value[0] ) {
+	if ( defined $value[0] && 'undef' ne $value[0] ) {
 	    $self->{template}{$name} = $value[0];
 	} else {
 	    delete $self->{template}{$name};
@@ -2544,17 +2566,21 @@ It uses template C<pass>, which defaults to
 
  %time %local_coord %latitude %longitude %altitude %-illumination %-event%n
 
-to display the events of individual passes. Template C<pass_oid>, which
+to display the events of individual passes. Template C<pass_start>, which
 defaults to
 
  %n%id - %-*name%n%n
 
-is used to identify the satellite. Template C<pass_date> which defaults
-to
+is used to identify the satellite. This is displayed before each pass
+when initialized with C<< $fmt->pass() >>, or once when initialized with
+C<< $fmt->pass( $body ) >>. If you use C<%date> or C<%time> in this
+template, you get the time the satellite rises.
+
+Template C<pass_date> which defaults to
 
  %n%date%n
 
-is used to display the date.
+is used to display the date when it changes.
 
 Template C<pass_appulse> to display the body the satellite
 appulses with, if any. This defaults to
@@ -2563,6 +2589,10 @@ appulses with, if any. This defaults to
     %-name(appulse)%n
 
 The above template is wrapped to fit on the page.
+
+Template C<pass_finish>, if defined (it is not by default) is displayed
+at the end of each pass. If you use C<%date> or C<%time> in this
+template, you get the time the satellite sets.
 
 =head3 phase
 
@@ -3070,6 +3100,16 @@ is ignored.
 The C<center> and C<station> arguments are not supported. All other
 standard arguments are supported.
 
+In addition the C<zone> argument allows you to specify a time zone
+different than the L<tz()|/tz> setting of the formatter. You must
+specify an argument acceptable to the
+L<App::Satpass2::FormatTime|App::Satpass2::FormatTime> object being used
+to format the time. For example, something like C<$date(zone=z)> will
+produce GMT output from
+L<App::Satpass2::FormatTime::DateTime|App::Satpass2::FormatTime::DateTime>,
+and B<may> produce the same from
+L<App::Satpass2::FormatTime::POSIX|App::Satpass2::FormatTime::POSIX>.
+
 The dimension is L<date|/date>.
 
 The default field width is computed when the 'date_format' attribute is
@@ -3165,6 +3205,16 @@ get a blank field if the effective date has not been set.
 
 All standard arguments are supported.
 
+In addition the C<zone> argument allows you to specify a time zone
+different than the L<tz()|/tz> setting of the formatter. You must
+specify an argument acceptable to the
+L<App::Satpass2::FormatTime|App::Satpass2::FormatTime> object being used
+to format the time. For example, something like C<$date(zone=z)> will
+produce GMT output from
+L<App::Satpass2::FormatTime::DateTime|App::Satpass2::FormatTime::DateTime>,
+and B<may> produce the same from
+L<App::Satpass2::FormatTime::POSIX|App::Satpass2::FormatTime::POSIX>.
+
 The dimension is L<date|/date>.
 
 The default field width is computed whenever the L</date_format> or
@@ -3226,6 +3276,25 @@ unlikely to get anything but a blank field.
 
 All standard arguments are supported, but C<units=days_since_epoch> is
 forbidden, since it is always 0.
+
+In addition the C<zone> argument allows you to specify a time zone
+different than the L<tz()|/tz> setting of the formatter. You must
+specify an argument acceptable to the
+L<App::Satpass2::FormatTime|App::Satpass2::FormatTime> object being used
+to format the time. For example, something like C<$date(zone=z)> will
+produce GMT output from
+L<App::Satpass2::FormatTime::DateTime|App::Satpass2::FormatTime::DateTime>,
+and B<may> produce the same from
+L<App::Satpass2::FormatTime::POSIX|App::Satpass2::FormatTime::POSIX>.
+In addition the C<zone> argument allows you to specify a time zone
+different than the L<tz()|/tz> setting of the formatter. You must
+specify an argument acceptable to the
+L<App::Satpass2::FormatTime|App::Satpass2::FormatTime> object being used
+to format the time. For example, something like C<$date(zone=z)> will
+produce GMT output from
+L<App::Satpass2::FormatTime::DateTime|App::Satpass2::FormatTime::DateTime>,
+and B<may> produce the same from
+L<App::Satpass2::FormatTime::POSIX|App::Satpass2::FormatTime::POSIX>.
 
 The dimension is L<date|/date>.
 
@@ -3652,6 +3721,16 @@ assumption  is not enforced.
 
 The C<center> and C<station> arguments are forbidden. All other standard
 arguments are supported.
+
+In addition the C<zone> argument allows you to specify a time zone
+different than the L<tz()|/tz> setting of the formatter. You must
+specify an argument acceptable to the
+L<App::Satpass2::FormatTime|App::Satpass2::FormatTime> object being used
+to format the time. For example, something like C<$date(zone=z)> will
+produce GMT output from
+L<App::Satpass2::FormatTime::DateTime|App::Satpass2::FormatTime::DateTime>,
+and B<may> produce the same from
+L<App::Satpass2::FormatTime::POSIX|App::Satpass2::FormatTime::POSIX>.
 
 The dimension is L<date|/date>. The default units are local unless the
 L<gmt|App::Satpass2::Format/gmt> attribute is set.

@@ -1,0 +1,56 @@
+# Do satellite pass calculations, displaying the results in vCalendar
+# format. The output may be redirected to a .vcal file. The start and
+# end dates for the pass calculation can be passed as arguments to the
+# 'source' statement, and default to 'today noon' and '+8' respectively.
+# This whole thing (less the comments) could be wrapped up as a macro
+# if desired.
+
+localize formatter date_format time_format
+
+# We intend to use %date(zone=z) to format the event begin and end
+
+set date_format %Y%m%dT%H%M%SZ
+
+# We intend to use %time to format the individual event times.
+
+set time_format %I:%M:%S
+
+# Supress the automatically-generated headers.
+
+fmtr header 0
+
+# Provide the vCalendar event start tag, the start time, and the start
+# of the event summary.
+
+fmtr template pass_start BEGIN:VEVENT%n;DTSTART:%date(zone=z)%n;SUMMARY:%*name
+
+# Define the optional pass_finish template to provide the event end
+# time, and the event end tag
+
+fmtr template pass_finish %n;DTEND:%date(zone=z)%n;END:VEVENT%n
+
+# The individual pass events get concatenated to the summary, with no newline.
+
+fmtr template pass ' %*event %time Az %*.0azimuth(bearing) Ele %*.0elevation'
+
+# If there is an appulse, we name the appulsed body
+
+fmtr template pass_appulse ' (%*name(appulse))'
+
+# We turn off the date display.
+
+fmtr template pass_date ''
+
+# Emit the start tag for the vCalendar data.
+
+echo BEGIN:VCALENDAR
+
+# Do the pass calculation. The -chronological is used for its side effect
+# of placing the satellite name with the individual pass, rather than at
+# the top of the data.
+
+pass -chronological ${1:-today noon} ${2:-+8}
+
+# Emit the end tag for the vCalendar data.
+
+echo END:VCALENDAR

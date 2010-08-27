@@ -124,7 +124,7 @@ my @pass = ( {		# pass
 	],
     } );
 
-$tst->method( template => pass_oid => '' );	# Supress pass OID.
+$tst->method( template => pass_start => '' );	# Supress pass OID.
 $tst->method( template => pass_date => '' );	# Supress pass date.
 $tst->method( template => pass_appulse => '' );	# Supress appulse.
 $tst->method( 'pass' );				# Initialize
@@ -1093,6 +1093,7 @@ $tst->method_is( 'pass', @pass, <<'EOD', 'Pass' );
 2008-10-09
 
  25544 - ISS
+
 23:23:41  27.5 153.8 SE      703.5  34.0765  -74.2084   353.9 lit   apls
 23:23:41  29.2 151.2 SE   389093.9        2.9 degrees from Moon
 EOD
