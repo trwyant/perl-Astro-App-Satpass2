@@ -312,6 +312,7 @@ my %template = (
     },
     date	=> {	# Date (was 'j')
 	allow => {
+	    delta => 1,
 	    zone => 1,
 	},
 	fetch => sub {return $_[0]{time}},
@@ -394,6 +395,7 @@ my %template = (
     },
     effective	=> {	# effective date
 	allow => {
+	    delta => 1,
 	    zone => 1,
 	},
 	fetch => sub {return _fetch_tle_attr($_[1], 'effective')},
@@ -428,6 +430,7 @@ my %template = (
     },
     epoch	=> {	# epoch (was 'p')
 	allow => {
+	    delta => 1,
 	    zone => 1,
 	},
 	fetch => sub {return _fetch_tle_attr($_[1], 'epoch')},
@@ -767,6 +770,7 @@ my %template = (
     },
     time	=> {	# time of day. (was 'h')
 	allow => {
+	    delta => 1,
 	    zone => 1,
 	},
 	fetch => sub {return $_[0]{time}},
@@ -1228,6 +1232,9 @@ sub _format_compiler {
 	    selector => 1,
 	    standard => 1,
 	},
+	delta	=> {
+	    standard => 0,
+	},
 	earth	=> {
 	},
 	missing	=> {
@@ -1653,6 +1660,8 @@ sub _format_text_block {
 sub _format_time {
     my ($self, $align, $width, $places, $info, $value, $opt) = @_;
     my $fmt = join (' ', map {$self->$_()} @{$info->{format}});
+    $opt->{delta}
+	and $value += $opt->{delta};
     my $gmt = $opt->{gmt} || $self->gmt();
     my $fmtr = $self->time_formatter();
     $fmtr->tz( $opt->{zone} || $self->tz() );
@@ -3110,6 +3119,9 @@ L<App::Satpass2::FormatTime::DateTime|App::Satpass2::FormatTime::DateTime>,
 and B<may> produce the same from
 L<App::Satpass2::FormatTime::POSIX|App::Satpass2::FormatTime::POSIX>.
 
+Also, the C<delta> argument allows you to display a time a given number
+of seconds after the actual time (or before, if the value is negative).
+
 The dimension is L<date|/date>.
 
 The default field width is computed when the 'date_format' attribute is
@@ -3215,6 +3227,11 @@ L<App::Satpass2::FormatTime::DateTime|App::Satpass2::FormatTime::DateTime>,
 and B<may> produce the same from
 L<App::Satpass2::FormatTime::POSIX|App::Satpass2::FormatTime::POSIX>.
 
+Also, the C<delta> argument allows you to display a time a given number
+of seconds after the actual time (or before, if the value is negative).
+I can't think why you would want to do this, but it's here for
+consistency.
+
 The dimension is L<date|/date>.
 
 The default field width is computed whenever the L</date_format> or
@@ -3295,6 +3312,11 @@ produce GMT output from
 L<App::Satpass2::FormatTime::DateTime|App::Satpass2::FormatTime::DateTime>,
 and B<may> produce the same from
 L<App::Satpass2::FormatTime::POSIX|App::Satpass2::FormatTime::POSIX>.
+
+Also, the C<delta> argument allows you to display a time a given number
+of seconds after the actual time (or before, if the value is negative).
+I can't think why you would want to do this, but it's here for
+consistency.
 
 The dimension is L<date|/date>.
 
@@ -3731,6 +3753,9 @@ produce GMT output from
 L<App::Satpass2::FormatTime::DateTime|App::Satpass2::FormatTime::DateTime>,
 and B<may> produce the same from
 L<App::Satpass2::FormatTime::POSIX|App::Satpass2::FormatTime::POSIX>.
+
+Also, the C<delta> argument allows you to display a time a given number
+of seconds after the actual time (or before, if the value is negative).
 
 The dimension is L<date|/date>. The default units are local unless the
 L<gmt|App::Satpass2::Format/gmt> attribute is set.

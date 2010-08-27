@@ -7,9 +7,10 @@
 
 localize formatter date_format time_format
 
-# We intend to use %date(zone=z) to format the event begin and end
+# We intend to use %date(zone=z) to format the event begin and end. We
+# truncate the time to the previous minute.
 
-set date_format %Y%m%dT%H%M%SZ
+set date_format %Y%m%dT%H%M00Z
 
 # We intend to use %time to format the individual event times.
 
@@ -22,7 +23,8 @@ fmtr header 0
 # Provide the vCalendar event start tag, the start time, and the start
 # of the event summary.
 
-fmtr template pass_start BEGIN:VEVENT%n;DTSTART:%date(zone=z)%n;SUMMARY:%*name
+fmtr template pass_start "BEGIN:VEVENT%n;DTSTART:%date(zone=z)%n;\
+DALARM:%date(delta=-360,zone=z)%n;SUMMARY:%*name"
 
 # Define the optional pass_finish template to provide the event end
 # time, and the event end tag
