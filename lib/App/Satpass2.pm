@@ -434,9 +434,12 @@ EOD
     }
 }
 
-sub echo : Verb() {
+sub echo : Verb(n) {
     my ($self, @args) = @_;
-    return join(' ', @args) . "\n";
+    (my $opt, @args) = $self->_getopt(@args);
+    my $output = join( ' ', @args );
+    $opt->{n} or $output .= "\n";
+    return $output;
 }
 
 sub end : Verb() {
@@ -509,7 +512,7 @@ sub execute {
 	my $output = $self->dispatch( @$args );
 
 	if ( defined $output ) {
-	    $output =~ m/ \n \z /smx or $output .= "\n";
+##	    $output =~ m/ \n \z /smx or $output .= "\n";
 	    my $ref = ref $stdout;
 	    if ( !defined $stdout ) {
 		$accum .= $output;
@@ -3952,6 +3955,10 @@ C<Data::Dumper>) and returns a dump of the C<App::Satpass2> object.
 This interactive method joins its arguments with spaces, appends a
 newline, and returns the result. It is so named because it is
 anticipated that the caller will print the result.
+
+The following option may be specified:
+
+ -n to supress the newline at the end of the echoed text.
 
 =head2 end
 
