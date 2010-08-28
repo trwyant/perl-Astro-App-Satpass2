@@ -7,6 +7,11 @@ almanac - A simple almanac program, displaying sun and moon rise and
 	the moon, solstices and equinoxes for the next 30 days after the
 	given day.
 
+flare_vcalendar - A source file, to be executed by, for example,
+	satpass2> source eg/flare_vcalendar
+	This makes Iridium flare calculations for any satellites that
+	have been loaded, and displays the results in vCalendar format.
+
 pass_vcalendar - A source file, to be executed by, for example,
 	satpass2> source eg/pass_vcalendar
 	This makes pass calculations for any satellites that have been

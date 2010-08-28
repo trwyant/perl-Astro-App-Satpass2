@@ -1,0 +1,43 @@
+# Do iridium flare calculations, displaying the results in vCalendar
+# format. The output may be redirected to a .vcal file. Any arguments
+# passed to the source statement will in turn be passed to the flare
+# command.
+# This whole thing (less the comments) could be wrapped up as a macro
+# if desired.
+
+localize formatter date_format time_format
+
+# We intend to use %date(zone=z) to format the event begin and end. We
+# truncate the time to the previous minute.
+
+set date_format %Y%m%dT%H%M00Z
+
+# We intend to use %time to format the individual event times.
+
+set time_format %I:%M:%S
+
+# Supress the automatically-generated headers.
+
+fmtr header 0
+
+# Template to provide output in vCalendar format.
+
+fmtr template flare "BEGIN:VEVENT%n;DTSTART:%date(zone=z)%n;\
+DALARM:%date(delta=-360,zone=z)%n;\
+SUMMARY:%*name %time Az %*.0azimuth(bearing) Ele %*.0elevation; Mag \
+%magnitude%n;\
+DTEND:%date(delta=60,zone=z)%n;END:VEVENT%n"
+
+# Emit the start tag for the vCalendar data.
+
+echo BEGIN:VCALENDAR
+
+# Do the pass calculation. The -chronological is used for its side effect
+# of placing the satellite name with the individual pass, rather than at
+# the top of the data.
+
+flare $@
+
+# Emit the end tag for the vCalendar data.
+
+echo END:VCALENDAR
