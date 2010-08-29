@@ -58,7 +58,7 @@ my $body = Astro::Coord::ECI::TLE->new(
 
 my $tst = App::Satpass2::Test::Format->new( 'App::Satpass2::Format::Classic' );
 
-$tst->plan( tests => 416 );
+$tst->plan( tests => 417 );
 
 $tst->require_ok();
 
@@ -443,6 +443,9 @@ $tst->format_is('%fraction_lit(appulse);', '0.74',
     'Fraction of appulsed body illuminated');
 $tst->format_is('%.0fraction_lit(appulse,units=percent);', '  74%',
     'Percent of appulsed body illuminated');
+$tst->format_is('%.0fraction_lit(appulse,units=percent,append= percent);',
+    '  74 percent',
+    'Percent of appulsed body illuminated, override appended text');
 $tst->format_is('%fraction_lit(station);', '',
     'Fraction of station illuminated (unavailable)');
 
@@ -1113,8 +1116,8 @@ EOD
 
 
 $tst->method_is( 'phase', <<'EOD', 'Phase title' );
-                             Phas                  Fract
-      Date     Time     Name Angl Phase              Lit
+                             Phas                  Frac
+      Date     Time     Name Angl Phase             Lit
 EOD
 $tst->method_is( 'phase', $moon, <<'EOD', 'Phase' );
 2008-10-09 23:23:41     Moon  119 waxing gibbous     74%

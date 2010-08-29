@@ -10,6 +10,7 @@ use Astro::Coord::ECI::Utils qw{
     deg2rad embodies julianday PI rad2deg TWOPI
 };
 use Carp;
+use Clone qw{ };
 use POSIX qw{ floor };
 use Text::Abbrev;
 use Text::Wrap qw{ wrap };
@@ -64,9 +65,8 @@ my %mutator = (
 #	to do something more complicated than just apply a conversion
 #	factor. The following hash keys may be specified:
 #
-#	    append => a literal string to append to the output, reducing
-#		the available field width (if any) by the length of the
-#		string;
+#	    append => a literal string to append to the output which can
+#		be overridden by the format effector;
 #	    factor => the conversion factor;
 #	    formatter => a code reference to the output formatting
 #		routine to be used in lieu of the one specified by the
@@ -574,6 +574,7 @@ my %template = (
     n => {	# newline
 	fetch => sub { return "\n" },
 	forbid => {
+	    append => 1,
 	    appulse => 1,
 	    center => 1,
 	    station => 1,
@@ -612,6 +613,7 @@ my %template = (
     percent	=> {	# literal percent (was '%')
 	fetch => sub {return '%'},
 	forbid => {
+	    append => 1,
 	    appulse => 1,
 	    center => 1,
 	    station => 1,
@@ -747,6 +749,7 @@ my %template = (
     space => {	# spaces
 	fetch => sub {return ''},
 	forbid => {
+	    append => 1,
 	    appulse => 1,
 	    center => 1,
 	    station => 1,
@@ -1080,7 +1083,6 @@ sub _format_compiler {
 	if ($wid_v) {
 	    $opt->{bearing}
 		and $wid_v += $opt->{bearing} + 1;
-	    $wid_v += length($opt->{append});
 	}
 
 	# Compute the value to be used as the number of decimal places.
@@ -1134,11 +1136,12 @@ sub _format_compiler {
 	# string, truncated or space-padded as necessary to get the
 	# specified width if any.
 	my $missing = $opt->{missing} || $self->{formatter}{$action}{missing};
+	my $miss_wid = $wid_v ? $wid_v + length $opt->{append} : '';
 	my $miss_v = defined $missing ?
-	    $wid_v ? substr(
+	    $miss_wid ? substr(
 		sprintf("%$align${wid_v}s", $missing),
-		0, $wid_v) : $missing :
-	    $wid_v ? ' ' x $wid_v : '';
+		0, $miss_wid) : $missing :
+	    $miss_wid ? ' ' x $miss_wid : '';
 
 	# Manufacture the code that does the actual formatting.
 	my $fmtr = sub {
@@ -1217,6 +1220,10 @@ sub _format_compiler {
     #     effector explicitly forbids it. If false, it is not allowed
     #     unless the format effector explicitly allows it.
     my %argument_def = (
+	append	=> {
+	    standard => 1,
+	    default  => '',
+	},
 	appulse	=> {
 	    selector => 1,
 	    standard => 1,
@@ -1314,6 +1321,8 @@ sub _format_compiler {
 	return ($body, $station, \%args);
     }
 
+    my %unit_hash_no_override = map { $_ => 1 } qw{ append };
+
     # The units turned out to be a real mess, so they get pulled out of
     # general argument processing.
     sub _format_args_meta_units {
@@ -1350,7 +1359,9 @@ sub _format_compiler {
 		    redo;
 		} elsif ($ref eq 'HASH') {
 		    foreach (keys %$factor) {
-			$args->{$_} = $factor->{$_};
+			$unit_hash_no_override{$_}
+			    and defined $args->{$_}
+			    or $args->{$_} = $factor->{$_};
 		    }
 		    $factor = delete $args->{factor};
 		    defined $factor
@@ -1380,13 +1391,15 @@ sub _format_execute {
     my $tx = $self->_template_fetcher( $name )->{code};
     my $output = $xqt->($self, $tx);
     if (defined $output) {
-	$output =~ s/ [ \t]+ \n /\n/smxg;
+	$output =~ s/ [ \t]+ (?= \n ) //smxg;
 	$output =~ s/ [ \t]+ \z //smx;
     }
     return $output;
 }
 
-sub _format_execute_format {
+# Format data. This is called from _format_execute, and passed $self and
+# the compiled format.
+sub _format_execute_format {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ($self, $tx) = @_;
     my $output = '';
     foreach (@$tx) {
@@ -1395,7 +1408,9 @@ sub _format_execute_format {
     return $output;
 }
 
-sub _format_execute_header {
+# Format header. This is called from _format_execute, and passed $self
+# and the compiled format.
+sub _format_execute_header {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ($self, $tx) = @_;
     $self->header() or return '';
     my @columns;
@@ -1422,6 +1437,9 @@ sub _format_execute_header {
 	    push @lines, $txt;
 	}
 	push @columns, {width => $wd, lines => \@lines};
+	if ( ref $field and my $len = length $field->{append} ) {
+	    push @columns, { width => $len, lines => [ ' ' x $len ] };
+	}
     }
     my $output = '';
     while (--$max >= 0) {
@@ -1462,8 +1480,15 @@ sub _format_azimuth {
 	my $bearing_align = $align;
 	$bearing_align =~ m/ - /smx
 	    or $bearing_align .= '-';
+	my $azopt;
+	if ( $opt->{append} eq '' ) {
+	    $azopt = $opt;
+	} else {
+	    $azopt = Clone::clone( $opt );
+	    $azopt->{append} = '';
+	}
 	return $self->_format_number(
-	    $align, $width, $places, $info, $value, $opt) . ' ' .
+	    $align, $width, $places, $info, $value, $azopt) . ' ' .
 	$self->_format_bearing(
 	    $bearing_align, $bearing_width, $places, $info, $value, $opt);
     } else {
@@ -1522,6 +1547,7 @@ sub _format_integer {
     my $buffer = sprintf "%$align${width}d", $value;
     ($width && length $buffer > $width)
 	and $buffer = '*' x $width;
+    $buffer .= $opt->{append};
     return $buffer;
 }
 
@@ -1538,26 +1564,25 @@ sub _format_number {
 	or return $width ? ' ' x $width : '';
     defined $places or $places = '';
     $value *= $opt->{unit_factor};
-    my $append = $opt->{append} || '';
     ($align eq '' && $width eq '' && $places eq '')
-	and return $value . $append;
-    my $fwid = $width ? ($width - length $append) : '';
+	and return $value . $opt->{append};
     my $ps = $places eq '' ? '' : ".$places";
-    my $buffer = sprintf "%$align$fwid${ps}f", $value;
+    my $buffer = sprintf "%$align$width${ps}f", $value;
     # The following line is because sprintf '%.1f', 0.04 produces
     # '-0.0'. This may not be a bug, given what 'perldoc -f sprintf'
     # says, but it sure looks like a wart to me.
     $buffer =~ s/ \A ( \s* ) - ( 0* [.]? 0* \s* ) \z /$1 $2/smx;
     ( $places eq '' && $buffer =~ m/ [.] /smx )
 	and $buffer =~ s/ 0+ \z //smx;
-    if ($fwid && length $buffer > $fwid && $fwid >= 7) {
-	$buffer = sprintf "%$align$fwid.@{[$fwid - 7]}e", $value;
+    if ($width && length $buffer > $width && $width >= 7) {
+	$buffer = sprintf "%$align$width.@{[$width - 7]}e", $value;
 	$buffer =~ s/ e ( [-+]? ) 0 (\d\d) \z /e$1$2/smx;	# Normalize
     }
-    $buffer .= $append;
 
     ($width && length $buffer > $width)
 	and $buffer = '*' x $width;
+
+    $buffer .= $opt->{append};
     return $buffer;
 }
 
@@ -1566,16 +1591,14 @@ sub _format_number_scientific {
     (defined $value && $value ne '')
 	or return $width ? ' ' x $width : '';
     $value *= $opt->{unit_factor};
-    my $append = $opt->{append} || '';
     ($align eq '' && $width eq '' && $places eq '')
-	and return $value . $append;
-    my $fwid = $width ? ($width - length $append) : '';
+	and return $value . $opt->{append};
     my $ps = $places eq '' ? '' : ".$places";
-    my $buffer = sprintf "%$align$fwid${ps}e", $value;
+    my $buffer = sprintf "%$align$width${ps}e", $value;
     $buffer =~ s/ e ( [-+]? ) 0 (\d\d) \z /e$1$2/smx;	# Normalize
-    $buffer .= $append;
     ($width && length $buffer > $width)
 	and $buffer = '*' x $width;
+    $buffer .= $opt->{append};
     return $buffer;
 }
 
@@ -1594,12 +1617,12 @@ sub _format_period {
 	my $buffer = sprintf ('%*d %02d:%02d:%02d',
 	    $dw, $days, $hrs, $mins, $secs);
 	($width && length $buffer > $width) and return '*' x $width;
-	return _format_string($self, $align, $width, $places, $info,
-	    $buffer);
+	return _format_string( $self, $align, $width, $places, $info,
+	    $buffer, $opt );
     } else {
 	($width && $width < 8) and return '*' x $width;
-	return _format_string($self, $align, $width, $places, $info,
-	    sprintf ('%02d:%02d:%02d', $hrs, $mins, $secs));
+	return _format_string( $self, $align, $width, $places, $info,
+	    sprintf ('%02d:%02d:%02d', $hrs, $mins, $secs), $opt );
     }
 }
 
@@ -1616,11 +1639,11 @@ sub _format_period {
 	my $angle = rad2deg($value);
 	foreach (@table) {
 	    $_->[0] > $angle or next;
-	    return _format_string($self, $align, $width, $places,
-		$info, $_->[1]);
+	    return _format_string( $self, $align, $width, $places,
+		$info, $_->[1], $opt );
 	}
 	return _format_string($self, $align, $width, $places,
-	    $info, $table[0][1]);
+	    $info, $table[0][1], $opt );
     }
 }
 
@@ -1638,8 +1661,11 @@ sub _format_right_ascension {
     my $buffer = sprintf ("%$align${width}s", sprintf (
 	    "%02d:%02d:%02${ps}f",
 	    $hr, $min, $sec));
-    return ($width && length $buffer > $width) ?
-	'*' x $width : $buffer;
+    $width
+	and length $buffer > $width
+	and $buffer = '*' x $width;
+    $buffer .= $opt->{append};
+    return $buffer;
 }
 
 sub _format_string {
@@ -1649,6 +1675,7 @@ sub _format_string {
     my $buffer = sprintf "%$align${width}s", $value;
     ($width && length $buffer > $width)
 	and $buffer = substr $buffer, 0, $width;
+    $buffer .= $opt->{append};
     return $buffer;
 }
 
@@ -1918,7 +1945,8 @@ sub position {
 	$self->_set( body => $body, time => $time, station => $sta );
 	my $output = '';
 	my $time_out = $self->_format_execute( format => 'date_time' );
-	$time_out eq $self->{_position_time}
+	defined $self->{_position_time}
+	    and $time_out eq $self->{_position_time}
 	    or $output .= ( $self->{_position_time} = $time_out );
 	if ( $sun && $sta && $body->represents( 'Astro::Coord::ECI::TLE' ) ) {
 	    my $illum = ($sta->azel ($body))[1] < 0 ? PASS_EVENT_NONE :
@@ -2872,7 +2900,9 @@ execution. The legal flags are:
 The field width is a positive integer. If omitted, the default varies
 with the format effector. If specified as '*', no width restriction is
 imposed. The default for a given format effector can be changed using
-the L<format_effector()|/format_effector> method.
+the L<format_effector()|/format_effector> method. This is the width of
+the formatted datum, and does not include any text specified by the
+C<append=> argument.
 
 The decimal places specification is a decimal point ('.' regardless of
 locale) followed by a positive integer. If omitted, the default varies
@@ -2904,6 +2934,7 @@ effector name. If no arguments are specified, the parentheses may be
 omitted also. The following arguments are legal for all format effectors
 unless otherwise stated in the documentation for a given effector:
 
+ append - text to append if the datum is present;
  appulse - selects data from the appulsing body if any;
  body - selects data from the satellite;
  center - selects data from the flare center if any;
@@ -2917,6 +2948,14 @@ selecting a data source, modify the default title of the field by
 prepending 'Appulse', 'Center', or 'Station', respectively. There is
 currently no way to modify this, other than to explicitly specify
 C<title=...> in any relevant template.
+
+The C<append> argument is defaulted to C<'%'> if the units are
+C<percent>, otherwise it defaults to C<''>. The field width does not
+include the appended text. For example, if you specify
+C<%2.0fraction_lit(units=percent,append= percent,missing=not there)> the
+field width of 2 applies only to the numeric fraction lit, and the total
+width will be 9.  If the datum is missing, the missing text will be
+truncated to the total width (i.e. 9), not the datum width (i.e. 2).
 
 Other arguments may be legal for specific effectors; these are
 documented with the individual format effectors.

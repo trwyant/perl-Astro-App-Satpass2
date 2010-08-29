@@ -25,7 +25,7 @@ fmtr header 0
 fmtr template flare "BEGIN:VEVENT%n;DTSTART:%date(zone=z)%n;\
 DALARM:%date(delta=-360,zone=z)%n;\
 SUMMARY:%*name %time Az %*.0azimuth(bearing) Ele %*.0elevation; Mag \
-%magnitude%n;\
+%magnitude %angle(appulse,append= deg from Sun,missing=night)%n;\
 DTEND:%date(delta=60,zone=z)%n;END:VEVENT%n"
 
 # Emit the start tag for the vCalendar data.

@@ -483,8 +483,8 @@ _app('pass -chronological 19801013T000000Z +1', <<'EOD',
 EOD
     'Pass in chronological format' );
 _app("phase '20090401T000000 UT'", <<'EOD', 'Phase of moon April 1 2009');
-                             Phas                  Fract
-      Date     Time     Name Angl Phase              Lit
+                             Phas                  Frac
+      Date     Time     Name Angl Phase             Lit
 2009/04/01 00:00:00     Moon   69 waxing crescent    32%
 EOD
 {
