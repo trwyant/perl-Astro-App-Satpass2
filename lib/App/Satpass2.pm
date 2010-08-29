@@ -3423,6 +3423,7 @@ sub _user_home_dir {
 	return (\@tokens, \%redir);
     }
 
+    # Retrieve the value of a variable.
     sub _tokenize_var {
 	my ($self, $name, $args, $relquote, $indirect) = @_;
 
