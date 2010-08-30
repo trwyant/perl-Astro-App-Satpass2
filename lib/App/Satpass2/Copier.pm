@@ -11,7 +11,7 @@ use base qw{ Exporter };
 
 our @EXPORT_OK = qw{ __instance };
 
-our $VERSION = '0.000_05';
+our $VERSION = '0.000_06';
 
 sub attributes {
     return ();

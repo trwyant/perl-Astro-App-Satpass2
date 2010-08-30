@@ -7,7 +7,7 @@ use base qw{ App::Satpass2::Format };
 
 use Carp;
 
-our $VERSION = '0.000_05';
+our $VERSION = '0.000_06';
 
 my %dumper_hash = (
     YAML => sub {
