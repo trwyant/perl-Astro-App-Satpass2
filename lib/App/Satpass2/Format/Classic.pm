@@ -617,10 +617,10 @@ my %template = (
 	    appulse => 1,
 	    center => 1,
 	    station => 1,
-	    title => 1,
+	    title => 0,	# Allow title, since maybe user wants '%' there.
 	},
 	formatter => \&_format_string,
-	literal => 1,
+	literal => 0,	# If 1, '%' appears in header as well.
 	title => '',
 	width => 1,
     },
@@ -3553,6 +3553,13 @@ There is no associated dimension.
 
 The default field width is 3, and the default title is 'MMA'.
 
+=head2 %n
+
+This format effector inserts a new line character.
+
+The C<append>, C<appulse>, C<center>, C<station>, C<title>, and C<units>
+arguments are forbidden. All other standard arguments are supported.
+
 =head2 %name
 
 This format effector displays the name of the selected body. The decimal
@@ -3588,8 +3595,10 @@ needed in a context where the percent sign would otherwise be
 interpreted as introducing a format effector. The decimal places
 specification is ignored.
 
-The C<appulse>, C<center>, C<station>, C<title>, and C<units> arguments
-are forbidden. All other standard arguments are supported.
+The C<append>, C<appulse>, C<center>, C<station>, and C<units> arguments
+are forbidden. All other standard arguments are supported, including
+C<title>, since by default a C<%percent> does not place a percent sign
+in the field's title.
 
 There is no associated dimension.
 
@@ -3752,8 +3761,8 @@ and the default title is 'Semiminor Axis'.
 This format effector displays spaces. The decimal places specification
 is ignored.
 
-The C<appulse>, C<center>, C<station>, C<title>, and C<units> arguments
-are forbidden. All other standard arguments are supported.
+The C<append>, C<appulse>, C<center>, C<station>, C<title>, and C<units>
+arguments are forbidden. All other standard arguments are supported.
 
 There is no associated dimension.
 
