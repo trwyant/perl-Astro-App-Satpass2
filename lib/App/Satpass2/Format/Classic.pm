@@ -620,6 +620,7 @@ my %template = (
 	    title => 1,
 	},
 	formatter => \&_format_string,
+	literal => 1,
 	title => '',
 	width => 1,
     },
