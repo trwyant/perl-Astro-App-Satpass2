@@ -96,12 +96,14 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 	my ($pkg, $code, @args) = @_;
 	my @rslt;
 	foreach (@args) {
-	    m{ ( [^(]* ) (?: [(] (.*) [)] )? \z }smx or do {
+	    m{ ( [^(]* ) (?: [(] \s* (.*?) \s* [)] )? \z }smx or do {
 		push @rslt, $_;
 		next;
 	    };
 	    if ($want{$1}) {
-		$attr{$code}{$1} = defined $2 ? [split ',', $2] : [];
+		$attr{$code}{$1} = defined $2 ?
+		    [ split qr{ \s* , \s* }smx, $2 ] :
+		    [];
 	    } else {
 		push @rslt, $_;
 	    }
@@ -578,8 +580,10 @@ sub export : Verb() {
     return;
 }
 
-sub flare :
-Verb(algorithm=s,am,choose=s@,day,dump,pm,questionable|spare,quiet) {
+# The following subroutine attributes MUST be on a single line, due to
+# the failure of PPI 1.213 to correctly handle multi-line attributes.
+sub flare : Verb(algorithm=s,am!,choose=s@,day!,dump,pm!,questionable|spare,quiet)
+{
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     $self->_parse_time_reset();
@@ -594,6 +598,9 @@ Verb(algorithm=s,am,choose=s@,day,dump,pm,questionable|spare,quiet) {
     my $horizon = deg2rad ($self->{horizon});
     my $twilight = $self->{_twilight};
     my @flare_mag = ($self->{flare_mag_night}, $self->{flare_mag_day});
+
+    _apply_boolean_default(
+	$opt, $self->{frame}[-1]{level1}, qw{ am day pm } );
 
 #	Decide which model to use.
 
@@ -613,9 +620,9 @@ Verb(algorithm=s,am,choose=s@,day,dump,pm,questionable|spare,quiet) {
 	    horizon => $horizon,
 	    twilight => $twilight,
 	    model => $model,
-	    am => !$opt->{am},
-	    day => !$opt->{day},
-	    pm => !$opt->{pm},
+	    am => $opt->{am},
+	    day => $opt->{day},
+	    pm => $opt->{pm},
 	    extinction => $self->{extinction},
 	);
 	push @active, $tle;
@@ -884,13 +891,17 @@ sub init {
 	    $self->_wail("Initialization file $init_file not found");
 	}
     } else {
-	foreach (sub {$ENV{SATPASS2INI}}, \&initfile, sub
-	    {$ENV{SATPASSINI}}, \&_init_file_01) {
-	    my $fn = $_->($self);
+	foreach (
+	    sub { return $ENV{SATPASS2INI} },
+	    \&initfile,
+	    sub { return ( $ENV{SATPASSINI}, 1 ) },
+	    \&_init_file_01
+	) {
+	    my ( $fn, $level1 ) = $_->($self);
 	    defined $fn and $fn ne '' or next;
 	    -f $fn or next;
 	    $self->{initfile} = $fn;
-	    return $self->source($fn);
+	    return $self->source( { level1 => $level1 }, $fn);
 	}
     }
     return;
@@ -977,16 +988,18 @@ sub init {
 #
 #	This subroutine returns the first alternate init file name,
 #	which is the standard name for the Astro-satpass 'satpass'
-#	script.
+#	script. If called in list context it returns not only the name,
+#	but a 1 to tell the caller this is a 'level1' file.
 
 sub _init_file_01 {
     my $inifn = $^O eq 'MSWin32' || $^O eq 'VMS' || $^O eq 'MacOS' ?
 	'satpass.ini' : '.satpass';
-    return $^O eq 'VMS' ? "SYS\$LOGIN:$inifn" :
+    my $inifile = $^O eq 'VMS' ? "SYS\$LOGIN:$inifn" :
 	$^O eq 'MacOS' ? $inifn :
 	$ENV{HOME} ? "$ENV{HOME}/$inifn" :
 	$ENV{LOGDIR} ? "$ENV{LOGDIR}/$inifn" :
 	$ENV{USERPROFILE} ? "$ENV{USERPROFILE}" : undef;
+    return wantarray ? ( $inifile, 1 ) : $inifile;
 }
 
 sub list : Verb(choose=s@) {
@@ -1098,7 +1111,7 @@ sub location : Verb() {
 		$self->{macro}{$name}
 		    and $output .= "macro define $name " .
 			join (" \\\n    ", map {
-			_quoter ($_)} @{$self->{macro}{$name}}) . "\n";
+			_quoter ($_)} @{ $self->{macro}{$name}{def} }) . "\n";
 	    }
 	} elsif ($cmd eq 'delete') {
 	    foreach my $name (@args ? @args : keys %{$self->{macro}}) {
@@ -1112,14 +1125,17 @@ sub location : Verb() {
 	    $name !~ m/ \W /smx
 		and $name !~ m/ \A _ /smx
 		or $self->_wail("Invalid macro name '$name'");
-	    $self->{macro}{$name} = [ _unescape( @args ) ];
+	    $self->{macro}{$name} = {
+		def => [ _unescape( @args ) ],
+		level1 => $self->{frame}[-1]{level1},
+	    };
 	}
 	return $output;
     }
 
 }
 
-sub pass : Verb(choose=s@,chronological!,dump!,quiet!) {
+sub pass : Verb(choose=s@, chronological!, dump!, quiet!) {
     my ($self, @args) = @_;
 
     (my $opt, @args) = $self->_getopt(@args);
@@ -1807,6 +1823,10 @@ sub source : Verb(optional) {
     my $fn = shift @args or $self->_wail("File name required");
     if ( my $fh = IO::File->new( $fn, '<' ) ) {
 	my $frames = $self->_frame_push( source => [@args] );
+	# Note that level1 is unsupported, and works only when the
+	# options are passed as a hash. It will go away when support for
+	# the original satpass script is dropped.
+	$self->{frame}[-1]{level1} = $opt->{level1};
 	my $err;
 	my $ok = eval { while ( <$fh> ) {
 		if ( defined ( my $buffer = $self->execute( sub { return
@@ -2039,6 +2059,31 @@ sub _aggregate {
     my ( $self, $bodies ) = @_;
     local $Astro::Coord::ECI::TLE::Set::Singleton = $self->{singleton};	## no critic (ProhibitPackageVars)
     return Astro::Coord::ECI::TLE::Set->aggregate ( @{ $bodies } );
+}
+
+#	_apply_boolean_default( \%opt, $invert, @keys );
+#
+#	This subroutine defaults a set of boolean options. The keys in
+#	the set are specified in @keys, and the defined values are
+#	inverted before the defaults are applied if $invert is true.
+#	Nothing is returned.
+
+sub _apply_boolean_default {
+    my ( $opt, $invert, @keys ) = @_;
+    my $found = 0;
+    foreach my $key ( @keys ) {
+	if ( exists $opt->{$key} ) {
+	    $invert
+		and $opt->{$key} = ( !  $opt->{$key} );
+	    $found |= ( $opt->{$key} ? 2 : 1 );
+	}
+    }
+    my $default = $found < 2;
+    foreach my $key ( @keys ) {
+	exists $opt->{$key}
+	    or $opt->{$key} = $default;
+    }
+    return;
 }
 
 #	$chosen = _choose($opt, $choice, $list)
@@ -2472,6 +2517,8 @@ sub _get_today_noon {
     sub _getopt {
 	local @ARGV = @_;
 	my $self = shift @ARGV;
+	return @ARGV
+	    if 'HASH' eq ref $ARGV[0];
 	my @data = caller(1);
 	my $code = \&{$data[3]};
 	my $lgl = _get_attr($code, 'Verb') || [];
@@ -2627,12 +2674,13 @@ sub _macro {
     my ($self, $name, @args) = @_;
     $self->{macro}{$name} or $self->_wail("No such macro as '$name'");
     my $frames = $self->_frame_push(macro => [@args]);
+    $self->{frame}[-1]{level1} = $self->{macro}{$name}{level1};
     my $macro = $self->{frame}[-1]{macro}{$name} =
 	delete $self->{macro}{$name};
     my $output;
     my $err;
     my $ok = eval {
-	foreach (@$macro) {
+	foreach (@{ $macro->{def} }) {
 	    if (defined (my $buffer = $self->execute($_))) {
 		$output .= $buffer;
 	    }
@@ -4029,8 +4077,8 @@ how to specify times.
 
 The following options are available:
 
-C<-am> ignores morning flares -- that is, those after midnight but
-before morning twilight.
+C<-am> displays morning flares -- that is, those after midnight but
+before morning twilight. This can be negated by specifying C<-noam>.
 
 C<-choose> chooses bodies from the observing list. It works the same way
 as the choose method, but does not alter the observing list. You can
@@ -4038,11 +4086,12 @@ specify multiple bodies by specifying -choose multiple times, or by
 separating your choices with commas. If -choose is not specified, the
 whole observing list is used.
 
-C<-day> ignores daytime flares -- that is, those between morning
-twilight and evening twilight.
+C<-day> displays daytime flares -- that is, those between morning
+twilight and evening twilight. This can be negated by specifying
+C<-noday>.
 
-C<-pm> ignores evening flares -- that is, those between evening twilight
-and midnight.
+C<-pm> displays evening flares -- that is, those between evening twilight
+and midnight. This can be negated by specifying C<-nopm>.
 
 C<-questionable> requests that satellites whose status is questionable
 (i.e. 'S') be included. Typically these are spares, or moving between
@@ -4051,6 +4100,20 @@ planes. You may use C<-spare> as a synonym for this.
 C<-quiet> suppresses any errors generated by running the orbital model.
 These are typically from obsolete data, and/or decayed satellites.
 Bodies that produce errors will not be included in the output.
+
+B<Note well> that the sense of the C<-am>, C<-day>, and C<-pm> options
+is opposite to that in the F<satpass> script. However, if they are used
+in a F<satpass> initialization script, or in a macro defined in a
+F<satpass> initialization script, the F<satpass> sense of these options
+will be used, and they will be inverted internally to the
+C<App::Satpass2> sense. This F<satpass> compatibility will be retracted
+when the F<satpass> script is retired.
+
+Once the C<-am>, C<-day>, and C<-pm> options have their C<App::Satpass2>
+sense, unspecified options are defaulted to false if any of these
+options is asserted, or true otherwise. For example, specifying C<-noam>
+has the same effect as specifying C<-day -pm>, and specifying none of
+the three options is the same as specifying C<-am -day -pm>.
 
 =head2 fmtr
 
@@ -5599,6 +5662,21 @@ The commands, and the reasons for their modification, appear below.
 The location of the observing station is no longer emitted as part of
 the output; an explicit location() is needed. I decided that I was not
 really smart enough to know when the user would want this output.
+
+=item flare
+
+The sense of the C<-am>, C<-day>, and C<-pm> options is reversed from
+the sense in F<satpass>. That is, in F<satpass>, C<-am> meant not to
+display morning flares, whereas in C<App::Satpass2>, C<-noam> means not
+to display morning flares.
+
+In order to ease the transition to C<App::Satpass2>, these options will
+be taken in their F<satpass> sense (and inverted to their new sense
+before use) if the C<flare> command is used in a F<satpass>
+initialization file, or in a macro defined in a F<satpass>
+initialization file. There is no supported way to get the F<satpass>
+behavior when using the C<flare> command in any other environment, or
+when calling the C<flare()> method.
 
 =item geocode
 
