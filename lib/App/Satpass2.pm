@@ -301,9 +301,11 @@ sub alias : Verb() {
     return $output;
 }
 
-sub almanac : Verb(dump,horizon|rise|set,transit,twilight,quarter) {
+sub almanac : Verb(dump!,horizon|rise|set!,transit!,twilight!,quarter!) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
+    _apply_boolean_default(
+	$opt, 0, qw{ horizon transit twilight quarter } );
 
     $self->_parse_time_reset();
     my $almanac_start = $self->_parse_time(
@@ -312,9 +314,6 @@ sub almanac : Verb(dump,horizon|rise|set,transit,twilight,quarter) {
 
     $almanac_start >= $almanac_end
 	and $self->_wail("End time must be after start time");
-
-    my $all;
-    $all = 1 unless grep{$opt->{$_}} qw{horizon transit twilight quarter};
 
 #	Build an object representing our ground location.
 
@@ -351,8 +350,8 @@ sub almanac : Verb(dump,horizon|rise|set,transit,twilight,quarter) {
     my $fmt = $self->_get_formatter_object( $opt );
     $output .= $fmt->almanac();
     foreach (sort {$a->{time} <=> $b->{time}} @almanac) {
-	next unless $all || $opt->{$_->{almanac}{event}};
-	$output .= $fmt->almanac( $_ );
+	$opt->{$_->{almanac}{event}}
+	    and $output .= $fmt->almanac( $_ );
     }
 
     return $output;
@@ -438,7 +437,7 @@ EOD
     }
 }
 
-sub echo : Verb(n) {
+sub echo : Verb(n!) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     my $output = join( ' ', @args );
@@ -584,7 +583,8 @@ sub export : Verb() {
 
 # The following subroutine attributes MUST be on a single line, due to
 # the failure of PPI 1.213 to correctly handle multi-line attributes.
-sub flare : Verb(algorithm=s,am!,choose=s@,day!,dump,pm!,questionable|spare,quiet)
+sub flare :
+Verb(algorithm=s,am!,choose=s@,day!,dump!,pm!,questionable|spare!,quiet!)
 {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
@@ -677,7 +677,7 @@ sub fmtr : Verb() {
 
 {
 
-    sub geocode : Verb(debug) {
+    sub geocode : Verb(debug!) {
 	my ($self, @args) = @_;
 	return _geocode_us($self, $self->_getopt(@args));
     }
@@ -795,7 +795,7 @@ sub get {
     return $accessor{$name}->($self, $name);
 }
 
-sub height : Verb(debug) {
+sub height : Verb(debug!) {
     my ($self, @args) = @_;
     return _height_us($self, $self->_getopt(@args));
 }
@@ -1248,7 +1248,7 @@ sub phase : Verb() {
 
 # TODO -- handling -realtime.
 
-sub position : Verb(choose=s@,questionable|spare,quiet,realtime) {
+sub position : Verb(choose=s@,questionable|spare!,quiet!,realtime!) {
     my ($self, @args) = @_;
 
     my ($opt, $time, $endtm, $interval) = $self->_getopt(@args);
@@ -1320,7 +1320,7 @@ sub position : Verb(choose=s@,questionable|spare,quiet,realtime) {
 
 }
 
-sub quarters : Verb(dump) {
+sub quarters : Verb(dump!) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     $self->_parse_time_reset();
@@ -1397,7 +1397,7 @@ SATPASS2_EXECUTE:
     return;
 }
 
-sub save : Verb(changes,overwrite) {
+sub save : Verb(changes!,overwrite!) {
     my ($self, @args) = @_;
     my ($opt, $fn) = $self->_getopt(@args);
     defined $fn or $fn = $self->initfile();
@@ -1644,7 +1644,7 @@ sub _set_webcmd {
     return ($self->{$name} = $val);
 }
 
-sub show : Verb(changes) {
+sub show : Verb(changes!) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     my $output;
@@ -1821,7 +1821,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 
 }
 
-sub source : Verb(optional) {
+sub source : Verb(optional!) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     my $output;
@@ -1851,7 +1851,10 @@ sub source : Verb(optional) {
     return $output;
 }
 
-sub st : Verb(all,changes,descending,last5,sort=s,end=s,start=s,verbose) {
+# The following subroutine attributes MUST be on a single line, due to
+# the failure of PPI 1.213 to correctly handle multi-line attributes.
+sub st :
+Verb(all!,changes!,descending!,last5!,sort=s,end=s,start=s,verbose!) {
     my ($self, @args) = @_;
     $self->_parse_time_reset();
     my $st = $self->_get_spacetrack();
@@ -1917,7 +1920,7 @@ sub st : Verb(all,changes,descending,last5,sort=s,end=s,start=s,verbose) {
 {
     my @status_code_map = qw{+ S -};
 
-    sub status : Verb(name,reload) {
+    sub status : Verb(name!,reload!) {
 	my ($self, @args) = @_;
 	(my $opt, @args) = $self->_getopt(@args);
 	@args or @args = qw{show};
@@ -1992,7 +1995,7 @@ sub time : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
 # undocumented. When we do, the formatter method loses its leading
 # underscore.
 
-sub tle : Verb(celestia,verbose) {
+sub tle : Verb(celestia!,verbose!) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     my $bodies = @args ? _choose([@args], $self->{bodies}) : $self->{bodies};
@@ -3925,8 +3928,9 @@ commitments as to what it does, nor does he commit not to change or
 remove it without notice.
 
 The other options specify what output to produce. If none are specified,
-all are turned on by default. If any are specified, you get only the
-output associated with the options you specified.
+all are turned on by default. If only negated options are specified
+(e.g. -noquarter), unspecified options are asserted by default.
+Otherwise unspecified options are considered to be negated.
 
 B<Note well> that unlike the F<satpass> script, the output from this
 method does not normally include location. The location is included only
@@ -3938,6 +3942,7 @@ revoked when support for the F<satpass> script is dropped.
 =head2 begin
 
  $satpass2->begin();
+ satpass2> begin
 
 This interactive method begins a localization block, which extends to
 the corresponding L<end()|/end> or to the end of the source file or
@@ -3946,7 +3951,7 @@ macro. Nothing is returned.
 =head2 cd
 
  $satpass2->cd();
- satpass2> begin
+ satpass2> cd
 
 This interactive method changes to the users' home directory, or to the
 given directory if one is specified as an argument. Tilde expansion is
@@ -3979,7 +3984,7 @@ arguments. Nothing is returned.
 
 =head2 dispatch
 
- $output = $satpass2->dispatch(...);
+ $output = $satpass2->dispatch( 'flare', 'today 12:00:00', '+1' );
 
 This non-interactive method takes as its arguments the name of an
 interactive method and its arguments, calls the method, and returns
@@ -4031,7 +4036,12 @@ It is an error to have an end without a corresponding L<begin()|/begin>.
 
 =head2 execute
 
- $output = $satpass2->execute(...);
+ $output = $satpass2->execute( <<'EOD' );
+ st set direct 1
+ st celestrak stations
+ choose iss
+ pass 'today 12:00:00' +7
+ EOD
 
 This non-interactive method takes as its arguments lines of text. The
 arguments are split on C<\n>. Each line is tokenized (see L</TOKENIZING>
@@ -4303,10 +4313,11 @@ This interactive method returns a listing of all bodies in the observing
 list. If the observing list is empty and the L</warn_on_empty> attribute
 is true, a warning is issued.
 
-The -choose option may be used to select which bodies are listed. This
-selects bodies to list just like the L<choose()|/choose> method, but the
-observing list is unaffected. To choose multiple bodies, either specify
-the option multiple times, separate the choices with commas, or both.
+The C<-choose> option may be used to select which bodies are listed.
+This selects bodies to list just like the L<choose()|/choose> method,
+but the observing list is unaffected. To choose multiple bodies, either
+specify the option multiple times, separate the choices with commas, or
+both.
 
 =head2 load
 

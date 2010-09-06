@@ -82,6 +82,7 @@ meananomaly
 meanmotion
 mma
 MSWin
+noquarter
 NORAD
 observability
 OID
