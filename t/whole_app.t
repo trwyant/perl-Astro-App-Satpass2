@@ -20,7 +20,7 @@ BEGIN {
 
 $| = 1;	## no critic (RequireLocalizedPunctuationVars)
 
-plan( tests => 172 );
+plan( tests => 176 );
 
 require_ok( 'App::Satpass2' )
     or BAIL_OUT( "Can not continue without loading App::Satpass2" );
@@ -200,6 +200,25 @@ _app("almanac '20090401T000000 UT'",
 2009/04/01 17:21:29 Moon transits meridian
 2009/04/01 18:33:28 Sunset
 2009/04/01 19:07:26 end twilight
+EOD
+_app("almanac -notransit '20090401T000000 UT'",
+    <<'EOD', 'Almanac for April Fools 2009');
+2009/04/01 01:17:47 Moon set
+2009/04/01 05:01:29 begin twilight
+2009/04/01 05:35:18 Sunrise
+2009/04/01 08:23:38 Moon rise
+2009/04/01 18:33:28 Sunset
+2009/04/01 19:07:26 end twilight
+EOD
+_app("almanac -rise -transit '20090401T000000 UT'",
+    <<'EOD', 'Almanac for April Fools 2009');
+2009/04/01 00:04:00 local midnight
+2009/04/01 01:17:47 Moon set
+2009/04/01 05:35:18 Sunrise
+2009/04/01 08:23:38 Moon rise
+2009/04/01 12:03:51 local noon
+2009/04/01 17:21:29 Moon transits meridian
+2009/04/01 18:33:28 Sunset
 EOD
 _app('begin', undef, 'Begin local block');
 _app('show horizon', 'set horizon 20', 'Confirm horizon setting');
@@ -388,6 +407,30 @@ _app('pass 19801012T000000Z', <<'EOD',
 05:10:23  24.5 302.6 NW      495.7  53.4634   -5.5405   220.8 shdw  max
 05:10:50  22.3 327.2 NW      537.6  55.0439   -4.0816   222.4 lit   lit
 05:14:16   0.0  19.0 N      1814.7  66.0412   12.6971   234.9 lit   set
+EOD
+    'Calculate passes over Greenwich' );
+_app('pass -noillumination 19801015T000000Z +1', <<'EOD',
+
+ 88888 -
+
+    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+
+1980/10/15
+05:26:29   0.0 210.3 SW     1693.5  38.1313   -9.4884   206.3 shdw  rise
+05:30:12  63.7 297.6 NW      239.9  51.8981   -1.3250   215.8 lit   max
+05:34:08   0.0  25.1 NE     1789.5  64.9426   15.6750   228.8 lit   set
+EOD
+    'Calculate passes over Greenwich' );
+_app('pass -horizon -transit 19801015T000000Z +1', <<'EOD',
+
+ 88888 -
+
+    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+
+1980/10/15
+05:26:29   0.0 210.3 SW     1693.5  38.1313   -9.4884   206.3 shdw  rise
+05:30:12  63.7 297.6 NW      239.9  51.8981   -1.3250   215.8 lit   max
+05:34:08   0.0  25.1 NE     1789.5  64.9426   15.6750   228.8 lit   set
 EOD
     'Calculate passes over Greenwich' );
 _app('set local_coord equatorial_rng', undef, 'Specify equatorial + range');

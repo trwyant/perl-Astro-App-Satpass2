@@ -82,6 +82,7 @@ meananomaly
 meanmotion
 mma
 MSWin
+noappulse
 noquarter
 NORAD
 observability
