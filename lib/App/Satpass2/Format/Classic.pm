@@ -1958,7 +1958,7 @@ sub position {
 	    $output .= $self->_set( illumination => $illum )
 		->_format_execute( format => 'position' );
 	    if ( $body->can_flare( $questionable ) ) {
-		$body->_set( horizon => 0 );
+		$body->set( horizon => 0 );
 		foreach my $info ( $body->reflection( $sta, $time ) ) {
 		    $output .= $self->_set(
 			phenomenon => $info,
