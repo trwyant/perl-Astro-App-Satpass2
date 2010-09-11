@@ -653,7 +653,6 @@ Verb(algorithm=s,am!,choose=s@,day!,dump!,pm!,questionable|spare!,quiet!)
 
     foreach my $fd (sort {$a->{time} <=> $b->{time}} @flares) {
 
-	next if $opt->{$fd->{type}};
 	next if $fd->{magnitude} > $flare_mag[$fd->{type} eq 'day'];
 	$output .= $fmt->flare( $fd );
     }
