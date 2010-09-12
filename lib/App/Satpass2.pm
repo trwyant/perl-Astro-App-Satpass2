@@ -788,8 +788,7 @@ sub geodetic : Verb() {
 
 sub get {
     my ($self, $name) = @_;
-    exists $accessor{$name}
-	or $self->_wail("No such attribute as '$name'");
+    $self->_attribute_exists( $name );
     $self->_deprecation_notice( attribute => $name );
     return $accessor{$name}->($self, $name);
 }
@@ -1040,10 +1039,18 @@ sub load : Verb(verbose!) {
     return;
 }
 
-sub localize : Verb() {
+sub localize : Verb(all|except!) {
     my ($self, @args) = @_;
-    foreach my $key (@args) {
-	$self->_localize( $key );
+    (my $opt, @args) = $self->_getopt(@args);
+    foreach my $name ( @args ) {
+	$self->_attribute_exists( $name );
+    }
+    if ( $opt->{all} ) {
+	my %except = map { $_ => 1 } @args;
+	@args = grep { ! $except{$_} } sort keys %mutator;
+    }
+    foreach my $name ( @args ) {
+	$self->_localize( $name );
     }
     return;
 }
@@ -1493,6 +1500,7 @@ sub set : Verb() {	## no critic (ProhibitAmbiguousNames)
     $self->{time_parser} and $self->_parse_time_reset();
     while (@args) {
 	my ( $name, $value ) = splice @args, 0, 2;
+	$self->_attribute_exists( $name );
 	if ($self->{_interactive}) {
 	    $nointeractive{$name}
 		and $self->_wail(
@@ -1503,10 +1511,8 @@ sub set : Verb() {	## no critic (ProhibitAmbiguousNames)
 	if ( $mutator{$name} ) {
 	    $self->_deprecation_notice( attribute => $name );
 	    $mutator{$name}->($self, $name, $value);
-	} elsif ( $accessor{$name} ) {
-	    $self->_wail("Read-only attribute '$name'");
 	} else {
-	    $self->_wail("Unknown attribute '$name'");
+	    $self->_wail("Read-only attribute '$name'");
 	}
     }
     return;
@@ -2128,6 +2134,18 @@ sub _apply_boolean_default {
 	    or $opt->{$key} = $default;
     }
     return;
+}
+
+#	$self->_attribute_exists( $name );
+#
+#	This method returns true if an accessor for the given attribute
+#	exists, and croaks otherwise.
+
+sub _attribute_exists {
+    my ( $self, $name ) = @_;
+    exists $accessor{$name}
+	or $self->_wail("No such attribute as '$name'");
+    return $accessor{$name};
 }
 
 #	$chosen = _choose($opt, $choice, $list)
@@ -4376,6 +4394,8 @@ Nothing is returned.
 
  $satpass2->localize( 'date_format', 'time_format', 'horizon' );
  satpass2> localize date_format time_format horizon
+ $satpass2->localize( { all => 1 } );
+ satpass2> localize -all
 
 This interactive method localizes the values of the attributes given in
 the argument list to the current macro, source file, or begin block.
@@ -4383,6 +4403,11 @@ Nested macros or source files will see the changes, but commands outside
 the scope of the localization will not. The arguments must be the names
 of valid attributes. Attempts to localize a value more than once in the
 same scope will be ignored. Nothing is returned.
+
+The C<-except> option causes the argument list to be used as an
+exception list, and all attributes except those in the argument list are
+localized. You can use C<-all> as a synonym for C<-except>; it may look
+more natural when there are no arguments.
 
 =head2 location
 
