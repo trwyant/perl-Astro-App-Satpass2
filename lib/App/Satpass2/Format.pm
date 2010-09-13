@@ -50,8 +50,8 @@ sub new {
 sub attributes {
     my ( $self ) = @_;
     return ( $self->SUPER::attributes(),
-	qw{ date_format desired_equinox_dynamical
-	    gmt header local_coord provider time_format tz
+	qw{ date_format desired_equinox_dynamical gmt
+	    header local_coord provider time_format time_formatter tz
 	} );
 }
 

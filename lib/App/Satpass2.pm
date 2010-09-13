@@ -671,6 +671,12 @@ sub fmtr : Verb() {
 	return join( ' ', map { _quoter( $_ ) } 'fmtr', $method, @args,
 	    @{ $rslt } ) . "\n";
     }
+    if ($self->{_interactive}) {
+	blessed( $rslt ) and $rslt = ref $rslt;
+	defined $rslt or $rslt = 'undef';
+	return join( ' ', map { _quoter( $_ ) } 'fmtr', $method, $rslt
+	) . "\n";
+    }
     return $rslt;
 }
 
@@ -1462,7 +1468,7 @@ sub save : Verb(changes!,overwrite!) {
     }
     my $fmtr = $self->get( 'formatter' );
     my $fmtr_class = ref $fmtr;
-    my $output = <<"EOD" . $self->show(@show_opt) .
+    my $output = <<"EOD" . $self->show( @show_opt, '-nodeprecated' ) .
 
 # App::Satpass2 $title
 
@@ -1482,9 +1488,9 @@ EOD
 # $fmtr_class $title
 
 EOD
-	join( '', map { join( ' ', map { _quoter( $_ ) } 'fmtr', @{ $_ }
-		) . "\n"
-	    } $fmtr->config( attributes => 0, changes => $opt->{changes}
+	join( '', map { join( ' ', map { _quoter( blessed( $_ ) ? ref $_
+	    : $_ ) } 'fmtr', @{ $_ }) . "\n"
+	    } $fmtr->config( attributes => 1, changes => $opt->{changes}
 	    ) );
     if ($fn ne '-') {
 	my $fh = IO::File->new($fn, '>')
@@ -1686,14 +1692,18 @@ sub _set_webcmd {
     return ($self->{$name} = $val);
 }
 
-sub show : Verb(changes!) {
+sub show : Verb(changes!,deprecated!) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
+    exists $opt->{deprecated} or $opt->{deprecated} = 1;
     my $output;
     @args or @args = sort grep {
 	!$nointeractive{$_} && !$self->_deprecation_in_progress(
 	    attribute => $_ )
     } keys %accessor;
+    $opt->{deprecated}
+	or @args = grep { ! $self->_deprecation_in_progress(
+	    attribute => $_ ) } @args;
     foreach my $name (@args) {
 	exists $shower{$name}
 	    or $self->_wail("No such attribute as '$name'");
@@ -2226,7 +2236,10 @@ sub _choose {
     my %deprecate = (
 	attribute => {
 	    country	=> 0,
+	    date_format	=> 0,
 	    explicit_macro_delete	=> 0,
+	    gmt		=> 0,
+	    time_format	=> 0,
 	},
 	method => {
 	},
@@ -3720,8 +3733,9 @@ B<Caveat:> L<DateTime|DateTime> is not well-behaved in the far future or
 past (say, more than a hundred years or so) if the zone is something
 other than C<UTC> (a.k.a. Greenwich, a.k.a.  Zulu, and so on). Should
 you wish to force the use of the C<strftime()> built-in in the presence
-of L<DateTime|DateTime>, you can use the
-L<time_formatter|/time_formatter> attribute to do this.
+of L<DateTime|DateTime>, you can use the L<App::Satpass2::Format
+time_formatter()|App::Satpass2::Format/time_formatter> method, or the
+deprecated L<time_formatter|/time_formatter> attribute to do this.
 
 =head1 OVERVIEW
 
@@ -4392,8 +4406,8 @@ Nothing is returned.
 
 =head2 localize
 
- $satpass2->localize( 'date_format', 'time_format', 'horizon' );
- satpass2> localize date_format time_format horizon
+ $satpass2->localize( qw{ formatter horizon } );
+ satpass2> localize formatter horizon
  $satpass2->localize( { all => 1 } );
  satpass2> localize -all
 
@@ -5004,7 +5018,11 @@ The default is 'us'.
 
 =head2 date_format
 
-This string attribute allows access to and manipulation of the formatter
+This string attribute is deprecated. It is provided for backward
+compatibility with the F<satpass> script. The preferred way to
+manipulate this is either directly, or via the L<fmtr()|/fmtr> method.
+
+This attribute allows access to and manipulation of the formatter
 object's L<date_format|App::Satpass2::Format/date_format> attribute.
 This is normally used as a C<strftime(3)> format to format a date. See
 the L<date_format|App::Satpass2::Format/date_format> documentation for
@@ -5171,7 +5189,11 @@ The default is 1 (i.e. true).
 
 =head2 gmt
 
-This boolean attribute allows access to and manipulation of the
+This boolean attribute is deprecated. It is provided for backward
+compatibility with the F<satpass> script. The preferred way to
+manipulate this is either directly, or via the L<fmtr()|/fmtr> method.
+
+This attribute allows access to and manipulation of the
 formatter object's L<gmt|App::Satpass2::Format/gmt> attribute. This is
 normally used to specify whether time is displayed in local or Greenwich
 Mean Time (a.k.a. Universal Time).  See the
@@ -5378,7 +5400,11 @@ The default is the C<STDOUT> file handle.
 
 =head2 time_format
 
-This string attribute allows access to and manipulation of the formatter
+This string attribute is deprecated. It is provided for backward
+compatibility with the F<satpass> script. The preferred way to
+manipulate this is either directly, or via the L<fmtr()|/fmtr> method.
+
+This attribute allows access to and manipulation of the formatter
 object's L<time_format|App::Satpass2::Format/time_format> attribute.
 This is normally used as a C<strftime(3)> format to format a time. See
 the L<time_format|App::Satpass2::Format/time_format> documentation for
@@ -5860,11 +5886,32 @@ since geocoder.ca changed its access policy only geocoder.us is
 supported, and this attribute is ignored and deprecated. This attribute
 will be dropped when support for F<satpass> is dropped.
 
+=item date_format
+
+This attribute is deprecated. It is properly an attribute of
+L<App::Satpass2::Format|App::Satpass2::Format>, and is implemented as a
+wrapper for that class' C<date_format> attribute. It will be dropped
+when support for F<satpass> is dropped.
+
 =item explicit_macro_delete
 
 This attribute is ignored and deprecated, since the C<App::Satpass2>
 macro() functionality always requires an explicit C<delete> to delete a
 macro. This attribute will be dropped when support for F<satpass> is
+
+=item gmt
+
+This attribute is deprecated. It is properly an attribute of
+L<App::Satpass2::Format|App::Satpass2::Format>, and is implemented as a
+wrapper for that class' C<gmt> attribute. It will be dropped
+when support for F<satpass> is dropped.
+
+=item time_format
+
+This attribute is deprecated. It is properly an attribute of
+L<App::Satpass2::Format|App::Satpass2::Format>, and is implemented as a
+wrapper for that class' C<time_format> attribute. It will be dropped
+when support for F<satpass> is dropped.
 dropped.
 
 =item twilight
