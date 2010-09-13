@@ -22,7 +22,7 @@ BEGIN {
     }
 }
 
-plan( tests => 9 );
+plan( tests => 10 );
 
 diag( 'Things needed for authortest' );
 
@@ -33,6 +33,7 @@ require_ok( 'DateTime' );
 require_ok( 'DateTime::TimeZone' );
 require_ok( 'Geo::WebService::Elevation::USGS' );
 require_ok( 'SOAP::Lite' );
+require_ok( 'Test::Perl::Critic' );
 require_ok( 'Time::HiRes' );
 
 ok( -f 'date_manip_v5/Date/Manip.pm',
