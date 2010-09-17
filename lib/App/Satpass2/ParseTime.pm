@@ -10,6 +10,10 @@ use Astro::Coord::ECI::Utils qw{ looks_like_number };
 
 our $VERSION = '0.000_06';
 
+my %static = (
+    perltime	=> 0,
+);
+
 sub new {
     my ( $class, @args ) = @_;
     ref $class and $class = ref $class;
@@ -32,7 +36,7 @@ sub new {
 	    or return;
     }
 
-    my $self = {};
+    my $self = { %static };
     bless $self, $class;
     $self->base( time );
     return $self;
@@ -52,9 +56,48 @@ sub base {
     return $self->{base};
 }
 
+{
+
+    my %skip = map { $_ => 1 } qw{ base };
+
+    sub config {
+	my ( $self, %args ) = @_;
+	my @data;
+
+	foreach my $name ( $self->attributes() ) {
+	    $skip{$name} and next;
+	    my $val = $self->$name();
+	    no warnings qw{ uninitialized };
+	    next if $args{changes} && $val eq $static{$name};
+	    push @data, [ $name, $args{decode} ? $self->decode( $name )
+		: $val ];
+	}
+
+	return @data;
+    }
+
+}
+
 sub delegate {
     my ( $self ) = @_;
     Carp::confess( 'The delegate() method must be overridden' );
+}
+
+{
+
+    my %decoder = (
+    );
+
+    sub decode {
+	my ( $self, $method, @args ) = @_;
+	my $dcdr = $decoder{$method}
+	    or return $self->$method( @args );
+	my $type = ref $dcdr
+	    or confess "Programming error -- decoder for $method is scalar";
+	'CODE' eq $type
+	    and return $dcdr->( $self, $method, @args );
+	confess "Programming error -- decoder for $method is $type";
+    }
 }
 
 {
@@ -261,6 +304,37 @@ Subclasses B<may> override this method, but if they do so they B<must>
 call C<SUPER::> with the same arguments they themselves were called
 with, and return whatever C<SUPER::> returns.
 
+=head3 config
+
+ use YAML;
+ print Dump ( $pt->config( attributes => 0, changes => 1 );
+
+This method retrieves the configuration of the formatter as an array of
+array references. The first element of each array reference is a method
+name, and the subsequent elements are arguments to that method. Calling
+the given methods with the given arguments should reproduce the
+configuration of the formatter.
+
+There are two named arguments:
+
+=over
+
+=item changes
+
+If this boolean argument is true (in the Perl sense), only changes from
+the default configuration are reported.
+
+=item decode
+
+If this boolean argument is true (in the Perl sense), the
+L<decode()|/decode> method is used to obtain the configuration values.
+
+=back
+
+Subclasses that add other ways to configure the object B<must> override
+this method. The override B<must> call C<SUPER::config()>, and include
+the result in the returned data.
+
 =head2 delegate
 
  my $delegate = $class->delegate()
@@ -274,14 +348,20 @@ class.
 
 This method B<must> be overridden by any subclass.
 
-=head2 copy
+=head2 decode
 
- $pt->copy( $copy );
+ $pt->decode( 'tz' );
 
-This method copies the values of all attributes (C<base>, C<perltime>,
-and C<tz>) to the object passed in the argument. The target object may
-be of a different class than the source object, but must support the
-given mutator methods.
+This method wraps other methods, converting their returned values to
+human-readable. The arguments are the name of the method, and its
+arguments if any. The return values of methods not explicitly documented
+below are not modified.
+
+There are currently no methods whose returns are affected by routing
+them through C<decode>. This may change.
+
+If a subclass overrides this method, the override should either perform
+the decoding itself, or delegate to C<SUPER::decode>.
 
 =head2 parse_time_absolute
 

@@ -10,38 +10,38 @@ localize formatter date_format time_format
 # We intend to use %date(zone=z) to format the event begin and end. We
 # truncate the time to the previous minute.
 
-set date_format %Y%m%dT%H%M00Z
+delegate formatter date_format %Y%m%dT%H%M00Z
 
 # We intend to use %time to format the individual event times.
 
-set time_format %I:%M:%S
+delegate formatter time_format %I:%M:%S
 
 # Supress the automatically-generated headers.
 
-fmtr header 0
+delegate formatter header 0
 
 # Provide the vCalendar event start tag, the start time, and the start
 # of the event summary.
 
-fmtr template pass_start "BEGIN:VEVENT%n;DTSTART:%date(zone=z)%n;\
+delegate formatter template pass_start "BEGIN:VEVENT%n;DTSTART:%date(zone=z)%n;\
 DALARM:%date(delta=-360,zone=z)%n;SUMMARY:%*name"
 
 # Define the optional pass_finish template to provide the event end
 # time, and the event end tag
 
-fmtr template pass_finish %n;DTEND:%date(zone=z)%n;END:VEVENT%n
+delegate formatter template pass_finish %n;DTEND:%date(zone=z)%n;END:VEVENT%n
 
 # The individual pass events get concatenated to the summary, with no newline.
 
-fmtr template pass ' %*event %time Az %*.0azimuth(bearing) Ele %*.0elevation'
+delegate formatter template pass ' %*event %time Az %*.0azimuth(bearing) Ele %*.0elevation'
 
 # If there is an appulse, we name the appulsed body
 
-fmtr template pass_appulse ' (%*name(appulse))'
+delegate formatter template pass_appulse ' (%*name(appulse))'
 
 # We turn off the date display.
 
-fmtr template pass_date ''
+delegate formatter template pass_date ''
 
 # Emit the start tag for the vCalendar data.
 

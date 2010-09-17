@@ -932,12 +932,9 @@ sub config {
     my ( $self, %args ) = @_;
     my @data = $self->SUPER::config( %args );
     foreach my $action ( sort keys %{ $self->{formatter} } ) {
-	my @mod = ( format_effector => $action );
-	my $hash = $self->{formatter}{$action};
-	foreach my $name ( sort keys %{ $hash } ) {
-	    push @mod, $name, $hash->{$name};
-	}
-	push @data, \@mod;
+	my @mods = $self->format_effector( $action )
+	    or next;
+	push @data, [ format_effector => $action => @mods ]
     }
     foreach my $name ( sort keys %{ $self->{macro} } ) {
 	next if $args{changes} &&
@@ -964,6 +961,32 @@ sub date_format {
     } else {
 	return $self->SUPER::date_format();
     }
+}
+
+{
+
+    my %decoder = (
+	format_effector => sub {
+	    my ( $self, $method, $action, @args ) = @_;
+	    @args and return $self->$method( $action, @args );
+	    my @rslt = $self->$method( $action );
+	    @rslt or push @rslt, 'undef';
+	    unshift @rslt, $action;
+	    return wantarray ? @rslt : \@rslt;
+	},
+    );
+
+    sub decode {
+	my ( $self, $method, @args ) = @_;
+	my $dcdr = $decoder{$method}
+	    or return $self->SUPER::decode( $method, @args );
+	my $type = ref $dcdr
+	    or confess "Programming error -- decoder for $method is scalar";
+	'CODE' eq $type
+	    and return $dcdr->( $self, $method, @args );
+	confess "Programming error -- decoder for $method is $type";
+    }
+
 }
 
 sub effectors_used {
@@ -1726,6 +1749,7 @@ sub _format_time_since_epoch {
 	},
     );
     my @names = sort keys %check;
+
     sub format_effector {
 	my ($self, $action, @args) = @_;
 	defined $action
@@ -1735,19 +1759,23 @@ sub _format_time_since_epoch {
 	if (@args) {
 	    while (@args) {
 		my ( $name, $val ) = splice @args, 0, 2;
-		$check{$name}
-		    or croak "No such format effector attribute as '$name'";
-		$template{$action}{forbid}
-		    and $template{$action}{forbid}{$name}
-		    and croak "Argument $name forbidden on %$action";
-		delete $self->{_template_cache};
-		if (defined $val && $val ne 'undef') {
-		    $check{$name}->( $action, $name, $val );
-		    $self->{formatter}{$action}{$name} = $val;
+		if ( defined $name && $name ne 'undef' ) {
+		    $check{$name}
+			or croak "No such format effector attribute as '$name'";
+		    $template{$action}{forbid}
+			and $template{$action}{forbid}{$name}
+			and croak "Argument $name forbidden on %$action";
+		    delete $self->{_template_cache};
+		    if (defined $val && $val ne 'undef') {
+			$check{$name}->( $action, $name, $val );
+			$self->{formatter}{$action}{$name} = $val;
+		    } else {
+			delete $self->{formatter}{$action}{$name};
+			%{$self->{formatter}{$action}}
+			    or delete $self->{formatter}{$action};
+		    }
 		} else {
-		    delete $self->{formatter}{$action}{$name};
-		    %{$self->{formatter}{$action}}
-			or delete $self->{formatter}{$action};
+		    delete $self->{formatter}{$action};
 		}
 	    }
 	    return $self;
@@ -2798,6 +2826,31 @@ output.
 =head2 Other Methods
 
 The following other methods are provided.
+
+=head2 decode
+
+ $fmt->decode( format_effector => 'azimuth' );
+
+This method overrides the
+L<App::Satpass2::Format decode()|App::Satpass2::Format/decode> method.
+In addition to the functionality provided by the parent, the following
+methods return something different when invoked via this method:
+
+=over
+
+=item format_effector
+
+If called as an accessor, the name of the formatter accessed is
+prepended to the returned array. If this leaves the returned array with
+just one entry, the string C<'undef'> is appended. The return is still
+an array in list context, and an array reference in scalar context.
+
+If called as a mutator, you still get back the object reference.
+
+=back
+
+If a subclass overrides this method, the override should either perform
+the decoding itself, or delegate to C<SUPER::decode>.
 
 =head3 effectors_used
 

@@ -126,7 +126,7 @@ my %mutator = (
     continuation_prompt => \&_set_unmodified,
     country => \&_set_unmodified,
     date_format => \&_set_formatter_attribute,
-    desired_equinox_dynamical => \&_set_desired_equinox_dynamical,
+    desired_equinox_dynamical => \&_set_formatter_attribute,
     debug => \&_set_unmodified,
     echo => \&_set_unmodified,
     ellipsoid => \&_set_ellipsoid,
@@ -145,7 +145,7 @@ my %mutator = (
     horizon => \&_set_angle,
     latitude => \&_set_angle,
     lit => \&_set_unmodified,
-    local_coord => \&_set_local_coord,
+    local_coord => \&_set_formatter_attribute,
     location => \&_set_unmodified,
     longitude => \&_set_angle,
     model => \&_set_model,
@@ -156,7 +156,6 @@ my %mutator = (
     spacetrack => \&_set_spacetrack,
     stdout => \&_set_stdout,
     time_format => \&_set_formatter_attribute,
-    time_formatter => \&_set_formatter_attribute,
     time_parser => \&_set_time_parser,
 ##    timing => \&_set_unmodified,
     twilight => \&_set_twilight,  # 'civil', 'nautical', 'astronomical'
@@ -179,11 +178,11 @@ my %accessor = (
     date_format => \&_get_formatter_attribute,
     desired_equinox_dynamical => \&_get_formatter_attribute,
     gmt => \&_get_formatter_attribute,
+    local_coord => \&_get_formatter_attribtue,
     perltime => \&_get_time_parser_attribute,
     time_format => \&_get_formatter_attribute,
 
 
-    time_formatter => \&_get_formatter_attribute,
     tz => \&_get_time_parser_attribute,
 );
 foreach ( keys %mutator, qw{ initfile } ) {
@@ -191,10 +190,13 @@ foreach ( keys %mutator, qw{ initfile } ) {
 }
 
 my %shower = (
+    date_format => \&_show_formatter_attribute,
     formatter => \&_show_stringable,
-    desired_equinox_dynamical => \&_show_desired_equinox_dynamical,
-    time_formatter => \&_show_stringable,
+    desired_equinox_dynamical => \&_show_formatter_attribute,
+    gmt => \&_show_formatter_attribute,
+    local_coord => \&_show_formatter_attribute,
     time_parser => \&_show_stringable,
+    time_format => \&_show_formatter_attribute,
 );
 foreach ( keys %accessor ) { $shower{$_} ||= \&_show_unmodified }
 
@@ -206,8 +208,6 @@ my %nointeractive = map {$_ => 1} qw{
     spacetrack
     stdout
 };
-
-use constant DEFAULT_LOCAL_COORD => 'azel_rng';
 
 #	Initial object contents
 #
@@ -230,7 +230,7 @@ my %static = (
     execute_filter => sub { return 1 },	# Undocumented and unsupported
 ##  explicit_macro_delete => 1,			# Deprecated
     extinction => 1,
-    filter => undef,
+    filter => 0,
     flare_mag_day => -6,
     flare_mag_night => 0,
     formatter => 'App::Satpass2::Format::Classic',	# Formatter class.
@@ -240,7 +240,6 @@ my %static = (
     horizon => 20,		# degrees
     latitude => undef,		# degrees
     lit => 1,
-    local_coord => DEFAULT_LOCAL_COORD,
     longitude => undef,		# degrees
     model => 'model',
 #   pending => undef,		# Continued input line if it exists.
@@ -661,23 +660,53 @@ Verb(algorithm=s,am!,choose=s@,day!,dump!,pm!,questionable|spare!,quiet!)
 
 }
 
-sub fmtr : Verb() {
-    my ( $self, $method, @args ) = @_;
-    my $fmtr = $self->get( 'formatter' );
-    my $rslt = $fmtr->$method( @args );
-    ref $rslt eq ref $fmtr and return;
-    if ( 'format_effector' eq $method && 'ARRAY' eq ref $rslt ) {
-	@{ $rslt } or return "# fmtr $method @args not set\n";
-	return join( ' ', map { _quoter( $_ ) } 'fmtr', $method, @args,
-	    @{ $rslt } ) . "\n";
-    }
-    if ($self->{_interactive}) {
-	blessed( $rslt ) and $rslt = ref $rslt;
-	defined $rslt or $rslt = 'undef';
-	return join( ' ', map { _quoter( $_ ) } 'fmtr', $method, $rslt
+{
+
+    my $config = sub {
+	my ( $self, $method, @args ) = @_;
+	local @ARGV = @args;
+	my %opt;
+	GetOptions( \%opt, qw{ changes! decode! } )
+	    or $self->_wail( "Bad $method option" );
+	return %opt;
+    };
+
+    my %interp = (
+	formatter => {
+	    config => $config,
+	    desired_equinox_dynamical => sub {
+		my ( $self, $method, @args ) = @_;
+		if ( @args && $args[0] ) {
+		    $self->_parse_time_reset();
+		    $args[0] = $self->_parse_time( $args[0], 0 );
+		}
+		return @args;
+	    },
+	},
+	time_parser => {
+	    config => $config,
+	},
+    );
+
+    sub delegate : Verb() {
+	my ( $self, $attribute, $method, @args ) = @_;
+	my $delegate = $self->get( $attribute );
+	$interp{$attribute}
+	    or $self->_wail( "Can not delegate to $attribute" );
+	$self->{_interactive}
+	    or return $delegate->$method( @args );
+
+	$interp{$attribute}{$method}
+	    and @args = $interp{$attribute}{$method}->( $self, $method, @args );
+	my $rslt = $delegate->decode( $method,
+	    map { ( defined $_ && $_ eq 'undef' ) ? undef : $_ } @args );
+	ref $rslt eq ref $delegate and return;
+
+	return join( ' ', map { _quoter( $_ ) } 'delegate', $attribute,
+	    $method, ref $rslt eq 'ARRAY' ? @{ $rslt } : $rslt
 	) . "\n";
     }
-    return $rslt;
+
 }
 
 {
@@ -1466,32 +1495,39 @@ sub save : Verb(changes!,overwrite!) {
 	push @show_opt, '-changes';
 	$title = 'setting changes';
     }
-    my $fmtr = $self->get( 'formatter' );
-    my $fmtr_class = ref $fmtr;
-    my $output = <<"EOD" . $self->show( @show_opt, '-nodeprecated' ) .
+
+    my $output = <<"EOD" .
 
 # App::Satpass2 $title
 
 EOD
+	$self->show( @show_opt, qw{ -nodeprecated -noreadonly } ) .
 	<<"EOD" . $self->st('show', @show_opt) .
 
 # Astro::SpaceTrack $title
 
 EOD
-	<<"EOD" . $self->macro('list') .
+	<<"EOD" . $self->macro('list');
 
 # App::Satpass2 macros
 
 EOD
-	<<"EOD" .
 
-# $fmtr_class $title
+    foreach my $attribute ( qw{ formatter time_parser } ) {
+	my $obj = $self->get( $attribute );
+	my $class = ref $obj;
+	$output .= <<"EOD" .
+
+# $class $title
 
 EOD
 	join( '', map { join( ' ', map { _quoter( blessed( $_ ) ? ref $_
-	    : $_ ) } 'fmtr', @{ $_ }) . "\n"
-	    } $fmtr->config( attributes => 1, changes => $opt->{changes}
+	    : $_ ) } 'delegate', $attribute, @{ $_ }) . "\n"
+	    } $obj->config(
+		changes => $opt->{changes}, decode => 1
 	    ) );
+    }
+
     if ($fn ne '-') {
 	my $fh = IO::File->new($fn, '>')
 	    or $self->_wail("Unable to open $fn: $!");
@@ -1563,12 +1599,6 @@ sub _set_code_ref {
     return( $_[0]{$_[1]} = $_[2] );
 }
 
-sub _set_desired_equinox_dynamical {
-    my ($self, $name, $val) = @_;
-    @_ = ( $self, $name, $val ? $self->_parse_time( $val ) : 0 );
-    goto &_set_formatter_attribute;
-}
-
 sub _set_distance_meters {
     return ( $_[0]{$_[1]} = defined $_[2] ?
 	( $_[0]->_parse_distance( $_[2], '0m' ) * 1000 ) : $_[2] );
@@ -1589,17 +1619,7 @@ sub _set_formatter {
 
 sub _set_formatter_attribute {
     my ( $self, $name, $val ) = @_;
-    defined $val and $val eq 'undef' and $val = undef;
-    my $fmtr = $self->get( 'formatter' );
-    $fmtr->$name( $val );
-    return $val;
-}
-
-sub _set_local_coord {
-    my ($self, $name, $val) = @_;
-    defined $val or $val = DEFAULT_LOCAL_COORD;
-    my $fmtr = $self->get( 'formatter' );
-    $fmtr->$name( $val );
+    $self->delegate( formatter => $name, $val );
     return $val;
 }
 
@@ -1692,18 +1712,19 @@ sub _set_webcmd {
     return ($self->{$name} = $val);
 }
 
-sub show : Verb(changes!,deprecated!) {
+sub show : Verb(changes!,deprecated!,readonly!) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
-    exists $opt->{deprecated} or $opt->{deprecated} = 1;
+    foreach my $name ( qw{ deprecated readonly } ) {
+	exists $opt->{$name} or $opt->{$name} = 1;
+    }
     my $output;
     @args or @args = sort grep {
-	!$nointeractive{$_} && !$self->_deprecation_in_progress(
-	    attribute => $_ )
+	!$nointeractive{$_} &&
+	( $opt->{deprecated} ||
+	    !$self->_deprecation_in_progress( attribute => $_ ) &&
+       	( $opt->{readonly} || exists  $mutator{$_} ) )
     } keys %accessor;
-    $opt->{deprecated}
-	or @args = grep { ! $self->_deprecation_in_progress(
-	    attribute => $_ ) } @args;
     foreach my $name (@args) {
 	exists $shower{$name}
 	    or $self->_wail("No such attribute as '$name'");
@@ -1712,25 +1733,15 @@ sub show : Verb(changes!,deprecated!) {
 	    no warnings qw{uninitialized};
 	    $static{$name} eq $val and next;
 	}
+	exists $mutator{$name} or $output .= '# ';
 	$output .= "set $name " . _quoter( $val ) . "\n";
     }
     return $output;
 }
 
-#	$string = $satpass2->_show_desired_equinox_dynamical ($name);
-
-#	Accessor for a time attribute. Returns '0' if the attribute is
-#	not set, or a string representing the attribute in GMT if it is
-#	set.
-
-sub _show_desired_equinox_dynamical {
-    my ($self, $name) = @_;
-    my $val = $self->get( $name );
-    if ( $val ) {
-	return strftime '%Y-%m-%d %H:%M:%S UT', gmtime $val;
-    } else {
-	return 0;
-    }
+sub _show_formatter_attribute {
+    my ( $self, $name ) = @_;
+    return $self->{formatter}->decode( $name );
 }
 
 sub _show_stringable {
@@ -2237,9 +2248,13 @@ sub _choose {
 	attribute => {
 	    country	=> 0,
 	    date_format	=> 0,
+	    desired_equinox_dynamical	=> 0,
 	    explicit_macro_delete	=> 0,
 	    gmt		=> 0,
+	    local_coord	=> 0,
+	    perltime	=> 0,
 	    time_format	=> 0,
+	    tz		=> 0,
 	},
 	method => {
 	},
@@ -2863,7 +2878,8 @@ sub _parse_time_reset {
 #	Quotes and escapes the input string if and as necessary for parser.
 
 sub _quoter {
-    my $string = shift;
+    my ( $string ) = @_;
+    return 'undef' unless defined $string;
     return $string if looks_like_number ($string);
     return "''" unless $string;
     return $string unless $string =~ m/ [\s'"] /smx;
@@ -3734,8 +3750,8 @@ past (say, more than a hundred years or so) if the zone is something
 other than C<UTC> (a.k.a. Greenwich, a.k.a.  Zulu, and so on). Should
 you wish to force the use of the C<strftime()> built-in in the presence
 of L<DateTime|DateTime>, you can use the L<App::Satpass2::Format
-time_formatter()|App::Satpass2::Format/time_formatter> method, or the
-deprecated L<time_formatter|/time_formatter> attribute to do this.
+time_formatter()|App::Satpass2::Format/time_formatter> method to do
+this.
 
 =head1 OVERVIEW
 
@@ -4205,18 +4221,29 @@ options is asserted, or true otherwise. For example, specifying C<-noam>
 has the same effect as specifying C<-day -pm>, and specifying none of
 the three options is the same as specifying C<-am -day -pm>.
 
-=head2 fmtr
+=head2 delegate
 
- $satpass2->fmtr( macro => local_coord => 'azel' );
- satpass2> fmtr macro local_coord azel
+ $satpass2->delegate( formatter => macro => local_coord => 'azel' );
+ satpass2> delegate formatter macro local_coord azel
 
-This interactive method modifies the current formatter object. The first
-argument is the name of the method to call. Subsequent arguments are
-passed to that method. The default formatter is
-L<App::Satpass2::Format::Classic|App::Satpass2::Format::Classic>, whose
-documentation you can see for the details.
+This interactive method modifies one of the objects to which
+functionality has been delegated, I<in situ.> The arguments are the
+attribute name of the object to be modified, the method to call on that
+object, and any arguments to that method. The results of the method call
+are returned.
 
-The results of the formatter call are returned.
+At this point, the only supported attribute is L<formatter|/formatter>.
+
+If this method is called interactively (i.e. as a result of calling
+L<dispatch()|/dispatch> either directly or indirectly via
+C<execute()|/execute> or C<run()|/run>), it behaves differently in a
+couple of respects:
+
+First, if the object is C<formatter> and the method is
+C<desired_equinox_dynamical> used as a mutator, the new value is parsed
+as a time. See L</SPECIFYING TIMES> for the details.
+
+Second, all methods are routed through the object's C<decode()> method.
 
 =head2 geocode
 
@@ -5020,7 +5047,8 @@ The default is 'us'.
 
 This string attribute is deprecated. It is provided for backward
 compatibility with the F<satpass> script. The preferred way to
-manipulate this is either directly, or via the L<fmtr()|/fmtr> method.
+manipulate this is either directly, or via the L<delegate()|/delegate>
+method.
 
 This attribute allows access to and manipulation of the formatter
 object's L<date_format|App::Satpass2::Format/date_format> attribute.
@@ -5052,7 +5080,12 @@ The default is 0.
 
 =head2 desired_equinox_dynamical
 
-This string attribute allows access to and manipulation of the formatter
+This string attribute is deprecated. It is provided for backward
+compatibility with the F<satpass> script. The preferred way to
+manipulate this is either directly, or via the L<delegate()|/delegate>
+method.
+
+This attribute allows access to and manipulation of the formatter
 object's
 L<desired_equinox_dynamical|App::Satpass2::Format/desired_equinox_dynamical>
 attribute. This is normally used to specify the desired equinox for
@@ -5191,22 +5224,23 @@ The default is 1 (i.e. true).
 
 This boolean attribute is deprecated. It is provided for backward
 compatibility with the F<satpass> script. The preferred way to
-manipulate this is either directly, or via the L<fmtr()|/fmtr> method.
+manipulate this is either directly, or via the L<delegate()|/delegate>
+method.
 
-This attribute allows access to and manipulation of the
-formatter object's L<gmt|App::Satpass2::Format/gmt> attribute. This is
-normally used to specify whether time is displayed in local or Greenwich
-Mean Time (a.k.a. Universal Time).  See the
-L<gmt|App::Satpass2::Format/gmt> documentation for the default. See the
-documentation of the actual formatter class being used for what it does.
+This attribute allows access to and manipulation of the formatter
+object's L<gmt|App::Satpass2::Format/gmt> attribute. This is normally
+used to specify whether time is displayed in local or Greenwich Mean
+Time (a.k.a. Universal Time).  See the L<gmt|App::Satpass2::Format/gmt>
+documentation for the default. See the documentation of the actual
+formatter class being used for what it does.
 
 The default will normally be 0 (i.e. false).
 
 =head2 height attribute
 
 This numeric attribute specifies the height of the observer above mean
-sea level, in meters. To specify in different units, see
-L</SPECIFYING DISTANCES>. The L<get()|/get> method returns meters.
+sea level, in meters. To specify in different units, see L</SPECIFYING
+DISTANCES>. The L<get()|/get> method returns meters.
 
 There is no default; you must specify a value.
 
@@ -5256,6 +5290,11 @@ The default is 1 (i.e. true).
 
 =head2 local_coord
 
+This string attribute is deprecated. It is provided for backward
+compatibility with the F<satpass> script. The preferred way to
+manipulate this is either directly, or via the L<delegate()|/delegate>
+method.
+
 This string attribute allows access to and manipulation of the formatter
 object's L<local_coord|App::Satpass2::Format/local_coord> attribute.
 This is normally used to specify the desired coordinates displayed by
@@ -5282,9 +5321,9 @@ The default is undef.
 
 =head2 location attribute
 
-This string attribute contains a text description of the observer's location.
-This is not used internally, but if it is not empty it will be
-displayed by the L</location> method.
+This string attribute contains a text description of the observer's
+location.  This is not used internally, but if it is not empty it will
+be displayed by the L</location> method.
 
 There is no default; the attribute is undefined unless you supply a
 value.
@@ -5312,6 +5351,11 @@ invalid model will result in an exception.
 The default is 'model', which specifies whatever model is favored.
 
 =head2 perltime
+
+This boolean attribute is deprecated. It is provided for backward
+compatibility with the F<satpass> script. The preferred way to
+manipulate this is either directly, or via the L<delegate()|/delegate>
+method.
 
 This boolean attribute allows access to and manipulation of the time
 parser object's L<perltime|App::Satpass2::ParseTime/perltime> attribute.
@@ -5402,7 +5446,8 @@ The default is the C<STDOUT> file handle.
 
 This string attribute is deprecated. It is provided for backward
 compatibility with the F<satpass> script. The preferred way to
-manipulate this is either directly, or via the L<fmtr()|/fmtr> method.
+manipulate this is either directly, or via the L<delegate()|/delegate>
+method.
 
 This attribute allows access to and manipulation of the formatter
 object's L<time_format|App::Satpass2::Format/time_format> attribute.
@@ -5423,37 +5468,14 @@ The above is a long URL, and may be split across multiple lines. More
 than that, the formatter may have inserted a hyphen at the break, which
 needs to be taken out to make the URL good. I<Caveat user.>
 
-=head2 time_formatter
-
-This attribute specifies the class to be used by the formatter to format
-time output. You can set it to either the actual formatter object, or to
-the name of the class to use. In the latter case, an object of the
-appropriate class will be instantiated, so C<get( 'time_formatter' )>
-always returns an object.  A call to C<show( 'time_formatter' )>,
-however, will always show the class name.
-
-Minimal constraints on the formatter class are imposed, but while it
-need not be a subclass of
-L<App::Satpass2::FormatTime|App::Satpass2::FormatTime>, it C<must>
-conform to that class' interface.
-
-The default is C<'App::Satpass2::FormatTime'>. Note that this actually
-instantiates one of its subclasses, preferring
-L<App::Satpass2::FormatTime::DateTime|App::Satpass2::FormatTime::DateTime>
-if L<DateTime|DateTime> and L<DateTime::TimeZone|DateTime::TimeZone> are
-both installed. If not, you get
-L<App::Satpass2::FormatTime::POSIX|App::Satpass2::FormatTime::POSIX>.
-See the L<App::Satpass2::FormatTime|App::Satpass2::FormatTime>
-documentation for the details.
-
 =head2 time_parser
 
-This attribute specifies the class to be used to parse times.
-You can set it to either the actual parser object, or to
-the name of the class to use. In the latter case, an object of the
-appropriate class will be instantiated, so C<get( 'time_parser' )>
-always returns an object.  A call to C<show( 'time_parser' )>,
-however, will always show the class name.
+This attribute specifies the class to be used to parse times.  You can
+set it to either the actual parser object, or to the name of the class
+to use. In the latter case, an object of the appropriate class will be
+instantiated, so C<get( 'time_parser' )> always returns an object.  A
+call to C<show( 'time_parser' )>, however, will always show the class
+name.
 
 The time parser must be a subclass of
 L<App::Satpass2::ParseTime|App::Satpass2::ParseTime>.
@@ -5484,16 +5506,21 @@ The default is C<'civil'>.
 
 =head2 tz
 
+This string attribute is deprecated. It is provided for backward
+compatibility with the F<satpass> script. The preferred way to
+manipulate this is either directly, or via the L<delegate()|/delegate>
+method on the relevant objects.
+
 This string attribute specifies both the default time zone for date
 parsing and the time zone for formatting of local times. This
-overloading exists for historical reasons, but may change in the future.
-At any event it takes effect to the extent the date parser and formatter
-objects support it.
+overloading exists for historical reasons, but will change in the
+future.  At any event it takes effect to the extent the date parser and
+formatter objects support it.
 
 If you are running under Mac OS 9 or less, or under VMS, you may have to
 set this. Otherwise, you normally should not bother unless you are
-deliberately producing output for a time zone other than either your
-own, or GMT.
+deliberately doing input or producing output for a time zone other than
+either your own, or GMT.
 
 =head2 verbose
 
@@ -5525,8 +5552,8 @@ display the help for this package on L<http://search.cpan.org/>. Mac OS
 X users will find C<'open'> a useful setting, and Windows users will
 find C<'start'> useful.
 
-This functionality was added on speculation, since there is no good
-way to test it in the initial release of the package.
+This functionality was added on speculation, since there is no good way
+to test it in the initial release of the package.
 
 The default is '' (i.e. the empty string), which leaves the
 functionality disabled.
@@ -5553,8 +5580,8 @@ Examples:
  12d33m5 specifies 12 degrees 33 minutes 5 seconds
 
 Right ascension is always positive. Declination and latitude are
-positive for north, negative for south. Longitude is positive for
-east, negative for west.
+positive for north, negative for south. Longitude is positive for east,
+negative for west.
 
 =head1 SPECIFYING DISTANCES
 
@@ -5600,8 +5627,8 @@ must enter dates in English. The ISO 8601 format is all-numeric.
 =head2 Relative time
 
 A relative time is specified by '+' or '-' and an integer number of
-days. The number of days must immediately follow the sign. Optionally,
-a number of hours, minutes, and seconds may be specified by placing
+days. The number of days must immediately follow the sign. Optionally, a
+number of hours, minutes, and seconds may be specified by placing
 whitespace after the day number, followed by hours:minutes:seconds. If
 you choose not to specify seconds, omit the trailing colon as well. The
 same applies if you choose not to specify minutes. For example:
@@ -5618,8 +5645,8 @@ previously-specified time, whether absolute or relative. For example:
 
  $satpass2->almanac( '', '+5' );
 
-establishes the most-recently-specified time as 'today midnight', and does
-an almanac for 5 days from that time. If the next method call is
+establishes the most-recently-specified time as 'today midnight', and
+does an almanac for 5 days from that time. If the next method call is
 
  $satpass2->almanac( '+5', '+3' );
 
@@ -5893,6 +5920,13 @@ L<App::Satpass2::Format|App::Satpass2::Format>, and is implemented as a
 wrapper for that class' C<date_format> attribute. It will be dropped
 when support for F<satpass> is dropped.
 
+=item desired_equinox_dynamical
+
+This attribute is deprecated. It is properly an attribute of
+L<App::Satpass2::Format|App::Satpass2::Format>, and is implemented as a
+wrapper for that class' C<desired_equinox_dynamical> attribute. It will
+be dropped when support for F<satpass> is dropped.
+
 =item explicit_macro_delete
 
 This attribute is ignored and deprecated, since the C<App::Satpass2>
@@ -5903,7 +5937,14 @@ macro. This attribute will be dropped when support for F<satpass> is
 
 This attribute is deprecated. It is properly an attribute of
 L<App::Satpass2::Format|App::Satpass2::Format>, and is implemented as a
-wrapper for that class' C<gmt> attribute. It will be dropped
+wrapper for that class' C<gmt> attribute. It will be dropped when
+support for F<satpass> is dropped.
+
+=item local_coord
+
+This attribute is deprecated. It is properly an attribute of
+L<App::Satpass2::Format|App::Satpass2::Format>, and is implemented as a
+wrapper for that class' C<local_coord> attribute. It will be dropped
 when support for F<satpass> is dropped.
 
 =item time_format
@@ -5912,7 +5953,6 @@ This attribute is deprecated. It is properly an attribute of
 L<App::Satpass2::Format|App::Satpass2::Format>, and is implemented as a
 wrapper for that class' C<time_format> attribute. It will be dropped
 when support for F<satpass> is dropped.
-dropped.
 
 =item twilight
 

@@ -54,7 +54,6 @@ elementnumber
 ephemeristype
 EST
 firstderivative
-fmtr
 fr
 gasparovic
 geocode

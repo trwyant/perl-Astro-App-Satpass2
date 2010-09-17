@@ -11,6 +11,8 @@ use App::Satpass2::FormatTime;
 
 our $VERSION = '0.000_06';
 
+use constant DEFAULT_LOCAL_COORD => 'azel_rng';
+
 # Note that the fact that new() works when called from
 # App::Satpass2::Test is unsupported and undocumented, and the
 # functionality may be revoked or changed without warning.
@@ -20,7 +22,7 @@ my %static = (
     desired_equinox_dynamical => 0,
     gmt		=> 0,
     header	=> 1,
-    local_coord	=> 'azel_rng',
+    local_coord	=> DEFAULT_LOCAL_COORD,
     provider	=> 'App::Satpass2',
     time_format	=> '%H:%M:%S',
 );
@@ -57,17 +59,59 @@ sub attributes {
 
 sub config {
     my ( $self, %args ) = @_;
-    exists $args{attributes} or $args{attributes} = 1;
     my @data;
-    if ( $args{attributes} ) {
-	foreach my $name ( $self->attributes() ) {
-	    my $val = $self->$name();
-	    no warnings qw{ uninitialized };
-	    next if $args{changes} && $val eq $static{$name};
-	    push @data, [ $name, $val ];
-	}
+
+    foreach my $name ( $self->attributes() ) {
+	my $val = $self->$name();
+	no warnings qw{ uninitialized };
+	next if $args{changes} && $val eq $static{$name};
+	push @data, [ $name, $args{decode} ? $self->decode( $name )
+	    : $val ];
     }
+
     return @data;
+}
+
+{
+
+    my %decoder = (
+	desired_equinox_dynamical => sub {
+	    my ( $self, $method, @args ) = @_;
+	    my $rslt = $self->$method( @args );
+	    @args and return $rslt;
+	    $rslt or return $rslt;
+	    return $self->{time_formatter}->strftime(
+		'%Y%m%dT%H%M%SZ', $rslt, 1 );
+	},
+	time_formatter => sub {
+	    my ( $self, $method, @args ) = @_;
+	    my $rslt = $self->$method( @args );
+	    @args and return $rslt;
+	    return ref $rslt || $rslt;
+	},
+    );
+
+    sub decode {
+	my ( $self, $method, @args ) = @_;
+	my $dcdr = $decoder{$method}
+	    or return $self->$method( @args );
+	my $type = ref $dcdr
+	    or confess "Programming error -- decoder for $method is scalar";
+	'CODE' eq $type
+	    and return $dcdr->( $self, $method, @args );
+	confess "Programming error -- decoder for $method is $type";
+    }
+}
+
+sub local_coord {
+    my ( $self, @args ) = @_;
+    if ( @args ) {
+	defined $args[0] or $args[0] = DEFAULT_LOCAL_COORD;
+	$self->{local_coord} = $args[0];
+	return $self;
+    } else {
+	return $self->{local_coord};
+    }
 }
 
 sub time_formatter {
@@ -503,22 +547,52 @@ There are two named arguments:
 
 =over
 
-=item attributes
-
-If this boolean argument is true (in the Perl sense), the attributes are
-included in the configuration. If false, they are not. If this argument
-is not specified, attributes are included.
-
 =item changes
 
 If this boolean argument is true (in the Perl sense), only changes from
 the default configuration are reported.
+
+=item decode
+
+If this boolean argument is true (in the Perl sense), the
+L<decode()|/decode> method is used to obtain the configuration values.
 
 =back
 
 Subclasses that add other ways to configure the object B<must> override
 this method. The override B<must> call C<SUPER::config()>, and include
 the result in the returned data.
+
+=head2 decode
+
+ $fmt->decode( 'desired_equinox_dynamical' );
+
+This method wraps other methods, converting their returned values to
+human-readable. The arguments are the name of the method, and its
+arguments if any. The return values of methods not explicitly documented
+below are not modified.
+
+The following methods return something different when invoked via this
+method:
+
+=over
+
+=item desired_equinox_dynamical
+
+If called as an accessor, the returned time is converted to an ISO-8601
+time in the GMT zone. If called as a mutator, you still get back the
+object reference.
+
+=item time_formatter
+
+If called as an accessor, the class name of the object being used to
+format the time is returned. If called as a mutator, you still get back
+the object reference.
+
+=back
+
+If a subclass overrides this method, the override should either perform
+the decoding itself, or delegate to C<SUPER::decode>.
 
 =head1 SEE ALSO
 

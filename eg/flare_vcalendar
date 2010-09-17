@@ -10,19 +10,19 @@ localize formatter date_format time_format
 # We intend to use %date(zone=z) to format the event begin and end. We
 # truncate the time to the previous minute.
 
-set date_format %Y%m%dT%H%M00Z
+delegate formatter date_format %Y%m%dT%H%M00Z
 
 # We intend to use %time to format the individual event times.
 
-set time_format %I:%M:%S
+delegate formatter time_format %I:%M:%S
 
 # Supress the automatically-generated headers.
 
-fmtr header 0
+delegate formatter header 0
 
 # Template to provide output in vCalendar format.
 
-fmtr template flare "BEGIN:VEVENT%n;DTSTART:%date(zone=z)%n;\
+delegate formatter template flare "BEGIN:VEVENT%n;DTSTART:%date(zone=z)%n;\
 DALARM:%date(delta=-360,zone=z)%n;\
 SUMMARY:%*name %time Az %*.0azimuth(bearing) Ele %*.0elevation; Mag \
 %magnitude %angle(appulse,append= deg from Sun,missing=night)%n;\
