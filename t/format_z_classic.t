@@ -126,7 +126,7 @@ my @pass = ( {		# pass
 
 $tst->method( template => pass_start => '' );	# Supress pass OID.
 $tst->method( template => pass_date => '' );	# Supress pass date.
-$tst->method( template => pass_appulse => '' );	# Supress appulse.
+$tst->method( template => pass_appulse => undef );	# Supress appulsed body.
 $tst->method( 'pass' );				# Initialize
 
 $tst->format_setup( pass => pass => @pass );

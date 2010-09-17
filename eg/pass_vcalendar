@@ -5,7 +5,7 @@
 # This whole thing (less the comments) could be wrapped up as a macro
 # if desired.
 
-localize formatter date_format time_format
+localize formatter
 
 # We intend to use %date(zone=z) to format the event begin and end. We
 # truncate the time to the previous minute.
@@ -35,9 +35,17 @@ delegate formatter template pass_finish %n;DTEND:%date(zone=z)%n;END:VEVENT%n
 
 delegate formatter template pass ' %*event %time Az %*.0azimuth(bearing) Ele %*.0elevation'
 
-# If there is an appulse, we name the appulsed body
+# Override the above for rise/set, to suppress the elevation.
 
-delegate formatter template pass_appulse ' (%*name(appulse))'
+delegate formatter template pass_horizon ' %*event %time Az %*.0azimuth(bearing)'
+
+# Override the general template for appulses
+
+delegate formatter template pass_appulse ' %*event %*name(appulse) %time Az %*.0azimuth(bearing) Ele %*.0elevation'
+
+# Suppress the appulsed body.
+
+delegate formatter template pass_appulsed_body ''
 
 # We turn off the date display.
 

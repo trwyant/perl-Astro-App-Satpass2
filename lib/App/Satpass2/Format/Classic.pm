@@ -838,8 +838,6 @@ Location: %*name%n
 EOD
     pass =>
     '%time %local_coord %latitude %longitude %altitude %-illumination %-event%n',
-    pass_appulse =>
-    '%time %local_coord(appulse)       %angle(appulse) degrees from %-name(appulse)%n',
     pass_date => '%n%date%n',
     pass_start => '%n%id - %-*name%n%n',
     phase => '%date %time %8name %phase(title=Phase Angle) %-16phase(units=phase) %.0fraction_lit(units=percent)%n',
@@ -899,6 +897,12 @@ NORAD ID: %*id%n
     Apogee altitude (derived): %*.*apoapsis kilometers%n
 EOD
 );
+$format_template_definitions{pass_appulse} =
+$format_template_definitions{pass} . <<'EOD';
+
+%time %local_coord(appulse)       %angle(appulse) degrees from %-name(appulse)%n
+EOD
+
 
 sub new {
     my ($class, @args) = @_;
@@ -1409,16 +1413,29 @@ sub _format_compiler {
 }
 
 sub _format_execute {
-    my ( $self, $type, $name ) = @_;
+    my ( $self, $type, @templates ) = @_;
     my $xqt = $self->can('_format_execute_' . $type)
 	or confess "Programming error - invalid type '$type'";
-    my $tx = $self->_template_fetcher( $name )->{code};
-    my $output = $xqt->($self, $tx);
-    if (defined $output) {
+
+    foreach my $name ( @templates ) {
+
+	defined $name and $name ne ''
+	    or next;
+	defined $self->{template}{$name}
+	    or next;
+
+	my $tx = $self->_template_fetcher( $name )->{code};
+	my $output;
+	defined( $output = $xqt->($self, $tx) )
+	    or return $output;
+
 	$output =~ s/ [ \t]+ (?= \n ) //smxg;
 	$output =~ s/ [ \t]+ \z //smx;
+
+	return $output;
     }
-    return $output;
+
+    return '';
 }
 
 # Format data. This is called from _format_execute, and passed $self and
@@ -1882,73 +1899,87 @@ sub _macro_expand {
     return $string;
 }
 
-sub pass {
-    my ( $self, $pass ) = @_;
+{
 
-    # If initializing with a satellite
-    if ( embodies( $pass, 'Astro::Coord::ECI::TLE' ) ) {
-
-	# Initialize to not display OID every pass.
-	delete $self->{_pass_internal_header};
-	delete $self->{_pass_oid_every_pass};
-
-	# Return OID and headers.
-	$self->_set( body => $pass );
-	return $self->_format_execute( format => 'pass_start' ) .
-	    $self->_format_execute( header => 'pass' );
-
-    # elsif we have the (presumptive) pass data
-    } elsif ( defined $pass ) {
-	my $output;
-
-	# Output the headers if we have events to go with them.
-	if ( @{ $pass->{events} } ) {
-	    $self->_set( phenomenon => $pass->{events}[0] );
-	    my $hdr = $self->_format_execute(
-		format => 'pass_date' );
-	    if ( ! defined $self->{_pass_internal_header}
-		|| $hdr ne $self->{_pass_internal_header} ) {
-		$output .= $hdr;
-		$self->{_pass_internal_header} = $hdr;
-	    }
-	    if ( $self->{_pass_oid_every_pass} ) {
-		$output .= $self->_format_execute(
-		    format => 'pass_start' );
-	    }
-	}
-
-	# Foreach event in the pass
-	foreach my $event ( @{ $pass->{events} } ) {
-
-	    # Accumulate the individual pass event.
-	    $self->_set( phenomenon => $event );
-	    $event->{body}->universal( $event->{time} );
-	    $output .= $self->_format_execute( format => 'pass' );
-
-	    # For appulses, append the appulse data.
-	    if ( $event->{appulse} ) {
-		$output .= $self->_format_execute( format => 'pass_appulse' );
-	    }
-	}
-
-	@{ $pass->{events} }
-	    and defined $self->{template}{pass_finish}
-	    and $output .= $self->_format_execute(
-		format => 'pass_finish' );
-
-	# Return the formatted pass.
-	return $output;
-
-    # Else we're initializing with no data
-    } else {
-
-	# Set up to display the OID for every pass
-	delete $self->{_pass_internal_header};
-	$self->{_pass_oid_every_pass} = 1;
-
-	# Return the headers only
-	return $self->_format_execute( header => 'pass' );
+    my @event_map;
+    foreach (
+##	[&PASS_EVENT_NONE => ''],
+	[&PASS_EVENT_SHADOWED => 'pass_illumination' ],
+	[&PASS_EVENT_LIT => 'pass_illumination' ],
+	[&PASS_EVENT_DAY => 'pass_illumination'],
+	[&PASS_EVENT_RISE => 'pass_horizon' ],
+	[&PASS_EVENT_MAX => 'pass_maximum'],
+	[&PASS_EVENT_SET => 'pass_horizon'],
+	[&PASS_EVENT_APPULSE => 'pass_appulse'],
+    ) {
+	$event_map[$_->[0]] = $_->[1];
     }
+
+    sub pass {
+	my ( $self, $pass ) = @_;
+
+	# If initializing with a satellite
+	if ( embodies( $pass, 'Astro::Coord::ECI::TLE' ) ) {
+
+	    # Initialize to not display OID every pass.
+	    delete $self->{_pass_internal_header};
+	    delete $self->{_pass_oid_every_pass};
+
+	    # Return OID and headers.
+	    $self->_set( body => $pass );
+	    return $self->_format_execute( format => 'pass_start' ) .
+		$self->_format_execute( header => 'pass' );
+
+	# elsif we have the (presumptive) pass data
+	} elsif ( defined $pass ) {
+	    my $output;
+
+	    # Output the headers if we have events to go with them.
+	    if ( @{ $pass->{events} } ) {
+		$self->_set( phenomenon => $pass->{events}[0] );
+		my $hdr = $self->_format_execute(
+		    format => 'pass_date' );
+		if ( ! defined $self->{_pass_internal_header}
+		    || $hdr ne $self->{_pass_internal_header} ) {
+		    $output .= $hdr;
+		    $self->{_pass_internal_header} = $hdr;
+		}
+		if ( $self->{_pass_oid_every_pass} ) {
+		    $output .= $self->_format_execute(
+			format => 'pass_start' );
+		}
+	    }
+
+	    # Foreach event in the pass
+	    foreach my $event ( @{ $pass->{events} } ) {
+
+		# Accumulate the individual pass event.
+		$self->_set( phenomenon => $event );
+		$event->{body}->universal( $event->{time} );
+		$output .= $self->_format_execute( format => $event_map[
+		    $event->{event} ], 'pass' );
+	    }
+
+	    @{ $pass->{events} }
+		and defined $self->{template}{pass_finish}
+		and $output .= $self->_format_execute(
+		    format => 'pass_finish' );
+
+	    # Return the formatted pass.
+	    return $output;
+
+	# Else we're initializing with no data
+	} else {
+
+	    # Set up to display the OID for every pass
+	    delete $self->{_pass_internal_header};
+	    $self->{_pass_oid_every_pass} = 1;
+
+	    # Return the headers only
+	    return $self->_format_execute( header => 'pass' );
+	}
+    }
+
 }
 
 sub phase {
@@ -2632,8 +2663,26 @@ It uses template C<pass>, which defaults to
 
  %time %local_coord %latitude %longitude %altitude %-illumination %-event%n
 
-to display the events of individual passes. Template C<pass_start>, which
+to display the events of individual passes. This can be overridden for
+individual events by defining the appropriate templates:
+
+ pass_horizon ------ for rise and set
+ pass_maximum ------ for maximum elevation above the horizon
+ pass_illumination - for changes in illumination
+ pass_appulse ------ for appulse to a background body.
+
+By default all these are undefined, except for pass_appulse, which
 defaults to
+
+ %time %local_coord %latitude %longitude %altitude %-illumination %-event%n
+ %time %local_coord(appulse)       %angle(appulse) degrees from
+    %-name(appulse)%n
+
+The above template is wrapped to fit on the page. If you define any of
+the event-specific templates to be an empty string (C<''>), you will
+suppress the output of the events that use that template.
+
+Template C<pass_start>, which defaults to
 
  %n%id - %-*name%n%n
 
@@ -2647,14 +2696,6 @@ Template C<pass_date> which defaults to
  %n%date%n
 
 is used to display the date when it changes.
-
-Template C<pass_appulse> to display the body the satellite
-appulses with, if any. This defaults to
-
- %time %local_coord(appulse)       %angle(appulse) degrees from
-    %-name(appulse)%n
-
-The above template is wrapped to fit on the page.
 
 Template C<pass_finish>, if defined (it is not by default) is displayed
 at the end of each pass. If you use C<%date> or C<%time> in this

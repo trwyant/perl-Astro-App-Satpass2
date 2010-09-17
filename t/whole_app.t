@@ -3,6 +3,7 @@ package main;
 use strict;
 use warnings;
 
+use Scalar::Util qw{ blessed };
 use Test::More 0.40;
 
 BEGIN {
@@ -20,7 +21,7 @@ BEGIN {
 
 $| = 1;	## no critic (RequireLocalizedPunctuationVars)
 
-plan( tests => 176 );
+plan( tests => 181 );
 
 require_ok( 'App::Satpass2' )
     or BAIL_OUT( "Can not continue without loading App::Satpass2" );
@@ -28,11 +29,10 @@ require_ok( 'App::Satpass2' )
 my $app = App::Satpass2->new();
 isa_ok($app, 'App::Satpass2')
     or BAIL_OUT("Can not continue without App::Satpass2 object");
-$app->set(
-    autoheight => undef,
-    gmt => 0,
-    stdout => undef,
-);
+_method( set => autoheight => undef, stdout => undef, undef,
+    'Clear autoheight and stdout' );
+_method( qw{ delegate formatter gmt 0 }, undef,
+    'Set formatter gmt false' );
 
 # NOTICE
 #
@@ -49,23 +49,26 @@ $app->set(
 
 $app->set( execute_filter => sub {
 	my ( $self, $args ) = @_;
-	@{ $args } > 2
-	    and $args->[0] eq 'set'
-	    and $args->[1] eq 'gmt'
+	@{ $args } > 3
+	    and $args->[0] eq 'delegate'
+	    and $args->[1] eq 'formatter'
+	    and $args->[2] eq 'gmt'
 	    and return;
 	return 1;
     }
 );
 
 my $can_filter = 1;
-_app( 'set gmt 1', undef, 'Attempt to set gmt with filter in place' );
-ok( ! $app->get( 'gmt' ), 'Confirm gmt still false' )
+_app( 'delegate formatter gmt 1', undef,
+    'Attempt to set gmt with filter in place' );
+ok( ! $app->delegate( formatter => 'gmt' ), 'Confirm gmt still false' )
     or $can_filter = 0;
 # NOTICE
 # The execute_filter attribute is undocumented and unsupported.
 $app->set( execute_filter => sub { return 1 } );
-_app( 'set gmt 1', undef, 'Attempt to set gmt with no filter in place' );
-ok( $app->get( 'gmt' ), 'Confirm gmt now true' );
+_app( 'delegate formatter gmt 1', undef,
+    'Attempt to set gmt with no filter in place' );
+ok( $app->delegate( formatter => 'gmt' ), 'Confirm gmt now true' );
 
 
 {
@@ -185,11 +188,21 @@ _app('location', <<'EOD', 'Location command with name');
 Location: Royal Observatory, Greenwich England
           Latitude 51.4772, longitude 0.0000, height 2 m
 EOD
-_app('set date_format %Y/%m/%d time_format %H:%M:%S',
+_app('set date_format %d/%m/%Y time_format "%I:%M:%S %p"',
     undef, 'Set date and time format');
-_app('show date_format', 'set date_format %Y/%m/%d', 'Show date format');
-_app('show time_format', 'set time_format %H:%M:%S', 'Show time format');
-_app("almanac '20090401T000000 UT'",
+_app('show date_format', 'set date_format %d/%m/%Y', 'Show date format');
+_app('show time_format', q{set time_format '%I:%M:%S %p'}, 'Show time format');
+_app('delegate formatter date_format %Y/%m/%d',
+    undef, 'Set date format directly');
+_app('delegate formatter time_format %H:%M:%S',
+    undef, 'Set time format directly');
+_app('delegate formatter date_format',
+    'delegate formatter date_format %Y/%m/%d',
+    'Show date format directly');
+_app('delegate formatter time_format',
+    'delegate formatter time_format %H:%M:%S',
+    'Show time format directly');
+_app("almanac '20090401T000000Z'",
     <<'EOD', 'Almanac for April Fools 2009');
 2009/04/01 00:04:00 local midnight
 2009/04/01 01:17:47 Moon set
@@ -201,7 +214,7 @@ _app("almanac '20090401T000000 UT'",
 2009/04/01 18:33:28 Sunset
 2009/04/01 19:07:26 end twilight
 EOD
-_app("almanac -notransit '20090401T000000 UT'",
+_app("almanac -notransit '20090401T000000Z'",
     <<'EOD', 'Almanac for April Fools 2009');
 2009/04/01 01:17:47 Moon set
 2009/04/01 05:01:29 begin twilight
@@ -210,7 +223,7 @@ _app("almanac -notransit '20090401T000000 UT'",
 2009/04/01 18:33:28 Sunset
 2009/04/01 19:07:26 end twilight
 EOD
-_app("almanac -rise -transit '20090401T000000 UT'",
+_app("almanac -rise -transit '20090401T000000Z'",
     <<'EOD', 'Almanac for April Fools 2009');
 2009/04/01 00:04:00 local midnight
 2009/04/01 01:17:47 Moon set
@@ -525,7 +538,7 @@ _app('pass -chronological 19801013T000000Z +1', <<'EOD',
 05:46:37   0.0  29.7 NE     1778.5  64.0515   17.6896   224.9 lit   set
 EOD
     'Pass in chronological format' );
-_app("phase '20090401T000000 UT'", <<'EOD', 'Phase of moon April 1 2009');
+_app("phase '20090401T000000Z'", <<'EOD', 'Phase of moon April 1 2009');
                              Phas                  Frac
       Date     Time     Name Angl Phase             Lit
 2009/04/01 00:00:00     Moon   69 waxing crescent    32%
@@ -565,7 +578,7 @@ EOD
 EOD
 	'Position of things in sky on 01-Apr-2009 midnight UT, in azel again');
 }
-_app("quarters '20090301T000000 UT'", <<'EOD',
+_app("quarters '20090301T000000Z'", <<'EOD',
 2009/03/04 07:45:18 First quarter Moon
 2009/03/11 02:37:41 Full Moon
 2009/03/18 17:47:34 Last quarter Moon
@@ -682,28 +695,27 @@ SKIP: {
 }
 
 SKIP: {
-    my $tests = 5;
+    my $tests = 4;
     my $rslt;
 ##  defined ($rslt = _check_access('http://rpc.geocoder.us/Geo/Coder/US'))
     defined ($rslt = _check_access('http://rpc.geocoder.us/'))
 	and skip ($rslt, $tests);
     eval {require SOAP::Lite}
 	or skip ("Can not load SOAP::Lite", $tests);
-    $rslt = eval {$app->execute(
-	    "geocode '1600 Pennsylvania Ave, Washington DC'")};
-    ok(!$@, "geocode of White House succeeded");
-    is($rslt, <<'EOD', "Geocode of White House returned expected data");
+    _method( execute =>
+	    "geocode '1600 Pennsylvania Ave, Washington DC'", <<'EOD',
 
 set location '1600 Pennsylvania Ave NW Washington DC 20502'
 set latitude 38.898748
 set longitude -77.037684
 EOD
-    is($app->get('location'),
+	'Geocode of White House returned expected data' );
+    _method( get => 'location',
 	'1600 Pennsylvania Ave NW Washington DC 20502',
 	'Geocode of White House returned expected address');
-    is($app->get('latitude'), 38.898748,
+    _method( get => 'latitude', 38.898748,
 	'Geocode of White House returned expected latitude');
-    is($app->get('longitude'), -77.037684,
+    _method( get => 'longitude', -77.037684,
 	'Geocode of White House returned expected longitude');
 }
 
@@ -726,6 +738,28 @@ sub _app {	## no critic (RequireArgUnpacking)
     }
     @_ = ($got, $want, $title);
     goto &_do_test;
+}
+
+sub _method {	## no critic (RequireArgUnpacking)
+    my ( $method, @args ) = @_;
+    my ( $want, $title ) = splice @args, -2;
+    my $got;
+    if ( eval { $got = $app->$method( @args ); 1 } ) {
+	blessed( $got ) and $got = undef;
+	foreach ( $want, $got ) {
+	    defined and not ref and chomp;
+	}
+	@_ = ( $got, $want, $title );
+	ref $want eq 'Regexp' ? goto &like :
+	    ref $want ? goto &is_deeply : goto &is;
+    } else {
+	$got = $@;
+	chomp $got;
+	ref $want eq 'Regexp'
+	    or $want = qr<\Q$want>smx;
+	@_ = ( $got, $want, $title );
+	goto &like;
+    }
 }
 
 #	$rslt = _check_access($url)

@@ -11,6 +11,7 @@ CVS/
 ^date_manip_v5/
 ^foo
 ^html/
+^iridium\.dat$
 ^Makefile$
 ^MANIFEST\.
 ^meta/
@@ -23,5 +24,5 @@ CVS/
 (^|/).svn/
 ^t/appulse\.tle$
 ^TODO$
-^usual.dat$
+^usual\.dat$
 ^xt/author/optionals/
