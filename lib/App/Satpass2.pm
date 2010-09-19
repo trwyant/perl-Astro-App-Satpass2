@@ -180,7 +180,6 @@ my %accessor = (
     gmt => \&_get_formatter_attribute,
     local_coord => \&_get_formatter_attribtue,
     perltime => \&_get_time_parser_attribute,
-    spacetrack => \&_get_spacetrack,
     time_format => \&_get_formatter_attribute,
     tz => \&_get_time_parser_attribute,
 );
