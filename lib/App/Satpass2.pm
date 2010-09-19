@@ -180,11 +180,11 @@ my %accessor = (
     gmt => \&_get_formatter_attribute,
     local_coord => \&_get_formatter_attribtue,
     perltime => \&_get_time_parser_attribute,
+    spacetrack => \&_get_spacetrack,
     time_format => \&_get_formatter_attribute,
-
-
     tz => \&_get_time_parser_attribute,
 );
+
 foreach ( keys %mutator, qw{ initfile } ) {
     $accessor{$_} ||= sub { return $_[0]->{$_[1]} };
 }
@@ -394,6 +394,55 @@ sub clear : Verb() {
     my $self = shift;
     @{$self->{bodies}} = ();
     return;
+}
+
+{
+
+    my $config = sub {
+	my ( $self, $method, @args ) = @_;
+	local @ARGV = @args;
+	my %opt;
+	GetOptions( \%opt, qw{ changes! decode! } )
+	    or $self->_wail( "Bad $method option" );
+	return %opt;
+    };
+
+    my %interp = (
+	formatter => {
+	    config => $config,
+	    desired_equinox_dynamical => sub {
+		my ( $self, $method, @args ) = @_;
+		if ( @args && $args[0] ) {
+		    $self->_parse_time_reset();
+		    $args[0] = $self->_parse_time( $args[0], 0 );
+		}
+		return @args;
+	    },
+	},
+	time_parser => {
+	    config => $config,
+	},
+    );
+
+    sub delegate : Verb() {
+	my ( $self, $attribute, $method, @args ) = @_;
+	my $delegate = $self->get( $attribute );
+	$interp{$attribute}
+	    or $self->_wail( "Can not delegate to $attribute" );
+	$self->{_interactive}
+	    or return $delegate->$method( @args );
+
+	$interp{$attribute}{$method}
+	    and @args = $interp{$attribute}{$method}->( $self, $method, @args );
+	my $rslt = $delegate->decode( $method,
+	    map { ( defined $_ && $_ eq 'undef' ) ? undef : $_ } @args );
+	ref $rslt eq ref $delegate and return;
+
+	return join( ' ', map { _quoter( $_ ) } 'delegate', $attribute,
+	    $method, ref $rslt eq 'ARRAY' ? @{ $rslt } : $rslt
+	) . "\n";
+    }
+
 }
 
 sub dispatch {
@@ -657,55 +706,6 @@ Verb(algorithm=s,am!,choose=s@,day!,dump!,pm!,questionable|spare!,quiet!)
     }
 
     return $output;
-
-}
-
-{
-
-    my $config = sub {
-	my ( $self, $method, @args ) = @_;
-	local @ARGV = @args;
-	my %opt;
-	GetOptions( \%opt, qw{ changes! decode! } )
-	    or $self->_wail( "Bad $method option" );
-	return %opt;
-    };
-
-    my %interp = (
-	formatter => {
-	    config => $config,
-	    desired_equinox_dynamical => sub {
-		my ( $self, $method, @args ) = @_;
-		if ( @args && $args[0] ) {
-		    $self->_parse_time_reset();
-		    $args[0] = $self->_parse_time( $args[0], 0 );
-		}
-		return @args;
-	    },
-	},
-	time_parser => {
-	    config => $config,
-	},
-    );
-
-    sub delegate : Verb() {
-	my ( $self, $attribute, $method, @args ) = @_;
-	my $delegate = $self->get( $attribute );
-	$interp{$attribute}
-	    or $self->_wail( "Can not delegate to $attribute" );
-	$self->{_interactive}
-	    or return $delegate->$method( @args );
-
-	$interp{$attribute}{$method}
-	    and @args = $interp{$attribute}{$method}->( $self, $method, @args );
-	my $rslt = $delegate->decode( $method,
-	    map { ( defined $_ && $_ eq 'undef' ) ? undef : $_ } @args );
-	ref $rslt eq ref $delegate and return;
-
-	return join( ' ', map { _quoter( $_ ) } 'delegate', $attribute,
-	    $method, ref $rslt eq 'ARRAY' ? @{ $rslt } : $rslt
-	) . "\n";
-    }
 
 }
 
@@ -1923,22 +1923,22 @@ Verb(all!,changes!,descending!,last5!,sort=s,end=s,start=s,verbose!) {
     my $st = $self->_get_spacetrack();
     (my $opt, @args) = $self->_getopt(@args);
     my $func = shift @args or $self->_wail("No st function specified");
-    $func eq 'show' and $func = 'get';
+    $func eq 'show' and $func = 'getv';
+    $func eq 'get' and $func = 'getv';
 
     my $output;
-    if ($func eq 'get') {
+    if ($func eq 'getv') {
 	@args or @args = $st->attribute_names();
 	my $dflt;
 	$opt->{changes} and $dflt = $self->_get_spacetrack_default();
 	foreach my $name (@args) {
-	    my $rslt = $st->get ($name);
-	    $self->_wail($rslt->status_line) unless $rslt->is_success;
+	    my $val = $st->getv( $name );
 	    if ($dflt) {
 		no warnings qw{uninitialized};
-		$rslt->content() eq $dflt->get($name)->content()
+		$val eq $dflt->getv( $name )
 		    and next;
 	    }
-	    $output .= "st set $name " . _quoter ($rslt->content) . "\n";
+	    $output .= "st set $name " . _quoter ( $val ) . "\n";
 	}
     } elsif ($func eq 'localize') {
 	foreach my $key (@args) {
@@ -2714,7 +2714,7 @@ EOD
     my %version;
     BEGIN {
 	%version = (
-	    'Astro::SpaceTrack' => 0.017,
+	    'Astro::SpaceTrack' => 0.048,
 	);
     }
 
