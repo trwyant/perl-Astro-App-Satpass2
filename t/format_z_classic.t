@@ -58,7 +58,7 @@ my $body = Astro::Coord::ECI::TLE->new(
 
 my $tst = App::Satpass2::Test::Format->new( 'App::Satpass2::Format::Classic' );
 
-$tst->plan( tests => 417 );
+$tst->plan( tests => 418 );
 
 $tst->require_ok();
 
@@ -81,7 +81,14 @@ $tst->can_ok( 'position' );
 $tst->can_ok( 'tle' );
 $tst->can_ok( 'tle_verbose' );
 
+$tst->can_ok( 'template' );
+
 $tst->new_ok();
+
+$tst->method_fail( template => local_coord => '%pass',
+    'Circular reference to local_coord in pass from local_coord',
+    'Setting circular template reference should fail',
+);
 
 my @almanac = ( {	# almanac
 	almanac => {
@@ -984,60 +991,57 @@ $tst->method_is( format_effector => 'altitude', [],
 $tst->format_is('%altitude;', 'Altitud',
     'Check that original default title is restored.');
 
-# Macro titles
+# Recursive template titles
 
-$tst->note( 'Macro titles' );
+$tst->note( 'Recursive template titles' );
 
-$tst->method_fail( macro => declination => '%right_ascension',
-    q{Macro name 'declination' duplicates format effector name},
-    'Redefinition of declination should fail' );
-$tst->method_ok( macro => azel => '%elevation %azimuth(bearing)',
-    'Define macro azel as elevation and azimuth');
-$tst->method_ok( macro => equatorial => '%right_ascension %declination',
-    'Define macro equatorial as right ascension and declination');
-$tst->method_is( macro => 'azel', '%elevation %azimuth(bearing)',
-    'Verify definition of macro azel');
-$tst->method_is (macro => equatorial => '%right_ascension %declination',
-    'Verify definition of macro equatorial');
+$tst->method_ok( template => azel => '%elevation %azimuth(bearing)',
+    'Define template azel as elevation and azimuth');
+$tst->method_ok( template => equatorial => '%right_ascension %declination',
+    'Define template equatorial as right ascension and declination');
+$tst->method_is( template => 'azel', '%elevation %azimuth(bearing)',
+    'Verify definition of template azel');
+$tst->method_is (template => equatorial => '%right_ascension %declination',
+    'Verify definition of template equatorial');
 $tst->format_is('%azel',
     'Eleva  Azimuth',
-    'Expand macro azel (title)');
+    'Expand template azel (title)');
 $tst->format_is('%equatorial',
     "   Right\nAscensio Decli",
-    'Expand macro equatorial (title)');
+    'Expand template equatorial (title)');
 
-# Macro data expansion better with pass
+# Recursive template data expansion better with pass
 
-$tst->note( 'Macro expansion' );
+$tst->note( 'Recursive template expansion' );
 $tst->format_setup( pass => pass => @pass );
 
 $tst->format_is('%azel',
     ' 27.5 153.8 SE',
-    'Expand macro azel (data)');
+    'Expand template azel (data)');
 $tst->format_is('%equatorial',
     '21:09:19 -19.2',
-    'Expand macro equatorial (data)');
-$tst->method_ok( macro => local_coord => '%azel',
-    "Define macro local_coord as '%azel'");
+    'Expand template equatorial (data)');
+$tst->method_ok( template => local_coord => '%azel',
+    "Define template local_coord as '%azel'");
 $tst->format_is('%local_coord',
     ' 27.5 153.8 SE',
-    'Expand macro local_coord (defined as %azel)');
-$tst->method_ok( macro => local_coord => '%equatorial',
-    "Define macro local_coord as '%equatorial'");
+    'Expand template local_coord (defined as %azel)');
+$tst->method_ok( template => local_coord => '%equatorial',
+    "Define template local_coord as '%equatorial'");
 $tst->format_is('%local_coord',
     '21:09:19 -19.2',
-    'Expand macro local_coord (now defined as %equatorial)');
-$tst->method_ok( macro => azel => '%elevation($*) %azimuth($*,bearing)',
-    'Redefine macro azel as elevation and azimuth, with argument');
+    'Expand template local_coord (now defined as %equatorial)');
+$tst->method_ok( template => azel => '%elevation($*) %azimuth($*,bearing)',
+    'Redefine template azel as elevation and azimuth, with argument');
 $tst->format_is('%azel',
     ' 27.5 153.8 SE',
-    'Expand macro azel with no argument');
+    'Expand template azel with no argument');
 $tst->format_is('%azel(body)',
     ' 27.5 153.8 SE',
-    'Expand macro azel with argument (body)');
+    'Expand template azel with argument (body)');
 $tst->format_is('%azel(appulse)',
     ' 29.2 151.2 SE',
-    'Expand macro azel with argument (appulse)');
+    'Expand template azel with argument (appulse)');
 
 $tst->note( 'Actual default output' );
 $tst->note( 'We create a new object for this, to restore defaults' );

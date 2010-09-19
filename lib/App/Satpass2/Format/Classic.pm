@@ -813,16 +813,19 @@ my %template_title_modifier = (
     station => 'Station %s',
 );
 
-my %format_macro_definitions = (
+my %format_template_definitions = (
+
+    # Things that were historically macros
+
     az_rng	=> '%azimuth($*,bearing) %range($*);',
     azel	=> '%elevation($*) %azimuth($*,bearing);',
     azel_rng	=> '%elevation($*) %azimuth($*,bearing) %range($*);',
     equatorial	=> '%right_ascension($*) %declination($*);',
     equatorial_rng => '%right_ascension($*) %declination($*) %range($*);',
     local_coord	=> '%azel_rng($*);',
-);
 
-my %format_template_definitions = (
+    # Things that were always templates
+
     almanac	=> '%date %time %*almanac%n',
     date_time	=> '%date %time%n',
     flare => <<'EOD',	# Note that leading spaces on line are significant
@@ -836,8 +839,13 @@ EOD
 Location: %*name%n
           Latitude %*.4latitude, longitude %*.4longitude, height %*.0altitude(units=meters) m%n
 EOD
-    pass =>
-    '%time %local_coord %latitude %longitude %altitude %-illumination %-event%n',
+    pass => <<'EOD',
+%time %local_coord %latitude %longitude %altitude %-illumination %-event%n
+EOD
+    pass_appulse => <<'EOD',
+%pass
+%time %local_coord(appulse)       %angle(appulse) degrees from %-name(appulse)%n
+EOD
     pass_date => '%n%date%n',
     pass_start => '%n%id - %-*name%n%n',
     phase => '%date %time %8name %phase(title=Phase Angle) %-16phase(units=phase) %.0fraction_lit(units=percent)%n',
@@ -897,11 +905,6 @@ NORAD ID: %*id%n
     Apogee altitude (derived): %*.*apoapsis kilometers%n
 EOD
 );
-$format_template_definitions{pass_appulse} =
-$format_template_definitions{pass} . <<'EOD';
-
-%time %local_coord(appulse)       %angle(appulse) degrees from %-name(appulse)%n
-EOD
 
 
 sub new {
@@ -910,12 +913,8 @@ sub new {
 
     $self->_set_time_format_initial();
 
-    $self->{macro} = {};	# Macro definitions
     $self->{template} = {};	# Templates
 
-    while ( my ( $name, $def ) = each %format_macro_definitions ) {
-	$self->macro( $name => $def );
-    }
     while ( my ( $name, $def ) = each %format_template_definitions ) {
 	$self->template( $name => $def );
     }
@@ -940,12 +939,7 @@ sub config {
 	    or next;
 	push @data, [ format_effector => $action => @mods ]
     }
-    foreach my $name ( sort keys %{ $self->{macro} } ) {
-	next if $args{changes} &&
-	    defined $self->{macro}{$name} &&
-	    $self->{macro}{$name} eq $format_macro_definitions{$name};
-	push @data, [ macro => $name, $self->{macro}{$name} ];
-    }
+
     foreach my $name ( sort keys %{ $self->{template} } ) {
 	# The regex is ad-hocery to prevent the unsupported celestia
 	# stuff from being included unless necessary.
@@ -954,6 +948,7 @@ sub config {
 	    $self->{template}{$name} eq $format_template_definitions{$name};
 	push @data, [ template => $name, $self->{template}{$name} ];
     }
+
     return @data;
 }
 
@@ -1045,12 +1040,12 @@ sub _format_compiler {
     my @parts;
     my %used;
 
+    # Expand macros (duh!)
+    $tplt = $self->_macro_expand( $tplt );
+
     # Literal newlines are ignored in templates. If you want a newline
     # you must use %n.
     $tplt =~ s/ \n //smxg;
-
-    # Expand macros (duh!)
-    $tplt = $self->_macro_expand( $tplt );
 
     # For each format effector in the template
     my $loc = 0;
@@ -1834,9 +1829,9 @@ sub local_coord {
     if ( @args ) {
 	my $val = $args[0];
 	defined $val or $val = 'azel_rng';
-	$self->macro( $val ) and $val ne 'local_coord'
-	    or croak "Unsupported local coordinate specification '$val'";
-	$self->macro( local_coord => "%$val(\$*);" );
+	$self->{template}{$val}
+	    or croak "Unknown local coordinate specification '$val'";
+	$self->template( local_coord => "%$val(\$*);" );
 	return $self->SUPER::local_coord( @args );
     } else {
 	return $self->SUPER::local_coord();
@@ -1854,49 +1849,30 @@ sub location {
     }
 }
 
-sub macro {
-    my ( $self, @args ) = @_;
-    my $name = shift @args;
-    if ( @args ) {
-	my $def = shift @args;
-	if ( defined $def ) {
-	    $name =~ m/ \W /smx
-		and croak "Macro name '$name' contains invalid characters";
-	    exists $template{$name}
-		and croak "Macro name '$name' duplicates format effector name";
-	    $def =~ s/ \n //smxg;
-	    $self->{macro}{$name} = $def;
-	} else {
-	    delete $self->{macro}{$name};
-	}
-	# We must delete the compiled formats since macros are expanded
-	# during compilation.
-	delete $self->{_template_cache};
-	$self->{_macro_count} = scalar keys %{ $self->{macro} };
-    }
-    return $self->{macro}{$name};
+sub _macro_expand {
+    my ( $self, $string, $recursion ) = @_;
+    $recursion ||= [];
+    ref $recursion or $recursion = [ $recursion ];
+    $string =~ s{ ( % ( \w+ ) ( [(] .*? [)] )? ;? ) }
+    { $self->_macro_expand_single( $1, $2, $3, $recursion ) }smxge;
+    return $string;
 }
 
-sub _macro_expand {
-    my ( $self, $string ) = @_;
-    my $limit = $self->{_macro_count};
-    while ( --$limit >= 0 ) {
-	my @replace;
-	while ( $string =~ m/ ( % ( \w+ ) ( \( .*? \) )? ;? ) /smxg ) {
-	    exists $self->{macro}{$2} or next;
-	    push @replace, [ $-[0], $1, $2, $3 ];
-	}
-	foreach ( reverse @replace ) {
-	    my ( $base, $replace, $name, $args ) = @{ $_ };
-	    defined $args or $args = '';
-	    $args =~ s/ \A \( //smx;
-	    $args =~ s/ \) \z //smx;
-	    ( my $expand = $self->{macro}{$name} ) =~ s/ \$ \* /$args/smxg;
-	    substr( $string, $base, length $replace, $expand );
-	}
-	@replace or last;
-    }
-    return $string;
+sub _macro_expand_single {
+    my ( $self, $text, $name, $args, $recursion ) = @_;
+    exists $template{$name} and return $text;
+    my $expansion =
+	defined $self->{template}{$name} ? $self->{template}{$name} :
+	undef;
+    defined $expansion or return $text;
+    _any( $name, $recursion )
+	and croak "Circular reference to $name in ", join ' from ',
+	    @{ $recursion };
+    defined $args or $args = '';
+    $args =~ s/ \A [(] //smx;
+    $args =~ s/ [)] \z //smx;
+    $expansion =~ s/ \$ [*] /$args/smxg;
+    return $self->_macro_expand( $expansion, [ $name, @{ $recursion } ] );
 }
 
 {
@@ -2322,6 +2298,7 @@ sub template {
     my ( $self, $name, @value ) = @_;
     if ( @value ) {
 	if ( defined $value[0] && 'undef' ne $value[0] ) {
+	    $self->_macro_expand( $value[0], $name );
 	    $self->{template}{$name} = $value[0];
 	} else {
 	    delete $self->{template}{$name};
@@ -2396,6 +2373,20 @@ sub tz {
 ########################################################################
 #
 #	General-purpose internal routines
+
+#	_any( $string, \@array )
+#
+#	This subroutine returns true if the given $string equals (string
+#	eq) any element of @array, and false otherwise.
+
+sub _any {
+    my ( $match, $array ) = @_;
+    foreach my $item ( @{ $array } ) {
+	$item eq $match
+	    and return 1;
+    }
+    return;
+}
 
 #	$hash = _clone_template($name, $arg => $val ...)
 #
@@ -2507,30 +2498,30 @@ The names and contents of the templates used by each formatter are
 described below. The templates may be retrieved or modified using the
 L<template()|/template> method.
 
-In addition, this class supports something called a C<macro>, which is
-used to implement the L<local_coord|App::Satpass2::Format/local_coord>
-functionality. A macro is a named template fragment, which is
-substituted into a template the first time it is used. Macros may be
-defined in terms of other macros, but defining a macro in terms of
-itself (either directly or indirectly) is unsupported, and probably will
-result in deep recursion errors from Perl. So don't do that. Macros may
-be retrieved or modified using the L</macro> method.
+You can define your own template fragments and use them in other
+templates. The template fragments are referred to by name with leading
+C<%> sign, just like format effectors, and are substituted into the
+referring template the first time it is used.
+
+If a template name conflicts with a format effector name, the format
+effector takes precedence. If arguments are passed when the template
+fragment is used, they are substituted for the string C<$*> in the
+template fragment.  Circular template definitions are not allowed, and
+are caught when the template is used.
 
 For example, the default local coordinate is C<azel_rng>. This is
 implemented by the equivalent of
 
  use App::Satpass2::Format::Classic;
- my $f = App::Satpass2::Format::Classic->new();
- $f->macro( local_coord => '%azel_rng($*)' );
+ my $f = $app::Satpass2::Format::Classic->new();
+ $f->template( azel_rng =>
+   '%elevation($*) %azimuth($*,bearing) %range($*);' );
+ $f->template( local_coord => '%azel_rng($*);' );
 
-The C<($*)> causes any arguments to the macro to passed through to
-C<%azel_rng($*)>, which is in fact another macro, the equivalent of
+If you wanted to make C<'ECI'> a working value of local_coord, you
+could do it with code similar to the following:
 
- $f->macro( azel_rng =>
-   '%elevation($*); %azimuth($*,bearing); %range($*);' );
-
-The C<%elevation($*)> and so forth are actual format effectors, calling
-for the appropriate data to be substituted into the template.
+ $f->template( ECI => '%eci_x($*) $eci_y($*) eci_z($*);' );
 
 =head1 METHODS
 
@@ -2568,9 +2559,9 @@ L<local_coord()|App::Satpass2::Format/local_coord> method, and performs
 the same function.
 
 When used as a mutator, it performs its function by checking to see if
-there is already a L</macro> of the given name, and if so defining
-L</macro> C<local_coord> to be the given macro.  If there is no
-L</macro> with the given name, the method croaks. If the given name is
+there is already a L</template> of the given name, and if so defining
+L</template> C<local_coord> to be the given template.  If there is no
+L</template> with the given name, the method croaks. If the given name is
 C<undef>, the default of C<azel_rng> is restored.
 
 =head3 time_format
@@ -2674,13 +2665,17 @@ individual events by defining the appropriate templates:
 By default all these are undefined, except for pass_appulse, which
 defaults to
 
- %time %local_coord %latitude %longitude %altitude %-illumination %-event%n
+ %pass
  %time %local_coord(appulse)       %angle(appulse) degrees from
     %-name(appulse)%n
 
-The above template is wrapped to fit on the page. If you define any of
-the event-specific templates to be an empty string (C<''>), you will
-suppress the output of the events that use that template.
+The above template is wrapped to fit on the page. Note that if you
+change the C<pass> template, C<pass_appulse> will see the changes also,
+in so far as it is able.
+
+If you define any of the event-specific templates to be an empty string
+(C<''>), you will suppress the output of the events that use that
+template.
 
 Template C<pass_start>, which defaults to
 
@@ -2936,23 +2931,6 @@ Global defaults will not be represented in the hash.
 
 If called with at least one $attr => $value pair, the return is the
 formatter object itself, to allow call chaining.
-
-=head3 macro
-
- print $fmt->macro( 'foo' );
- $fmt->macro( foo => '%azimuth %elevation' );
-
-This method is not inherited from
-L<App::Satpass2::Format|App::Satpass2::Format>. It returns the
-definition of a macro, or defines it (or redefines it) if the definition
-argument is provided. The definition is the provided argument (which may
-contain format effectors), with literal C<"\n"> characters removed. If
-the definition is C<undef>, the macro is deleted.
-
-The method always returns the definition of the macro; if the macro does
-not exist, it returns C<undef>.
-
-Note that the name of a format effector may not be used as a macro name.
 
 =head3 template
 
