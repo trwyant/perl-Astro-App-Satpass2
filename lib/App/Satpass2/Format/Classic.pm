@@ -164,9 +164,9 @@ my %units = (
     },
 );
 
-#	The %template hash defines the individual format effectors. The
-#	hash keys are the format effector names, and the values are
-#	references to hashes that define the format effector.
+#	The %format_effector hash defines the individual format
+#	effectors. The hash keys are the format effector names, and the
+#	values are references to hashes that define the format effector.
 #
 #	The following keys are defined for each format effector:
 #
@@ -175,7 +175,7 @@ my %units = (
 #
 #	fetch => a subroutine to fetch the data. The calling sequence is
 #	    ($self, $body, $station, $options), where the $options hash
-#	    is derived from the arguments passed in the template.
+#	    is derived from the arguments passed to the format effector.
 #
 #	forbid => a reference to a hash keyed by the names of standard
 #	    arguments to forbid. The values must be true.
@@ -204,7 +204,7 @@ my %units = (
 #
 #	width => the default width of the field.
 
-my %template = (
+my %format_effector = (
     almanac => {
 	fetch => sub {return $_[0]{almanac}},
 	forbid => {
@@ -797,23 +797,25 @@ my %template = (
 
 # Clone %apogee and %perigee from %apoapsis and %periapsis,
 # respectively.
-$template{apogee} = _clone_template('apoapsis', title => 'Apogee');
-$template{perigee} = _clone_template('periapsis', title => 'Perigee');
+$format_effector{apogee} = _clone_format_effector(
+    'apoapsis', title => 'Apogee');
+$format_effector{perigee} = _clone_format_effector(
+    'periapsis', title => 'Perigee');
 
 # Explicitly forbid the 'units' argument in format effectors that have
 # no associated units.
-foreach my $fmtr ( keys %template ) {
-    exists $template{$fmtr}{units}
-	or $template{forbid}{units} = 1;
+foreach my $fmtr ( keys %format_effector ) {
+    exists $format_effector{$fmtr}{units}
+	or $format_effector{forbid}{units} = 1;
 }
 
-my %template_title_modifier = (
+my %format_effector_title_modifier = (
     appulse => 'Appulse %s',
     center => 'Center %s',
     station => 'Station %s',
 );
 
-my %format_template_definitions = (
+my %template_definitions = (
 
     # Things that were historically macros
 
@@ -915,7 +917,7 @@ sub new {
 
     $self->{template} = {};	# Templates
 
-    while ( my ( $name, $def ) = each %format_template_definitions ) {
+    while ( my ( $name, $def ) = each %template_definitions ) {
 	$self->template( $name => $def );
     }
     return $self;
@@ -945,7 +947,7 @@ sub config {
 	# stuff from being included unless necessary.
 	next if ( $args{changes} || $name =~ m/ celestia /smx ) &&
 	    defined $self->{template}{$name} &&
-	    $self->{template}{$name} eq $format_template_definitions{$name};
+	    $self->{template}{$name} eq $template_definitions{$name};
 	push @data, [ template => $name, $self->{template}{$name} ];
     }
 
@@ -1017,7 +1019,7 @@ sub flare {
     }
 }
 
-my %tplt_abbr = abbrev (keys %template);
+my %tplt_abbr = abbrev (keys %format_effector);
 
 # Regular expression used to parse format effectors out of a template.
 my $tplt_regex = qr{
@@ -1067,8 +1069,8 @@ sub _format_compiler {
 		substr $tplt, $-[0], $+[0] - $-[0];
 
 	# Stash the data for this format effector for easy access.
-	my $info = $template{$action}
-	    or confess "Programming error - no \$template{$action}";
+	my $info = $format_effector{$action}
+	    or confess "Programming error - no \$format_effector{$action}";
 
 	# Record a use of this format effector, for the benefit of
 	# effectors_used().
@@ -1137,7 +1139,7 @@ sub _format_compiler {
 		    defined $raw_ttl->{$sel} ? $raw_ttl->{$sel} :
 			$raw_ttl->{body};
 		} else {
-		    my $mod_fmt = $template_title_modifier{$sel};
+		    my $mod_fmt = $format_effector_title_modifier{$sel};
 		    $mod_fmt ? sprintf $mod_fmt, $raw_ttl : $raw_ttl;
 		}
 	    }
@@ -1753,7 +1755,7 @@ sub _format_time_since_epoch {
 		and croak "Width must be an integer"},
 	units => sub {
 	    my ( $action, $name, $val ) = @_;
-	    my $units = $template{$action}{units}
+	    my $units = $format_effector{$action}{units}
 		or croak "%$action does not support units";
 	    exists $units{$units}{factor}{$val}
 		or croak "'$val' is not a valid '$units'";
@@ -1766,7 +1768,7 @@ sub _format_time_since_epoch {
 	my ($self, $action, @args) = @_;
 	defined $action
 	    or croak 'No format effector specified';
-	$template{$action}
+	$format_effector{$action}
 	    or croak "No such format effector as '$action'";
 	if (@args) {
 	    while (@args) {
@@ -1774,8 +1776,8 @@ sub _format_time_since_epoch {
 		if ( defined $name && $name ne 'undef' ) {
 		    $check{$name}
 			or croak "No such format effector attribute as '$name'";
-		    $template{$action}{forbid}
-			and $template{$action}{forbid}{$name}
+		    $format_effector{$action}{forbid}
+			and $format_effector{$action}{forbid}{$name}
 			and croak "Argument $name forbidden on %$action";
 		    delete $self->{_template_cache};
 		    if (defined $val && $val ne 'undef') {
@@ -1860,7 +1862,7 @@ sub _macro_expand {
 
 sub _macro_expand_single {
     my ( $self, $text, $name, $args, $recursion ) = @_;
-    exists $template{$name} and return $text;
+    exists $format_effector{$name} and return $text;
     my $expansion =
 	defined $self->{template}{$name} ? $self->{template}{$name} :
 	undef;
@@ -2255,8 +2257,8 @@ sub _set_phenomenon {
     my %attr;	# Names of *_format attributes.
     my %fmt;	# Format effectors that use *_format attribtutes
 
-    foreach my $key (keys %template) {
-	my $fmt = $template{$key}{format} or next;
+    foreach my $key (keys %format_effector) {
+	my $fmt = $format_effector{$key}{format} or next;
 	foreach (@$fmt) {
 	    $attr{$_}++;
 	    push @{$fmt{$_} ||= []}, $key;
@@ -2275,7 +2277,7 @@ sub _set_phenomenon {
 	delete $self->{_template_cache};
 
 	foreach my $tplt (@$key) {
-	    my $info = $template{$tplt};
+	    my $info = $format_effector{$tplt};
 	    my $tf = join (' ', map {$self->$_()} @{$info->{format}});
 	    $self->{formatter_default}{$tplt}{width} =
 		$self->time_formatter()->strftime_width( $tf );
@@ -2388,17 +2390,17 @@ sub _any {
     return;
 }
 
-#	$hash = _clone_template($name, $arg => $val ...)
+#	$hash = _clone_format_effector($name, $arg => $val ...)
 #
-#	This subroutine does a shallow clone on the named template item,
-#	replacing the values of the desired arguments. A reference to
-#	the cloned hash is returned.
+#	This subroutine does a shallow clone on the named format
+#	effector, replacing the values of the desired arguments. A
+#	reference to the cloned hash is returned.
 
-sub _clone_template {
+sub _clone_format_effector {
     my ($name, %args) = @_;
     my $clone = {};
-    foreach my $key (keys %{ $template{$name} }) {
-	$clone->{$key} = $template{$name}{$key};
+    foreach my $key (keys %{ $format_effector{$name} }) {
+	$clone->{$key} = $format_effector{$name}{$key};
     }
     foreach my $key (keys %args) {
 	if (defined $args{$key}) {
