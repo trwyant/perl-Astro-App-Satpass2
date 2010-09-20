@@ -5,7 +5,7 @@ use 5.006002;
 use strict;
 use warnings;
 
-use App::Satpass2::Copier qw{ __instance };
+use App::Satpass2::Copier qw{ __instance __quoter };
 use App::Satpass2::ParseTime;
 use Astro::Coord::ECI;
 use Astro::Coord::ECI::Moon;
@@ -29,12 +29,20 @@ use POSIX qw{ floor strftime };
 use Scalar::Util qw{ blessed openhandle weaken };
 use Text::Abbrev;
 
-my $got_time_hires;
+use constant ASTRO_SPACETRACK_VERSION => 0.048;
+
+my ( $got_time_hires, $got_astro_spacetrack );
 
 BEGIN {
 
     $got_time_hires = eval {
 	require Time::HiRes;
+	1;
+    };
+
+    $got_astro_spacetrack = eval {
+	require Astro::SpaceTrack;
+	Astro::SpaceTrack->VERSION( ASTRO_SPACETRACK_VERSION );
 	1;
     };
 
@@ -276,6 +284,10 @@ sub new {
 	exists $args{$name} or $args{$name} = $static{$name};
     }
 
+    not exists $args{spacetrack}
+	and $got_astro_spacetrack
+	and $args{spacetrack} = $self->_get_spacetrack_default();
+
     foreach my $name ( qw{ formatter time_parser } ) {
 	$self->set( $name => delete $args{$name} );
     }
@@ -428,6 +440,7 @@ sub clear : Verb() {
 	my $delegate = $self->get( $attribute );
 	$interp{$attribute}
 	    or $self->_wail( "Can not delegate to $attribute" );
+
 	$self->{_interactive}
 	    or return $delegate->$method( @args );
 
@@ -435,11 +448,22 @@ sub clear : Verb() {
 	    and @args = $interp{$attribute}{$method}->( $self, $method, @args );
 	my $rslt = $delegate->decode( $method,
 	    map { ( defined $_ && $_ eq 'undef' ) ? undef : $_ } @args );
-	ref $rslt eq ref $delegate and return;
+	my $ref = ref $rslt;
+	$ref eq ref $delegate and return;
 
-	return join( ' ', map { _quoter( $_ ) } 'delegate', $attribute,
-	    $method, ref $rslt eq 'ARRAY' ? @{ $rslt } : $rslt
-	) . "\n";
+	if ( 'ARRAY' eq $ref ) {
+	    return join( ' ', map { __quoter( $_ ) } 'delegate',
+		$attribute, $method, @{ $rslt } ) . "\n";
+	} elsif ( $ref ) {
+	    return $rslt;
+	} elsif ( $rslt =~ m/ \n /smx ) {
+	    $rslt =~ s{ (?: \A | (?<= \n ) ) }
+		{delegate $attribute $method }smxg;
+	    return $rslt;
+	} 
+
+	return join( ' ', map { __quoter( $_ ) } 'delegate', $attribute,
+	    $rslt ) . "\n";
     }
 
 }
@@ -1153,7 +1177,7 @@ sub location : Verb() {
 		$self->{macro}{$name}
 		    and $output .= "macro define $name " .
 			join (" \\\n    ", map {
-			_quoter ($_)} @{ $self->{macro}{$name}{def} }) . "\n";
+			__quoter ($_)} @{ $self->{macro}{$name}{def} }) . "\n";
 	    }
 	} elsif ($cmd eq 'delete') {
 	    foreach my $name (@args ? @args : keys %{$self->{macro}}) {
@@ -1520,7 +1544,7 @@ EOD
 # $class $title
 
 EOD
-	join( '', map { join( ' ', map { _quoter( blessed( $_ ) ? ref $_
+	join( '', map { join( ' ', map { __quoter( blessed( $_ ) ? ref $_
 	    : $_ ) } 'delegate', $attribute, @{ $_ }) . "\n"
 	    } $obj->config(
 		changes => $opt->{changes}, decode => 1
@@ -1733,7 +1757,7 @@ sub show : Verb(changes!,deprecated!,readonly!) {
 	    $static{$name} eq $val and next;
 	}
 	exists $mutator{$name} or $output .= '# ';
-	$output .= "set $name " . _quoter( $val ) . "\n";
+	$output .= "set $name " . __quoter( $val ) . "\n";
     }
     return $output;
 }
@@ -1780,10 +1804,10 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 		    $pmdec = rad2deg ($pmdec) * SPY2DPS;
 		    $output .= sprintf (
 			"sky add %s %s %7.3f %.2f %.4f %.5f %s\n",
-			_quoter ($body->get ('name')), _rad2hms ($ra),
+			__quoter ($body->get ('name')), _rad2hms ($ra),
 			rad2deg ($dec), $rng, $pmra, $pmdec, $vr);
 		} else {
-		    $output .= "sky add " . _quoter (
+		    $output .= "sky add " . __quoter (
 			$body->get ('name')) . "\n";
 		}
 	    }
@@ -1856,7 +1880,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    my ($ra, $dec, $rng, $pmra, $pmdec, $pmrec) =
 		$self->_simbad4 ($name);
 	    $rng = sprintf '%.2f', $rng;
-	    $output .= "sky add " . _quoter ($name) .
+	    $output .= "sky add " . __quoter ($name) .
 		" $ra $dec $rng $pmra $pmdec $pmrec\n";
 	    $ra = deg2rad (_parse_angle ($ra));
 	    my $body = Astro::Coord::ECI::Star->new (name => $name);
@@ -1937,9 +1961,10 @@ Verb(all!,changes!,descending!,last5!,sort=s,end=s,start=s,verbose!) {
 		$val eq $dflt->getv( $name )
 		    and next;
 	    }
-	    $output .= "st set $name " . _quoter ( $val ) . "\n";
+	    $output .= "st set $name " . __quoter ( $val ) . "\n";
 	}
     } elsif ($func eq 'localize') {
+	$self->_deprecation_notice( method => 'st localize' );
 	foreach my $key (@args) {
 	    exists $self->{frame}[-1]{spacetrack}{$key}
 		or $self->{frame}[-1]{spacetrack}{$key} =
@@ -1947,7 +1972,7 @@ Verb(all!,changes!,descending!,last5!,sort=s,end=s,start=s,verbose!) {
 	}
     } else {
 	($func !~ m/ \A _ /smx && $st->can ($func))
-	    or $self->_wail("No such st function as '$func'");
+	    or $self->_wail("No such st method as '$func'");
 	$opt->{all} and unshift @args, '-all';
 	$opt->{descending} and unshift @args, '-descending';
 	$opt->{last5} and unshift @args, '-last5';
@@ -2007,7 +2032,7 @@ Verb(all!,changes!,descending!,last5!,sort=s,end=s,start=s,verbose!) {
 	    @args and @data = map {$_->[2]} @{_choose(\@args,
 		    [map {[$_->[0], $_->[3], $_]} @data])};
 	    foreach my $tle (@data) {
-		$output .= join (' ', map {_quoter($_)} 'status', 'add',
+		$output .= join (' ', map {__quoter($_)} 'status', 'add',
 		    $tle->[0], $tle->[1], $status_code_map[$tle->[2]],
 		    $tle->[3], $tle->[4]) . "\n";
 	    }
@@ -2256,6 +2281,7 @@ sub _choose {
 	    tz		=> 0,
 	},
 	method => {
+	    'st localize' => 0,
 	},
     );
 
@@ -2713,7 +2739,7 @@ EOD
     my %version;
     BEGIN {
 	%version = (
-	    'Astro::SpaceTrack' => 0.048,
+	    'Astro::SpaceTrack' => ASTRO_SPACETRACK_VERSION,
 	);
     }
 
@@ -2870,20 +2896,6 @@ sub _parse_time_reset {
 	or confess 'Programming error - $self->{time_parser} not defined';
     $pt->reset();
     return $pt->base();
-}
-
-#	$quoted = _quoter ($string)
-
-#	Quotes and escapes the input string if and as necessary for parser.
-
-sub _quoter {
-    my ( $string ) = @_;
-    return 'undef' unless defined $string;
-    return $string if looks_like_number ($string);
-    return "''" unless $string;
-    return $string unless $string =~ m/ [\s'"] /smx;
-    $string =~ s/ ( [\\'] ) /\\$1/smxg;
-    return "'$string'";
 }
 
 #	$string = _rad2hms ($angle)

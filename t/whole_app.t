@@ -182,8 +182,8 @@ EOD
 _app("set location 'Royal Observatory, Greenwich England'",
     undef, "Set our location's name");
 _app('show location',
-    "set location 'Royal Observatory, Greenwich England'",
-    "Location's name");
+    'set location "Royal Observatory, Greenwich England"',
+    'Name of location');
 _app('location', <<'EOD', 'Location command with name');
 Location: Royal Observatory, Greenwich England
           Latitude 51.4772, longitude 0.0000, height 2 m
@@ -191,7 +191,7 @@ EOD
 _app('set date_format %d/%m/%Y time_format "%I:%M:%S %p"',
     undef, 'Set date and time format');
 _app('show date_format', 'set date_format %d/%m/%Y', 'Show date format');
-_app('show time_format', q{set time_format '%I:%M:%S %p'}, 'Show time format');
+_app('show time_format', 'set time_format "%I:%M:%S %p"', 'Show time format');
 _app('delegate formatter date_format %Y/%m/%d',
     undef, 'Set date format directly');
 _app('delegate formatter time_format %H:%M:%S',
@@ -703,9 +703,9 @@ SKIP: {
     eval {require SOAP::Lite}
 	or skip ("Can not load SOAP::Lite", $tests);
     _method( execute =>
-	    "geocode '1600 Pennsylvania Ave, Washington DC'", <<'EOD',
+	    'geocode "1600 Pennsylvania Ave, Washington DC"', <<'EOD',
 
-set location '1600 Pennsylvania Ave NW Washington DC 20502'
+set location "1600 Pennsylvania Ave NW Washington DC 20502"
 set latitude 38.898748
 set longitude -77.037684
 EOD

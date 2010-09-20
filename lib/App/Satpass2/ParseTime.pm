@@ -73,7 +73,7 @@ sub base {
 		: $val ];
 	}
 
-	return @data;
+	return wantarray ? @data : \@data;
     }
 
 }
