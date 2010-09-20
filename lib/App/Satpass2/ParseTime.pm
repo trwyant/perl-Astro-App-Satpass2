@@ -42,9 +42,9 @@ sub new {
     return $self;
 }
 
-sub attributes {
+sub attribute_names {
     my ( $self ) = @_;
-    return ( $self->SUPER::attributes(), qw{ base perltime tz } );
+    return ( $self->SUPER::attribute_names(), qw{ base perltime tz } );
 }
 
 sub base {
@@ -64,7 +64,7 @@ sub base {
 	my ( $self, %args ) = @_;
 	my @data;
 
-	foreach my $name ( $self->attributes() ) {
+	foreach my $name ( $self->attribute_names() ) {
 	    $skip{$name} and next;
 	    my $val = $self->$name();
 	    no warnings qw{ uninitialized };
@@ -307,7 +307,7 @@ with, and return whatever C<SUPER::> returns.
 =head3 config
 
  use YAML;
- print Dump ( $pt->config( attributes => 0, changes => 1 );
+ print Dump ( $pt->config( changes => 1 );
 
 This method retrieves the configuration of the formatter as an array of
 array references. The first element of each array reference is a method

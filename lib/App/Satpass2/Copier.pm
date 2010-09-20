@@ -13,7 +13,7 @@ our @EXPORT_OK = qw{ __instance };
 
 our $VERSION = '0.000_06';
 
-sub attributes {
+sub attribute_names {
     return ();
 }
 
@@ -24,7 +24,7 @@ sub clone {
 
 sub copy {
     my ( $self, $copy ) = @_;
-    foreach my $attr ( $self->attributes() ) {
+    foreach my $attr ( $self->attribute_names() ) {
 	$copy->$attr( $self->$attr() );
     }
     return $self;
@@ -33,7 +33,7 @@ sub copy {
 sub create_attribute_methods {
     my ( $self ) = @_;
     my $class = ref $self || $self;
-    foreach my $attr ( $self->attributes() ) {
+    foreach my $attr ( $self->attribute_names() ) {
 	$class->can( $attr ) and next;
 	my $method = $class . '::' . $attr;
 	no strict qw{ refs };
@@ -82,7 +82,7 @@ App::Satpass2::Copier - Object copying functionality for App::Satpass2
  
  sub new { ... }
  
- sub attributes {
+ sub attribute_names {
      return ( qw{ bar baz } );
  }
  
@@ -100,20 +100,20 @@ without prior notice.
 
 This class supports the following public methods:
 
-=head2 attributes
+=head2 attribute_names
 
- print join( ', ', $obj->attributes() ), "\n";
+ print join( ', ', $obj->attribute_names() ), "\n";
 
-This method returns the names of the object's attributes.
+This method returns the names of the object's attribute_names.
 
 Subclasses should override this. Immediate subclasses B<should> call
-C<SUPER::attributes()>, and indirect subclasses B<must> call
-C<SUPER::attributes()>. A subclass' override would look something like
+C<SUPER::attribute_names()>, and indirect subclasses B<must> call
+C<SUPER::attribute_names()>. A subclass' override would look something like
 this:
 
- sub attributes {
+ sub attribute_names {
      my ( $self ) = @_;
-     return ( $self->SUPER::attributes(), qw{ foo bar baz } );
+     return ( $self->SUPER::attribute_names(), qw{ foo bar baz } );
  }
 
 =head2 clone
@@ -132,7 +132,7 @@ object.
  $obj->copy( $copy );
 
 This method copies the attribute values of the original object into the
-attributes of the copy object. The original object is returned.
+attribute_names of the copy object. The original object is returned.
 
 The copy object need not be the same class as the original, but it must
 support all attributes the original supports.

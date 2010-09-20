@@ -16,7 +16,7 @@ $tst->plan( tests => 13 );
 $tst->require_ok();
 
 $tst->can_ok( 'new' );
-$tst->can_ok( 'attributes' );
+$tst->can_ok( 'attribute_names' );
 $tst->can_ok( 'copy' );
 $tst->can_ok( 'gmt' );
 $tst->can_ok( 'strftime' );

@@ -951,7 +951,7 @@ sub config {
 	push @data, [ template => $name, $self->{template}{$name} ];
     }
 
-    return @data;
+    return wantarray ? @data : \@data;
 }
 
 sub date_format {

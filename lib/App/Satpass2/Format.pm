@@ -49,9 +49,9 @@ sub new {
     return $self;
 }
 
-sub attributes {
+sub attribute_names {
     my ( $self ) = @_;
-    return ( $self->SUPER::attributes(),
+    return ( $self->SUPER::attribute_names(),
 	qw{ date_format desired_equinox_dynamical gmt
 	    header local_coord provider time_format time_formatter tz
 	} );
@@ -61,7 +61,7 @@ sub config {
     my ( $self, %args ) = @_;
     my @data;
 
-    foreach my $name ( $self->attributes() ) {
+    foreach my $name ( $self->attribute_names() ) {
 	my $val = $self->$name();
 	no warnings qw{ uninitialized };
 	next if $args{changes} && $val eq $static{$name};
@@ -69,7 +69,7 @@ sub config {
 	    : $val ];
     }
 
-    return @data;
+    return wantarray ? @data : \@data;
 }
 
 {
@@ -535,13 +535,14 @@ The following other methods are provided.
 =head3 config
 
  use YAML;
- print Dump ( $pt->config( attributes => 0, changes => 1 );
+ print Dump ( $pt->config( changes => 1 );
 
 This method retrieves the configuration of the formatter as an array of
 array references. The first element of each array reference is a method
 name, and the subsequent elements are arguments to that method. Calling
 the given methods with the given arguments should reproduce the
-configuration of the formatter.
+configuration of the formatter. If called in scalar context, it returns
+a reference to the array.
 
 There are two named arguments:
 

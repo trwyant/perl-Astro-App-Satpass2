@@ -30,7 +30,7 @@ sub new {
     return $self;
 }
 
-sub attributes {
+sub attribute_names {
     return ( qw{ gmt tz } );
 }
 
