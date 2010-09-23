@@ -254,7 +254,7 @@ my %static = (
     prompt => 'satpass2> ',
     simbad_url => 'simbad.u-strasbg.fr',
     singleton => 0,
-    spacetrack => undef,	# Astro::SpaceTrack object.
+#   spacetrack => undef,	# Astro::SpaceTrack object set in new().
 #   stdout => undef,		# Set to stdout in new().
     time_parser => 'App::Satpass2::ParseTime',	# Time parser class.
     twilight => 'civil',
@@ -415,8 +415,8 @@ sub delegate : Verb() {
 sub _delegate_interactive {
     my ( $self, $attribute, $method, @args ) = @_;
     my $code = $self->can( "__delegate__${attribute}__$method" ) ||
-    $self->can( "__delegate__$attribute" ) ||
-    $self->_wail( "Can not delegate to $attribute" );
+	$self->can( "__delegate__$attribute" ) ||
+	$self->_wail( "Can not delegate to $attribute" );
     goto &$code;
 }
 
@@ -424,9 +424,14 @@ sub _delegate_nointeractive {
     my ( $self, $attribute, $method, @args ) = @_;
     $self->can( "__delegate__$attribute" )
 	or $self->_wail( "Can not delegate to $attribute" );
+    return $self->_delegate_get_object( $attribute )->$method( @args );
+}
+
+sub _delegate_get_object {
+    my ( $self, $attribute ) = @_;
     my $object = $self->get( $attribute )
-	or return;
-    return $object->$method( @args );
+	or $self->_wail( "No $attribute object available" );
+    return $object;
 }
 
 sub _delegate_config_options {
@@ -444,8 +449,10 @@ sub _delegate_output {
 
 sub __delegate__formatter {
     my ( $self, $attribute, $method, @args ) = @_;
-    my $object = $self->get( $attribute ) or return;
+    my $object = $self->_delegate_get_object( $attribute );
+
     my $rslt = $object->$method( @args );
+
     __instance( $rslt, ref $object ) and return;
     ref $rslt and return $rslt;
     return join( ' ', map { __quoter( $_ ) } 'delegate', $attribute,
@@ -455,7 +462,7 @@ sub __delegate__formatter {
 
 sub __delegate__formatter__config {
     my ( $self, $attribute, $method, @args ) = @_;
-    my $object = $self->get( $attribute ) or return;
+    my $object = $self->_delegate_get_object( $attribute );
 
     ( my $opt, @args ) = $self->_delegate_config_options( @args );
 
@@ -470,9 +477,9 @@ sub __delegate__formatter__config {
 
 sub __delegate__formatter__desired_equinox_dynamical {
     my ( $self, $attribute, $method, @args ) = @_;
-    my $object = $self->get( $attribute ) or return;
+    my $object = $self->_delegate_get_object( $attribute );
 
-    if ( @args && $args[0] ) {
+    if ( $args[0] ) {
 	$self->_parse_time_reset();
 	$args[0] = $self->_parse_time( $args[0], 0 );
     }
@@ -486,7 +493,7 @@ sub __delegate__formatter__desired_equinox_dynamical {
 
 sub __delegate__formatter__format_effector {
     my ( $self, $attribute, $method, @args ) = @_;
-    my $object = $self->get( $attribute ) or return;
+    my $object = $self->_delegate_get_object( $attribute );
 
     my $rslt = $object->decode( $method, @args );
     __instance( $rslt, ref $object )
@@ -498,7 +505,7 @@ sub __delegate__formatter__format_effector {
 
 sub __delegate__spacetrack {
     my ( $self, $attribute, $method, @args ) = @_;
-    my $object = $self->get( $attribute ) or return;
+    my $object = $self->_delegate_get_object( $attribute );
 
     $method !~ m/ \A _ /smx and $object->can( $method )
 	or $self->_wail("No such $attribute method as '$method'");
@@ -553,7 +560,7 @@ sub __delegate__spacetrack {
 
     sub __delegate__spacetrack__show {
 	my ( $self, $attribute, $method, @args ) = @_;
-	my $object = $self->get( $attribute ) or return;
+	my $object = $self->_delegate_get_object( $attribute );
 
 	( my $opt, @args ) = $self->_delegate_config_options( @args );
 
@@ -583,7 +590,7 @@ sub __delegate__spacetrack {
 
 sub __delegate__spacetrack__getv {
     my ( $self, $attribute, $method, @args ) = @_;
-    my $object = $self->get( $attribute ) or return;
+    my $object = $self->_delegate_get_object( $attribute );
     return _delegate_output( $attribute, 'set', $args[0], $object->getv(
 	    $args[0] ) );
 }
