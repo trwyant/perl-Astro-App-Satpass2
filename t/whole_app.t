@@ -628,13 +628,14 @@ _app('set latitude 40.964972 longitude -5.663047 height 802 location \'Salamanca
     undef, 'Move to Salamanca, Spain for next test');
 
 SKIP: {
-    -d 't' or skip ("No t directory found", 1);
+    my $tests = 1;
+    -d 't' or skip( "No t directory found", $tests );
     my $skip;
     $skip = _get_satellite_data($app,
 	File::Spec->catfile(qw{t appulse.tle}),
 	'retrieve', '-start', '20090331T000000Z',
 	'-end', '20090402T000000Z', 25544
-    ) and skip $skip, 1;
+    ) and skip( $skip, $tests );
 
     is(
 	eval {
@@ -821,7 +822,7 @@ sub _do_test {
 	    require Astro::SpaceTrack;
 	    1;
 	} or return ($bypass = "Astro::SpaceTrack not available");
-	$app_obj->st(qw{set with_name 1});
+	$app_obj->delegate( qw{ spacetrack set with_name 1 } );
 
 	# If we do not have a Space Track username or password, try to
 	# scavenge one from the user's profile.
@@ -838,11 +839,15 @@ sub _do_test {
 			    && $args->[1] eq 'set'
 			    || @{ $args } > 1
 			    && $args->[0] eq 'source'
+			    || @{ $args } > 3
+			    && $args->[0] eq 'delegate'
+			    && $args->[1] eq 'spacetrack'
+			    && $args->[2] eq 'set'
 			    ;
 		    } );
 		$app2->init();
 		$app_obj->execute(
-		    $app2->st(qw{show username password})
+		    $app2->dispatch( qw{ delegate spacetrack show username password } )
 		);
 	    };
 	}
@@ -868,12 +873,14 @@ EOD
 		    or return ($bypass = $message);
 		my $pass = _prompt('Enter Space Track password: ')
 		    or return ($bypass = $message);
-		$app_obj->st('set', username => $user, password => $pass);
+		$app_obj->delegate( 'spacetrack', 'set',
+		    username => $user, password => $pass);
 		eval {
-		    $app_obj->st('login');
+		    $app_obj->delegate( qw{ spacetrack login } );
 		    1;
 		} and last;
-		$app_obj->st('set', username => '', password => '');
+		$app_obj->delegate( 'spacetrack', 'set',
+		    username => '', password => '');
 		$@ =~ m/401/ and do {
 		    warn $@, "\n";
 		    redo;
@@ -886,7 +893,7 @@ EOD
 	# password, retrieve the desired data, returning a failure
 	# message if we fail.
 	eval {
-	    $app_obj->st(@stcmd);
+	    $app_obj->delegate( spacetrack => @stcmd);
 	    1;
 	} or return "Failed to retrieve data from Space Track: $@";
 
@@ -903,9 +910,7 @@ EOD
 	my ( $app_obj ) = @_;
 	my $sp = $app_obj->get( 'spacetrack' ) or return;
 	foreach my $name ( qw{ username password } ) {
-	    my $value = $sp->get( $name );
-	    defined $value or return;
-	    $value = $value->content();
+	    my $value = $sp->getv( $name );
 	    defined $value and $value ne ''
 		or return;
 	}
