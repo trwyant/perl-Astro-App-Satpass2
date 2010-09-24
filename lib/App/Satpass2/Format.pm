@@ -9,7 +9,7 @@ use Carp;
 use Clone ();
 use App::Satpass2::FormatTime;
 
-our $VERSION = '0.000_06';
+our $VERSION = '0.000_07';
 
 use constant DEFAULT_LOCAL_COORD => 'azel_rng';
 

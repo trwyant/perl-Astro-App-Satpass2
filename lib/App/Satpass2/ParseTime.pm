@@ -8,7 +8,7 @@ use base qw{ App::Satpass2::Copier };
 use Carp;
 use Astro::Coord::ECI::Utils qw{ looks_like_number };
 
-our $VERSION = '0.000_06';
+our $VERSION = '0.000_07';
 
 my %static = (
     perltime	=> 0,

@@ -13,7 +13,7 @@ use DateTime;
 use DateTime::TimeZone;
 use POSIX ();
 
-our $VERSION = '0.000_06';
+our $VERSION = '0.000_07';
 
 sub strftime {
     my ( $self, $tplt, $time, $gmt ) = @_;
