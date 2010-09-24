@@ -606,18 +606,19 @@ sub dispatch {
     my ($self, $verb, @args) = @_;
 
     defined $verb or return;
+    my $code;
+    if ($self->{macro}{$verb}) {
+	$code = $self->can( '_macro' );
+	splice @args, 0, 0, $verb;
+    } else {
+	$verb =~ s/ \A core [.] //smx;
+	$code = $self->can($verb)
+	    and _get_attr($code, 'Verb')
+	    or $self->_wail("Unknown interactive method '$verb'");
+    }
     $self->{_interactive} = \$verb;	# Any local variable will do.
     weaken ($self->{_interactive});	# Goes away when $verb does.
-    if ($self->{macro}{$verb}) {
-	return $self->_macro($verb, @args);
-    } else {
-	$verb =~ s/ \A core\. //smx;
-	my ($code, $lglopt);
-	$code = $self->can($verb)
-	    and $lglopt = _get_attr($code, 'Verb')
-	    or $self->_wail("Unknown interactive method '$verb'");
-	return $code->($self, @args);
-    }
+    return $code->($self, @args);
 }
 
 sub drop : Verb() {
@@ -4155,7 +4156,7 @@ Otherwise unspecified options are considered to be negated.
 B<Note well> that unlike the F<satpass> script, the output from this
 method does not normally include location. The location is included only
 if the command is issued from a F<satpass> initialization file (as
-opposed to an C<App::Satpass2> initialization file, or from a macro
+opposed to an C<App::Satpass2> initialization file), or from a macro
 defined in a F<satpass> initialization file. This functionality will be
 revoked when support for the F<satpass> script is dropped.
 
@@ -4359,8 +4360,9 @@ the three options is the same as specifying C<-am -day -pm>.
 
 =head2 delegate
 
- $satpass2->delegate( formatter => macro => local_coord => 'azel' );
- satpass2> delegate formatter macro local_coord azel
+ $satpass2->delegate( formatter => template =>
+     local_coord => 'azel' );
+ satpass2> delegate formatter template local_coord azel
 
 This interactive method modifies one of the objects to which
 functionality has been delegated, I<in situ.> The arguments are the
@@ -4368,7 +4370,8 @@ attribute name of the object to be modified, the method to call on that
 object, and any arguments to that method. The results of the method call
 are returned.
 
-At this point, the only supported attribute is L<formatter|/formatter>.
+The only supported attributes are L<formatter|/formatter>,
+L<satpass|/satpass>, and L<time_parser|/time_parser>.
 
 If this method is called interactively (i.e. as a result of calling
 L<dispatch()|/dispatch> either directly or indirectly via
@@ -4573,6 +4576,8 @@ Nothing is returned.
  satpass2> localize formatter horizon
  $satpass2->localize( { all => 1 } );
  satpass2> localize -all
+ $satpass2->localize( { except => 1 }, qw{ formatter horizon } );
+ satpass2> localize -except formatter horizon
 
 This interactive method localizes the values of the attributes given in
 the argument list to the current macro, source file, or begin block.
@@ -4629,6 +4634,9 @@ For subcommands other than 'define', the arguments are macro names.
 
 The C<brief> and C<list> subcommands return their documented output. The
 C<delete> and C<define> subcommands return nothing.
+
+Macros can be called programmatically via the L<dispatch()|/dispatch>
+method.
 
 =head2 pass
 
@@ -4944,8 +4952,9 @@ return C<undef>.
  satpass2> st method ...
 
 This interactive method is deprecated in favor of the
-L<delegate( 'spacetrack' )|/delegate> method. Interactively, you can
-defined 'st' as a macro:
+L<delegate( 'spacetrack' )|/delegate> method. If you don't like all the
+typing that implies in interactive mode, you can define 'st' as a
+macro:
 
  satpass2> macro define st 'delegate spacetrack $@'
 
