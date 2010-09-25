@@ -12,7 +12,9 @@ our @EXPORT = qw{
     diag
     plan
     is
+    is_deeply
     isa_ok
+    ok
     require_ok
     skip
     time_ok

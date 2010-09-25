@@ -22,6 +22,24 @@ my $test_mocktime;
 
 BEGIN {
 
+    # The idea here is that the given directory is assumed to contain a
+    # Date::Manip v5 installation that we can use to test the v5 logic
+    # on a system with v6 installed in Perl. But we don't want to look
+    # in this directory if we're using Test::Without::Module to block
+    # Date::Manip, because if we do we will defeat the blockage.
+
+    if ( -d 'date_manip_v5' ) {
+	my $forbidden = eval {
+	    require Test::Without::Module;
+	    Test::Without::Module::get_forbidden_list();
+	} || {};
+
+	if ( ! exists $forbidden->{ 'Date::Manip' } ) {
+	    require lib;
+	    lib->import( 'date_manip_v5' );
+	}
+    }
+
     eval {
 	require Date::Manip;
 	1;
@@ -62,7 +80,7 @@ BEGIN {
 
 }
 
-plan( tests => 19 );
+plan( tests => 22 );
 
 require_ok( 'App::Satpass2::ParseTime' );
 
@@ -73,6 +91,17 @@ my $pt = eval {
 isa_ok( $pt, 'App::Satpass2::ParseTime::Date::Manip::v5' );
 
 isa_ok( $pt, 'App::Satpass2::ParseTime' );
+
+is( $pt->delegate(),
+    'App::Satpass2::ParseTime::Date::Manip::v5',
+    'Delegate is App::Satpass2::ParseTime::Date::Manip::v5'
+);
+
+ok( $pt->use_perltime(), 'Uses perltime' );
+
+time_is( $pt, parse => '20100202T120000Z',
+    timegm( 0, 0, 12, 2, 1, 110 ),
+    'Parse noon on Groundhog Day 2010', );
 
 my $base = timegm( 0, 0, 0, 1, 3, 109 );	# April 1, 2009 GMT;
 use constant ONE_DAY => 86400;			# One day, in seconds.

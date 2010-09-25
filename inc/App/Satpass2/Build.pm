@@ -20,10 +20,12 @@ my @hide = qw{ Astro::SIMBAD::Client Astro::SpaceTrack Date::Manip
     sub _get_hider {
 	$done and return $hider;
 	$done = 1;
-	foreach my $module ( qw{
-		Test::Without::Module
-		Devel::Hide
-	    } ) {
+	# Not using Devel::Hide any more because it does not have a
+	# public interface to say if a module is hidden.
+	foreach my $module (
+		'Test::Without::Module',
+#		'Devel::Hide',
+	    ) {
 	    eval "require $module; 1"
 		and return ( $hider = $module );
 	}

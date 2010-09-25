@@ -22,7 +22,7 @@ BEGIN {
     }
 }
 
-plan( tests => 10 );
+plan( tests => 12 );
 
 diag( 'Things needed for authortest' );
 
@@ -30,10 +30,12 @@ require_ok( 'Astro::SIMBAD::Client' );
 require_ok( 'Astro::SpaceTrack' );
 require_ok( 'Date::Manip' );
 require_ok( 'DateTime' );
+ok( eval { Date::Manip->VERSION( 6 ) }, 'Installed Date::Manip is v6' );
 require_ok( 'DateTime::TimeZone' );
 require_ok( 'Geo::WebService::Elevation::USGS' );
 require_ok( 'SOAP::Lite' );
 require_ok( 'Test::Perl::Critic' );
+require_ok( 'Test::Without::Module' );
 require_ok( 'Time::HiRes' );
 
 ok( -f 'date_manip_v5/Date/Manip.pm',

@@ -45,7 +45,7 @@ BEGIN {
 
 }
 
-plan( tests => 84 );
+plan( tests => 86 );
 
 require_ok( 'App::Satpass2::ParseTime' );
 
@@ -56,6 +56,14 @@ my $pt = eval {
 isa_ok( $pt, 'App::Satpass2::ParseTime::ISO8601' );
 
 isa_ok( $pt, 'App::Satpass2::ParseTime' );
+
+is( $pt->delegate(),
+    'App::Satpass2::ParseTime::ISO8601',
+    'Delegate is App::Satpass2::ParseTime::ISO8601'
+);
+
+
+ok( ! $pt->use_perltime(), 'Does not use perltime' );
 
 my $base = timegm( 0, 0, 0, 1, 3, 109 );	# April 1, 2009 GMT;
 use constant ONE_DAY => 86400;			# One day, in seconds.

@@ -49,7 +49,6 @@ xt/author/basic.t
 xt/author/critic.t
 xt/author/executable.t
 xt/author/manifest.t
-xt/author/parse_time_date_manip_5.t
 xt/author/perlcriticrc
 xt/author/pod.t
 xt/author/pod_coverage.t

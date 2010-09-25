@@ -61,7 +61,7 @@ BEGIN {
 
 }
 
-plan( tests => 21 );
+plan( tests => 24 );
 
 require_ok( 'App::Satpass2::ParseTime' );
 
@@ -72,6 +72,17 @@ my $pt = eval {
 isa_ok( $pt, 'App::Satpass2::ParseTime::Date::Manip::v6' );
 
 isa_ok( $pt, 'App::Satpass2::ParseTime' );
+
+is( $pt->delegate(),
+    'App::Satpass2::ParseTime::Date::Manip::v6',
+    'Delegate is App::Satpass2::ParseTime::Date::Manip::v6'
+);
+
+ok( ! $pt->use_perltime(), 'Does not use perltime' );
+
+time_is( $pt, parse => '20100202T120000Z',
+    timegm( 0, 0, 12, 2, 1, 110 ),
+    'Parse noon on Groundhog Day 2010', );
 
 my $base = timegm( 0, 0, 0, 1, 3, 109 );	# April 1, 2009 GMT;
 use constant ONE_DAY => 86400;			# One day, in seconds.
