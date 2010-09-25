@@ -30,7 +30,7 @@ sub delegate {
 	my ( $self, $string ) = @_;
 
 	my @zone;
-	if ( $string =~ s/ \s* $zone_re \z //smx ) {
+	if ( $string =~ s/ \s* $zone_re \z //smxo ) {
 	    @zone = ( $1, $2, $3, $4 );
 	} elsif ( $self->{+__PACKAGE__}{tz} ) {
 	    @zone = @{ $self->{+__PACKAGE__}{tz} };
@@ -113,7 +113,7 @@ sub tz {
     my ( $self, @args ) = @_;
     if ( @args ) {
 	if ( defined $args[0] && $args[0] ne '' ) {
-	    $args[0] =~ m/ \A $zone_re \z /smx
+	    $args[0] =~ m/ \A $zone_re \z /smxo
 		or croak "Invalid zone '$args[0]'";
 	    $self->{+__PACKAGE__}{tz} = [ $1, $2, $3, $4 ];
 	} else {
