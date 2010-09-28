@@ -28,7 +28,7 @@ my %static = (
 );
 
 sub new {
-    my ( $class, @args ) = @_;
+    my ( $class, %args ) = @_;
     ref $class and $class = ref $class;
     $class eq __PACKAGE__
 	and 'App::Satpass2::Test' ne caller
@@ -36,16 +36,12 @@ sub new {
 	    'Use a subclass';
     my $self = { %static };
     bless $self, $class;
-    $self->{time_formatter} = App::Satpass2::FormatTime->new();
-    my %set_explicitly;
-    while ( @args ) {
-	my ( $name, $value ) = splice @args, 0, 2;
+    exists $args{tz} or $args{tz} = $ENV{TZ};
+    $self->time_formatter( delete $args{time_formatter} );
+    while ( my ( $name, $value ) = each %args ) {
 	$self->can( $name ) or croak "Method '$name' does not exist";
-	$set_explicitly{$name} = $value;
 	$self->$name( $value );
     }
-    exists $set_explicitly{tz}
-	or $self->tz( $ENV{TZ} );
     return $self;
 }
 
