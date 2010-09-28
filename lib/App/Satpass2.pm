@@ -29,7 +29,7 @@ use POSIX qw{ floor strftime };
 use Scalar::Util qw{ blessed openhandle weaken };
 use Text::Abbrev;
 
-use constant ASTRO_SPACETRACK_VERSION => 0.048;
+use constant ASTRO_SPACETRACK_VERSION => 0.049;
 
 my ( $got_time_hires, $got_astro_spacetrack );
 
@@ -510,12 +510,8 @@ sub __delegate__spacetrack {
     $method !~ m/ \A _ /smx and $object->can( $method )
 	or $self->_wail("No such $attribute method as '$method'");
 
-    # TODO Astro::SpaceTrack should take care of this.
-    my %opt = (
-	sort => 'catnum',
-    );
+    my %opt;
 
-    # TODO properly configure Getopt::Long. Think this has it.
     local @ARGV = @args;
     my $err;
     local $SIG{__WARN__} = sub { $err = $_[0] };
@@ -1790,6 +1786,11 @@ sub _set_spacetrack {
     if (defined $val) {
 	__instance($val, 'Astro::SpaceTrack')
 	    or $self->_wail("$name must be an Astro::SpaceTrack instance");
+	my $version = $val->VERSION();
+	$version =~ s/ _ //smxg;
+	$version >= ASTRO_SPACETRACK_VERSION
+	    or $self->_wail("$name must be Astro::SpaceTrack version ",
+	    ASTRO_SPACETRACK_VERSION, ' or greater' );
     }
     return ($self->{$name} = $val);
 }
@@ -2100,8 +2101,6 @@ Verb(all!,changes!,descending!,effective!,last5!,sort=s,end_epoch=s,rcs!,start_e
     } else {
 	($func !~ m/ \A _ /smx && $st->can ($func))
 	    or $self->_wail("No such st method as '$func'");
-	exists $opt->{sort}
-	    or $opt->{sort} = 'catnum';	# TODO Astro::SpaceTrack should handle.
 	$opt->{start_epoch}
 	    and $opt->{start_epoch} = $self->_parse_time(
 	    $opt->{start_epoch} );
