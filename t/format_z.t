@@ -9,7 +9,7 @@ use App::Satpass2::Test::Format;
 
 my $tst = App::Satpass2::Test::Format->new( 'App::Satpass2::Format' );
 
-$tst->plan( tests => 19 );
+$tst->plan( tests => 21 );
 
 $tst->require_ok();
 
@@ -38,6 +38,34 @@ $tst->method_is( time_format => '%H:%M:%S',
 $tst->method_is( tz => undef, 'Default time zone is undefined' );
 $tst->method_ok( tz => 'est5edt', 'Set time zone' );
 $tst->method_is( tz => 'est5edt', 'Got back same time zone' );
+
+my $expect_time_formatter = eval {
+    require DateTime;
+    require DateTime::TimeZone;
+    'App::Satpass2::FormatTime::DateTime';
+} || 'App::Satpass2::FormatTime::POSIX';
+
+$tst->method_is( config => decode => 1,
+    [
+	[ date_format			=> '%Y-%m-%d' ],
+	[ desired_equinox_dynamical	=> 0 ],
+	[ gmt				=> 1 ],
+	[ header			=> 1 ],
+	[ local_coord			=> 'azel_rng' ],
+	[ provider			=> 'App::Satpass2::Test::Format' ],
+	[ time_format			=> '%H:%M:%S' ],
+	[ time_formatter		=> $expect_time_formatter ],
+	[ tz				=> 'est5edt' ],
+    ],
+    'Dump configuration' );
+$tst->method_is( config => decode => 1, changes => 1,
+    [
+	[ gmt				=> 1 ],
+	[ provider			=> 'App::Satpass2::Test::Format' ],
+	[ time_formatter		=> $expect_time_formatter ],
+	[ tz				=> 'est5edt' ],
+    ],
+    'Dump configuration changes' );
 
 1;
 
