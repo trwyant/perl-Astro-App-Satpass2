@@ -29,7 +29,7 @@ use POSIX qw{ floor strftime };
 use Scalar::Util qw{ blessed openhandle weaken };
 use Text::Abbrev;
 
-use constant ASTRO_SPACETRACK_VERSION => 0.049;
+use constant ASTRO_SPACETRACK_VERSION => 0.050;
 
 my ( $got_time_hires, $got_astro_spacetrack );
 
@@ -1097,6 +1097,13 @@ sub init {
 }
 
 {
+
+    # TODO - this needs to return File::Spec->catfile( $root, $perl,
+    # 'App-Satpass2', 'satpass2rc' where $root is equivalent to
+    # File::HomeDir->my_config() // File::HomeDir->my_documents() //
+    # File::HomeDir->my_home(), and $perl is '.perl' if $root is the
+    # home directory, and 'Perl' otherwise. Except that this puts it in
+    # ~/Documents under Mac OS X, which I really do not want.
 
     my $init_file;
 
