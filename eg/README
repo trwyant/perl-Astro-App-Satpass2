@@ -12,7 +12,17 @@ flare_vcalendar - A source file, to be executed by, for example,
 	This makes Iridium flare calculations for any satellites that
 	have been loaded, and displays the results in vCalendar format.
 
+	CAVEAT: My ancient Palm desktop software appears not to properly
+	handle the switch between normal and daylight-saving  time
+	(a.k.a. summer time), in that predictions made before the switch
+	for events after the switch get assigned the wrong time, even
+	though the UT event time is correct in the emitted file. I have
+	not changed the event times to local time eg/flare_vcalendar
+	because the vcalendar standard specifies UT.
+
 pass_vcalendar - A source file, to be executed by, for example,
 	satpass2> source eg/pass_vcalendar
 	This makes pass calculations for any satellites that have been
 	loaded, and displays the results in vCalendar format.
+
+	CAVEAT: The same as for flare_vcalendar.
