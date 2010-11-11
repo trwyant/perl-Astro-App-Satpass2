@@ -5,7 +5,7 @@
 # This whole thing (less the comments) could be wrapped up as a macro
 # if desired.
 
-localize formatter date_format time_format
+localize formatter
 
 # We intend to use %date(zone=z) to format the event begin and end. We
 # truncate the time to the previous minute.
@@ -25,7 +25,7 @@ delegate formatter header 0
 delegate formatter template flare "BEGIN:VEVENT%n;DTSTART:%date(zone=z)%n;\
 DALARM:%date(delta=-360,zone=z)%n;\
 SUMMARY:%*name %time Az %*.0azimuth(bearing) Ele %*.0elevation; Mag \
-%magnitude %angle(appulse,append= deg from Sun,missing=night)%n;\
+%magnitude %*.0angle(appulse,append= deg from Sun,missing=night)%n;\
 DTEND:%date(delta=60,zone=z)%n;END:VEVENT%n"
 
 # Emit the start tag for the vCalendar data.
