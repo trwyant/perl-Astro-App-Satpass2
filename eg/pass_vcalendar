@@ -39,6 +39,10 @@ DALARM:%date(delta=-360,zone=z)%n;SUMMARY:%*name"
 
 delegate formatter template pass_finish %n;DTEND:%date(zone=z)%n;END:VEVENT%n
 
+# Eliminate the blank line that is inserted by default between passes
+
+delegate formatter template pass_pad ''
+
 # The individual pass events get concatenated to the summary, with no newline.
 
 delegate formatter template pass ' %*event %time Az %*.0azimuth(bearing) Ele %*.0elevation'
@@ -50,10 +54,6 @@ delegate formatter template pass_horizon ' %*event %time Az %*.0azimuth(bearing)
 # Override the general template for appulses
 
 delegate formatter template pass_appulse ' %*event %*name(appulse) %time Az %*.0azimuth(bearing) Ele %*.0elevation'
-
-# Suppress the appulsed body.
-
-delegate formatter template pass_appulsed_body ''
 
 # We turn off the date display.
 

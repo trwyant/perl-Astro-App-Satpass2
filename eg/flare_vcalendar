@@ -2,6 +2,7 @@
 # format. The output may be redirected to a .vcal file. Any arguments
 # passed to the source statement will in turn be passed to the flare
 # command.
+#
 # This whole thing (less the comments) could be wrapped up as a macro
 # if desired.
 

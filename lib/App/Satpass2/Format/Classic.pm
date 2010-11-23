@@ -841,15 +841,16 @@ EOD
 Location: %*name%n
           Latitude %*.4latitude, longitude %*.4longitude, height %*.0altitude(units=meters) m%n
 EOD
-    pass => <<'EOD',
+    pass	=> <<'EOD',
 %time %local_coord %latitude %longitude %altitude %-illumination %-event%n
 EOD
     pass_appulse => <<'EOD',
 %pass
 %time %local_coord(appulse)       %angle(appulse) degrees from %-name(appulse)%n
 EOD
-    pass_date => '%n%date%n',
-    pass_start => '%n%id - %-*name%n%n',
+    pass_date	=> '%n%date%n',
+    pass_pad	=> '%n',
+    pass_start	=> '%n%id - %-*name%n%n',
     phase => '%date %time %8name %phase(title=Phase Angle) %-16phase(units=phase) %.0fraction_lit(units=percent)%n',
     position	=>
 	'%16name(missing=oid) %local_coord %epoch %illumination%n',
@@ -1910,11 +1911,12 @@ sub _macro_expand_single {
 
 	# elsif we have the (presumptive) pass data
 	} elsif ( defined $pass ) {
-	    my $output;
+	    my $output = '';
 
 	    # Output the headers if we have events to go with them.
 	    if ( @{ $pass->{events} } ) {
 		$self->_set( phenomenon => $pass->{events}[0] );
+		my $length = length $output;
 		my $hdr = $self->_format_execute(
 		    format => 'pass_date' );
 		if ( ! defined $self->{_pass_internal_header}
@@ -1926,6 +1928,10 @@ sub _macro_expand_single {
 		    $output .= $self->_format_execute(
 			format => 'pass_start' );
 		}
+		length $output <= $length
+		    and defined $self->{template}{pass_pad}
+		    and $output .= $self->_format_execute(
+		    format => 'pass_pad' );
 	    }
 
 	    # Foreach event in the pass
@@ -2651,6 +2657,8 @@ There are two possible formats for pass output. If you initialize with
 C<< $fmt->pass() >>, the headings are printed at the top, and the OID is
 displayed with the date in the body of the report. If you initialize
 with C<< $fmt->pass( $body ) >>, the OID is displayed with the headings.
+The L<App::Satpass2 pass()|App::Satpass2/pass> method uses the latter
+initialization unless the C<-chronological> option is asserted.
 
 It uses template C<pass>, which defaults to
 
@@ -2671,9 +2679,10 @@ defaults to
  %time %local_coord(appulse)       %angle(appulse) degrees from
     %-name(appulse)%n
 
-The above template is wrapped to fit on the page. Note that if you
-change the C<pass> template, C<pass_appulse> will see the changes also,
-in so far as it is able.
+The above template is wrapped to fit on the page. Note that
+C<pass_appulse> is defined in terms of C<pass>, so that if you change
+the C<pass> template, C<pass_appulse> will see the changes also, in so
+far as it is able.
 
 If you define any of the event-specific templates to be an empty string
 (C<''>), you will suppress the output of the events that use that
@@ -2688,13 +2697,13 @@ when initialized with C<< $fmt->pass() >>, or once when initialized with
 C<< $fmt->pass( $body ) >>. If you use C<%date> or C<%time> in this
 template, you get the time the satellite rises.
 
-Template C<pass_date> which defaults to
+Template C<pass_date> which defaults to C<%n%date%n> is used to display
+the date when it changes.
 
- %n%date%n
+If neither C<pass_start> or C<pass_date> is used before a given pass,
+C<pass_pad> is used. This template defaults to C<%n>.
 
-is used to display the date when it changes.
-
-Template C<pass_finish>, if defined (it is not by default) is displayed
+Template C<pass_finish>, if defined (it is not by default), is displayed
 at the end of each pass. If you use C<%date> or C<%time> in this
 template, you get the time the satellite sets.
 
