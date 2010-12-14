@@ -12,8 +12,8 @@ use Carp;
 our $VERSION = '0.000_07';
 
 my $delegate = eval {
-    require App::Satpass2::FormatTime::DateTime;
-    'App::Satpass2::FormatTime::DateTime';
+    require App::Satpass2::FormatTime::DateTime::Strftime;
+    'App::Satpass2::FormatTime::DateTime::Strftime';
 } || do {
     require App::Satpass2::FormatTime::POSIX;
     'App::Satpass2::FormatTime::POSIX';
@@ -34,17 +34,17 @@ sub attribute_names {
     return ( qw{ gmt tz } );
 }
 
-sub strftime_width {
+sub format_datetime_width {
     my ( $self, $tplt ) = @_;
     if ( $tplt =~ m/ (?: \A | (?<= [^%] ) ) % (?: \z | (?= [^%] ) ) /smx
 	) {
-	my ( $time, $wid ) = $self->_strftime_width_try( $tplt, undef,
+	my ( $time, $wid ) = $self->_format_datetime_width_try( $tplt, undef,
 	    year => 2100 );
-	( $time, $wid ) = $self->_strftime_width_try( $tplt, $time,
+	( $time, $wid ) = $self->_format_datetime_width_try( $tplt, $time,
 	    month => 1 .. 12 );
-	( $time, $wid ) = $self->_strftime_width_try( $tplt, $time,
+	( $time, $wid ) = $self->_format_datetime_width_try( $tplt, $time,
 	    day => 1 .. 7 );
-	( $time, $wid ) = $self->_strftime_width_try( $tplt, $time,
+	( $time, $wid ) = $self->_format_datetime_width_try( $tplt, $time,
 	    hour => 6, 18 );
 	return $wid;
     } else {
@@ -53,18 +53,18 @@ sub strftime_width {
     }
 }
 
-sub _strftime_width_try {
+sub _format_datetime_width_try {
     my ( $self, $tplt, $time, $name, @try ) = @_;
     my $wid = 0;
     my $max_trial;
     foreach my $trial ( @try ) {
-	$time = $self->__strftime_width_adjust_object( $time, $name, $trial );
-	my $size = length $self->strftime( $tplt, $time );
+	$time = $self->__format_datetime_width_adjust_object( $time, $name, $trial );
+	my $size = length $self->format_datetime( $tplt, $time );
 	$size > $wid or next;
 	$wid = $size;
 	$max_trial = $trial;
     }
-    $time = $self->__strftime_width_adjust_object( $time, $name, $max_trial );
+    $time = $self->__format_datetime_width_adjust_object( $time, $name, $max_trial );
     return ( $time, $wid );
 }
 
@@ -83,7 +83,7 @@ App::Satpass2::FormatTime - Format time for output.
 
  use App::Satpass2::FormatTime;
  my $ft = App::Satpass2::FormatTime->new();
- print 'The time is ', $ft->strftime( '%H:%M:%S', time );
+ print 'The time is ', $ft->format_datetime( '%H:%M:%S', time );
 
 =head1 NOTICE
 
@@ -113,7 +113,7 @@ This method instantiates a time formatter object.
 
 This method is both accessor and mutator for the C<gmt> attribute. This
 boolean attribute provides a default for the C<gmt> argument of
-L<strftime()|/strftime>.
+L<format_datetime()|/format_datetime>.
 
 If called with an argument, the argument becomes the new value of the
 C<gmt> attribute. The object is returned to allow call chaining.
@@ -121,14 +121,14 @@ C<gmt> attribute. The object is returned to allow call chaining.
 If called without an argument, the current value of the C<gmt> attribute
 is returned.
 
-=head2 strftime
+=head2 format_datetime
 
- print 'Time now: ', $ft->strftime( '%H:%M:%S', time, 0 ), "\n";
+ print 'Time now: ', $ft->format_datetime( '%H:%M:%S', time, 0 ), "\n";
 
-This attribute uses the C<strftime(3)> format passed in the first
-argument to format the Perl time passed in the second argument. The
-third argument, if defined, overrides the L<gmt|/gmt> attribute, forcing
-the time to be GMT if true, or local if false.
+This attribute uses the format passed in the first argument to format
+the Perl time passed in the second argument. The third argument, if
+defined, overrides the L<gmt|/gmt> attribute, forcing the time to be GMT
+if true, or local if false.
 
 The string representing the formatted time is returned.
 
@@ -138,30 +138,31 @@ given zone, provided the value of L<tz|/tz> is defined and not C<''>.
 The override C<may> accept times in formats other than Perl epoch, but
 it need not document or support these.
 
-=head2 strftime_width
+=head2 format_datetime_width
 
- my $wid = $ft->strftime_width( '%H:%M:%S' );
+ my $wid = $ft->format_datetime_width( '%H:%M:%S' );
 
 This method computes the maximum width required to display a time in the
 given format. This is done by assuming only the month, day, and meridian
 might affect the width, and then trying each and returning the width of
 the widest.
 
-=head2 __strftime_width_adjust_object
+=head2 __format_datetime_width_adjust_object
 
- my $ref = $self->__strftime_width_adjust_object( undef, year => 2100 );
+ my $ref = $self->__format_datetime_width_adjust_object( undef, year => 2100 );
 
 This method B<must> be overridden by the subclass.  It exists to support
-L<strftime_width()|/strftime_width>, and should not be called directly.
-It is not itself supported, in the sense that the author reserves the
-right to change or revoke it without notice. Though since this whole
-mess is unsupported in that sense, this statement is redundant.
+L<format_datetime_width()|/format_datetime_width>, and should not be
+called directly.  It is not itself supported, in the sense that the
+author reserves the right to change or revoke it without notice. Though
+since this whole mess is unsupported in that sense, this statement is
+redundant.
 
 This method takes as its arguments a time in any format supported by the
-L<strftime()|/strftime> method, the name of a component (C<year>,
-C<month>, C<day>, C<hour>, C<minute>, or C<second>), and a value for
-that component. The time is returned with the given component set to the
-given value. If the time is C<undef>, a new time representing
+L<format_datetime()|/format_datetime> method, the name of a component
+(C<year>, C<month>, C<day>, C<hour>, C<minute>, or C<second>), and a
+value for that component. The time is returned with the given component
+set to the given value. If the time is C<undef>, a new time representing
 C<01-Jan-2100 00:00:00> is constructed, adjusted, and returned.
 
 =head2 tz

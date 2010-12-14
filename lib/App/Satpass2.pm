@@ -25,7 +25,7 @@ use Getopt::Long;
 use IO::File;
 use IO::Handle;
 use IPC::System::Simple qw{ capturex };
-use POSIX qw{ floor strftime };
+use POSIX qw{ floor };
 use Scalar::Util qw{ blessed openhandle weaken };
 use Text::Abbrev;
 
@@ -3885,6 +3885,7 @@ attribute to do this, though I can't think why you would want to.
 
 L<DateTime|DateTime> and L<DateTime::TimeZone|DateTime::TimeZone> will
 be used to format time for output if they are available. If not, the
+L<POSIX|POSIX> C<strftime()> will be used,
 Perl C<strftime()> built-in will be used, with the C<TZ> environment
 variable set if the L<tz|/tz> attribute is neither C<null> or C<''>, in
 the hopes that the underlying system call will respond to this.
@@ -3895,6 +3896,14 @@ you wish to force the use of the C<strftime()> built-in in the presence
 of L<DateTime|DateTime>, you can use the L<App::Satpass2::Format
 time_formatter()|App::Satpass2::Format/time_formatter> method to do
 this.
+
+Which time formatter is used is controlled by the
+L<App::Satpass2::Format|App::Satpass2::Format>
+L<time_formatter|App::Satpass2::Format/time_formatter> attribute. See
+that documentation for more information. The default time formatter uses
+C<strftime (3)> formats, but CLDR formatting is also available if you
+have the L<DateTime|DateTime> and
+L<DateTime::TimeZone|DateTime::TimeZone> modules installed.
 
 =head1 OVERVIEW
 
@@ -5204,23 +5213,20 @@ The default is 'us'.
 
 This string attribute is deprecated. It is provided for backward
 compatibility with the F<satpass> script. The preferred way to
-manipulate this is either directly, or via the L<delegate()|/delegate>
-method.
+manipulate this is either directly on the formatter object, or via the
+L<delegate()|/delegate> method.
 
 This attribute allows access to and manipulation of the formatter
 object's L<date_format|App::Satpass2::Format/date_format> attribute.
-This is normally used as a C<strftime(3)> format to format a date. See
+This is normally used as a C<strftime (3)> format to format a date. See
 the L<date_format|App::Satpass2::Format/date_format> documentation for
 the default. See the documentation of the actual formatter class being
 used for what it does.
 
-The formatter class, if it makes use of this attribute at all, should
-interpret the value of this attribute as a C<strftime(3)> format.
-
-This string attribute specifies the strftime(3) format used to display
-times.  Documentation of the C<strftime(3)> subroutine may be found at
+This string attribute specifies the format used to display
+dates. Documentation of the C<strftime (3)> subroutine may be found at
 L<http://www.openbsd.org/cgi-bin/man.cgi?query=strftime&apropos=0&sektion=0&manpath=OpenBSD+Current&arch=i386&format=html>,
-among  other places.
+among other places.
 
 The above is a long URL, and may be split across multiple lines. More
 than that, the formatter may have inserted a hyphen at the break, which

@@ -18,13 +18,11 @@ use constant DEFAULT_LOCAL_COORD => 'azel_rng';
 # functionality may be revoked or changed without warning.
 
 my %static = (
-    date_format	=> '%Y-%m-%d',
     desired_equinox_dynamical => 0,
     gmt		=> 0,
     header	=> 1,
     local_coord	=> DEFAULT_LOCAL_COORD,
     provider	=> 'App::Satpass2',
-    time_format	=> '%H:%M:%S',
 );
 
 sub new {
@@ -38,6 +36,10 @@ sub new {
     bless $self, $class;
     exists $args{tz} or $args{tz} = $ENV{TZ};
     $self->time_formatter( delete $args{time_formatter} );
+    $args{date_format}
+	or $self->date_format( $self->time_formatter()->DATE_FORMAT() );
+    $args{time_format}
+	or $self->time_format( $self->time_formatter()->TIME_FORMAT() );
     while ( my ( $name, $value ) = each %args ) {
 	$self->can( $name ) or croak "Method '$name' does not exist";
 	$self->$name( $value );
@@ -53,19 +55,41 @@ sub attribute_names {
 	} );
 }
 
-sub config {
-    my ( $self, %args ) = @_;
-    my @data;
+{
 
-    foreach my $name ( $self->attribute_names() ) {
-	my $val = $self->$name();
-	no warnings qw{ uninitialized };
-	next if $args{changes} && $val eq $static{$name};
-	push @data, [ $name, $args{decode} ? $self->decode( $name )
-	    : $val ];
+    my %original_value = (
+	date_format	=> sub {
+	    return $_[0]->time_formatter()->DATE_FORMAT()
+	},
+	time_format	=> sub {
+	    return $_[0]->time_formatter()->TIME_FORMAT()
+	},
+    );
+
+    foreach my $key ( keys %static ) {
+	$original_value{ $key } ||= sub {
+	    return $static{$key};
+	};
     }
 
-    return wantarray ? @data : \@data;
+    sub config {
+	my ( $self, %args ) = @_;
+	my @data;
+
+	foreach my $name ( $self->attribute_names() ) {
+	    my $val = $self->$name();
+	    no warnings qw{ uninitialized };
+	    next if $args{changes} &&
+		$val eq ( $original_value{$name} ?
+		    $original_value{$name}->( $self, $name ) :
+		    undef );
+	    push @data, [ $name, $args{decode} ? $self->decode( $name )
+		: $val ];
+	}
+
+	return wantarray ? @data : \@data;
+    }
+
 }
 
 {
@@ -77,7 +101,8 @@ sub config {
 	    @args and return $rslt;
 	    $rslt or return $rslt;
 	    return $self->{time_formatter}->strftime(
-		'%Y%m%dT%H%M%SZ', $rslt, 1 );
+		$self->{time_formatter}->ISO_8601_FORMAT(),
+		$rslt, 1 );
 	},
 	time_formatter => sub {
 	    my ( $self, $method, @args ) = @_;
@@ -121,8 +146,13 @@ sub time_formatter {
 		or $self->_wail( "Can not load $fmtr: $@" );
 	    $fmtr = $fmtr->new();
 	};
-	$self->{time_formatter} and $self->{time_formatter}->copy( $fmtr );
+	my $old = $self->{time_formatter}
+	    and $self->{time_formatter}->copy( $fmtr );
 	$self->{time_formatter} = $fmtr;
+	if ( ! $old || $old->FORMAT_TYPE() ne $fmtr->FORMAT_TYPE() ) {
+	    $self->date_format( $fmtr->DATE_FORMAT() );
+	    $self->time_format( $fmtr->TIME_FORMAT() );
+	}
 	return $self;
     } else {
 	return $self->{time_formatter};
@@ -206,7 +236,13 @@ it is recommended for sanity's sake that the subclasses interpret this
 value as a C<POSIX::strftime> format producing a date (but not a time),
 if they use this attribute at all.
 
-The default value is '%Y-%m-%d'.
+The default value, if used by the subclass at all, should produce a
+numeric date of the form year-month-day. For formatters that use
+C<strftime()>, this will be '%Y-%m-%d'.
+
+B<Note> that this value will be reset to its default if the
+L<time_formatter|/time_formatter> attribute is modified and the new
+object has a different C<FORMATTER_TYPE()> than the old one.
 
 =head3 desired_equinox_dynamical
 
@@ -355,11 +391,24 @@ it is recommended for sanity's sake that the subclasses interpret this
 value as a C<POSIX::strftime> format producing a time (but not a date),
 if they use this attribute at all.
 
+The default value, if used by the subclass at all, should produce a
+numeric time of the form hour:minute:second. For formatters that use
+C<strftime()>, this will be '%H:%M:%S'.
+
+B<Note> that this value will be reset to its default if the
+L<time_formatter|/time_formatter> attribute is modified and the new
+object has a different C<FORMATTER_TYPE()> than the old one.
+
 =head3 time_formatter
 
 This method returns the object used to format times. It will probably be
 a L<App::Satpass2::FormatTime|App::Satpass2::FormatTime> object of some
 sort, and will certainly conform to that interface.
+
+B<Note> that setting this will reset the L<date_format|/date_format> and
+L<time_format|/time_format> attributes to values appropriate to the
+new time formatter's class, if the new formatter object has a different
+C<FORMATTER_TYPE()> than the old one.
 
 =head3 tz
 

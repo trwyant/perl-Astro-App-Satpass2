@@ -37,6 +37,7 @@ backdate
 bstardrag
 ca
 celestrak
+CLDR
 CPAN
 CPANPLUS
 darwin

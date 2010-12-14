@@ -42,7 +42,7 @@ $tst->method_is( tz => 'est5edt', 'Got back same time zone' );
 my $expect_time_formatter = eval {
     require DateTime;
     require DateTime::TimeZone;
-    'App::Satpass2::FormatTime::DateTime';
+    'App::Satpass2::FormatTime::DateTime::Strftime';
 } || 'App::Satpass2::FormatTime::POSIX';
 
 $tst->method_is( config => decode => 1,

@@ -5,14 +5,17 @@ use 5.006002;
 use strict;
 use warnings;
 
-use base qw{ App::Satpass2::FormatTime };
+use base qw{
+    App::Satpass2::FormatTime
+    App::Satpass2::FormatTime::Strftime
+};
 
 use Carp;
 use POSIX ();
 
 our $VERSION = '0.000_07';
 
-sub strftime {
+sub format_datetime {
     my ( $self, $tplt, $time, $gmt ) = @_;
     defined $gmt or $gmt = $self->gmt();
     my @parts;
@@ -38,7 +41,7 @@ sub strftime {
 	second	=> sub { $_[0][0] = $_[1]; return },
     );
 
-    sub __strftime_width_adjust_object {
+    sub __format_datetime_width_adjust_object {
 	my ( $self, $obj, $name, $val ) = @_;
 	$obj or $obj = [ 0, 0, 0, 1, 0, 200 ];
 	$adjuster{$name}->( $obj, $val );
@@ -59,7 +62,9 @@ App::Satpass2::FormatTime::POSIX - Format time using POSIX::strftime
 
  use App::Satpass2::FormatTime::POSIX;
  my $tf = App::Satpass2::FormatTime::POSIX->new();
- print 'It is now ', $tf->strftime( '%H:%M:%S', time, 1 ), " GMT\n";
+ print 'It is now ',
+     $tf->format_datetime( '%H:%M:%S', time, 1 ),
+     " GMT\n";
 
 =head1 NOTICE
 
@@ -79,7 +84,8 @@ nothing I can do about it.
 =head1 METHODS
 
 This class provides no public methods over and above those provided by
-L<App::Satpass2::FormatTime|App::Satpass2::FormatTime>.
+L<App::Satpass2::FormatTime|App::Satpass2::FormatTime> and
+L<App::Satpass2::FormatTime::Strftime|App::Satpass2::FormatTime::Strftime>.
 
 =head1 SUPPORT
 

@@ -1731,7 +1731,8 @@ sub _format_time {
     my $gmt = $opt->{gmt} || $self->gmt();
     my $fmtr = $self->time_formatter();
     $fmtr->tz( $opt->{zone} || $self->tz() );
-    my $buffer = $fmtr->strftime( $fmt, $value, $opt->{gmt} || undef );
+    my $buffer = $fmtr->format_datetime(
+	$fmt, $value, $opt->{gmt} || undef );
     return _format_string($self, $align, $width, $places, $info,
 	$buffer, $opt);
 }
@@ -2284,9 +2285,10 @@ sub _set_phenomenon {
 
 	foreach my $tplt (@$key) {
 	    my $info = $format_effector{$tplt};
-	    my $tf = join (' ', map {$self->$_()} @{$info->{format}});
+	    my $tf = join (' ', grep { defined $_ }
+		map { $self->$_() } @{ $info->{format} } );
 	    $self->{formatter_default}{$tplt}{width} =
-		$self->time_formatter()->strftime_width( $tf );
+		$self->time_formatter()->format_datetime_width( $tf );
 	}
 	return;
     }
@@ -3224,10 +3226,10 @@ The default field width is 1, and the default title is blank.
 =head2 %date
 
 This format effector displays the date specified by the 'time' datum, in
-the C<strftime()> format specified by the C<date_format> attribute. Note
-that it is assumed that the C<date_format> will not display time of day,
-but this assumption  is not enforced. The decimal places specification
-is ignored.
+the format specified by the C<date_format> attribute. Note that it is
+assumed that the C<date_format> will not display time of day, but this
+assumption  is not enforced. The decimal places specification is
+ignored.
 
 The C<center> and C<station> arguments are not supported. All other
 standard arguments are supported.
@@ -3868,10 +3870,10 @@ The default field width is 60, and the default title is 'Status'.
 =head2 %time
 
 This format effector displays the time specified to the
-L<flare()|/flare> or L<pass()|/pass> methods, in the C<strftime()> format
-specified by the L<time_format|/time_format> attribute. Note that it is
-assumed that this attribute will not display the date, but this
-assumption  is not enforced.
+L<flare()|/flare> or L<pass()|/pass> methods, in the format specified by
+the L<time_format|/time_format> attribute. Note that it is assumed that
+this attribute will not display the date, but this assumption  is not
+enforced.
 
 The C<center> and C<station> arguments are forbidden. All other standard
 arguments are supported.

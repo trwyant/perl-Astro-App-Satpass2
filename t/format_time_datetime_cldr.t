@@ -9,7 +9,17 @@ use App::Satpass2::Test::Format;
 use Time::Local;
 
 my $tst = App::Satpass2::Test::Format->new(
-    'App::Satpass2::FormatTime::POSIX' );
+    'App::Satpass2::FormatTime::DateTime::Cldr' );
+
+eval {
+    require DateTime;
+    require DateTime::TimeZone;
+    1;
+} or do {
+    $tst->plan(
+	skip_all => 'DateTime and/or DateTime::TimeZone not available' );
+    exit;
+};
 
 $tst->plan( tests => 13 );
 
@@ -27,12 +37,12 @@ $tst->new_ok();
 
 my $time = timegm( 0, 0, 0, 1, 3, 111 );	# midnight 1-Apr-2011
 $tst->method_ok( 'gmt', 'Harness turned on gmt attribute' );
-$tst->method_is( format_datetime => '%Y/%m/%d %H:%M:%S', $time,
+$tst->method_is( format_datetime => 'yyyy/MM/dd HH:mm:SS', $time,
     '2011/04/01 00:00:00', 'Implicit GMT time' );
-$tst->method_is( format_datetime_width => '%Y/%m/%d %H:%M:%S', 19,
+$tst->method_is( format_datetime_width => 'yyyy/MM/dd HH:mm:SS', 19,
     'Compute width required for format' );
 $tst->method( gmt => 0 );			# Turn off gmt attr
-$tst->method_is( format_datetime => '%Y/%m/%d %H:%M:%S', $time, 1,
+$tst->method_is( format_datetime => 'yyyy/MM/dd HH:mm:SS', $time, 1,
     '2011/04/01 00:00:00', 'Explicit GMT time' );
 
 1;

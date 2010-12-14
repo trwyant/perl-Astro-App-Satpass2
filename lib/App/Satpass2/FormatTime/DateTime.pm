@@ -5,7 +5,9 @@ use 5.006002;
 use strict;
 use warnings;
 
-use base qw{ App::Satpass2::FormatTime };
+use base qw{
+    App::Satpass2::FormatTime
+};
 
 use App::Satpass2::Copier qw{ __instance };
 use Carp;
@@ -15,17 +17,17 @@ use POSIX ();
 
 our $VERSION = '0.000_07';
 
-sub strftime {
+sub format_datetime {
     my ( $self, $tplt, $time, $gmt ) = @_;
     if ( __instance( $time, 'DateTime' ) ) {
-	return $time->strftime( $tplt );
+	return $self->__format_datetime( $time, $tplt );
     } else {
 	# Oh, for 5.010 and the // operator.
 	my $dt = DateTime->from_epoch(
 	    epoch => POSIX::floor( $time + 0.5),
 	    time_zone => $self->_get_zone( defined $gmt ? $gmt :
 		$self->gmt() ) );
-	return $dt->strftime( $tplt );
+	return $self->__format_datetime( $dt, $tplt );
     }
 }
 
@@ -81,7 +83,7 @@ sub strftime {
 
 }
 
-sub __strftime_width_adjust_object {
+sub __format_datetime_width_adjust_object {
     my ( $self, $obj, $name, $val ) = @_;
     $obj or $obj = DateTime->new( year => 2100 );
     $obj->set( $name => $val );
@@ -94,29 +96,34 @@ __END__
 
 =head1 NAME
 
-App::Satpass2::FormatTime::DateTime - <<< replace boilerplate >>>
+App::Satpass2::FormatTime::DateTime - Format time using DateTime->strftime()
 
 =head1 SYNOPSIS
 
-<<< replace boilerplate >>>
+ use App::Satpass2::FormatTime::DateTime;
+ my $tf = App::Satpass2::FormatTime::DateTime->new();
+ print 'It is now ',
+     $tf->format_datetime( '%H:%M:%S', time, 1 ),
+     " GMT\n";
+
+=head1 NOTICE
+
+This class and its subclasses are private to the
+L<App::Satpass2|App::Satpass2> package. The author reserves the right to
+add, change, or retract functionality without notice.
 
 =head1 DETAILS
 
-<<< replace boilerplate >>>
+This subclass of L<App::Satpass2::FormatTime|App::Satpass2::FormatTime>
+formats times using C<DateTime->strftime()>. Time zones other than the
+default local zone are handled using
+L<DateTime::TimeZone|DateTime::TimeZone> objects.
 
 =head1 METHODS
 
-This class supports the following public methods:
-
-=head1 ATTRIBUTES
-
-This class has the following attributes:
-
-
-=head1 SEE ALSO
-
-<<< replace or remove boilerplate >>>
-
+This class provides no public methods over and above those provided by
+L<App::Satpass2::FormatTime|App::Satpass2::FormatTime> and
+L<App::Satpass2::FormatTime::Strftime|App::Satpass2::FormatTime::Strftime>.
 =head1 SUPPORT
 
 Support is by the author. Please file bug reports at
