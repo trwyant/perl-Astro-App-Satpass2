@@ -40,7 +40,7 @@ t/data.tle
 t/format_time.t
 t/format_time_datetime_strftime.t
 t/format_time_datetime_cldr.t
-t/format_time_posix.t
+t/format_time_posix_strftime.t
 t/format_z.t
 t/format_z_classic.t
 t/format_z_dump.t
