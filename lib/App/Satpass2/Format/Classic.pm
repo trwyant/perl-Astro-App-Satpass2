@@ -3242,7 +3242,7 @@ to format the time. For example, something like C<$date(zone=z)> will
 produce GMT output from
 L<App::Satpass2::FormatTime::DateTime|App::Satpass2::FormatTime::DateTime>,
 and B<may> produce the same from
-L<App::Satpass2::FormatTime::POSIX|App::Satpass2::FormatTime::POSIX>.
+L<App::Satpass2::FormatTime::POSIX::Strftime|App::Satpass2::FormatTime::POSIX::Strftime>.
 
 Also, the C<delta> argument allows you to display a time a given number
 of seconds after the actual time (or before, if the value is negative).
@@ -3350,7 +3350,7 @@ to format the time. For example, something like C<$date(zone=z)> will
 produce GMT output from
 L<App::Satpass2::FormatTime::DateTime|App::Satpass2::FormatTime::DateTime>,
 and B<may> produce the same from
-L<App::Satpass2::FormatTime::POSIX|App::Satpass2::FormatTime::POSIX>.
+L<App::Satpass2::FormatTime::POSIX::Strftime|App::Satpass2::FormatTime::POSIX::Strftime>.
 
 Also, the C<delta> argument allows you to display a time a given number
 of seconds after the actual time (or before, if the value is negative).
@@ -3427,7 +3427,7 @@ to format the time. For example, something like C<$date(zone=z)> will
 produce GMT output from
 L<App::Satpass2::FormatTime::DateTime|App::Satpass2::FormatTime::DateTime>,
 and B<may> produce the same from
-L<App::Satpass2::FormatTime::POSIX|App::Satpass2::FormatTime::POSIX>.
+L<App::Satpass2::FormatTime::POSIX::Strftime|App::Satpass2::FormatTime::POSIX::Strftime>.
 In addition the C<zone> argument allows you to specify a time zone
 different than the L<tz()|/tz> setting of the formatter. You must
 specify an argument acceptable to the
@@ -3436,7 +3436,7 @@ to format the time. For example, something like C<$date(zone=z)> will
 produce GMT output from
 L<App::Satpass2::FormatTime::DateTime|App::Satpass2::FormatTime::DateTime>,
 and B<may> produce the same from
-L<App::Satpass2::FormatTime::POSIX|App::Satpass2::FormatTime::POSIX>.
+L<App::Satpass2::FormatTime::POSIX::Strftime|App::Satpass2::FormatTime::POSIX::Strftime>.
 
 Also, the C<delta> argument allows you to display a time a given number
 of seconds after the actual time (or before, if the value is negative).
@@ -3886,7 +3886,7 @@ to format the time. For example, something like C<$date(zone=z)> will
 produce GMT output from
 L<App::Satpass2::FormatTime::DateTime|App::Satpass2::FormatTime::DateTime>,
 and B<may> produce the same from
-L<App::Satpass2::FormatTime::POSIX|App::Satpass2::FormatTime::POSIX>.
+L<App::Satpass2::FormatTime::POSIX::Strftime|App::Satpass2::FormatTime::POSIX::Strftime>.
 
 Also, the C<delta> argument allows you to display a time a given number
 of seconds after the actual time (or before, if the value is negative).

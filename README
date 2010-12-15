@@ -14,8 +14,15 @@ App::Satpass2::Format - Base class for formatter;
 App::Satpass2::Format::Classic - Format kind of like old satpass script;
 App::Satpass2::Format::Dump - Dump output (for debugging);
 App::Satpass2::FormatTime - Base class for formatting times;
-App::Satpass2::FormatTime::DateTime - Format times using DateTime;
-App::Satpass2::FormatTime::POSIX - Format times using strftime().
+App::Satpass2::FormatTime::Cldr - Provide default CLDR formats;
+App::Satpass2::FormatTime::DateTime - Base class to format times using
+    DateTime;
+App::Satpass2::FormatTime::DateTime::Cldr - Format times using
+    DateTime->format_cldr();
+App::Satpass2::FormatTime::DateTime::Strftime - Format times using
+    DateTime->strftime();
+App::Satpass2::FormatTime::POSIX::Strftime - Format times using strftime();
+App::Satpass2::FormatTime::Strftime - Provide default strftime formats.
 
 In addition, a 'satpass2' script is included, which simply uses
 App::Satpass2 and passes @ARGV to its run() method.

@@ -15,8 +15,8 @@ my $delegate = eval {
     require App::Satpass2::FormatTime::DateTime::Strftime;
     'App::Satpass2::FormatTime::DateTime::Strftime';
 } || do {
-    require App::Satpass2::FormatTime::POSIX;
-    'App::Satpass2::FormatTime::POSIX';
+    require App::Satpass2::FormatTime::POSIX::Strftime;
+    'App::Satpass2::FormatTime::POSIX::Strftime';
 };
 
 sub new {

@@ -33,14 +33,14 @@ require_ok( 'App::Satpass2::FormatTime' );
 
 isa_ok( 'App::Satpass2::FormatTime', 'App::Satpass2::Copier' );
 
-require_ok( 'App::Satpass2::FormatTime::POSIX' );
+require_ok( 'App::Satpass2::FormatTime::POSIX::Strftime' );
 
-isa_ok( 'App::Satpass2::FormatTime::POSIX', 'App::Satpass2::FormatTime' );
+isa_ok( 'App::Satpass2::FormatTime::POSIX::Strftime', 'App::Satpass2::FormatTime' );
 
-isa_ok( 'App::Satpass2::FormatTime::POSIX',
+isa_ok( 'App::Satpass2::FormatTime::POSIX::Strftime',
     'App::Satpass2::FormatTime::Strftime' );
 
-instantiate( 'App::Satpass2::FormatTime::POSIX' );
+instantiate( 'App::Satpass2::FormatTime::POSIX::Strftime' );
 
 SKIP: {
 

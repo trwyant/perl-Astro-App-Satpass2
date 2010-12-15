@@ -1,4 +1,4 @@
-package App::Satpass2::FormatTime::POSIX;
+package App::Satpass2::FormatTime::POSIX::Strftime;
 
 use 5.006002;
 
@@ -56,12 +56,12 @@ __END__
 
 =head1 NAME
 
-App::Satpass2::FormatTime::POSIX - Format time using POSIX::strftime
+App::Satpass2::FormatTime::POSIX::Strftime - Format time using POSIX::strftime
 
 =head1 SYNOPSIS
 
- use App::Satpass2::FormatTime::POSIX;
- my $tf = App::Satpass2::FormatTime::POSIX->new();
+ use App::Satpass2::FormatTime::POSIX::Strftime;
+ my $tf = App::Satpass2::FormatTime::POSIX::Strftime->new();
  print 'It is now ',
      $tf->format_datetime( '%H:%M:%S', time, 1 ),
      " GMT\n";

@@ -43,7 +43,7 @@ my $expect_time_formatter = eval {
     require DateTime;
     require DateTime::TimeZone;
     'App::Satpass2::FormatTime::DateTime::Strftime';
-} || 'App::Satpass2::FormatTime::POSIX';
+} || 'App::Satpass2::FormatTime::POSIX::Strftime';
 
 $tst->method_is( config => decode => 1,
     [
