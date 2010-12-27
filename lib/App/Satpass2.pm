@@ -408,7 +408,8 @@ sub clear : Verb() {
 }
 
 sub delegate : Verb() {
-    $_[0]->{_interactive} and goto &_delegate_interactive;
+##    $_[0]->{_interactive} and goto &_delegate_interactive;
+    _is_interactive() and goto &_delegate_interactive;
     goto &_delegate_nointeractive;
 }
 
@@ -612,8 +613,8 @@ sub dispatch {
 	    and _get_attr($code, 'Verb')
 	    or $self->_wail("Unknown interactive method '$verb'");
     }
-    $self->{_interactive} = \$verb;	# Any local variable will do.
-    weaken ($self->{_interactive});	# Goes away when $verb does.
+##    $self->{_interactive} = \$verb;	# Any local variable will do.
+##    weaken ($self->{_interactive});	# Goes away when $verb does.
     return $code->($self, @args);
 }
 
@@ -708,8 +709,9 @@ sub execute {
 	# {localout} is the output to be used for this command. It goes
 	# in the frame stack because our command may start a new frame,
 	# and _frame_push() needs to have a place to get the correct
-	# to be disposed of, and the associated file (if any) to be
-	# flushed.
+	# output handle. It weakened to ensure that the handle is
+	# disposed of, and the associated file (if any) is flushed if we
+	# raise an exception.
 
 	$self->{frame}[-1]{localout} = $stdout;
 	ref $stdout and weaken ($self->{frame}[-1]{localout});
@@ -1696,7 +1698,8 @@ sub set : Verb() {	## no critic (ProhibitAmbiguousNames)
     while (@args) {
 	my ( $name, $value ) = splice @args, 0, 2;
 	$self->_attribute_exists( $name );
-	if ($self->{_interactive}) {
+##	if ($self->{_interactive}) {
+	if ( _is_interactive() ) {
 	    $nointeractive{$name}
 		and $self->_wail(
 		    "Attribute '$name' may not be set interactively");
@@ -2859,6 +2862,22 @@ EOD
 
     return;
 
+}
+
+#	_is_interactive()
+#
+#	Returns true if the dispatch() method is above us on the call
+#	stack, otherwise returns false.
+
+use constant INTERACTIVE_CALLER => __PACKAGE__ . '::dispatch';
+sub _is_interactive {
+    my $level = 0;
+    while ( my @info = caller( $level ) ) {
+	INTERACTIVE_CALLER eq $info[3]
+	    and return $level;
+	$level++;
+    }
+    return;
 }
 
 #	$self->_load_module ($module_name)
