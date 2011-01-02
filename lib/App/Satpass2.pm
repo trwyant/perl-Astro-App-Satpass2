@@ -26,7 +26,7 @@ use IO::File;
 use IO::Handle;
 use IPC::System::Simple qw{ capturex };
 use POSIX qw{ floor };
-use Scalar::Util qw{ blessed openhandle weaken };
+use Scalar::Util qw{ blessed openhandle };
 use Text::Abbrev;
 
 use constant ASTRO_SPACETRACK_VERSION => 0.050;
@@ -709,14 +709,16 @@ sub execute {
 	# {localout} is the output to be used for this command. It goes
 	# in the frame stack because our command may start a new frame,
 	# and _frame_push() needs to have a place to get the correct
-	# output handle. It weakened to ensure that the handle is
-	# disposed of, and the associated file (if any) is flushed if we
-	# raise an exception.
+	# output handle.
 
+	my $frame_depth = $#{$self->{frame}};
 	$self->{frame}[-1]{localout} = $stdout;
-	ref $stdout and weaken ($self->{frame}[-1]{localout});
+##	ref $stdout and weaken ($self->{frame}[-1]{localout});
 
 	my $output = $self->dispatch( @$args );
+
+	$#{$self->{frame}} >= $frame_depth
+	    and delete $self->{frame}[ $frame_depth ]{localout};
 
 	if ( defined $output ) {
 ##	    $output =~ m/ \n \z /smx or $output .= "\n";

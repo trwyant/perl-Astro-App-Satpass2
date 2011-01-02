@@ -54,7 +54,7 @@ sub requires {
 	'IPC::System::Simple'	=> 0,
 ##	'Params::Util'		=> 0.250,
 	'Scalar::Util'		=> 0,
-	'Task::Weaken'		=> 0,
+##	'Task::Weaken'		=> 0,
 	'Time::Local'		=> 0,
 	@extra,
     };
