@@ -26,6 +26,8 @@ sub delegate {
 
 1;
 
+__END__
+
 =head1 NAME
 
 App::Satpass2::ParseTime::Date::Manip - Parse time for App::Satpass2 using Date::Manip
@@ -68,7 +70,7 @@ Thomas R. Wyant, III F<wyant at cpan dot org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2009-2011, Thomas R. Wyant, III
+Copyright (C) 2009-2011 by Thomas R. Wyant, III
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl 5.10.0. For more details, see the full text
@@ -79,61 +81,5 @@ without any warranty; without even the implied warranty of
 merchantability or fitness for a particular purpose.
 
 =cut
-
-__END__
-
-# ex: set textwidth=72 :
-
-1;
-
-=head1 NAME
-
-App::Satpass2::ParseTime::Date::Manip - <<< replace boilerplate >>>
-
-=head1 SYNOPSIS
-
-<<< replace boilerplate >>>
-
-=head1 DETAILS
-
-<<< replace boilerplate >>>
-
-=head1 METHODS
-
-This class supports the following public methods:
-
-=head1 ATTRIBUTES
-
-This class has the following attributes:
-
-
-=head1 SEE ALSO
-
-<<< replace or remove boilerplate >>>
-
-=head1 SUPPORT
-
-Support is by the author. Please file bug reports at
-L<http://rt.cpan.org>, or in electronic mail to the author.
-
-=head1 AUTHOR
-
-Thomas R. Wyant, III F<wyant at cpan dot org>
-
-=head1 COPYRIGHT AND LICENSE
-
-Copyright (C) 2009-2011, Thomas R. Wyant, III
-
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl 5.10.0. For more details, see the full text
-of the licenses in the directory LICENSES.
-
-This program is distributed in the hope that it will be useful, but
-without any warranty; without even the implied warranty of
-merchantability or fitness for a particular purpose.
-
-=cut
-
-__END__
 
 # ex: set textwidth=72 :
