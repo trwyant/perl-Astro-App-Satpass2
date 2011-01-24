@@ -84,10 +84,6 @@ sub ACTION_make_optional_modules_tests {
     foreach my $ip ( _get_general_tests() ) {
 	my ( $op ) = _get_tests_without_optional_modules( $ip );
 	-f $op and next;
-	local $/ = undef;
-	open my $ih, '<', $ip or die "Unable to open $ip: $!\n";
-	my $content = <$ih>;
-	close $ih;
 	print "Creating $op\n";
 	open my $oh, '>', $op or die "Unable to open $op: $!\n";
 	print { $oh } <<"EOD";

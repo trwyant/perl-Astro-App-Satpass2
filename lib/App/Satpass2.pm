@@ -329,9 +329,9 @@ sub almanac : Verb(dump!,horizon|rise|set!,transit!,twilight!,quarter!) {
 
     my $sta = $self->_get_station();
 
-    my $id = looks_like_number($self->{twilight}) ?
-	"twilight ($self->{twilight} degrees)" :
-	"$self->{twilight} twilight (@{[rad2deg $self->{_twilight}]} degrees)";
+##  my $id = looks_like_number($self->{twilight}) ?
+##	"twilight ($self->{twilight} degrees)" :
+##	"$self->{twilight} twilight (@{[rad2deg $self->{_twilight}]} degrees)";
 
     my @almanac;
     my $output;
@@ -800,7 +800,6 @@ Verb(algorithm=s,am!,choose=s@,day!,dump!,pm!,questionable|spare!,quiet!)
     my $pass_end = $self->_parse_time (shift @args || '+7');
     $pass_start >= $pass_end
 	and $self->_wail("End time must be after start time");
-    my $pass_step = shift || 60;
     my $sta = $self->_get_station();
 
     my $horizon = deg2rad ($self->{horizon});
@@ -837,8 +836,6 @@ Verb(algorithm=s,am!,choose=s@,day!,dump!,pm!,questionable|spare!,quiet!)
     }
     @active or $self->_wail("No bodies capable of flaring");
     my $output;
-
-    my $sun = Astro::Coord::ECI::Sun->new ();
 
     my @flares;
     foreach my $tle (@active) {
@@ -1443,14 +1440,6 @@ Verb(choose=s@,appulse!,chronological!,dump!,horizon|rise|set!,illumination!,qui
 }
 
 {
-    my %selector = (
-	rise	=> 'horizon',
-	set	=> 'horizon',
-	max	=> 'transit',
-	lit	=> 'illumination',
-	shdw	=> 'illumination',
-	apls	=> 'appulse',
-    );
     my @selector;
     $selector[ PASS_EVENT_SHADOWED ]	= 'illumination';
     $selector[ PASS_EVENT_LIT ]		= 'illumination';
@@ -2254,7 +2243,7 @@ sub validate : Verb(quiet!) {
     $pass_start >= $pass_end
 	and $self->_wail("End time must be after start time");
 
-    my @bodies = @{ $self->{bodies} }
+    @{ $self->{bodies} }
 	or $self->_wail("No bodies selected");
 
 #	Validate each body.
@@ -2465,7 +2454,7 @@ sub _frame_push {
 	    $self->{frame}[-1]{localout} :
 	    $self->{frame}[-1]{stdout};
 ####    defined $stdout or $stdout = select();
-    my ($package, $filename, $line) = caller;
+    my ( undef, $filename, $line ) = caller;
     push @{$self->{frame}}, {
 	type => $type,
 	args => $args,
@@ -2501,7 +2490,8 @@ sub _frame_push {
 
     sub _frame_pop {
 	my ($self, @args) = @_;
-	my $type = @args > 1 ? shift @args : undef;
+##	my $type = @args > 1 ? shift @args : undef;
+	@args > 1 and shift @args;	# Currently unused
 	my $frames = @args ? shift @args : @{$self->{frame}} - 1;
 	while (@{$self->{frame}} > $frames) {
 	    my $frame = pop @{$self->{frame}}
@@ -3455,7 +3445,8 @@ sub _user_home_dir {
 		    # colon, since that might specify substring
 		    # processing.
 
-		    my $colon = $flag =~ s/ \A : //smx ? ':' : '';
+##		    my $colon = $flag =~ s/ \A : //smx ? ':' : '';
+		    $flag =~ s/ \A : //smx;
 
 		    # We run the stuff after the first cabbalistic
 		    # character through the tokenizer, since further

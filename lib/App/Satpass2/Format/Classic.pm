@@ -1728,7 +1728,7 @@ sub _format_time {
     my $fmt = join (' ', map {$self->$_()} @{$info->{format}});
     $opt->{delta}
 	and $value += $opt->{delta};
-    my $gmt = $opt->{gmt} || $self->gmt();
+#   my $gmt = $opt->{gmt} || $self->gmt();
     my $fmtr = $self->time_formatter();
     $fmtr->tz( $opt->{zone} || $self->tz() );
     my $buffer = $fmtr->format_datetime(

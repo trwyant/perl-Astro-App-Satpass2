@@ -74,7 +74,7 @@ sub delegate {
 
 	my $offset = shift @date || 0;
 	if ( @zone && ! $zone[0] ) {
-	    my ( $zulu, $sign, $hr, $min ) = @zone;
+	    my ( undef, $sign, $hr, $min ) = @zone;
 	    $offset -= $sign . ( ( $hr * 60 + ( $min || 0 ) ) * 60 )
 	}
 
