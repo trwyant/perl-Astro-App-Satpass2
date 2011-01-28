@@ -817,7 +817,7 @@ Verb(algorithm=s,am!,choose=s@,day!,dump!,pm!,questionable|spare!,quiet!)
 
     my @active;
     foreach my $tle ( $self->_aggregate( $opt->{choose} ?
-	    _choose( $opt->{choose}, $self->{bodies} ) : $self->{bodies}
+	    scalar _choose( $opt->{choose}, $self->{bodies} ) : $self->{bodies}
 	) )
     {
 	$tle->can_flare ($opt->{questionable}) or next;
@@ -1357,7 +1357,7 @@ Verb(choose=s@,appulse!,chronological!,dump!,horizon|rise|set!,illumination!,qui
 	and $self->_wail("End time must be after start time");
 
     my $sta = $self->_get_station();
-    my @bodies = @{$opt->{choose} ? _choose($opt->{choose},
+    my @bodies = @{$opt->{choose} ? scalar _choose($opt->{choose},
 	    $self->{bodies}) : $self->{bodies}}
 	or $self->_wail("No bodies selected");
     my $pass_step = shift || 60;
@@ -1514,7 +1514,7 @@ sub position : Verb(choose=s@,questionable|spare!,quiet!,realtime!) {
 
     my @list = ( $self->_aggregate( $self->{bodies} ), @{$self->{sky}});
     $opt->{choose}
-	and @list = @{_choose($opt->{choose}, \@list)};
+	and @list = _choose($opt->{choose}, \@list);
 
     my $sun;
     foreach my $body (@list) {
