@@ -56,6 +56,7 @@ ephemeristype
 EST
 firstderivative
 fr
+FreeDesktop
 gasparovic
 geocode
 geocoder
@@ -88,6 +89,7 @@ NORAD
 observability
 OID
 op
+org
 pc
 periapsis
 perigee

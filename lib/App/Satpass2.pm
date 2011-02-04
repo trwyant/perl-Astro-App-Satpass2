@@ -19,7 +19,7 @@ use Carp;
 use Clone ();
 use Cwd ();
 use File::Glob qw{ :glob };
-##  use File::HomeDir;
+use File::HomeDir;
 use File::Temp;
 use Getopt::Long;
 use IO::File;
@@ -1083,12 +1083,13 @@ sub init {
     } else {
 	foreach (
 	    sub { return $ENV{SATPASS2INI} },
-	    \&initfile,
+	    sub { $self->initfile( { quiet => 1 } ) },
 	    sub { return ( $ENV{SATPASSINI}, 1 ) },
 	    \&_init_file_01
 	) {
 	    my ( $fn, $level1 ) = $_->($self);
 	    defined $fn and $fn ne '' or next;
+	    chomp $fn;
 	    -f $fn or next;
 	    $self->{initfile} = $fn;
 	    return $self->source( { level1 => $level1 }, $fn);
@@ -1097,88 +1098,25 @@ sub init {
     return;
 }
 
-{
 
-    # TODO - this needs to return File::Spec->catfile( $root, $perl,
-    # 'App-Satpass2', 'satpass2rc' where $root is equivalent to
-    # File::HomeDir->my_config() // File::HomeDir->my_documents() //
-    # File::HomeDir->my_home(), and $perl is '.perl' if $root is the
-    # home directory, and 'Perl' otherwise. Except that this puts it in
-    # ~/Documents under Mac OS X, which I really do not want.
+sub initfile : Verb(create-directory!,quiet!) {
 
-    my $init_file;
+    my ( $self, @args ) = @_;
+    (my $opt, @args) = $self->_getopt(@args);
 
-    my %os_specific = (
-	darwin	=> sub {
-	    my ( $self ) = @_;
-	    my @path;
-	    eval {
-		require Mac::SystemDirectory;
-		push @path, Mac::SystemDirectory::FindDirectory(
-		    Mac::SystemDirectory::NSApplicationSupportDirectory()
-		);
-		1;
-	    } or eval {
-		require Mac::Files;
-		my $folder = Mac::Files::FindFolder(
-		    Mac::Files::kUserDomain(),
-		    Mac::Files::kApplicationSupportFolderType(),
-		);
-		defined $folder or return;
-		if ( -l $folder ) {
-		    $folder = readlink $folder or return;
-		}
-		-d $folder or return;
-		push @path, $folder;
-	    } or push @path, File::Spec->catdir($self->_home_dir(),
-		'Library', 'Application Support');
-	    if ( @path && -d $path[0] ) {
-		push @path, 'satpass2rc';
-	    } else {
-		@path = ( $self->_home_dir(), '.satpass2rc' );
-	    }
-	    return @path;
-	},
-	MacOS	=> sub {
-	    my ( $self ) = @_;
-	    return 'satpass2.ini';
-	},
-	MSWin32	=> sub {
-	    my ( $self ) = @_;
-	    my @path;
-	    eval {
-		require Win32;
-		push @path, Win32::GetFolderPath(
-		    Win32::CSIDL_LOCAL_APPDATA(), 1 );
-		1;
-	    } or push @path, $self->_home_dir();
-	    push @path, 'satpass2.ini';
-	    return @path;
-	},
-	VMS	=> sub {
-	    my ( $self ) = @_;
-	    return ( $self->_home_dir(), 'satpass2.ini' );
-	},
-    );
+    my $init_dir = File::HomeDir->my_dist_config(
+	'App-Satpass2', { create => $opt->{'create-directory'} } );
 
-    sub initfile : Verb() {
-	my ( $self ) = @_;
-	defined $init_file and return $init_file;
+    defined $init_dir
+	or do {
+	$opt->{quiet} and return;
+	$self->_wail(
+	    'Init file directory not found' );
+    };
 
-	my @path;
-	local $@ = undef;
-
-	if ( my $code = $os_specific{$^O} ) {
-	    @path = $code->( $self );
-	} elsif ( @path = $self->_xdg_config_dir() ) {
-	    push @path, 'satpass2rc';
-	} else {
-	    @path = ( $self->_home_dir(), '.satpass2rc' );
-	}
-
-	return ( $init_file = @path > 1 ? File::Spec->catfile( @path ) :
-	    @path ? $path[0] : '' );
-    }
+    # The "\n" is for display purposes, and gets chomp-ed before
+    # use.
+    return File::Spec->catfile( $init_dir, "satpass2rc\n" );
 }
 
 #	$file_name = _init_file_01()
@@ -3783,39 +3721,6 @@ sub _whinge {
     return;
 }
 
-#	$dir = $self->_xdg_data_dir();
-#
-#	Return the Free Desktop XDG data directory for App::Satpass2. If
-#	neither $ENV{XDG_DATA_HOME} nor ~/.local/share/ exists, just
-#	return. If they do, return the resultant directory. The
-#	algorithm implements (I believe)
-#	http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
-#
-#	If we decide to use the config directory rather than the data
-#	directory, it's XDG_CONFIG_HOME and '.config' (not
-#	'.config/share').
-
-#sub _xdg_data_dir {
-#    my ( $self ) = @_;
-#    my $dir = $ENV{XDG_DATA_HOME} || File::Spec->catdir(
-#	$self->_home_dir(), '.local', 'share' );
-#    -d $dir or return;
-#
-#    return $dir;
-#}
-
-#	If we decide to use the data directory, it's XDG_DATA_HOME and
-#	'.local/share'.
-
-sub _xdg_config_dir {
-    my ( $self ) = @_;
-    my $dir = $ENV{XDG_CONFIG_HOME} || File::Spec->catdir(
-	$self->_home_dir(), '.config' );
-    -d $dir or return;
-
-    return $dir;
-}
-
 1;
 
 __END__
@@ -4272,7 +4177,7 @@ anticipated that the caller will print the result.
 
 The following option may be specified:
 
- -n to supress the newline at the end of the echoed text.
+ -n to suppress the newline at the end of the echoed text.
 
 =head2 end
 
@@ -4540,30 +4445,31 @@ to find the initialization file. See also the L<init() method|/init> for
 other places initialization files may be found, and the
 L<initfile attribute>,
 which records the name of the actual file loaded by the last call to
-L<init()|/init>, 
+L<init()|/init>,
 
-Under C<MSWin32>, the initialization file is F<satpass2.ini> in the
-user's application data directory. The location of this directory may
-vary from version to version of the operating system. If for some reason
-this directory can not be found, the user's home directory will be used.
+The initialization file is always named F<satpass2rc>. It is located in
+the directory specified by
 
-Under C<VMS>, the initialization file is F<satpass2.ini> in the user's
-home directory.
+ File::HomeDir->my_dist_config( 'App-Satpass2' )
 
-Under C<darwin> (a.k.a. Mac OS X), the initialization file is
-F<satpass2rc> in the user's F<Library/Application Support> directory. If
-this directory can not be found, the initialization file is
-F<.satpass2rc> in the user's home directory.
+Unfortunately, this method returns C<undef> unless the directory
+actually exists, and is sketchily documented. As of this writing, though
+(February 2011), the F<App-Satpass2/> directory will be found in
+directory F<Perl/> in your documents directory, or in directory
+C<.perl/> if L<File::HomeDir|File::HomeDir> thinks your documents
+directory is your home directory. The exception is on FreeDesktop.org
+systems (e.g. Linux), where the F<Perl/> directory is found by default
+in C<.config/> under your home directory.
 
-Under C<MacOS> (meaning 9 and below) the initialization file is
-F<satpass2.ini> in the same directory as the satpass2 script.
+There are two options to this method:
 
-Any other operating system is assumed to be some flavor of Unix. The
-initialization file is F<satpass2rc> in the user's Free Desktop
-configuration directory (either the location specified by environment
-variable XDG_CONFIG_HOME if that exists, or F<.config> if not) if that
-directory can be found; otherwise it is F<.satpass2rc> in the user's
-home directory.
+* C<-create-directory> causes the directory for the initialization file
+to be created;
+
+* C<-quiet> suppresses the exception which is normally thrown if the
+directory for the initialization file is not found, and
+C<-create-directory> was not asserted, and instead causes the method to
+simply return.
 
 =head2 list
 
@@ -4806,7 +4712,7 @@ options and commands to be passed to the application.
 
 The valid options are:
 
- -filter to supress banner text;
+ -filter to suppress banner text;
  -gmt to output time in GMT;
  -initfile name of the initialization file to use;
  -version to display the output of version() and return.
@@ -6178,16 +6084,6 @@ in its default location.
 
 Bugs can be reported to the author by mail, or through
 L<http://rt.cpan.org/>.
-
-The VMS- and MSWin32-specific code to find the initialization file and
-do tilde expansion is untested, since I do not currently have access to
-those systems.
-
-I am B<not> using L<File::HomeDir|File::HomeDir> to find the
-initialization file, because as of this writing it does not support Free
-Desktop configuration directories, and because I respectfully differ
-with Adam on how to sort out the morass of Apple's changing interfaces
-and the Perl modules that access them.
 
 =head1 AUTHOR
 
