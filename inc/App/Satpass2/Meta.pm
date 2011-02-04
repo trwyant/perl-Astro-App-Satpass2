@@ -24,18 +24,6 @@ sub distribution {
 
 sub requires {
     my ( $self, @extra ) = @_;
-    if ( ! $self->distribution() ) {
-	if ( $^O eq 'darwin' ) {
-	    require POSIX;
-	    my $release = ( POSIX::uname() )[2];	# release
-	    my ( $major ) = split qr{ [.] }smx, $release;
-	    push @extra, $major >= 8 ? (	# Tiger (10.4) or above
-		'Mac::SystemDirectory'	=> 0
-	    ) : (
-		'Mac::Files'		=> 0,
-	    );
-	}
-    }
     return {
 	'Astro::Coord::ECI'	=> 0,
 	'Astro::Coord::ECI::Moon'	=> 0,
@@ -49,10 +37,11 @@ sub requires {
 	'Clone'			=> 0,
 	'Cwd'			=> 0,
 	'File::Glob'		=> 0,
-##	'File::HomeDir'		=> 0,
+	'File::HomeDir'		=> 0,
 	'File::Temp'		=> 0,
 	'IPC::System::Simple'	=> 0,
 ##	'Params::Util'		=> 0.250,
+	'POSIX'			=> 0,
 	'Scalar::Util'		=> 0,
 ##	'Task::Weaken'		=> 0,
 	'Time::Local'		=> 0,
