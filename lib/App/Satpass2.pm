@@ -2714,50 +2714,6 @@ sub _get_today_noon {
     }
 }
 
-#	$home = $self->_home_dir();
-#
-#	Return the user's home directory. We pretty much follow the
-#	documented logic of the zero-argument chdir(), but for Win32
-#	we add some fillips cribbed from File::HomeDir. We don't use
-#	File::HomeDir itself because under Mac OS X it relies on
-#	Mac::Carbon, which fails its tests. It is trivial to make
-#	Mac::Carbon pass, but its maintainer has so far not done so.
-
-{
-    my @try = (['HOME'], ['LOGDIR']);
-    $^O eq 'VMS' and push @try, ['SYS$LOGIN'];
-    $^O eq 'MSWin32' and push @try, ['USERPROFILE'], ['HOMEDRIVE', 'HOMEPATH'];
-
-    my $home;
-
-    sub _home_dir {
-	my ( $self ) = @_;
-	defined $home and return $home;
-
-	my $dir;
-	eval {
-	    $dir = ( getpwuid $< )[7];
-	    1;
-	} and return ( $home = $dir );
-	TRIAL:
-	foreach my $trial ( @try ) {
-	    my @path;
-	    foreach my $ele ( 'ARRAY' eq ref $trial ? @{ $trial } : (
-		    $trial ) ) {
-		defined $ENV{$ele}
-		    and '' ne $ENV{$ele}
-		    or next TRIAL;
-		push @path, $ENV{$ele};
-	    }
-	    @path or next;
-	    $dir = File::Spec->catdir( @path );
-	    -d $dir and return ( $home = $dir );
-	}
-	$self->_wail('Unable to determine home directory');
-	return;	# Unreachable, but Perl::Critic does not know this.
-    }
-}
-
 #	$satpass2->_iridium_status(\@status)
 
 #	Updates the status of all Iridium satellites from the given
@@ -3110,22 +3066,18 @@ sub _unescape {
 #	$dir = $self->_user_home_dir( $user );
 #
 #	Find the home directory for the given user, croaking if this can
-#	not be done. If $user is '' or undef, delegates to
-#	$self->_home_dir().
+#	not be done. If $user is '' or undef, returns the home directory
+#	for the current user.
 
 sub _user_home_dir {
     my ( $self, $user ) = @_;
     defined $user or $user = '';
     '+' eq $user and return Cwd::cwd();
-    '' eq $user and return $self->_home_dir();
-    my @info;
-    eval {
-	@info = getpwnam $user;
-	1;
-    } or $self->_wail( "Unable to find home for $user: $@" );
-    @info
-	or $self->_wail( "Unable to find home for $user: No such user" );
-    return $info[7];
+    '' eq $user and return File::HomeDir->my_home();
+    my $home_dir = File::HomeDir->users_home( $user );
+    defined $home_dir
+	or $self->_wail( "Unable to find home for $user" );
+    return $home_dir;
 }
 
 #	($tokens, $redirect) = $self->_tokenize(
