@@ -6,6 +6,8 @@ use warnings;
 use base qw{ Astro::App::Satpass2::Copier };
 
 use Carp;
+
+use Astro::App::Satpass2::Utils qw{ load_package };
 use Astro::Coord::ECI::Utils qw{ looks_like_number };
 
 our $VERSION = '0.000_07';
@@ -192,10 +194,11 @@ sub use_perltime {
 		next;
 	    };
 
-	    local $@ = undef;
-	    $trial{$try} = eval "require $try; 1" or next;
+	    my $pkg = $trial{$try} = load_package(
+		$try, 'Astro::App::Satpass2::ParseTime' )
+		or next;
 
-	    my $delegate = $trial{$try} = eval { $try->delegate() }
+	    my $delegate = $trial{$try} = eval { $pkg->delegate() }
 		or next;
 
 	    if ( $trial{$delegate} ) {
