@@ -7,8 +7,8 @@ use lib qw{ inc };
 
 BEGIN {
     eval {
-	require App::Satpass2::Test::ParseTime;
-	App::Satpass2::Test::ParseTime->import();
+	require Astro::App::Satpass2::Test::ParseTime;
+	Astro::App::Satpass2::Test::ParseTime->import();
 	1;
     } or do {
 	print "1..0 # skip Test::More 0.40 or greater not available\n";
@@ -47,19 +47,19 @@ BEGIN {
 
 plan( tests => 86 );
 
-require_ok( 'App::Satpass2::ParseTime' );
+require_ok( 'Astro::App::Satpass2::ParseTime' );
 
 my $pt = eval {
-    App::Satpass2::ParseTime->new( 'App::Satpass2::ParseTime::ISO8601' );
-} or diag( 'Failed to instantiate App::Satpass2::ParseTime: ' . $@ );
+    Astro::App::Satpass2::ParseTime->new( 'Astro::App::Satpass2::ParseTime::ISO8601' );
+} or diag( 'Failed to instantiate Astro::App::Satpass2::ParseTime: ' . $@ );
 
-isa_ok( $pt, 'App::Satpass2::ParseTime::ISO8601' );
+isa_ok( $pt, 'Astro::App::Satpass2::ParseTime::ISO8601' );
 
-isa_ok( $pt, 'App::Satpass2::ParseTime' );
+isa_ok( $pt, 'Astro::App::Satpass2::ParseTime' );
 
 is( $pt->delegate(),
-    'App::Satpass2::ParseTime::ISO8601',
-    'Delegate is App::Satpass2::ParseTime::ISO8601'
+    'Astro::App::Satpass2::ParseTime::ISO8601',
+    'Delegate is Astro::App::Satpass2::ParseTime::ISO8601'
 );
 
 

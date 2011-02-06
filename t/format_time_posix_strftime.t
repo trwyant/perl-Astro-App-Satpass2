@@ -5,11 +5,11 @@ use warnings;
 
 use lib qw{ inc };
 
-use App::Satpass2::Test::Format;
+use Astro::App::Satpass2::Test::Format;
 use Time::Local;
 
-my $tst = App::Satpass2::Test::Format->new(
-    'App::Satpass2::FormatTime::POSIX::Strftime' );
+my $tst = Astro::App::Satpass2::Test::Format->new(
+    'Astro::App::Satpass2::FormatTime::POSIX::Strftime' );
 
 $tst->plan( tests => 13 );
 

@@ -5,15 +5,15 @@ use 5.006002;
 use strict;
 use warnings;
 
-use App::Satpass2;
+use Astro::App::Satpass2;
 
-App::Satpass2->run(@ARGV);
+Astro::App::Satpass2->run(@ARGV);
 
 __END__
 
 =head1 TITLE
 
-satpass2 - Script to wrap App::Satpass2 satellite prediction functionality.
+satpass2 - Script to wrap Astro::App::Satpass2 satellite prediction functionality.
 
 =head1 SYNOPSIS
 
@@ -25,8 +25,8 @@ satpass2 - Script to wrap App::Satpass2 satellite prediction functionality.
 
 =head1 OPTIONS
 
-The available options are those of the L<App::Satpass2|App::Satpass2>
-L<run()|App::Satpass2/run> method. Briefly and non-definitively,
+The available options are those of the L<Astro::App::Satpass2|Astro::App::Satpass2>
+L<run()|Astro::App::Satpass2/run> method. Briefly and non-definitively,
 
 =over
 
@@ -48,8 +48,8 @@ This option specifies that times are to be displayed in GMT.
 
 =item -help
 
-This option causes the L<App::Satpass2|App::Satpass2>
-L<help()|App::Satpass2/help> method to be run. The script then exits.
+This option causes the L<Astro::App::Satpass2|Astro::App::Satpass2>
+L<help()|Astro::App::Satpass2/help> method to be run. The script then exits.
 
 =item -version
 
@@ -60,9 +60,9 @@ displayed. The script then exits.
 
 =head1 DETAILS
 
-This script is a wrapper for the L<App::Satpass2|App::Satpass2> package.
-All it really does is to load the C<App::Satpass2> package and then call
-its L<run()|App::Satpass2/run> method.
+This script is a wrapper for the L<Astro::App::Satpass2|Astro::App::Satpass2> package.
+All it really does is to load the C<Astro::App::Satpass2> package and then call
+its L<run()|Astro::App::Satpass2/run> method.
 
 What you get is an application similar to the C<satpass> script packaged
 with L<Astro::Coord::ECI|Astro::Coord::ECI>, but (hopefully!) more
@@ -84,7 +84,7 @@ Besides the restructuring of the code into an object, the largest change
 from F<satpass> is the extremely flexible templating system used to
 produce output. This should allow broad customization of output to meet
 personal needs. See
-L<App::Satpass2::Format::Classic|App::Satpass2::Format::Classic> for the
+L<Astro::App::Satpass2::Format::Classic|Astro::App::Satpass2::Format::Classic> for the
 (unfortunately) gory details.
 
 =head1 AUTHOR

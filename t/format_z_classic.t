@@ -5,7 +5,7 @@ use warnings;
 
 use lib qw{ inc };
 
-use App::Satpass2::Test::Format;
+use Astro::App::Satpass2::Test::Format;
 use Astro::Coord::ECI;
 use Astro::Coord::ECI::Moon;
 use Astro::Coord::ECI::Sun;
@@ -56,7 +56,7 @@ my $body = Astro::Coord::ECI::TLE->new(
 )->universal($time);
 
 
-my $tst = App::Satpass2::Test::Format->new( 'App::Satpass2::Format::Classic' );
+my $tst = Astro::App::Satpass2::Test::Format->new( 'Astro::App::Satpass2::Format::Classic' );
 
 $tst->plan( tests => 418 );
 

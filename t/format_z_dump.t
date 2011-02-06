@@ -5,10 +5,10 @@ use warnings;
 
 use lib qw{ inc };
 
-use App::Satpass2::Test::Format;
+use Astro::App::Satpass2::Test::Format;
 
-my $tst = App::Satpass2::Test::Format->new(
-    'App::Satpass2::Format::Dump' );
+my $tst = Astro::App::Satpass2::Test::Format->new(
+    'Astro::App::Satpass2::Format::Dump' );
 
 $tst->plan( tests => 17 );
 

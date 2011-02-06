@@ -23,12 +23,12 @@ $| = 1;	## no critic (RequireLocalizedPunctuationVars)
 
 plan( tests => 181 );
 
-require_ok( 'App::Satpass2' )
-    or BAIL_OUT( "Can not continue without loading App::Satpass2" );
+require_ok( 'Astro::App::Satpass2' )
+    or BAIL_OUT( "Can not continue without loading Astro::App::Satpass2" );
 
-my $app = App::Satpass2->new();
-isa_ok($app, 'App::Satpass2')
-    or BAIL_OUT("Can not continue without App::Satpass2 object");
+my $app = Astro::App::Satpass2->new();
+isa_ok($app, 'Astro::App::Satpass2')
+    or BAIL_OUT("Can not continue without Astro::App::Satpass2 object");
 _method( set => autoheight => undef, stdout => undef, undef,
     'Clear autoheight and stdout' );
 _method( qw{ delegate formatter gmt 0 }, undef,
@@ -828,7 +828,7 @@ sub _do_test {
 	# scavenge one from the user's profile.
 	if ( $can_filter && ! _have_spacetrack_info( $app_obj ) ) {
 	    eval {	## no critic (RequireCheckingReturnValueOfEval)
-		my $app2 = App::Satpass2->new();
+		my $app2 = Astro::App::Satpass2->new();
 		# NOTICE
 		# The execute_filter attribute is undocumented and
 		# unsupported.

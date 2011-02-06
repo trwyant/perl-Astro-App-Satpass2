@@ -5,9 +5,9 @@ use warnings;
 
 use lib qw{ inc };
 
-use App::Satpass2::Test::Format;
+use Astro::App::Satpass2::Test::Format;
 
-my $tst = App::Satpass2::Test::Format->new( 'App::Satpass2::Format' );
+my $tst = Astro::App::Satpass2::Test::Format->new( 'Astro::App::Satpass2::Format' );
 
 $tst->plan( tests => 21 );
 
@@ -22,7 +22,7 @@ $tst->can_ok( 'provider' );
 $tst->can_ok( 'time_format' );
 $tst->can_ok( 'tz' );
 
-$tst->new_ok();		# Works only from App::Satpass2::Test.
+$tst->new_ok();		# Works only from Astro::App::Satpass2::Test.
 $tst->method_is( date_format => '%Y-%m-%d',
     q{Default date_format is '%Y-%m-%d'} );
 $tst->method_equals( desired_equinox_dynamical => 0,
@@ -31,8 +31,8 @@ $tst->method_equals( gmt => 1,
     'Test framework sets gmt to 1' );
 $tst->method_is( local_coord => 'azel_rng',
     q{Default local_coord is 'azel_rng' } );
-$tst->method_is( provider => 'App::Satpass2::Test::Format',
-    q{Test framework sets provider to 'App::Satpass2::Test::Format'} );
+$tst->method_is( provider => 'Astro::App::Satpass2::Test::Format',
+    q{Test framework sets provider to 'Astro::App::Satpass2::Test::Format'} );
 $tst->method_is( time_format => '%H:%M:%S',
     q{Default time_format is '%H:%M:%S'} );
 $tst->method_is( tz => undef, 'Default time zone is undefined' );
@@ -42,8 +42,8 @@ $tst->method_is( tz => 'est5edt', 'Got back same time zone' );
 my $expect_time_formatter = eval {
     require DateTime;
     require DateTime::TimeZone;
-    'App::Satpass2::FormatTime::DateTime::Strftime';
-} || 'App::Satpass2::FormatTime::POSIX::Strftime';
+    'Astro::App::Satpass2::FormatTime::DateTime::Strftime';
+} || 'Astro::App::Satpass2::FormatTime::POSIX::Strftime';
 
 $tst->method_is( config => decode => 1,
     [
@@ -52,7 +52,7 @@ $tst->method_is( config => decode => 1,
 	[ gmt				=> 1 ],
 	[ header			=> 1 ],
 	[ local_coord			=> 'azel_rng' ],
-	[ provider			=> 'App::Satpass2::Test::Format' ],
+	[ provider			=> 'Astro::App::Satpass2::Test::Format' ],
 	[ time_format			=> '%H:%M:%S' ],
 	[ time_formatter		=> $expect_time_formatter ],
 	[ tz				=> 'est5edt' ],
@@ -61,7 +61,7 @@ $tst->method_is( config => decode => 1,
 $tst->method_is( config => decode => 1, changes => 1,
     [
 	[ gmt				=> 1 ],
-	[ provider			=> 'App::Satpass2::Test::Format' ],
+	[ provider			=> 'Astro::App::Satpass2::Test::Format' ],
 	[ time_formatter		=> $expect_time_formatter ],
 	[ tz				=> 'est5edt' ],
     ],

@@ -5,19 +5,19 @@ use warnings;
 
 use lib qw{ inc };
 
-use App::Satpass2::Build;
-use App::Satpass2::Meta;
-use App::Satpass2::Recommend;
+use Astro::App::Satpass2::Build;
+use Astro::App::Satpass2::Meta;
+use Astro::App::Satpass2::Recommend;
 use Module::Build;
 
-my $meta = App::Satpass2::Meta->new();
+my $meta = Astro::App::Satpass2::Meta->new();
 
 (my $mbv = Module::Build->VERSION) =~ s/_//g;
 
 my %attr = (
     dist_author => 'Tom Wyant (wyant at cpan dot org)',
     dist_abstract => 'Predict satellite visibility using Astro::Coord::ECI',
-    module_name => 'App::Satpass2',
+    module_name => 'Astro::App::Satpass2',
     license => 'perl',
     requires => $meta->requires(
         'perl'	=> $meta->requires_perl(),
@@ -35,7 +35,7 @@ $mbv >= 0.28 and $attr{meta_merge} = {
 	directory => [qw{ inc t xt }],
     },
     resources => {
-	bugtracker => 'https://rt.cpan.org/Public/Dist/Display.html?Name=App-Satpass2',
+	bugtracker => 'https://rt.cpan.org/Public/Dist/Display.html?Name=Astro-App-Satpass2',
     },
 };
 
@@ -45,10 +45,10 @@ $mbv >= 0.28 and $attr{meta_merge} = {
 $mbv >= 0.34
     and $attr{auto_configure_requires} = !$meta->distribution();
 
-App::Satpass2::Recommend->recommend();
+Astro::App::Satpass2::Recommend->recommend();
 
 #	Generate a builder object.
 
-my $bldr = App::Satpass2::Build->new (%attr);
+my $bldr = Astro::App::Satpass2::Build->new (%attr);
 
 $bldr->create_build_script ();

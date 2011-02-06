@@ -18,29 +18,29 @@ BEGIN {
 my $date_manip_delegate;
 eval {	## no critic (RequireCheckingReturnValueOfEval)
     require Date::Manip;
-    $date_manip_delegate = 'App::Satpass2::ParseTime::Date::Manip::v5';
+    $date_manip_delegate = 'Astro::App::Satpass2::ParseTime::Date::Manip::v5';
     Date::Manip->VERSION( 6.0 );
-    $date_manip_delegate = 'App::Satpass2::ParseTime::Date::Manip::v6';
+    $date_manip_delegate = 'Astro::App::Satpass2::ParseTime::Date::Manip::v6';
 };
 
 
 plan( tests => 45 );
 
-require_ok( 'App::Satpass2::Copier' )
+require_ok( 'Astro::App::Satpass2::Copier' )
     or BAIL_OUT();
 
-require_ok( 'App::Satpass2::FormatTime' );
+require_ok( 'Astro::App::Satpass2::FormatTime' );
 
-isa_ok( 'App::Satpass2::FormatTime', 'App::Satpass2::Copier' );
+isa_ok( 'Astro::App::Satpass2::FormatTime', 'Astro::App::Satpass2::Copier' );
 
-require_ok( 'App::Satpass2::FormatTime::POSIX::Strftime' );
+require_ok( 'Astro::App::Satpass2::FormatTime::POSIX::Strftime' );
 
-isa_ok( 'App::Satpass2::FormatTime::POSIX::Strftime', 'App::Satpass2::FormatTime' );
+isa_ok( 'Astro::App::Satpass2::FormatTime::POSIX::Strftime', 'Astro::App::Satpass2::FormatTime' );
 
-isa_ok( 'App::Satpass2::FormatTime::POSIX::Strftime',
-    'App::Satpass2::FormatTime::Strftime' );
+isa_ok( 'Astro::App::Satpass2::FormatTime::POSIX::Strftime',
+    'Astro::App::Satpass2::FormatTime::Strftime' );
 
-instantiate( 'App::Satpass2::FormatTime::POSIX::Strftime' );
+instantiate( 'Astro::App::Satpass2::FormatTime::POSIX::Strftime' );
 
 SKIP: {
 
@@ -50,128 +50,128 @@ SKIP: {
 	1;
     } or skip( 'DateTime and/or DateTime::TimeZone not available', 10 );
 
-    require_ok( 'App::Satpass2::FormatTime::DateTime' );
+    require_ok( 'Astro::App::Satpass2::FormatTime::DateTime' );
 
-    isa_ok( 'App::Satpass2::FormatTime::DateTime',
-	'App::Satpass2::FormatTime' );
+    isa_ok( 'Astro::App::Satpass2::FormatTime::DateTime',
+	'Astro::App::Satpass2::FormatTime' );
 
-    require_ok( 'App::Satpass2::FormatTime::DateTime::Strftime' );
+    require_ok( 'Astro::App::Satpass2::FormatTime::DateTime::Strftime' );
 
-    isa_ok( 'App::Satpass2::FormatTime::DateTime::Strftime',
-	'App::Satpass2::FormatTime::DateTime' );
+    isa_ok( 'Astro::App::Satpass2::FormatTime::DateTime::Strftime',
+	'Astro::App::Satpass2::FormatTime::DateTime' );
 
-    isa_ok( 'App::Satpass2::FormatTime::DateTime::Strftime',
-	'App::Satpass2::FormatTime::Strftime' );
+    isa_ok( 'Astro::App::Satpass2::FormatTime::DateTime::Strftime',
+	'Astro::App::Satpass2::FormatTime::Strftime' );
 
-    instantiate( 'App::Satpass2::FormatTime::DateTime::Strftime' );
+    instantiate( 'Astro::App::Satpass2::FormatTime::DateTime::Strftime' );
 
-    require_ok( 'App::Satpass2::FormatTime::DateTime::Cldr' );
+    require_ok( 'Astro::App::Satpass2::FormatTime::DateTime::Cldr' );
 
-    isa_ok( 'App::Satpass2::FormatTime::DateTime::Cldr',
-	'App::Satpass2::FormatTime::DateTime' );
+    isa_ok( 'Astro::App::Satpass2::FormatTime::DateTime::Cldr',
+	'Astro::App::Satpass2::FormatTime::DateTime' );
 
-    isa_ok( 'App::Satpass2::FormatTime::DateTime::Cldr',
-	'App::Satpass2::FormatTime::Cldr' );
+    isa_ok( 'Astro::App::Satpass2::FormatTime::DateTime::Cldr',
+	'Astro::App::Satpass2::FormatTime::Cldr' );
 
-    instantiate( 'App::Satpass2::FormatTime::DateTime::Cldr' );
+    instantiate( 'Astro::App::Satpass2::FormatTime::DateTime::Cldr' );
 
 }
 
-instantiate( 'App::Satpass2::FormatTime' );
+instantiate( 'Astro::App::Satpass2::FormatTime' );
 
-require_ok( 'App::Satpass2::Format' )
+require_ok( 'Astro::App::Satpass2::Format' )
     or BAIL_OUT();
 
-isa_ok( 'App::Satpass2::Format', 'App::Satpass2::Copier' );
+isa_ok( 'Astro::App::Satpass2::Format', 'Astro::App::Satpass2::Copier' );
 
-require_ok( 'App::Satpass2::Format::Dump' )
+require_ok( 'Astro::App::Satpass2::Format::Dump' )
     or BAIL_OUT();
 
-isa_ok( 'App::Satpass2::Format::Dump', 'App::Satpass2::Format' );
+isa_ok( 'Astro::App::Satpass2::Format::Dump', 'Astro::App::Satpass2::Format' );
 
-instantiate( 'App::Satpass2::Format::Dump' );
+instantiate( 'Astro::App::Satpass2::Format::Dump' );
 
-require_ok( 'App::Satpass2::Format::Classic' )
+require_ok( 'Astro::App::Satpass2::Format::Classic' )
     or BAIL_OUT();
 
-isa_ok( 'App::Satpass2::Format::Classic', 'App::Satpass2::Format' );
+isa_ok( 'Astro::App::Satpass2::Format::Classic', 'Astro::App::Satpass2::Format' );
 
-instantiate( 'App::Satpass2::Format::Classic' );
+instantiate( 'Astro::App::Satpass2::Format::Classic' );
 
-require_ok( 'App::Satpass2::ParseTime' );
+require_ok( 'Astro::App::Satpass2::ParseTime' );
 
-isa_ok( 'App::Satpass2::ParseTime', 'App::Satpass2::Copier' );
+isa_ok( 'Astro::App::Satpass2::ParseTime', 'Astro::App::Satpass2::Copier' );
 
-require_ok( 'App::Satpass2::ParseTime::Date::Manip' )
+require_ok( 'Astro::App::Satpass2::ParseTime::Date::Manip' )
     or BAIL_OUT();
 
-is( eval { App::Satpass2::ParseTime::Date::Manip->delegate() },	## no critic (RequireCheckingReturnValueOfEval)
+is( eval { Astro::App::Satpass2::ParseTime::Date::Manip->delegate() },	## no critic (RequireCheckingReturnValueOfEval)
     $date_manip_delegate,
     'Date::Manip delegate is ' . (
 	defined $date_manip_delegate ? $date_manip_delegate : 'undef' ),
 );
 
-require_ok( 'App::Satpass2::ParseTime::Date::Manip::v5' )
+require_ok( 'Astro::App::Satpass2::ParseTime::Date::Manip::v5' )
     or BAIL_OUT();
 
-isa_ok( 'App::Satpass2::ParseTime::Date::Manip::v5',
-    'App::Satpass2::ParseTime' );
+isa_ok( 'Astro::App::Satpass2::ParseTime::Date::Manip::v5',
+    'Astro::App::Satpass2::ParseTime' );
 
-require_ok( 'App::Satpass2::ParseTime::Date::Manip::v6' )
+require_ok( 'Astro::App::Satpass2::ParseTime::Date::Manip::v6' )
     or BAIL_OUT();
 
-isa_ok( 'App::Satpass2::ParseTime::Date::Manip::v6',
-    'App::Satpass2::ParseTime' );
+isa_ok( 'Astro::App::Satpass2::ParseTime::Date::Manip::v6',
+    'Astro::App::Satpass2::ParseTime' );
 
-require_ok( 'App::Satpass2::ParseTime::ISO8601' )
+require_ok( 'Astro::App::Satpass2::ParseTime::ISO8601' )
     or BAIL_OUT();
 
-isa_ok( 'App::Satpass2::ParseTime::ISO8601',
-    'App::Satpass2::ParseTime' );
+isa_ok( 'Astro::App::Satpass2::ParseTime::ISO8601',
+    'Astro::App::Satpass2::ParseTime' );
 
-is( eval { App::Satpass2::ParseTime::ISO8601->delegate() },	## no critic (RequireCheckingReturnValueOfEval)
-    'App::Satpass2::ParseTime::ISO8601',
-    'ISO8601 delegate is App::Satpass2::ParseTime::ISO8601' );
+is( eval { Astro::App::Satpass2::ParseTime::ISO8601->delegate() },	## no critic (RequireCheckingReturnValueOfEval)
+    'Astro::App::Satpass2::ParseTime::ISO8601',
+    'ISO8601 delegate is Astro::App::Satpass2::ParseTime::ISO8601' );
 
 SKIP: {
     $date_manip_delegate
 	or skip( "Unable to load Date::Manip", 1 );
-    instantiate( 'App::Satpass2::ParseTime',
-	'App::Satpass2::ParseTime::Date::Manip',
+    instantiate( 'Astro::App::Satpass2::ParseTime',
+	'Astro::App::Satpass2::ParseTime::Date::Manip',
 	$date_manip_delegate );
 }
 
-instantiate( 'App::Satpass2::ParseTime',
-    'App::Satpass2::ParseTime::ISO8601',
-    'App::Satpass2::ParseTime::ISO8601' );
+instantiate( 'Astro::App::Satpass2::ParseTime',
+    'Astro::App::Satpass2::ParseTime::ISO8601',
+    'Astro::App::Satpass2::ParseTime::ISO8601' );
 
 {
 
     my $want_class = $date_manip_delegate ||
-	'App::Satpass2::ParseTime::ISO8601';
+	'Astro::App::Satpass2::ParseTime::ISO8601';
 
-    instantiate( 'App::Satpass2::ParseTime', $want_class );
+    instantiate( 'Astro::App::Satpass2::ParseTime', $want_class );
 
-    instantiate( 'App::Satpass2::ParseTime',
-	'App::Satpass2::ParseTime::Date::Manip App::Satpass2::ParseTime::ISO8601',
+    instantiate( 'Astro::App::Satpass2::ParseTime',
+	'Astro::App::Satpass2::ParseTime::Date::Manip Astro::App::Satpass2::ParseTime::ISO8601',
 	$want_class );
 
-    instantiate( 'App::Satpass2::ParseTime',
-	'App::Satpass2::ParseTime::Date::Manip',
-	'App::Satpass2::ParseTime::ISO8601',
+    instantiate( 'Astro::App::Satpass2::ParseTime',
+	'Astro::App::Satpass2::ParseTime::Date::Manip',
+	'Astro::App::Satpass2::ParseTime::ISO8601',
 	$want_class );
 
-    instantiate( 'App::Satpass2::ParseTime',
-	'App::Satpass2::ParseTime::ISO8601',
-	'App::Satpass2::ParseTime::Date::Manip',
-	'App::Satpass2::ParseTime::ISO8601' );
+    instantiate( 'Astro::App::Satpass2::ParseTime',
+	'Astro::App::Satpass2::ParseTime::ISO8601',
+	'Astro::App::Satpass2::ParseTime::Date::Manip',
+	'Astro::App::Satpass2::ParseTime::ISO8601' );
 
 }
 
-require_ok( 'App::Satpass2' )
+require_ok( 'Astro::App::Satpass2' )
     or BAIL_OUT();
 
-instantiate( 'App::Satpass2' );
+instantiate( 'Astro::App::Satpass2' );
 
 
 sub instantiate {

@@ -1,31 +1,31 @@
-App-Satpass2 is Copyright (C) 2009-2011 by Thomas R. Wyant, III
+Astro-App-Satpass2 is Copyright (C) 2009-2011 by Thomas R. Wyant, III
 
 This package contains an application to predict satellite visibility,
 using the Astro::Coord::ECI classes. The following classes are included:
 
-App::Satpass2 - The application class;
-App::Satpass2::ParseTime - Base class for time parsing;
-App::Satpass2::ParseTime::ISO8601 - Standalone ISO-8601-ish parser;
-App::Satpass2::ParseTime::Date::Manip - Date::Manip parser base;
-App::Satpass2::ParseTime::Date::Manip::v5 - Used with Date::Manip 5;
-App::Satpass2::ParseTime::Date::Manip::v6 - Used with Date::Manip 6;
-App::Satpass2::Copier - Base class for helper classes;
-App::Satpass2::Format - Base class for formatter;
-App::Satpass2::Format::Classic - Format kind of like old satpass script;
-App::Satpass2::Format::Dump - Dump output (for debugging);
-App::Satpass2::FormatTime - Base class for formatting times;
-App::Satpass2::FormatTime::Cldr - Provide default CLDR formats;
-App::Satpass2::FormatTime::DateTime - Base class to format times using
+Astro::App::Satpass2 - The application class;
+Astro::App::Satpass2::ParseTime - Base class for time parsing;
+Astro::App::Satpass2::ParseTime::ISO8601 - Standalone ISO-8601-ish parser;
+Astro::App::Satpass2::ParseTime::Date::Manip - Date::Manip parser base;
+Astro::App::Satpass2::ParseTime::Date::Manip::v5 - Used with Date::Manip 5;
+Astro::App::Satpass2::ParseTime::Date::Manip::v6 - Used with Date::Manip 6;
+Astro::App::Satpass2::Copier - Base class for helper classes;
+Astro::App::Satpass2::Format - Base class for formatter;
+Astro::App::Satpass2::Format::Classic - Format kind of like old satpass script;
+Astro::App::Satpass2::Format::Dump - Dump output (for debugging);
+Astro::App::Satpass2::FormatTime - Base class for formatting times;
+Astro::App::Satpass2::FormatTime::Cldr - Provide default CLDR formats;
+Astro::App::Satpass2::FormatTime::DateTime - Base class to format times using
     DateTime;
-App::Satpass2::FormatTime::DateTime::Cldr - Format times using
+Astro::App::Satpass2::FormatTime::DateTime::Cldr - Format times using
     DateTime->format_cldr();
-App::Satpass2::FormatTime::DateTime::Strftime - Format times using
+Astro::App::Satpass2::FormatTime::DateTime::Strftime - Format times using
     DateTime->strftime();
-App::Satpass2::FormatTime::POSIX::Strftime - Format times using strftime();
-App::Satpass2::FormatTime::Strftime - Provide default strftime formats.
+Astro::App::Satpass2::FormatTime::POSIX::Strftime - Format times using strftime();
+Astro::App::Satpass2::FormatTime::Strftime - Provide default strftime formats.
 
 In addition, a 'satpass2' script is included, which simply uses
-App::Satpass2 and passes @ARGV to its run() method.
+Astro::App::Satpass2 and passes @ARGV to its run() method.
 
 There were several motivations for this package:
 
@@ -39,10 +39,10 @@ There were several motivations for this package:
   and drop obsolete functionality such as the SIMBAD 3 interface and the
   associated setting to determine which SIMBAD interface to use. This
   means that 'satpass2' is not quite command-compatable with 'satpass'.
-  The App::Satpass2 documentation describes the differences.
+  The Astro::App::Satpass2 documentation describes the differences.
 
 * The output formatting of the 'satpass' script is not very flexable.
-  App::Satpass2::Format::Classic provides a huge amount of freedom to
+  Astro::App::Satpass2::Format::Classic provides a huge amount of freedom to
   custom-format output, though it turns out that you need to learn your
   way around a fairly complex format specification mechanism to take
   advantage of this flexability.
@@ -57,14 +57,14 @@ There were several motivations for this package:
 INSTALLATION
 
 Most Perl users will want to install using their favorite of either
-'cpan' or 'cpanp'. For either of these, installing App::Satpass2 gets
+'cpan' or 'cpanp'. For either of these, installing Astro::App::Satpass2 gets
 you everything. ActivePerl users will want to use ActiveState's 'ppi',
-and install App-Satpass2.
+and install Astro-App-Satpass2.
 
 If for some reason neither of these works for you, you can download the
 distribution and expand it using something like
 
-    tar -xzf App-Satpass2-9.999.tar.gz
+    tar -xzf Astro-App-Satpass2-9.999.tar.gz
 
 Users of MSWin32 (and perhaps other operating systems) may need to
 convert the line endings in the expanded files from Unix to their native

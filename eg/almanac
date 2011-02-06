@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use App::Satpass2;
+use Astro::App::Satpass2;
 use Getopt::Long;
 
 my %opt;
@@ -23,4 +23,4 @@ $opt{location} and push @args, $opt{location};
 push @args, 'location', 'echo', "almanac '$time'", 'echo',
     "quarters '$time'", 'exit';
 
-App::Satpass2->run(@args);
+Astro::App::Satpass2->run(@args);

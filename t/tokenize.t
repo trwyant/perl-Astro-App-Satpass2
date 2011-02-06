@@ -18,7 +18,7 @@ BEGIN {
 }
 
 
-use App::Satpass2;
+use Astro::App::Satpass2;
 
 plan( 'no_plan' );
 
@@ -389,7 +389,7 @@ tokenize( '$$', [ [ $$ ], {} ] )
 	@got = ();
 	my $name = _format_method_args( new => @args );
 	if ( $tt = eval {
-		App::Satpass2->new( @args );
+		Astro::App::Satpass2->new( @args );
 	    } ) {
 	    @_ = ( $name );
 	    goto &pass;

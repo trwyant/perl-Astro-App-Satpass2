@@ -4,18 +4,18 @@ use strict;
 use warnings;
 
 use lib qw{ inc };
-use App::Satpass2::Meta;
-use App::Satpass2::Recommend;
+use Astro::App::Satpass2::Meta;
+use Astro::App::Satpass2::Recommend;
 
 use ExtUtils::MakeMaker qw{WriteMakefile};
 
-my $meta = App::Satpass2::Meta->new();
+my $meta = Astro::App::Satpass2::Meta->new();
 
 (my $mmv = ExtUtils::MakeMaker->VERSION) =~ s/_//g;
 
 my %attr = (
-    NAME => 'App::Satpass2',
-    VERSION_FROM => 'lib/App/Satpass2.pm',
+    NAME => 'Astro::App::Satpass2',
+    VERSION_FROM => 'lib/Astro/App/Satpass2.pm',
     PREREQ_PM => $meta->requires(),
     PL_FILES => {},	# Prevent old MakeMaker from running Build.PL
     EXE_FILES => [qw{bin/satpass2}],
@@ -38,7 +38,7 @@ if ( $mmv >= 6.4501 ) {
 	},
 	dynamic_config => 1,
 	resources => {
-	    bugtracker => 'https://rt.cpan.org/Public/Dist/Display.html?Name=App-Satpass2',
+	    bugtracker => 'https://rt.cpan.org/Public/Dist/Display.html?Name=Astro-App-Satpass2',
 	    license => 'http://dev.perl.org/licenses/',
 	},
     };
@@ -48,6 +48,6 @@ if ( $mmv >= 6.4501 ) {
 
 $mmv >= 6.4701 and $attr{MIN_PERL_VERSION} = $meta->requires_perl();
 
-App::Satpass2::Recommend->recommend();
+Astro::App::Satpass2::Recommend->recommend();
 
 WriteMakefile (%attr);
