@@ -8,7 +8,7 @@ use base qw{ Astro::App::Satpass2::Copier };
 use Carp;
 use Clone ();
 use Astro::App::Satpass2::FormatTime;
-use Astro::App::Satpass2::Utils qw{ load };
+use Astro::App::Satpass2::Utils qw{ load_package };
 
 our $VERSION = '0.000_07';
 
@@ -143,7 +143,7 @@ sub time_formatter {
 	defined $fmtr and $fmtr ne ''
 	    or $fmtr = 'Astro::App::Satpass2::FormatTime';
 	ref $fmtr or do {
-	    my $class = load( $fmtr,
+	    my $class = load_package( $fmtr,
 		'Astro::App::Satpass2::FormatTime' )
 		or croak "Can not load $fmtr";
 	    $fmtr = $class->new();

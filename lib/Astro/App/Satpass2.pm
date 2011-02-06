@@ -6,7 +6,7 @@ use strict;
 use warnings;
 
 use Astro::App::Satpass2::ParseTime;
-use Astro::App::Satpass2::Utils qw{ instance quoter };
+use Astro::App::Satpass2::Utils qw{ instance load_package quoter };
 use Astro::Coord::ECI;
 use Astro::Coord::ECI::Moon;
 use Astro::Coord::ECI::Star;
@@ -1645,35 +1645,6 @@ sub set : Verb() {	## no critic (ProhibitAmbiguousNames)
     return;
 }
 
-sub _make_stringable {
-    my ( $self, $name, $val, $class, $msg ) = @_;
-    my $obj;
-    if ( ref $val ) {
-	blessed( $val )
-	    or $self->_wail( "$name may not be unblessed reference" );
-	$obj = $val;
-    } else {
-	my @args;
-	my $base = 0;
-	while ( $val =~ m/ (?: \A | [^\\] ) (?: \\ \\ )* , /smxg ) {
-	    push @args, substr $val, $base, $+[0] - $base - 1;
-	    $base = $+[0];
-	    $args[-1] =~ s/ \\ ( . ) /./smxg;
-	}
-	push @args, substr $val, $base;
-	my $pkg = shift @args;
-	eval "require $pkg; 1"
-	    or $self->_wail( "Unable to load $pkg: $@" );
-	$obj = $pkg->new( map { split qr{ = }smx, $_, 2 } @args )
-	    or $self->_wail( $msg ||
-	    "Can not instantiate object from '$val'" );
-    }
-    defined $class
-	and not $obj->isa( $class )
-	and $self->_wail( "$name must be of class $class" );
-    return $obj;
-}
-
 sub _set_angle {
     return ($_[0]{$_[1]} = _parse_angle ($_[2]));
 }
@@ -1697,9 +1668,13 @@ sub _set_ellipsoid {
 
 sub _set_formatter {
     my ( $self, $name, $val ) = @_;
-    defined $val or $val = 'Astro::App::Satpass2::Format::Classic';
-    return $self->_set_stringable( $name, $val, undef,
-	"Unknown formatter '$val'" );
+    return $self->_set_stringable(
+	name	=> $name,
+	value	=> $val,
+	message	=> 'Unknown formatter',
+	default	=> 'Astro::App::Satpass2::Format::Classic',
+	prefix	=> [ 'Astro::App::Satpass2::Format' ]
+    );
 }
 
 sub _set_formatter_attribute {
@@ -1741,21 +1716,62 @@ sub _set_stdout {
     return ($self->{$name} = $val);
 }
 
+# Set an attribute whose value is an Astro::App::Satpass2::Copier object
+# %arg is a hash of argument name/value pairs:
+#    {name} is the required name of the attribute to set;
+#    {value} is the required value of the attribute to set;
+#    {class} is the optional class that the object must be;
+#    {message} is an optional message to emit if the object can not be
+#	instantiated;
+
 sub _set_stringable {
-    my ( $self, $name, $val, $class, $msg ) = @_;
-    my $old = $self->{$name};
-    my $obj = $self->_make_stringable( $name, $val, $class, $msg );
+    my ( $self, %arg ) = @_;
+    my $old = $self->{$arg{name}};
+    my $obj;
+    if ( ref $arg{value} ) {
+	blessed( $arg{value} )
+	    or $self->_wail( "$arg{name} may not be unblessed reference" );
+	$obj = $arg{value};
+    } else {
+	if ( defined $arg{default} ) {
+	    defined $arg{value}
+		and '' ne $arg{value}
+		or $arg{value} = $arg{default};
+	}
+	my @args;
+	my $base = 0;
+	while ( $arg{value} =~ m/ (?: \A | [^\\] ) (?: \\ \\ )* , /smxg ) {
+	    push @args, substr $arg{value}, $base, $+[0] - $base - 1;
+	    $base = $+[0];
+	    $args[-1] =~ s/ \\ ( . ) /./smxg;
+	}
+	push @args, substr $arg{value}, $base;
+	my $pkg = shift @args;
+	my @prefix = @{ $arg{prefix} || [] };
+	my $cls = load_package( $pkg, @{ $arg{prefix} || [] } )
+	    or $self->_wail( "Unable to load $pkg" );
+	$obj = $cls->new( map { split qr{ = }smx, $_, 2 } @args )
+	    or $self->_wail( $arg{message} ||
+	    "Can not instantiate object from '$arg{value}'" );
+    }
+    defined $arg{class}
+	and not $obj->isa( $arg{class} )
+	and $self->_wail( "$arg{name} must be of class $arg{class}" );
     blessed( $old ) and $old->can( 'copy' ) and $old->copy( $obj );
-    $self->{$name} = $obj;
-    return $val;
+    $self->{$arg{name}} = $obj;
+    return $arg{value};
 }
 
 sub _set_time_parser {
     my ( $self, $name, $val ) = @_;
-    defined $val and $val ne ''
-	or $val = 'Astro::App::Satpass2::ParseTime';
-    return $self->_set_stringable( $name, $val,
-	'Astro::App::Satpass2::ParseTime', "Unknown time parser '$val'" );
+    return $self->_set_stringable(
+	name	=> $name,
+	value	=> $val,
+	class	=> 'Astro::App::Satpass2::ParseTime',
+	message	=> 'Unknown time parser',
+	default	=> 'Astro::App::Satpass2::ParseTime',
+	prefix	=> [ 'Astro::App::Satpass2::ParseTime' ],
+    );
 }
 
 sub _set_time_parser_attribute {
@@ -5243,6 +5259,9 @@ will be instantiated, so C<get( 'formatter' )> always returns an object.
 A call to C<show( 'formatter' )>, however, will always show the class
 name.
 
+When setting the formatter to a class name, the leading
+C<'Astro::App::Satpass2::Format::'> may be omitted.
+
 Minimal constraints on the formatter class are imposed, but while it
 need not be a subclass of
 L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>, it C<must> conform to
@@ -5516,6 +5535,9 @@ to use. In the latter case, an object of the appropriate class will be
 instantiated, so C<get( 'time_parser' )> always returns an object.  A
 call to C<show( 'time_parser' )>, however, will always show the class
 name.
+
+When setting this attribuite to a class name, the leading
+C<'Astro::App::Satpass2::ParseTime::'> can be omitted.
 
 The time parser must be a subclass of
 L<Astro::App::Satpass2::ParseTime|Astro::App::Satpass2::ParseTime>.

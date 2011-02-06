@@ -12,7 +12,7 @@ use Scalar::Util qw{ blessed looks_like_number };
 
 our $VERSION = '0.000_07';
 
-our @EXPORT_OK = qw{ instance load quoter };
+our @EXPORT_OK = qw{ instance load_package quoter };
 
 
 sub instance {
@@ -25,12 +25,9 @@ sub instance {
 
 {
     my %loaded;
-    sub load {
+    sub load_package {
 	my ( $module, @prefix ) = @_;
-
-	foreach ( @prefix ) {
-	    s/ :* \z /::/smx;
-	}
+	defined $module or $module = '';
 
 	my $key = join ' ', $module, @prefix;
 	exists $loaded{$key}
@@ -38,9 +35,11 @@ sub instance {
 
 	push @prefix, '';
 	foreach my $pfx ( @prefix ) {
-	    eval "require $pfx$module; 1"
+	    my $package = join '::', grep { $_ ne '' } $pfx, $module;
+	    '' ne $package or next;
+	    eval "require $package; 1"
 		or next;
-	    return ( $loaded{$key} = $pfx . $module );
+	    return ( $loaded{$key} = $package );
 	}
 
 	return ( $loaded{$key} = undef );
@@ -99,13 +98,15 @@ instance of C<$class>, and false otherwise. The C<$object> argument need
 not be a reference, nor need it be blessed, though in these cases the
 return is false.
 
-=head2 load
+=head2 load_package
 
- load( $module );
- load( $module, 'Astro::App::Satpass2' );
+ load_package( $module );
+ load_package( $module, 'Astro::App::Satpass2' );
 
 This exportable subroutine loads a Perl module. The first argument is
-the name of the module itself. Subsequent arguments are prefixes to try.
+the name of the module itself. Subsequent arguments are prefixes to try,
+B<without> any trailing colons.
+
 In the examples, if C<$module> contains C<'Foo'>, the first example will
 try to C<require 'Foo'>, and the second will try to
 C<require 'Astro::App::Satpass2::Foo'> and C<require 'Foo'>, in that
