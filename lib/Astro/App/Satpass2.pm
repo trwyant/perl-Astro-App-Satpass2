@@ -452,7 +452,7 @@ sub __delegate__formatter {
     my ( $self, $attribute, $method, @args ) = @_;
     my $object = $self->_delegate_get_object( $attribute );
 
-    my $rslt = $object->$method( @args );
+    my $rslt = $object->decode( $method, @args );
 
     __instance( $rslt, ref $object ) and return;
     ref $rslt and return $rslt;
@@ -3739,6 +3739,10 @@ This is alpha code. It has been tested on my box, but has limited
 exposure to the wild. Also, the public interface may not be completely
 stable, though I will try to call attention to any incompatible changes.
 
+The eventual plan is to retire the F<satpass> script in favor of this
+package, and to rename the satpass-less F<Astro-satpass> distribution to
+F<Astro-Coord-ECI>.
+
 L<Date::Manip|Date::Manip> will be used to parse times if it is
 available. L<Date::Manip|Date::Manip> version 6.00 or higher is
 preferred. If this is not available (say, if you have not yet upgraded
@@ -3753,26 +3757,29 @@ L<Date::Manip|Date::Manip> you can use the L<time_parser|/time_parser>
 attribute to do this, though I can't think why you would want to.
 
 L<DateTime|DateTime> and L<DateTime::TimeZone|DateTime::TimeZone> will
-be used to format time for output if they are available. If not, the
-L<POSIX|POSIX> C<strftime()> will be used,
-Perl C<strftime()> built-in will be used, with the C<TZ> environment
+be used to format time for output if they are available. If not,
+L<POSIX|POSIX> C<strftime()> will be used, with the C<TZ> environment
 variable set if the L<tz|/tz> attribute is neither C<null> or C<''>, in
 the hopes that the underlying system call will respond to this.
 B<Caveat:> L<DateTime|DateTime> is not well-behaved in the far future or
 past (say, more than a hundred years or so) if the zone is something
-other than C<UTC> (a.k.a. Greenwich, a.k.a.  Zulu, and so on). Should
-you wish to force the use of the C<strftime()> built-in in the presence
-of L<DateTime|DateTime>, you can use the L<Astro::App::Satpass2::Format
-time_formatter()|Astro::App::Satpass2::Format/time_formatter> method to do
-this.
+other than C<UTC> (a.k.a. Greenwich, a.k.a.  Zulu, and so on).
 
-Which time formatter is used is controlled by the
-L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
-L<time_formatter|Astro::App::Satpass2::Format/time_formatter> attribute. See
-that documentation for more information. The default time formatter uses
-C<strftime (3)> formats, but CLDR formatting is also available if you
-have the L<DateTime|DateTime> and
+Should you wish to force the use of the C<strftime()> built-in in the
+presence of L<DateTime|DateTime>, you can use the
+L<Astro::App::Satpass2::Format time_formatter()|Astro::App::Satpass2::Format/time_formatter>
+method to do this. Interactively, this would be something like
+
+ satpass2> delegate formatter time_formatter \
+ > Astro::App::Satpass2::FormatTime::POSIX::Strftime
+
+The default time formatter uses C<strftime (3)> formats, but CLDR
+formatting is also available if you have the L<DateTime|DateTime> and
 L<DateTime::TimeZone|DateTime::TimeZone> modules installed.
+Interactively, This could be done with something like
+
+ satpass2> delegate formatter time_formatter \
+ > Astro::App::Satpass2::FormatTime::DateTime::Cldr
 
 =head1 OVERVIEW
 
