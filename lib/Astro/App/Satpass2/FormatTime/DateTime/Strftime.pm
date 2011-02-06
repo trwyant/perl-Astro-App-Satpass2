@@ -10,7 +10,6 @@ use base qw{
     Astro::App::Satpass2::FormatTime::Strftime
 };
 
-use Astro::App::Satpass2::Copier qw{ __instance };
 use Carp;
 use DateTime;
 use DateTime::TimeZone;

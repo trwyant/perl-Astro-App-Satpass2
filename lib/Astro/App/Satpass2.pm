@@ -5,8 +5,8 @@ use 5.006002;
 use strict;
 use warnings;
 
-use Astro::App::Satpass2::Copier qw{ __instance __quoter };
 use Astro::App::Satpass2::ParseTime;
+use Astro::App::Satpass2::Utils qw{ instance quoter };
 use Astro::Coord::ECI;
 use Astro::Coord::ECI::Moon;
 use Astro::Coord::ECI::Star;
@@ -445,7 +445,7 @@ sub _delegate_config_options {
 
 sub _delegate_output {
     my @args = @_;
-    return join( ' ', map { __quoter( $_ ) } 'delegate', @args ) . "\n";
+    return join( ' ', map { quoter( $_ ) } 'delegate', @args ) . "\n";
 }
 
 sub __delegate__formatter {
@@ -454,9 +454,9 @@ sub __delegate__formatter {
 
     my $rslt = $object->decode( $method, @args );
 
-    __instance( $rslt, ref $object ) and return;
+    instance( $rslt, ref $object ) and return;
     ref $rslt and return $rslt;
-    return join( ' ', map { __quoter( $_ ) } 'delegate', $attribute,
+    return join( ' ', map { quoter( $_ ) } 'delegate', $attribute,
 	$method, $rslt ) . "\n";
 
 }
@@ -486,7 +486,7 @@ sub __delegate__formatter__desired_equinox_dynamical {
     }
 
     my $rslt = $object->decode( $method, @args );
-    __instance( $rslt, ref $object )
+    instance( $rslt, ref $object )
 	and return;
 
     return _delegate_output( $attribute, $method, $rslt );
@@ -497,7 +497,7 @@ sub __delegate__formatter__format_effector {
     my $object = $self->_delegate_get_object( $attribute );
 
     my $rslt = $object->decode( $method, @args );
-    __instance( $rslt, ref $object )
+    instance( $rslt, ref $object )
 	and return;
 
     return _delegate_output( $attribute, $method, @{ $rslt } );
@@ -1254,7 +1254,7 @@ sub location : Verb() {
 		$self->{macro}{$name}
 		    and $output .= "macro define $name " .
 			join (" \\\n    ", map {
-			__quoter ($_)} @{ $self->{macro}{$name}{def} }) . "\n";
+			quoter ($_)} @{ $self->{macro}{$name}{def} }) . "\n";
 	    }
 	} elsif ($cmd eq 'delete') {
 	    foreach my $name (@args ? @args : keys %{$self->{macro}}) {
@@ -1723,7 +1723,7 @@ sub _set_model {
 sub _set_spacetrack {
     my ($self, $name, $val) = @_;
     if (defined $val) {
-	__instance($val, 'Astro::SpaceTrack')
+	instance($val, 'Astro::SpaceTrack')
 	    or $self->_wail("$name must be an Astro::SpaceTrack instance");
 	my $version = $val->VERSION();
 	$version =~ s/ _ //smxg;
@@ -1824,7 +1824,7 @@ sub show : Verb(changes!,deprecated!,readonly!) {
 	    $static{$name} eq $val and next;
 	}
 	exists $mutator{$name} or $output .= '# ';
-	$output .= "set $name " . __quoter( $val ) . "\n";
+	$output .= "set $name " . quoter( $val ) . "\n";
     }
     return $output;
 }
@@ -1871,10 +1871,10 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 		    $pmdec = rad2deg ($pmdec) * SPY2DPS;
 		    $output .= sprintf (
 			"sky add %s %s %7.3f %.2f %.4f %.5f %s\n",
-			__quoter ($body->get ('name')), _rad2hms ($ra),
+			quoter ($body->get ('name')), _rad2hms ($ra),
 			rad2deg ($dec), $rng, $pmra, $pmdec, $vr);
 		} else {
-		    $output .= "sky add " . __quoter (
+		    $output .= "sky add " . quoter (
 			$body->get ('name')) . "\n";
 		}
 	    }
@@ -1947,7 +1947,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    my ($ra, $dec, $rng, $pmra, $pmdec, $pmrec) =
 		$self->_simbad4 ($name);
 	    $rng = sprintf '%.2f', $rng;
-	    $output .= "sky add " . __quoter ($name) .
+	    $output .= "sky add " . quoter ($name) .
 		" $ra $dec $rng $pmra $pmdec $pmrec\n";
 	    $ra = deg2rad (_parse_angle ($ra));
 	    my $body = Astro::Coord::ECI::Star->new (name => $name);
@@ -2029,7 +2029,7 @@ Verb(all!,changes!,descending!,effective!,last5!,sort=s,end_epoch=s,rcs!,start_e
 		$val eq $dflt->getv( $name )
 		    and next;
 	    }
-	    $output .= "st set $name " . __quoter ( $val ) . "\n";
+	    $output .= "st set $name " . quoter ( $val ) . "\n";
 	}
     } elsif ($func eq 'localize') {
 	foreach my $key (@args) {
@@ -2096,7 +2096,7 @@ Verb(all!,changes!,descending!,effective!,last5!,sort=s,end_epoch=s,rcs!,start_e
 	    @args and @data = map {$_->[2]} @{_choose(\@args,
 		    [map {[$_->[0], $_->[3], $_]} @data])};
 	    foreach my $tle (@data) {
-		$output .= join (' ', map {__quoter($_)} 'status', 'add',
+		$output .= join (' ', map {quoter($_)} 'status', 'add',
 		    $tle->[0], $tle->[1], $status_code_map[$tle->[2]],
 		    $tle->[3], $tle->[4]) . "\n";
 	    }
@@ -5581,6 +5581,23 @@ attribute.  A pass is considered visible if it is after the end of
 evening twilight or before the beginning of morning twilight for the
 observer (i.e. "it's dark"), but the satellite is illuminated by the
 Sun.
+
+The default is 1 (i.e. true).
+
+=head2 warn
+
+This boolean attribute specifies whether warnings and errors are
+reported via C<carp> and C<croak>, or via C<warn> and C<die>. If true,
+you get C<warn> and C<die>, if false C<carp> and C<croak>. This is set
+true in the object instantiated by the L<run()|/run> method.
+
+The default is 0 (i.e. false).
+
+=head2 warn_on_empty
+
+This boolean attribute specifies whether the L<list()|/list> interactive
+method warns on an empty list. If false, you just get nothing back from
+it.
 
 The default is 1 (i.e. true).
 

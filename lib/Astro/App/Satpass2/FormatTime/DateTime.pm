@@ -9,7 +9,7 @@ use base qw{
     Astro::App::Satpass2::FormatTime
 };
 
-use Astro::App::Satpass2::Copier qw{ __instance };
+use Astro::App::Satpass2::Utils qw{ instance };
 use Carp;
 use DateTime;
 use DateTime::TimeZone;
@@ -19,7 +19,7 @@ our $VERSION = '0.000_07';
 
 sub format_datetime {
     my ( $self, $tplt, $time, $gmt ) = @_;
-    if ( __instance( $time, 'DateTime' ) ) {
+    if ( instance( $time, 'DateTime' ) ) {
 	return $self->__format_datetime( $time, $tplt );
     } else {
 	# Oh, for 5.010 and the // operator.

@@ -8,6 +8,7 @@ use base qw{ Astro::App::Satpass2::Copier };
 use Carp;
 use Clone ();
 use Astro::App::Satpass2::FormatTime;
+use Astro::App::Satpass2::Utils qw{ load };
 
 our $VERSION = '0.000_07';
 
@@ -142,9 +143,10 @@ sub time_formatter {
 	defined $fmtr and $fmtr ne ''
 	    or $fmtr = 'Astro::App::Satpass2::FormatTime';
 	ref $fmtr or do {
-	    eval "require $fmtr; 1"
-		or $self->_wail( "Can not load $fmtr: $@" );
-	    $fmtr = $fmtr->new();
+	    my $class = load( $fmtr,
+		'Astro::App::Satpass2::FormatTime' )
+		or croak "Can not load $fmtr";
+	    $fmtr = $class->new();
 	};
 	my $old = $self->{time_formatter}
 	    and $self->{time_formatter}->copy( $fmtr );
@@ -401,9 +403,13 @@ object has a different C<FORMATTER_TYPE()> than the old one.
 
 =head3 time_formatter
 
-This method returns the object used to format times. It will probably be
-a L<Astro::App::Satpass2::FormatTime|Astro::App::Satpass2::FormatTime> object of some
-sort, and will certainly conform to that interface.
+This method acts as both accessor and mutator for the object used to
+format times. It will probably be a
+L<Astro::App::Satpass2::FormatTime|Astro::App::Satpass2::FormatTime>
+object of some sort, and will certainly conform to that interface. When
+setting the value, you can specify either a class name or an object. If
+a class name, the leading C<Astro::App::Satpass2::FormatTime::> can be
+omitted.
 
 B<Note> that setting this will reset the L<date_format|/date_format> and
 L<time_format|/time_format> attributes to values appropriate to the

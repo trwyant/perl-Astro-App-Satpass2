@@ -5,11 +5,6 @@ use warnings;
 
 use Carp;
 use Clone ();
-use Scalar::Util qw{ blessed looks_like_number };
-
-use base qw{ Exporter };
-
-our @EXPORT_OK = qw{ __instance __quoter };
 
 our $VERSION = '0.000_07';
 
@@ -48,32 +43,6 @@ sub create_attribute_methods {
 	};
     }
     return;
-}
-
-#	__instance( $object, $class );
-#
-#	Returns true if $object is an instance of $class, and false
-#	otherwise. $object must be a reference.
-
-sub __instance {
-    my ( $object, $class ) = @_;
-    ref $object or return;
-    blessed( $object ) or return;
-    return $object->isa( $class );
-}
-
-#	$quoted = __quoter( $string )
-
-#	Quotes and escapes the input string if and as necessary for parser.
-
-sub __quoter {
-    my ( $string ) = @_;
-    return 'undef' unless defined $string;
-    return $string if looks_like_number ($string);
-    return "''" unless $string;
-    return $string unless $string =~ m/ [\s'"\$] /smx;
-    $string =~ s/ ( [\\"\$] ) /\\$1/smxg;
-    return qq{"$string"};
 }
 
 
