@@ -13,7 +13,7 @@ use base qw{
 use Carp;
 use POSIX ();
 
-our $VERSION = '0.000_07';
+our $VERSION = '0.000_11';
 
 sub format_datetime {
     my ( $self, $tplt, $time, $gmt ) = @_;

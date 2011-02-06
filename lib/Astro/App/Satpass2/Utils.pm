@@ -10,7 +10,7 @@ use base qw{ Exporter };
 use Carp;
 use Scalar::Util qw{ blessed looks_like_number };
 
-our $VERSION = '0.000_07';
+our $VERSION = '0.000_11';
 
 our @EXPORT_OK = qw{ instance load_package quoter };
 
