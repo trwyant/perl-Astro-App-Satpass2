@@ -2022,8 +2022,28 @@ sub source : Verb(optional!) {
     return $output;
 }
 
+sub st : Verb() {
+    my ( $self, $func, @args ) = @_;
+    $self->_deprecation_notice( method => 'st' );
+    if ( 'localize' eq $func ) {
+	my $st = $self->_get_spacetrack();
+	foreach my $key (@args) {
+	    exists $self->{frame}[-1]{spacetrack}{$key}
+		or $self->{frame}[-1]{spacetrack}{$key} =
+		$st->get ($key)->content
+	}
+    } else {
+	splice @_, 1, 0, 'spacetrack';
+	goto &delegate;
+    }
+    return;
+}
+
 # The following subroutine attributes MUST be on a single line, due to
 # the failure of PPI 1.213 to correctly handle multi-line attributes.
+
+=begin comment
+
 sub st :
 Verb(all!,changes!,descending!,effective!,last5!,sort=s,end_epoch=s,rcs!,start_epoch=s,tle!,verbose!) {
     my ($self, @args) = @_;
@@ -2082,6 +2102,10 @@ Verb(all!,changes!,descending!,effective!,last5!,sort=s,end_epoch=s,rcs!,start_e
     }
     return $output;
 }
+
+=end comment
+
+=cut
 
 # TODO I must have thought -reload would be good for something, but it
 # appears I never implemented it.
@@ -2804,7 +2828,7 @@ sub _is_interactive {
 	@module or confess "Programming error - No module specified";
 	my @probs;
 	foreach my $module (@module) {
-	    eval {load_module ($module); 1} or do {
+	    load_module ($module) or do {
 		push @probs, "$module needed";
 		next;
 	    };
