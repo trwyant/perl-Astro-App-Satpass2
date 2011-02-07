@@ -2019,10 +2019,11 @@ sub source : Verb(optional!) {
 	$opt->{optional}
 	    or $self->_wail("Failed to open $fn: $!");
     }
+    $self->_rewrite_level1_macros();
     return $output;
 }
 
-sub st : Verb() {
+sub st : Verb() {	## no critic (RequireArgUnpacking)
     my ( $self, $func, @args ) = @_;
     $self->_deprecation_notice( method => 'st' );
     if ( 'localize' eq $func ) {
@@ -3013,6 +3014,64 @@ sub _read_continuation {
     $self->{echo} and $self->_whinge( $prompt, $more );
     $more =~ m/ \n \z /smx or $more .= "\n";
     return $more;
+}
+
+#	$self->_rewrite_level1_macros();
+#
+#	This method rewrites all macros defined by a satpass
+#	initialization file (as opposed to a satpass2 initialization
+#	file) to be satpass2-compatable. It also clears the level1 flag
+#	so that the satpass-compatible functionality is not invoked.
+#
+#	Specifically it:
+#	* Inserts a 'location' command before 'almanac' and 'pass';
+#	* Changes the senses of the -am, -day, and -pm options in
+#	  'flare'.
+#
+#	This method goes away when the satpass functionality does.
+
+{
+    my %filter = (
+	almanac	=> sub {
+	    my ( $verb, $line ) = @_;
+	    return ( 'location', $line );
+	},
+	flare	=> sub {
+	    my ( $verb, $line ) = @_;
+	    $line =~ s/ (?<= \s ) - (am|day|pm) \b /-no$1/smx;
+	    return $line;
+	},
+	pass	=> sub {
+	    my ( $verb, $line ) = @_;
+	    return ( 'location', $line );
+	},
+    );
+
+    sub _rewrite_level1_macros {
+	my ( $self ) = @_;
+
+	foreach my $macro ( values %{ $self->{macro} } ) {
+
+	    delete $macro->{level1} or next;
+
+	    my ( $rewrote, @rslt );
+	    foreach ( @{ $macro->{def} } ) {
+		if ( m/ ( \S+ ) /smx
+			and my $code = $filter{$1} ) {
+		    push @rslt, $code->( $1, $_ );
+		    $rewrote++;
+		} else {
+		    push @rslt, $_;
+		}
+	    }
+
+	    $rewrote
+		and $macro->{def} = \@rslt;
+
+	}
+
+	return;
+    }
 }
 
 #	@coordinates = $self->_simbad4 ($query)
@@ -5562,7 +5621,7 @@ instantiated, so C<get( 'time_parser' )> always returns an object.  A
 call to C<show( 'time_parser' )>, however, will always show the class
 name.
 
-When setting this attribuite to a class name, the leading
+When setting this attribute to a class name, the leading
 C<'Astro::App::Satpass2::ParseTime::'> can be omitted.
 
 The time parser must be a subclass of

@@ -33,6 +33,7 @@ lib/Astro/App/Satpass2/FormatTime/DateTime/Cldr.pm
 lib/Astro/App/Satpass2/FormatTime/DateTime/Strftime.pm
 lib/Astro/App/Satpass2/FormatTime/POSIX/Strftime.pm
 lib/Astro/App/Satpass2/FormatTime/Strftime.pm
+lib/Astro/App/Satpass2/Utils.pm
 LICENSES/Artistic
 LICENSES/Copying
 t/basic.t

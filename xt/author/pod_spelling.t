@@ -54,6 +54,7 @@ edu
 elementnumber
 ephemeristype
 EST
+exportable
 firstderivative
 fr
 FreeDesktop
@@ -96,6 +97,7 @@ perigee
 perltime
 pm
 programmatically
+quoter
 rc
 realtime
 reportable
