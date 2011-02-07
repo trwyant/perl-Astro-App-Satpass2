@@ -1570,7 +1570,8 @@ SATPASS2_EXECUTE:
 sub save : Verb(changes!,overwrite!) {
     my ($self, @args) = @_;
     my ($opt, $fn) = $self->_getopt(@args);
-    defined $fn or $fn = $self->initfile();
+    defined $fn or $fn = $self->initfile( { 'create-directory' => 1 } );
+    chomp $fn;	# because initfile() adds a newline for printing
     if ($fn ne '-' && -e $fn) {
 	-f $fn or $self->_wail(
 	    "Can not overwrite $fn: not an ordinary file");
@@ -1609,7 +1610,8 @@ EOD
 # $class $title
 
 EOD
-	$self->_delegate_interactive( $attribute, 'config', @show_opt );
+	( $self->_delegate_interactive( $attribute, 'config', @show_opt
+	    ) || "# none\n" );
     }
 
     if ($fn ne '-') {
