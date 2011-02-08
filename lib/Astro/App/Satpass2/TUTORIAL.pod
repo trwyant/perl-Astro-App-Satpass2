@@ -1,0 +1,559 @@
+=head1 NAME
+
+Astro::App::Satpass2::TUTORIAL - Tutorial on the use of Astro::App::Satpass2
+
+=head1 INTRODUCTION
+
+This package was created to provide a flexable way to predict satellite
+positions, passes, and visibility. Unfortunately, with flexability comes
+complexity, more often than not. This document's purpose is to get you
+up and running, and walk you through some of the things the package can
+do.
+
+The simplest way to access C<Astro::App::Satpass2> functionality is
+through the F<satpass2> script, and that what this tutorial does.
+
+To get any real use out of this package, you need satellite orbital
+data. The best source is L<http://www.space-track.org/>, but this
+requires registration, so this tutorial will assume you are not
+registered and use data from other sources. Most other sources are
+redistributions of Space Track data, and will not be as up-to-date, but
+are generally good enough for non-critical computations.
+
+=head1 SETUP
+
+The first thing that needs to be done, of course, is to install
+C<Astro::App::Satpass2> itself. The recommended way to do this is
+normally to use one of the F<CPAN> tools. With F<cpan>, the installation
+would be simply
+
+ $ cpan
+ ... front matter ...
+ cpan> install Astro::App::Satpass2
+ ... cpan downloads, tests, and installs this package
+     and all dependencies ...
+ cpan> exit
+
+You could equally well use CPANPLUS (F<cpanp>) or cpanminus (F<cpanm>);
+the choice is yours. If you are using Active State's F<ActivePerl>, you
+should use their F<ppi> tool to install distribution
+F<Astro-App-Satpass2>.
+
+There are several Perl modules that this package considers optional, but
+which will be used if they are available. Unless stated otherwise, the
+examples in this tutorial assume that optional module
+L<Astro::SpaceTrack|Astro::SpaceTrack> is installed, so that you can
+download satellite orbital data directly into C<Astro::App::Satpass2>.
+
+The author also recommends optional module L<Date::Manip|Date::Manip>,
+but since the latest version of this module only installs under Perl
+5.10 and above, this tutorial will not assume it is installed. When it
+is not, C<Astro::App::Satpass> uses a home-grown ISO-8601-ish date
+parser. All dates specified in the examples will be compatable with both
+date parsers.
+
+It does not matter whether you install optional modules before or after
+installing C<Astro::App::Satpass2>; it will use them if it finds them.
+
+=head1 CONFIGURATION
+
+There are several possibilities for configuring C<Astro::App::Satpass2>.
+This tutorial will cover the following:
+
+=head2 Configuring from a F<satpass> initialization file
+
+If you already have configured the initialization file for the
+F<satpass> script packaged with L<Astro::Coord::ECI|Astro::Coord::ECI>,
+C<Astro::App::Satpass2> will read this script, making allowances for at
+least some of the incompatabilites between the two tools. Since the
+intent is to remove this functionality, you may at some time wish to
+convert your F<satpass> initialization file to a C<Astro::App::Satpass2>
+initialization file. To do this from inside the F<satpass2> script,
+simply issue the command
+
+ satpass2> save -changes
+
+Subsequent runs of the F<satpass2> script will initialize from the new
+file.
+
+=head2 Configuring manually
+
+Before you do any predictions, C<Astro::App::Satpass2> needs to know
+where you are. The embedded L<Astro::SpaceTrack|Astro::SpaceTrack>
+object will also need some configuration so it knows how to fetch data
+from its various sources.
+
+Specifically, you need your latitude, longitude (from Greenwich
+England), and height above sea level. The height is least critical, and
+any reasonable guess will probably work.
+
+Latitude and longitude can be specified in either decimal degrees (e.g.
+40.5) or degrees, minutes and seconds (e.g. 40d30m0s). B<South> latitude
+and B<West> longitude are negative.
+
+Height is assumed to be in meters, but you can be specified in feet by
+appending 'ft'. For example, '10' specifies 10 meters, as does '10m',
+but '10ft' specifies 10 feet.
+
+Because it would be painful to specify this every time you use it,
+C<Astro::App::Satpass2> allows a configuration file. The example that
+follows will end by creating a configuration file and storing the
+configuration in it.
+
+And here, finally, is the example. We make the egregious assumption that
+the President of the United States uses this software, so we use the
+executive mansion as our location.
+
+ $ satpass2
+ ... front matter displayed ...
+ satpass2>
+ satpass2> # This is a comment, as is any line beginning
+ satpass2> # with a hash mark ('#'). Comments and blank
+ satpass2> # lines are ignored.
+ satpass2>
+ satpass2> # Enter the name of our location. This is for
+ satpass2> # information only, and will be displayed by
+ satpass2> # the location command. Command arguments that
+ satpass2> # contain spaces need to be quoted.
+ satpass2> set location '1600 Pennsylvania Ave, Washington DC'
+ satpass2>
+ satpass2> # Set our latitude and longitude.
+ satpass2> set latitude 38d53m55.5s longitude -77d2m15.7s
+ satpass2>
+ satpass2> # Set our height above sea level.
+ satpass2> set height 54.72ft
+ satpass2>
+ satpass2> # Some of our data sources will try to fetch
+ satpass2> # their data from Space Track when we ask for
+ satpass2> # it. We are assuming no Space Track username,
+ satpass2> # so we tell them to just give us what they have.
+ satpass2> delegate spacetrack set direct 1
+ satpass2>
+ satpass2> # Some data sources come with or without the
+ satpass2> # actual name of the spacecraft. We want the name
+ satpass2> # if it is available.
+ satpass2> delegate spacetrack set with_name 1
+ satpass2>
+ satpass2> # Save our configuration. All we really need to
+ satpass2> # save are the changes from the default.
+ satpass2> save -changes
+ satpass2>
+ satpass2> # We can now exit. When we restart, we will get
+ satpass2> # the configuration we just set up.
+ satpass2> exit
+
+=head2 Geocoding the address
+
+Looking up a latitude and longitude can be a bit of a pain. If you live
+in the United States, C<Astro::App::Satpass2> can geocode your address,
+and then query the U. S. Geological Survey for your height above sea
+level.
+
+This requires two more optional modules: L<SOAP::Lite|SOAP::Lite> and
+L<Geo::WebService::Elevation::USGS|Geo::WebService::Elevation::USGS>.
+With these installed, the address entry in the previous example becomes
+
+ satpass2> geocode '1600 Pennsylvania Ave, Washington DC'
+
+=head1 PREDICTING PASSES
+
+The main use of this package is probably predicting when satellites are
+going to pass over the observer.
+
+=head2 Visible Passes
+
+This is the functionality that tells you when you can go out and see a
+satellite, assuming clear skies and a satellite large enough to be
+visible. Visible passes require three things to happen:
+
+* The satellite must be above the horizon (of course!).
+
+* The Sun must be shining on the satellite (they do not have lights),
+and
+
+* The Sun must not be shining where you are (otherwise the sky is to
+bright to see the satellite).
+
+The example is for the International Space Station, and we will
+use NASA's predictions of its orbit over the next week as a starting
+point.
+
+ $ satpass
+ ... front matter ...
+ satpass2>
+ satpass2> # Tell the Astro::SpaceTrack object to fetch us
+ satpass2> # all the predicted orbital elements from NASA's
+ satpass2> # Human Space Flight web site. We include the
+ satpass2> # effective date, since there may be Space Shuttle
+ satpass2> # data also, and that information is not usable
+ satpass2> # until the actual launch.
+ satpass2> delegate spacetrack spaceflight -all -effective
+ satpass2>
+ satpass2> # Make the default pass prediction, which is for
+ satpass2> # seven days starting today at noon.
+ satpass2> pass
+
+You may want to print this information and stick it on your
+refrigerator. C<Astro::App::Satpass2> has something a bit like Unix
+output redirection to get your information into a file:
+
+ satpass2> pass >pass.txt
+
+After which you open F<pass.txt> in some simple editor and print it. A
+word-processing editor will probably not work satisfactorally unless you
+set the entire document to a monospace font.
+
+You may want a prediction for some specific date. The following example
+does a prediction for the night of April 1 2011 (specifically, for one
+day starting at noon on that day) and saves the output in
+F<april_fool.txt>.
+
+ satpass2> pass '2011/4/1 12:00:00' +1 >april_fool.txt
+
+Note that the date is quoted because of the space between the date and
+the time. If you had L<Date::Manip|Date::Manip> installed, you could
+specify the date more fledably, as (say) C<'1-Apr-2011 noon'>.
+
+=head2 Different Viewing Conditions
+
+C<Astro::App::Satpass2> assumes a few things about viewing conditions
+where you are. These may or may not be true. If they are not, you can
+change them.
+
+The settings discussed below are part of your configuration, and can be
+saved using
+
+ satpass2> save -changes
+
+as discussed above. If you have already saved your configuration you
+will be asked whether you want to overwrite the old configuration. Any
+answer beginning with 'y' (case-insensitive) will be considered true.
+Any other answer will be considered false.
+
+=head3 The horizon
+
+C<Astro::App::Satpass2> assumes that you do not have a very good
+horizon, and that you can not see a satellite until it is at least 20
+degrees above the horizon, and therefore does not report passes that do
+not get at least 20 degrees above the horizon. If you are at the beach
+you may be able to see to within 5 degrees of the horizon. You can
+configure C<Astro::App::Satpass2> to report passes more than 5 degrees
+above the horizon by
+
+ satpass2> set horizon 5
+
+If you are on the top of a mountain, you may even be able to see a bit
+over the normal horizon. If you can see 2 degrees over the horizon,
+
+ satpass2> set horizon -2
+
+C<Astro::App::Satpass2> does not predict visible passes that occur
+during the day, and it defines day as any time after the end of morning
+twilight and before the start of evening twilight. These in turn are
+defined as the point when the upper limb of the Sun passes above or
+below a given distance below the horizon.
+
+=head3 Twilight
+
+By default, C<Astro::App::Satpass2> uses civil twilight to decide
+whether it is day or night. This is defined as the point at which the
+Sun is 6 degrees below the horizon. For a dimmer satellite, you may want
+to use nautical twilight (9 degrees below the horizon) or astronomical
+twilight (12 degrees below the horizon). You can change to nautical
+twilight using
+
+ satpass2> set twilight nautical
+
+and similarly for astronomical. Or, you can define your own twilight by
+entering it in degrees, remembering that degrees below the horizon are
+negative. If you are looking for the International Space Station, you
+may be able to spot it with the Sun only 3 degrees below the horizon:
+
+ satpass2> set twilight -3
+
+=head2 All Passes
+
+If you are interested in communicating with the satellite rather than
+looking at it, all you care about is whether the satellite is above the
+horizon, not whether it is day or night or whether the satellite is
+illuminated by the Sun. In this case you want to
+
+ satpass2> set visible 0
+
+which turns off the latter two checks and reports any pass of the
+satellite over your location, visible or not. To go back to predicting
+just visible passes,
+
+ satpass2> set visible 1
+
+=head1 IRIDIUM FLARES
+
+I know of no scientific value to these, but they are fun to watch. The
+Iridium constellation is 66 satellites (plus spares) used for satellite
+telephone service. The original-design Iridium satellites are triangular
+prisms, with one main mission antenna leaning out from each face of the
+prism. The main mission antennae are about the size of a door, flat, and
+shiny, and because the satellites are maintained in a precise
+orientation in orbit, it can be predicted when one of these antennae
+will reflect the Sun to a given position. A bright flare can be brighter
+than Venus at its brightest, and under good conditions is visible during
+the day.
+
+=head2 Predicting Flares
+
+Predicting flares is a bit like predicting satellite passes - you
+download the orbital data and predict the flare from the data.
+
+ $ satpass2
+ ... front matter ...
+ satpass2>
+ satpass2> # Download the data on Iridium satellites.
+ satpass2> delegate spacetrack celestrak iridium
+ satpass2>
+ satpass2> # Predict flares for the next seven days,
+ satpass2> # starting today at noon.
+ satpass2> flare
+
+This will take a while, because it has to cover all 66 in-service
+Iridium satellites, 24 hours per day. And this does not include spares,
+which are usually kept under control, just to prove that they work. If
+you want them as well,
+
+ satpass2> flare -spare
+
+If you want a copy of all this to stick on your refrigerator door,
+capture it to a file in the same way you captured the pass data:
+
+ satpass2> flare >flare.txt
+
+If you want to append it to the F<pass.txt> file created for satellite
+passes,
+
+ satpass2> flare >>pass.txt
+
+just as you would under Unix.
+
+But maybe you are not interested in daylight flares. If not,
+
+ satpass2> flare -noday
+
+If you are also not interested in flares at 4:00 AM,
+
+ satpass2> flare -noam -noday
+
+or equivalently,
+
+ satpass2> flare -pm
+
+The C<-am>, C<-day>, and C<-pm> options select which flares are
+reported, by time.  The C<-am> option selects flares from midnight until
+the end of morning twilight; C<-day> selects flares from the end of
+morning twilight to the beginning of evening twilight, and C<-pm>
+selects flares from the beginning of evening twilight until midnight.
+
+The options can be negated by prefixing C<no> to the option name (e.g.
+C<-noday>). If you specify no options, they are all considered to be
+asserted. If you specify no asserted options, all unspecified options
+are considered to be asserted.  Otherwise, only explicitly-asserted
+options are considered to be asserted.
+
+If you do not want flares for a particular part of the day, calculations
+for that part of the day are not done. This can speed the prediction
+process.
+
+=head2 Different Flare Visibility
+
+Flare brightness is measured in magnitude, a system used by astronomers
+to measure the brightness of stars. This system goes back a couple
+thousand years, and originally classified the brightest stars as first
+magnitude, the less-bright stars as second magnitude, and so on. The
+system has been formalized to a logarithmic scale in which a brightness
+difference of five magnitudes represents a light intensity difference of
+a factor of 100. Brighter stars may have negative magnitudes (Sirius is
+about -1.4).
+
+Obviously a flare that would be fairly bright at night might be
+completely invisible during the day, so day and night have separate
+settings to control the minimum reportable brightness.
+C<Astro::App::Satpass2> uses the C<flare_mag_day> setting to determine
+the dimmest reportable flare during the day; this defaults to C<-6>. The
+dimmest reportable flare at night is determined by the C<flare_mag_day>
+settig, which defaults to C<0>.
+
+In order to duplicate (fairly closely) the Iridium flares reported by
+L<http://www.heavens-above.com/>, you will want to tweak
+C<Astro::App::Satpass2>'s settings a bit:
+
+ satpass2> set twilight -1.8 flare_mag_night -1
+
+seems to come fairly close.
+
+=head1 OTHER CUSTOMIZATIONS
+
+There are other customizations of the output that you may want.
+
+=head2 Location
+
+If you want to display your location, just issue the
+
+ satpass2> location
+
+command. The output of this can be directed to a file, just as the
+location of any other command. For a nice list of passes and flares for
+your refrigerator door, you can do something like this:
+
+ satpass2> location >this_week.txt
+ satpass2> delegate spacetrack spaceflight -all -effective
+ satpass2> pass >>this_week.txt
+ satpass2> delegate spacetrack celestrak iridium
+ satpass2> flare -pm >>this_week.txt
+ satpass2> exit
+
+=head2 Date and Time Format
+
+By default, date and time are displayed in an ISO-8601-ish format. If
+you want something friendlier, you can specify a C<strftime (3)> format
+independently for the date and the time. These settings can be saved to
+your initialization file just like any other setting.
+
+The date and time format settings belong to the formatter object, which
+is a separate subsystem all to itself. So:
+
+ satpass2>
+ satpass2> # Display the date as weekday day-month-year
+ satpass2> delegate formatter date_format '%a %d-%b-%Y
+ satpass2>
+ satpass2> # Display the time as 1-12 AM or PM
+ satpass2> delegate formatter time_format '%I:%M:%S %p'
+ satpass2>
+ satpass2> # Save the configuration, overwriting any previous one
+ satpass2> save -changes -confirm
+
+=head1 INTERMEDIATE TOPICS
+
+This section covers things that are beyond just getting the application
+up and running.
+
+=head2 Multiple Locations
+
+What this topic actually describes is a way to have multiple locations
+on tap, so that if you are going to be at point 'A' from Monday through
+Wednesday, and point 'B' Thursday and Friday you can easily switch
+between them.
+
+This section relies on the fact that C<Astro::App::Satpass2> can define
+a thing called a C<macro>, which is a named set of commands. The macro
+is executed by giving its name, so in essence macros are a way to create
+new commands. You can pass arguments to macros, but that is a more
+advanced topic. Here, we are just going to set up macros representing a
+number of locations.
+
+The definition of a macro is simply the list of commands it issues. Each
+command is a single argument, and therefore probably needs to be quoted.
+When the command to be issued itself contains quotes, you either use a
+different style (single versus double quotes) or you escape the quote
+mark with a back slash (C<'\').
+
+The first thing our hypothetical user needs is a macro to set the
+location to his or her home location. The definition comes from our
+first example:
+
+ satpass2> macro define home \
+ > "set location '1600 Pennsylvania Ave, Washington DC'" \
+ > "set latitude 38d53m55.5s longitude -77d2m15.7s" \
+ > "set height 54.72ft"
+ satpass2>
+
+Normally, this would all have to go on the same line, but
+C<Astro::App::Satpass2> recognises an end-of-line back slash as a
+continuation mark, so all four lines above are parsed as though they are
+the same line. C<Astro::App::Satpass2> changes the prompt for a
+continuation line, just to keep you on your toes.
+
+Now we need another place to visit -- say, the residence of the Prime
+Minister of Canada:
+
+ satpass2> macro define sussex_drive \
+ > "set location '24 Sussex Drive, Ottawa, ON'" \
+ > "set latitude 45.444348 longitude -75.693934" \
+ > "set height 50m"
+ satpass2>
+
+Now, to switch locations to the Prime Minister's residence, just say
+
+ satpass2> sussex_drive
+ satpass2>
+ satpass2> # and to confirm it,
+ satpass2> location
+ Location: 24 Sussex Drive, Ottawa, ON
+           Latitude 45.4443, longitude -75.6939, height 50 m
+ satpass2>
+
+And to return home, just say
+
+ satpass2> home
+
+Of course, these are really only useful if they are in your
+initialization file. And they can be, with the usual incantation:
+
+ satpass2> save -changes -confirm
+
+=head2 Temporary Settings
+
+As you recall from the section on L<IRIDIUM FLARES|/IRIDIUM FLARES>, if
+you are trying to imitate the results from Heavens Above you have to
+tweak the default settings a bit. These settings stay tweaked until you
+put them back to their original values. If you always want the tweaks
+when you do Iridium flare predictions, you can put them into a macro
+along with the flare prediction. Values of settings can be localized to
+a macro (among other things), so that the old values are restored when
+the macro exits. The example could be defined as a macro like this:
+
+ satpass2> macro define iridium_flare \
+ > "localize twilight flare_mag_night" \
+ > "set twilight -1.8 flare_mag_night -1" \
+ > "flare"
+ satpass2>
+
+Note that the C<"flare"> did not need to be quoted, but it does no harm
+to do so, and it makes the documentation look nicer.
+
+Then when you say
+
+ satpass2> iridium_flare
+
+The C<twilight> and C<flare_mag_night> settings will be changed, the
+flare prediction will be run, and the old C<twilight> and
+C<flare_mag_night> settings will be restored.
+
+Note that B<only> attributes of the C<Astro::App::Satpass2> object
+(those set with a C<set> command) can be localized; attributes of helper
+objects can not be. But you B<can> localize the entire helper object.
+For example, for a temporary change to the
+L<Astro::SpaceTrack|Astro::SpaceTrack> object,
+
+ satpass2> localize spacetrack
+
+inside the appropriate scope. Yes, you can localize outside a macro (or
+any other localization scope), but it does no good to do so, because the
+old value is not restored until you exit, and what good is that?
+
+=head1 AUTHOR
+
+Thomas R. Wyant, III F<wyant@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2011 by Thomas R. Wyant, III
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl 5.10.0. For more details, see the full text
+of the licenses in the directory LICENSES.
+
+This program is distributed in the hope that it will be useful, but
+without any warranty; without even the implied warranty of
+merchantability or fitness for a particular purpose.
+
+=cut
+
+# ex: set textwidth=72 autoindent :
