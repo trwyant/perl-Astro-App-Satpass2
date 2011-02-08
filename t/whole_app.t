@@ -190,8 +190,10 @@ Location: Royal Observatory, Greenwich England
 EOD
 _app('set date_format %d/%m/%Y time_format "%I:%M:%S %p"',
     undef, 'Set date and time format');
-_app('show date_format', 'set date_format %d/%m/%Y', 'Show date format');
-_app('show time_format', 'set time_format "%I:%M:%S %p"', 'Show time format');
+_app('show date_format', 'tell formatter date_format %d/%m/%Y',
+    'Show date format');
+_app('show time_format', 'tell formatter time_format "%I:%M:%S %p"',
+    'Show time format');
 _app('tell formatter date_format %Y/%m/%d',
     undef, 'Set date format directly');
 _app('tell formatter time_format %H:%M:%S',

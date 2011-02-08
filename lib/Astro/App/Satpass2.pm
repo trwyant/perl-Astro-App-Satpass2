@@ -1645,6 +1645,9 @@ sub show : Verb(changes!,deprecated!,readonly!) {
     foreach my $name (@args) {
 	exists $shower{$name}
 	    or $self->_wail("No such attribute as '$name'");
+
+=begin comment
+
 	my $val = $shower{$name}->( $self, $name );
 	if ($opt->{changes}) {
 	    no warnings qw{uninitialized};
@@ -1652,25 +1655,40 @@ sub show : Verb(changes!,deprecated!,readonly!) {
 	}
 	exists $mutator{$name} or $output .= '# ';
 	$output .= "set $name " . quoter( $val ) . "\n";
+
+=end comment
+
+=cut
+
+	my @val = $shower{$name}->( $self, $name );
+	if ( $opt->{changes} ) {
+	    no warnings qw{ uninitialized };
+	    $static{$name} eq $val[-1] and next;
+	}
+	exists $mutator{$name} or unshift @val, '#';
+	$output .= join ' ', map { quoter( $_ ) } @val;
+	$output .= "\n";
     }
     return $output;
 }
 
 sub _show_formatter_attribute {
     my ( $self, $name ) = @_;
-    return $self->{formatter}->decode( $name );
+    my $val = $self->{formatter}->decode( $name );
+    return ( qw{ tell formatter }, $name, $val );
 }
 
 sub _show_stringable {
     my ( $self, $name ) = @_;
     my $obj = $self->get( $name );
-    return ref $obj || $obj;
+    my $val = ref $obj || $obj;
+    return ( 'set', $name, $val );
 }
 
 sub _show_unmodified {
     my ($self, $name) = @_;
     my $val = $self->get( $name );
-    return defined $val ? $val : 'undef';
+    return ( 'set', $name, $val );
 }
 
 
