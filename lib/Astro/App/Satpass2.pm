@@ -3055,6 +3055,14 @@ sub _read_continuation {
 #	This method goes away when the satpass functionality does.
 
 {
+    my %localize_map = (
+	date_format	=> 'formatter',
+	desired_equinox_dynamical	=> 'formatter',
+	gmt		=> 'formatter',
+	local_coord	=> 'formatter',
+	time_format	=> 'formatter',
+    );
+
     my %filter = (
 	almanac	=> sub {
 	    my ( $verb, $line ) = @_;
@@ -3064,6 +3072,17 @@ sub _read_continuation {
 	    my ( $verb, $line ) = @_;
 	    $line =~ s/ (?<= \s ) - (am|day|pm) \b /-no$1/smx;
 	    return $line;
+	},
+	localize	=> sub {
+	    my ( $verb, $line ) = @_;
+	    my @things = split qr{ \s+ }smx, $line;
+	    my @output;
+	    my %duplicate;
+	    foreach my $token ( @things ) {
+		$token = $localize_map{$token} || $token;
+		$duplicate{$token}++ or push @output, $token;
+	    }
+	    return join ' ', @output;
 	},
 	pass	=> sub {
 	    my ( $verb, $line ) = @_;
