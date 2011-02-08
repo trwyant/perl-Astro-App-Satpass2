@@ -407,197 +407,6 @@ sub clear : Verb() {
     return;
 }
 
-sub delegate : Verb() {
-##    $_[0]->{_interactive} and goto &_delegate_interactive;
-    _is_interactive() and goto &_delegate_interactive;
-    goto &_delegate_nointeractive;
-}
-
-sub _delegate_interactive {
-    my ( $self, $attribute, $method, @args ) = @_;
-    my $code = $self->can( "__delegate__${attribute}__$method" ) ||
-	$self->can( "__delegate__$attribute" ) ||
-	$self->_wail( "Can not delegate to $attribute" );
-    goto &$code;
-}
-
-sub _delegate_nointeractive {
-    my ( $self, $attribute, $method, @args ) = @_;
-    $self->can( "__delegate__$attribute" )
-	or $self->_wail( "Can not delegate to $attribute" );
-    return $self->_delegate_get_object( $attribute )->$method( @args );
-}
-
-sub _delegate_get_object {
-    my ( $self, $attribute ) = @_;
-    my $object = $self->get( $attribute )
-	or $self->_wail( "No $attribute object available" );
-    return $object;
-}
-
-sub _delegate_config_options {
-    ( my $self, local @ARGV ) = @_;
-    my %opt;
-    GetOptions( \%opt, qw{ changes! decode! } )
-	or $self->_wail( "Bad option" );
-    return ( \%opt, @ARGV );
-}
-
-sub _delegate_output {
-    my @args = @_;
-    return join( ' ', map { quoter( $_ ) } 'delegate', @args ) . "\n";
-}
-
-sub __delegate__formatter {
-    my ( $self, $attribute, $method, @args ) = @_;
-    my $object = $self->_delegate_get_object( $attribute );
-
-    my $rslt = $object->decode( $method, @args );
-
-    instance( $rslt, ref $object ) and return;
-    ref $rslt and return $rslt;
-    return join( ' ', map { quoter( $_ ) } 'delegate', $attribute,
-	$method, $rslt ) . "\n";
-
-}
-
-sub __delegate__formatter__config {
-    my ( $self, $attribute, $method, @args ) = @_;
-    my $object = $self->_delegate_get_object( $attribute );
-
-    ( my $opt, @args ) = $self->_delegate_config_options( @args );
-
-    exists $opt->{decode} or $opt->{decode} = 1;
-    my @rslt = $object->config( %{ $opt } );
-    my $output;
-    foreach my $item ( @rslt ) {
-	$output .= _delegate_output( $attribute, @{ $item } );
-    }
-    return $output;
-}
-
-sub __delegate__formatter__desired_equinox_dynamical {
-    my ( $self, $attribute, $method, @args ) = @_;
-    my $object = $self->_delegate_get_object( $attribute );
-
-    if ( $args[0] ) {
-	$self->_parse_time_reset();
-	$args[0] = $self->_parse_time( $args[0], 0 );
-    }
-
-    my $rslt = $object->decode( $method, @args );
-    instance( $rslt, ref $object )
-	and return;
-
-    return _delegate_output( $attribute, $method, $rslt );
-}
-
-sub __delegate__formatter__format_effector {
-    my ( $self, $attribute, $method, @args ) = @_;
-    my $object = $self->_delegate_get_object( $attribute );
-
-    my $rslt = $object->decode( $method, @args );
-    instance( $rslt, ref $object )
-	and return;
-
-    return _delegate_output( $attribute, $method, @{ $rslt } );
-
-}
-
-sub __delegate__spacetrack {
-    my ( $self, $attribute, $method, @args ) = @_;
-    my $object = $self->_delegate_get_object( $attribute );
-
-    $method !~ m/ \A _ /smx and $object->can( $method )
-	or $self->_wail("No such $attribute method as '$method'");
-
-    my %opt;
-
-    local @ARGV = @args;
-    my $err;
-    local $SIG{__WARN__} = sub { $err = $_[0] };
-    my $go = Getopt::Long::Parser->new( config => [ qw{ default
-	    pass_through } ] );
-    $go->getoptions( \%opt, qw{ all! descending! effective! last5! rcs!
-	sort=s tle! end_epoch=s start_epoch=s verbose! } )
-	or $self->_wail( $err );
-
-    $self->_parse_time_reset();
-    $opt{start_epoch}
-	and $opt{start_epoch} = $self->_parse_time( $opt{start_epoch} );
-    $opt{end_epoch}
-	and $opt{end_epoch} = $self->_parse_time( $opt{end_epoch} );
-
-    my ($rslt, @rest) = $method eq 'set' ?
-	$object->$method( @ARGV ) :
-	$object->$method( \%opt, @ARGV );
-    $rslt->is_success()
-	or $self->_wail( $rslt->status_line() );
-
-    my $content_type = $object->content_type || '';
-    my $output;
-    if ($content_type eq 'orbit') {
-	push @{$self->{bodies}},
-	    Astro::Coord::ECI::TLE->parse ($rslt->content);
-	$opt{verbose} and $output .= $rslt->content;
-    } elsif ($content_type eq 'iridium-status') {
-	$self->_iridium_status( @rest );
-	$opt{verbose} and $output .= $rslt->content;
-    } elsif ($content_type || $opt{verbose}) {
-	$output .= $rslt->content;
-    }
-    defined $output
-	and $output =~ s/ (?<! \n ) \z /\n/smx;
-    return $output;
-}
-
-{
-
-    my $virgin;
-
-    sub __delegate__spacetrack__show {
-	my ( $self, $attribute, $method, @args ) = @_;
-	my $object = $self->_delegate_get_object( $attribute );
-
-	( my $opt, @args ) = $self->_delegate_config_options( @args );
-
-	@args or @args = $object->attribute_names();
-
-	if ( $opt->{changes} ) {
-	    $virgin ||= $self->_get_spacetrack_default();
-	}
-
-	my $output;
-	foreach my $name ( @args ) {
-	    my $value = $object->getv( $name );
-	    no warnings qw{ uninitialized };
-	    $opt->{changes}
-		and $value eq $virgin->getv( $name )
-		and next;
-	    $output .= _delegate_output( $attribute, 'set', $name,
-		$value );
-	}
-
-	return $output;
-    }
-
-}
-
-*__delegate__spacetrack__config = \&__delegate__spacetrack__show;
-
-sub __delegate__spacetrack__getv {
-    my ( $self, $attribute, $method, @args ) = @_;
-    my $object = $self->_delegate_get_object( $attribute );
-    return _delegate_output( $attribute, 'set', $args[0], $object->getv(
-	    $args[0] ) );
-}
-
-*__delegate__spacetrack__get = \&__delegate__spacetrack__getv;
-
-*__delegate__time_parser = \&__delegate_formatter;
-
-*__delegate__time_parser__config = \&__delegate__formatter__config;
-
 
 sub dispatch {
     my ($self, $verb, @args) = @_;
@@ -1610,7 +1419,7 @@ EOD
 # $class $title
 
 EOD
-	( $self->_delegate_interactive( $attribute, 'config', @show_opt
+	( $self->_tell_interactive( $attribute, 'config', @show_opt
 	    ) || "# none\n" );
     }
 
@@ -1681,7 +1490,7 @@ sub _set_formatter {
 
 sub _set_formatter_attribute {
     my ( $self, $name, $val ) = @_;
-    $self->delegate( formatter => $name, $val );
+    $self->tell( formatter => $name, $val );
     return $val;
 }
 
@@ -2035,7 +1844,7 @@ sub st : Verb() {	## no critic (RequireArgUnpacking)
 	}
     } else {
 	splice @_, 1, 0, 'spacetrack';
-	goto &delegate;
+	goto &tell;
     }
     return;
 }
@@ -2171,6 +1980,199 @@ sub system : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
     }
 }
 
+
+sub tell : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
+##    $_[0]->{_interactive} and goto &_tell_interactive;
+    _is_interactive() and goto &_tell_interactive;
+    goto &_tell_nointeractive;
+}
+
+sub _tell_interactive {
+    my ( $self, $attribute, $method, @args ) = @_;
+    my $code = $self->can( "__tell__${attribute}__$method" ) ||
+	$self->can( "__tell__$attribute" ) ||
+	$self->_wail( "Can not tell $attribute" );
+    goto &$code;
+}
+
+sub _tell_nointeractive {
+    my ( $self, $attribute, $method, @args ) = @_;
+    $self->can( "__tell__$attribute" )
+	or $self->_wail( "Can not tell $attribute" );
+    return $self->_tell_get_object( $attribute )->$method( @args );
+}
+
+sub _tell_get_object {
+    my ( $self, $attribute ) = @_;
+    my $object = $self->get( $attribute )
+	or $self->_wail( "No $attribute object available" );
+    return $object;
+}
+
+sub _tell_config_options {
+    ( my $self, local @ARGV ) = @_;
+    my %opt;
+    GetOptions( \%opt, qw{ changes! decode! } )
+	or $self->_wail( "Bad option" );
+    return ( \%opt, @ARGV );
+}
+
+sub _tell_output {
+    my @args = @_;
+    return join( ' ', map { quoter( $_ ) } 'tell', @args ) . "\n";
+}
+
+sub __tell__formatter {
+    my ( $self, $attribute, $method, @args ) = @_;
+    my $object = $self->_tell_get_object( $attribute );
+
+    my $rslt = $object->decode( $method, @args );
+
+    instance( $rslt, ref $object ) and return;
+    ref $rslt and return $rslt;
+    return join( ' ', map { quoter( $_ ) } 'tell', $attribute,
+	$method, $rslt ) . "\n";
+
+}
+
+sub __tell__formatter__config {
+    my ( $self, $attribute, $method, @args ) = @_;
+    my $object = $self->_tell_get_object( $attribute );
+
+    ( my $opt, @args ) = $self->_tell_config_options( @args );
+
+    exists $opt->{decode} or $opt->{decode} = 1;
+    my @rslt = $object->config( %{ $opt } );
+    my $output;
+    foreach my $item ( @rslt ) {
+	$output .= _tell_output( $attribute, @{ $item } );
+    }
+    return $output;
+}
+
+sub __tell__formatter__desired_equinox_dynamical {
+    my ( $self, $attribute, $method, @args ) = @_;
+    my $object = $self->_tell_get_object( $attribute );
+
+    if ( $args[0] ) {
+	$self->_parse_time_reset();
+	$args[0] = $self->_parse_time( $args[0], 0 );
+    }
+
+    my $rslt = $object->decode( $method, @args );
+    instance( $rslt, ref $object )
+	and return;
+
+    return _tell_output( $attribute, $method, $rslt );
+}
+
+sub __tell__formatter__format_effector {
+    my ( $self, $attribute, $method, @args ) = @_;
+    my $object = $self->_tell_get_object( $attribute );
+
+    my $rslt = $object->decode( $method, @args );
+    instance( $rslt, ref $object )
+	and return;
+
+    return _tell_output( $attribute, $method, @{ $rslt } );
+
+}
+
+sub __tell__spacetrack {
+    my ( $self, $attribute, $method, @args ) = @_;
+    my $object = $self->_tell_get_object( $attribute );
+
+    $method !~ m/ \A _ /smx and $object->can( $method )
+	or $self->_wail("No such $attribute method as '$method'");
+
+    my %opt;
+
+    local @ARGV = @args;
+    my $err;
+    local $SIG{__WARN__} = sub { $err = $_[0] };
+    my $go = Getopt::Long::Parser->new( config => [ qw{ default
+	    pass_through } ] );
+    $go->getoptions( \%opt, qw{ all! descending! effective! last5! rcs!
+	sort=s tle! end_epoch=s start_epoch=s verbose! } )
+	or $self->_wail( $err );
+
+    $self->_parse_time_reset();
+    $opt{start_epoch}
+	and $opt{start_epoch} = $self->_parse_time( $opt{start_epoch} );
+    $opt{end_epoch}
+	and $opt{end_epoch} = $self->_parse_time( $opt{end_epoch} );
+
+    my ($rslt, @rest) = $method eq 'set' ?
+	$object->$method( @ARGV ) :
+	$object->$method( \%opt, @ARGV );
+    $rslt->is_success()
+	or $self->_wail( $rslt->status_line() );
+
+    my $content_type = $object->content_type || '';
+    my $output;
+    if ($content_type eq 'orbit') {
+	push @{$self->{bodies}},
+	    Astro::Coord::ECI::TLE->parse ($rslt->content);
+	$opt{verbose} and $output .= $rslt->content;
+    } elsif ($content_type eq 'iridium-status') {
+	$self->_iridium_status( @rest );
+	$opt{verbose} and $output .= $rslt->content;
+    } elsif ($content_type || $opt{verbose}) {
+	$output .= $rslt->content;
+    }
+    defined $output
+	and $output =~ s/ (?<! \n ) \z /\n/smx;
+    return $output;
+}
+
+{
+
+    my $virgin;
+
+    sub __tell__spacetrack__show {
+	my ( $self, $attribute, $method, @args ) = @_;
+	my $object = $self->_tell_get_object( $attribute );
+
+	( my $opt, @args ) = $self->_tell_config_options( @args );
+
+	@args or @args = $object->attribute_names();
+
+	if ( $opt->{changes} ) {
+	    $virgin ||= $self->_get_spacetrack_default();
+	}
+
+	my $output;
+	foreach my $name ( @args ) {
+	    my $value = $object->getv( $name );
+	    no warnings qw{ uninitialized };
+	    $opt->{changes}
+		and $value eq $virgin->getv( $name )
+		and next;
+	    $output .= _tell_output( $attribute, 'set', $name,
+		$value );
+	}
+
+	return $output;
+    }
+
+}
+
+*__tell__spacetrack__config = \&__tell__spacetrack__show;
+
+sub __tell__spacetrack__getv {
+    my ( $self, $attribute, $method, @args ) = @_;
+    my $object = $self->_tell_get_object( $attribute );
+    return _tell_output( $attribute, 'set', $args[0], $object->getv(
+	    $args[0] ) );
+}
+
+*__tell__spacetrack__get = \&__tell__spacetrack__getv;
+
+*__tell__time_parser = \&__tell_formatter;
+
+*__tell__time_parser__config = \&__tell__formatter__config;
+
+
 sub time : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
     my ($self, @args) = @_;
     $got_time_hires or $self->_wail( 'Time::HiRes not available' );
@@ -2180,6 +2182,7 @@ sub time : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
     $output .= sprintf "%.3f seconds\n", Time::HiRes::time() - $start;
     return $output;
 }
+
 
 # TODO the Celestia functionality. Currently, it gives a file that is
 # syntactically valid, but does not give the correct position. What is
@@ -2204,6 +2207,7 @@ sub tle : Verb(celestia!,verbose!) {
     return $output;
 }
 
+
 sub unexport : Verb() {
     my ( $self, @args ) = @_;
     foreach my $name ( @args ) {
@@ -2211,6 +2215,7 @@ sub unexport : Verb() {
     }
     return;
 }
+
 
 sub validate : Verb(quiet!) {
     my ($self, @args) = @_;
@@ -2239,6 +2244,7 @@ sub validate : Verb(quiet!) {
 
     return;
 }
+
 
 sub version : Verb() {
     return <<"EOD";
@@ -3871,7 +3877,7 @@ presence of L<DateTime|DateTime>, you can use the
 L<Astro::App::Satpass2::Format time_formatter()|Astro::App::Satpass2::Format/time_formatter>
 method to do this. Interactively, this would be something like
 
- satpass2> delegate formatter time_formatter \
+ satpass2> tell formatter time_formatter \
  > Astro::App::Satpass2::FormatTime::POSIX::Strftime
 
 The default time formatter uses C<strftime (3)> formats, but CLDR
@@ -3879,7 +3885,7 @@ formatting is also available if you have the L<DateTime|DateTime> and
 L<DateTime::TimeZone|DateTime::TimeZone> modules installed.
 Interactively, This could be done with something like
 
- satpass2> delegate formatter time_formatter \
+ satpass2> tell formatter time_formatter \
  > Astro::App::Satpass2::FormatTime::DateTime::Cldr
 
 =head1 OVERVIEW
@@ -4349,32 +4355,6 @@ sense, unspecified options are defaulted to false if any of these
 options is asserted, or true otherwise. For example, specifying C<-noam>
 has the same effect as specifying C<-day -pm>, and specifying none of
 the three options is the same as specifying C<-am -day -pm>.
-
-=head2 delegate
-
- $satpass2->delegate( formatter => template =>
-     local_coord => 'azel' );
- satpass2> delegate formatter template local_coord azel
-
-This interactive method modifies one of the objects to which
-functionality has been delegated, I<in situ.> The arguments are the
-attribute name of the object to be modified, the method to call on that
-object, and any arguments to that method. The results of the method call
-are returned.
-
-The only supported attributes are L<formatter|/formatter>,
-L<satpass|/satpass>, and L<time_parser|/time_parser>.
-
-If this method is called interactively (i.e. as a result of calling
-L<dispatch()|/dispatch> either directly or indirectly via
-C<execute()|/execute> or C<run()|/run>), it behaves differently in a
-couple of respects:
-
-First, if the object is C<formatter> and the method is
-C<desired_equinox_dynamical> used as a mutator, the new value is parsed
-as a time. See L</SPECIFYING TIMES> for the details.
-
-Second, all methods are routed through the object's C<decode()> method.
 
 =head2 geocode
 
@@ -4945,11 +4925,11 @@ return C<undef>.
  satpass2> st method ...
 
 This interactive method is deprecated in favor of the
-L<delegate( 'spacetrack' )|/delegate> method. If you don't like all the
+L<tell( 'spacetrack' )|/tell> method. If you don't like all the
 typing that implies in interactive mode, you can define 'st' as a
 macro:
 
- satpass2> macro define st 'delegate spacetrack $@'
+ satpass2> macro define st 'tell spacetrack $@'
 
 This interactive method calls L<Astro::SpaceTrack|Astro::SpaceTrack>
 (which must be installed) to load satellite data. The arguments are the
@@ -5029,6 +5009,32 @@ those of Astro::App::Satpass2, not those of the underlying operating system.
 If the L</stdout> attribute is a terminal, output goes directly to the
 terminal, thus making things like 'less' possible. Otherwise output is
 captured and returned.
+
+=head2 tell
+
+ $satpass2->tell( formatter => template =>
+     local_coord => 'azel' );
+ satpass2> tell formatter template local_coord azel
+
+This interactive method modifies one of the objects to which
+functionality has been delegated, I<in situ.> The arguments are the
+attribute name of the object to be modified, the method to call on that
+object, and any arguments to that method. The results of the method call
+are returned.
+
+The only supported attributes are L<formatter|/formatter>,
+L<satpass|/satpass>, and L<time_parser|/time_parser>.
+
+If this method is called interactively (i.e. as a result of calling
+L<dispatch()|/dispatch> either directly or indirectly via
+C<execute()|/execute> or C<run()|/run>), it behaves differently in a
+couple of respects:
+
+First, if the object is C<formatter> and the method is
+C<desired_equinox_dynamical> used as a mutator, the new value is parsed
+as a time. See L</SPECIFYING TIMES> for the details.
+
+Second, all methods are routed through the object's C<decode()> method.
 
 =head2 time
 
@@ -5192,7 +5198,7 @@ The default is 'us'.
 This string attribute is deprecated. It is provided for backward
 compatibility with the F<satpass> script. The preferred way to
 manipulate this is either directly on the formatter object, or via the
-L<delegate()|/delegate> method.
+L<tell()|/tell> method.
 
 This attribute allows access to and manipulation of the formatter
 object's L<date_format|Astro::App::Satpass2::Format/date_format> attribute.
@@ -5223,7 +5229,7 @@ The default is 0.
 
 This string attribute is deprecated. It is provided for backward
 compatibility with the F<satpass> script. The preferred way to
-manipulate this is either directly, or via the L<delegate()|/delegate>
+manipulate this is either directly, or via the L<tell()|/tell>
 method.
 
 This attribute allows access to and manipulation of the formatter
@@ -5368,7 +5374,7 @@ The default is 1 (i.e. true).
 
 This boolean attribute is deprecated. It is provided for backward
 compatibility with the F<satpass> script. The preferred way to
-manipulate this is either directly, or via the L<delegate()|/delegate>
+manipulate this is either directly, or via the L<tell()|/tell>
 method.
 
 This attribute allows access to and manipulation of the formatter
@@ -5436,7 +5442,7 @@ The default is 1 (i.e. true).
 
 This string attribute is deprecated. It is provided for backward
 compatibility with the F<satpass> script. The preferred way to
-manipulate this is either directly, or via the L<delegate()|/delegate>
+manipulate this is either directly, or via the L<tell()|/tell>
 method.
 
 This string attribute allows access to and manipulation of the formatter
@@ -5498,7 +5504,7 @@ The default is 'model', which specifies whatever model is favored.
 
 This boolean attribute is deprecated. It is provided for backward
 compatibility with the F<satpass> script. The preferred way to
-manipulate this is either directly, or via the L<delegate()|/delegate>
+manipulate this is either directly, or via the L<tell()|/tell>
 method.
 
 This boolean attribute allows access to and manipulation of the time
@@ -5590,7 +5596,7 @@ The default is the C<STDOUT> file handle.
 
 This string attribute is deprecated. It is provided for backward
 compatibility with the F<satpass> script. The preferred way to
-manipulate this is either directly, or via the L<delegate()|/delegate>
+manipulate this is either directly, or via the L<tell()|/tell>
 method.
 
 This attribute allows access to and manipulation of the formatter
@@ -5655,7 +5661,7 @@ The default is C<'civil'>.
 
 This string attribute is deprecated. It is provided for backward
 compatibility with the F<satpass> script. The preferred way to
-manipulate this is either directly, or via the L<delegate()|/delegate>
+manipulate this is either directly, or via the L<tell()|/tell>
 method on the relevant objects.
 
 This string attribute specifies both the default time zone for date
@@ -5961,13 +5967,13 @@ be put through a deprecation cycle and disappear.
 =item st
 
 This command/method is deprecated in favor of the
-L<delegate()|/delegate> command/method, with first argument
+L<tell()|/tell> command/method, with first argument
 C<'spacetrack'>. It will remain until support for the F<satpass> script
 is dropped, and then be put through a deprecation cycle and removed.
 
 People using the 'st' command interactively can define 'st' as a macro:
 
- satpass2> macro define st 'delegate spacetrack $@'
+ satpass2> macro define st 'tell spacetrack $@'
 
 Note that the elimination of this command/method leaves you no way to
 localize individual attributes of the L<spacetrack|/spacetrack>

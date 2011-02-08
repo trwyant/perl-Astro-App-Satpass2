@@ -4,8 +4,8 @@ Astro::App::Satpass2::TUTORIAL - Tutorial on the use of Astro::App::Satpass2
 
 =head1 INTRODUCTION
 
-This package was created to provide a flexable way to predict satellite
-positions, passes, and visibility. Unfortunately, with flexability comes
+This package was created to provide a flexible way to predict satellite
+positions, passes, and visibility. Unfortunately, with flexibility comes
 complexity, more often than not. This document's purpose is to get you
 up and running, and walk you through some of the things the package can
 do.
@@ -48,8 +48,8 @@ download satellite orbital data directly into C<Astro::App::Satpass2>.
 The author also recommends optional module L<Date::Manip|Date::Manip>,
 but since the latest version of this module only installs under Perl
 5.10 and above, this tutorial will not assume it is installed. When it
-is not, C<Astro::App::Satpass> uses a home-grown ISO-8601-ish date
-parser. All dates specified in the examples will be compatable with both
+is not, C<Astro::App::Satpass2> uses a home-grown ISO-8601-ish date
+parser. All dates specified in the examples will be compatible with both
 date parsers.
 
 It does not matter whether you install optional modules before or after
@@ -65,7 +65,7 @@ This tutorial will cover the following:
 If you already have configured the initialization file for the
 F<satpass> script packaged with L<Astro::Coord::ECI|Astro::Coord::ECI>,
 C<Astro::App::Satpass2> will read this script, making allowances for at
-least some of the incompatabilites between the two tools. Since the
+least some of the incompatibilities between the two tools. Since the
 intent is to remove this functionality, you may at some time wish to
 convert your F<satpass> initialization file to a C<Astro::App::Satpass2>
 initialization file. To do this from inside the F<satpass2> script,
@@ -127,12 +127,12 @@ executive mansion as our location.
  satpass2> # their data from Space Track when we ask for
  satpass2> # it. We are assuming no Space Track username,
  satpass2> # so we tell them to just give us what they have.
- satpass2> delegate spacetrack set direct 1
+ satpass2> tell spacetrack set direct 1
  satpass2>
  satpass2> # Some data sources come with or without the
  satpass2> # actual name of the spacecraft. We want the name
  satpass2> # if it is available.
- satpass2> delegate spacetrack set with_name 1
+ satpass2> tell spacetrack set with_name 1
  satpass2>
  satpass2> # Save our configuration. All we really need to
  satpass2> # save are the changes from the default.
@@ -187,7 +187,7 @@ point.
  satpass2> # effective date, since there may be Space Shuttle
  satpass2> # data also, and that information is not usable
  satpass2> # until the actual launch.
- satpass2> delegate spacetrack spaceflight -all -effective
+ satpass2> tell spacetrack spaceflight -all -effective
  satpass2>
  satpass2> # Make the default pass prediction, which is for
  satpass2> # seven days starting today at noon.
@@ -200,8 +200,8 @@ output redirection to get your information into a file:
  satpass2> pass >pass.txt
 
 After which you open F<pass.txt> in some simple editor and print it. A
-word-processing editor will probably not work satisfactorally unless you
-set the entire document to a monospace font.
+word-processing editor will probably not work satisfactorily unless you
+set the entire document to a mono-space font.
 
 You may want a prediction for some specific date. The following example
 does a prediction for the night of April 1 2011 (specifically, for one
@@ -212,7 +212,7 @@ F<april_fool.txt>.
 
 Note that the date is quoted because of the space between the date and
 the time. If you had L<Date::Manip|Date::Manip> installed, you could
-specify the date more fledably, as (say) C<'1-Apr-2011 noon'>.
+specify the date more flexibly, as (say) C<'1-Apr-2011 noon'>.
 
 =head2 Different Viewing Conditions
 
@@ -308,7 +308,7 @@ download the orbital data and predict the flare from the data.
  ... front matter ...
  satpass2>
  satpass2> # Download the data on Iridium satellites.
- satpass2> delegate spacetrack celestrak iridium
+ satpass2> tell spacetrack celestrak iridium
  satpass2>
  satpass2> # Predict flares for the next seven days,
  satpass2> # starting today at noon.
@@ -378,7 +378,7 @@ settings to control the minimum reportable brightness.
 C<Astro::App::Satpass2> uses the C<flare_mag_day> setting to determine
 the dimmest reportable flare during the day; this defaults to C<-6>. The
 dimmest reportable flare at night is determined by the C<flare_mag_day>
-settig, which defaults to C<0>.
+setting, which defaults to C<0>.
 
 In order to duplicate (fairly closely) the Iridium flares reported by
 L<http://www.heavens-above.com/>, you will want to tweak
@@ -403,9 +403,9 @@ location of any other command. For a nice list of passes and flares for
 your refrigerator door, you can do something like this:
 
  satpass2> location >this_week.txt
- satpass2> delegate spacetrack spaceflight -all -effective
+ satpass2> tell spacetrack spaceflight -all -effective
  satpass2> pass >>this_week.txt
- satpass2> delegate spacetrack celestrak iridium
+ satpass2> tell spacetrack celestrak iridium
  satpass2> flare -pm >>this_week.txt
  satpass2> exit
 
@@ -421,10 +421,10 @@ is a separate subsystem all to itself. So:
 
  satpass2>
  satpass2> # Display the date as weekday day-month-year
- satpass2> delegate formatter date_format '%a %d-%b-%Y
+ satpass2> tell formatter date_format '%a %d-%b-%Y
  satpass2>
  satpass2> # Display the time as 1-12 AM or PM
- satpass2> delegate formatter time_format '%I:%M:%S %p'
+ satpass2> tell formatter time_format '%I:%M:%S %p'
  satpass2>
  satpass2> # Save the configuration, overwriting any previous one
  satpass2> save -changes -confirm
@@ -452,7 +452,7 @@ The definition of a macro is simply the list of commands it issues. Each
 command is a single argument, and therefore probably needs to be quoted.
 When the command to be issued itself contains quotes, you either use a
 different style (single versus double quotes) or you escape the quote
-mark with a back slash (C<'\').
+mark with a back slash (C<'\'>).
 
 The first thing our hypothetical user needs is a macro to set the
 location to his or her home location. The definition comes from our
@@ -465,7 +465,7 @@ first example:
  satpass2>
 
 Normally, this would all have to go on the same line, but
-C<Astro::App::Satpass2> recognises an end-of-line back slash as a
+C<Astro::App::Satpass2> recognizes an end-of-line back slash as a
 continuation mark, so all four lines above are parsed as though they are
 the same line. C<Astro::App::Satpass2> changes the prompt for a
 continuation line, just to keep you on your toes.

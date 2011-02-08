@@ -39,6 +39,7 @@ ca
 celestrak
 CLDR
 CPAN
+cpanminus
 CPANPLUS
 darwin
 DateTime

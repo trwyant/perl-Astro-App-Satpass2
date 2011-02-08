@@ -31,7 +31,7 @@ isa_ok($app, 'Astro::App::Satpass2')
     or BAIL_OUT("Can not continue without Astro::App::Satpass2 object");
 _method( set => autoheight => undef, stdout => undef, undef,
     'Clear autoheight and stdout' );
-_method( qw{ delegate formatter gmt 0 }, undef,
+_method( qw{ tell formatter gmt 0 }, undef,
     'Set formatter gmt false' );
 
 # NOTICE
@@ -50,7 +50,7 @@ _method( qw{ delegate formatter gmt 0 }, undef,
 $app->set( execute_filter => sub {
 	my ( $self, $args ) = @_;
 	@{ $args } > 3
-	    and $args->[0] eq 'delegate'
+	    and $args->[0] eq 'tell'
 	    and $args->[1] eq 'formatter'
 	    and $args->[2] eq 'gmt'
 	    and return;
@@ -59,16 +59,16 @@ $app->set( execute_filter => sub {
 );
 
 my $can_filter = 1;
-_app( 'delegate formatter gmt 1', undef,
+_app( 'tell formatter gmt 1', undef,
     'Attempt to set gmt with filter in place' );
-ok( ! $app->delegate( formatter => 'gmt' ), 'Confirm gmt still false' )
+ok( ! $app->tell( formatter => 'gmt' ), 'Confirm gmt still false' )
     or $can_filter = 0;
 # NOTICE
 # The execute_filter attribute is undocumented and unsupported.
 $app->set( execute_filter => sub { return 1 } );
-_app( 'delegate formatter gmt 1', undef,
+_app( 'tell formatter gmt 1', undef,
     'Attempt to set gmt with no filter in place' );
-ok( $app->delegate( formatter => 'gmt' ), 'Confirm gmt now true' );
+ok( $app->tell( formatter => 'gmt' ), 'Confirm gmt now true' );
 
 
 {
@@ -192,15 +192,15 @@ _app('set date_format %d/%m/%Y time_format "%I:%M:%S %p"',
     undef, 'Set date and time format');
 _app('show date_format', 'set date_format %d/%m/%Y', 'Show date format');
 _app('show time_format', 'set time_format "%I:%M:%S %p"', 'Show time format');
-_app('delegate formatter date_format %Y/%m/%d',
+_app('tell formatter date_format %Y/%m/%d',
     undef, 'Set date format directly');
-_app('delegate formatter time_format %H:%M:%S',
+_app('tell formatter time_format %H:%M:%S',
     undef, 'Set time format directly');
-_app('delegate formatter date_format',
-    'delegate formatter date_format %Y/%m/%d',
+_app('tell formatter date_format',
+    'tell formatter date_format %Y/%m/%d',
     'Show date format directly');
-_app('delegate formatter time_format',
-    'delegate formatter time_format %H:%M:%S',
+_app('tell formatter time_format',
+    'tell formatter time_format %H:%M:%S',
     'Show time format directly');
 _app("almanac '20090401T000000Z'",
     <<'EOD', 'Almanac for April Fools 2009');
@@ -822,7 +822,7 @@ sub _do_test {
 	    require Astro::SpaceTrack;
 	    1;
 	} or return ($bypass = "Astro::SpaceTrack not available");
-	$app_obj->delegate( qw{ spacetrack set with_name 1 } );
+	$app_obj->tell( qw{ spacetrack set with_name 1 } );
 
 	# If we do not have a Space Track username or password, try to
 	# scavenge one from the user's profile.
@@ -840,14 +840,14 @@ sub _do_test {
 			    || @{ $args } > 1
 			    && $args->[0] eq 'source'
 			    || @{ $args } > 3
-			    && $args->[0] eq 'delegate'
+			    && $args->[0] eq 'tell'
 			    && $args->[1] eq 'spacetrack'
 			    && $args->[2] eq 'set'
 			    ;
 		    } );
 		$app2->init();
 		$app_obj->execute(
-		    $app2->dispatch( qw{ delegate spacetrack show username password } )
+		    $app2->dispatch( qw{ tell spacetrack show username password } )
 		);
 	    };
 	}
@@ -873,13 +873,13 @@ EOD
 		    or return ($bypass = $message);
 		my $pass = _prompt('Enter Space Track password: ')
 		    or return ($bypass = $message);
-		$app_obj->delegate( 'spacetrack', 'set',
+		$app_obj->tell( 'spacetrack', 'set',
 		    username => $user, password => $pass);
 		eval {
-		    $app_obj->delegate( qw{ spacetrack login } );
+		    $app_obj->tell( qw{ spacetrack login } );
 		    1;
 		} and last;
-		$app_obj->delegate( 'spacetrack', 'set',
+		$app_obj->tell( 'spacetrack', 'set',
 		    username => '', password => '');
 		$@ =~ m/401/ and do {
 		    warn $@, "\n";
@@ -893,7 +893,7 @@ EOD
 	# password, retrieve the desired data, returning a failure
 	# message if we fail.
 	eval {
-	    $app_obj->delegate( spacetrack => @stcmd);
+	    $app_obj->tell( spacetrack => @stcmd);
 	    1;
 	} or return "Failed to retrieve data from Space Track: $@";
 
