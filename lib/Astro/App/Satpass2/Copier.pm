@@ -6,7 +6,7 @@ use warnings;
 use Carp;
 use Clone ();
 
-our $VERSION = '0.000_11';
+our $VERSION = '0.000_12';
 
 sub attribute_names {
     return ();

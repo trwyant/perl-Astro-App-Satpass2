@@ -7,7 +7,7 @@ use warnings;
 
 use Carp;
 
-our $VERSION = '0.000_11';
+our $VERSION = '0.000_12';
 
 use constant DATE_FORMAT => 'yyyy-MM-dd';
 
