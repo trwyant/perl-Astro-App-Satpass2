@@ -248,9 +248,9 @@ over the normal horizon. If you can see 2 degrees over the horizon,
  satpass2> set horizon -2
 
 C<Astro::App::Satpass2> does not predict visible passes that occur
-during the day, and it defines day as any time after the end of morning
-twilight and before the start of evening twilight. These in turn are
-defined as the point when the upper limb of the Sun passes above or
+during the day, and it defines day as any time after the start of
+morning twilight and before the end of evening twilight. These in turn
+are defined as the point when the upper limb of the Sun passes above or
 below a given distance below the horizon.
 
 =head3 Twilight
@@ -347,9 +347,9 @@ or equivalently,
 
 The C<-am>, C<-day>, and C<-pm> options select which flares are
 reported, by time.  The C<-am> option selects flares from midnight until
-the end of morning twilight; C<-day> selects flares from the end of
-morning twilight to the beginning of evening twilight, and C<-pm>
-selects flares from the beginning of evening twilight until midnight.
+the start of morning twilight; C<-day> selects flares from the start of
+morning twilight to the end of evening twilight, and C<-pm> selects
+flares from the end of evening twilight until midnight.
 
 The options can be negated by prefixing C<no> to the option name (e.g.
 C<-noday>). If you specify no options, they are all considered to be

@@ -823,7 +823,7 @@ sub _height_us {
 	moon => 'Astro::Coord::ECI::Moon',
 	set => 'Astro::Coord::ECI::TLE::Set',
 	sun => 'Astro::Coord::ECI::Sun',
-	st => 'Astro::SpaceTrack',
+	spacetrack => 'Astro::SpaceTrack',
 	star => 'Astro::Coord::ECI::Star',
 	tle => 'Astro::Coord::ECI::TLE',
 	utils => 'Astro::Coord::ECI::Utils',
@@ -3050,7 +3050,9 @@ sub _read_continuation {
 #	Specifically it:
 #	* Inserts a 'location' command before 'almanac' and 'pass';
 #	* Changes the senses of the -am, -day, and -pm options in
-#	  'flare'.
+#	  'flare';
+#	* Removes delegated attributes from 'localize', replacing them
+#	  with a localization of the helper object.
 #
 #	This method goes away when the satpass functionality does.
 
@@ -3836,7 +3838,7 @@ Astro::App::Satpass2 - Forecast satellite visibility.
      height => 16.68,          # meters
  );
  # Acquire ISS data from NASA
- $satpass2->st( qw{ spaceflight -all } );
+ $satpass2->tell( qw{ spacetrack spaceflight -all } );
  # Display our location
  $satpass2->location();
  # Display visible ISS passes over our location
@@ -3852,7 +3854,7 @@ this package,
  satpass2> set latitude 38.898748 longitude -77.037684
  satpass2> set height 16.68
  satpass2> # Acquire ISS data from NASA
- satpass2> st spaceflight -all
+ satpass2> tell spacetrack spaceflight -all
  satpass2> # Display our location
  satpass2> location
  satpass2> # Display visible ISS passes over our location
@@ -3887,44 +3889,6 @@ The eventual plan is to retire the F<satpass> script in favor of this
 package, and to rename the satpass-less F<Astro-satpass> distribution to
 F<Astro-Coord-ECI>.
 
-L<Date::Manip|Date::Manip> will be used to parse times if it is
-available. L<Date::Manip|Date::Manip> version 6.00 or higher is
-preferred. If this is not available (say, if you have not yet upgraded
-to Perl 5.010), you will experience reduced functionality, including
-possible improper handling of summer time. If L<Date::Manip|Date::Manip>
-is not available,
-L<Astro::App::Satpass2::ParseTime::ISO8601|Astro::App::Satpass2::ParseTime::ISO8601>
-will be used. This is a home-grown ISO-8601 parser, which understands
-only the year-month-day format, but has some convenience extensions. If
-you wish to force the use of the home-grown parser in the presence of
-L<Date::Manip|Date::Manip> you can use the L<time_parser|/time_parser>
-attribute to do this, though I can't think why you would want to.
-
-L<DateTime|DateTime> and L<DateTime::TimeZone|DateTime::TimeZone> will
-be used to format time for output if they are available. If not,
-L<POSIX|POSIX> C<strftime()> will be used, with the C<TZ> environment
-variable set if the L<tz|/tz> attribute is neither C<null> or C<''>, in
-the hopes that the underlying system call will respond to this.
-B<Caveat:> L<DateTime|DateTime> is not well-behaved in the far future or
-past (say, more than a hundred years or so) if the zone is something
-other than C<UTC> (a.k.a. Greenwich, a.k.a.  Zulu, and so on).
-
-Should you wish to force the use of the C<strftime()> built-in in the
-presence of L<DateTime|DateTime>, you can use the
-L<Astro::App::Satpass2::Format time_formatter()|Astro::App::Satpass2::Format/time_formatter>
-method to do this. Interactively, this would be something like
-
- satpass2> tell formatter time_formatter \
- > Astro::App::Satpass2::FormatTime::POSIX::Strftime
-
-The default time formatter uses C<strftime (3)> formats, but CLDR
-formatting is also available if you have the L<DateTime|DateTime> and
-L<DateTime::TimeZone|DateTime::TimeZone> modules installed.
-Interactively, This could be done with something like
-
- satpass2> tell formatter time_formatter \
- > Astro::App::Satpass2::FormatTime::DateTime::Cldr
-
 =head1 OVERVIEW
 
 This class implements an application to predict satellite visibility and
@@ -3933,171 +3897,112 @@ replacement of the F<satpass> script in distribution C<Astro-satpass>,
 aimed at making it easier to test, and removing some of the odder cruft
 that has accumulated in the F<satpass> script.
 
-=head2 Setup
+The easiest way to make use of this class is via the bundled F<satpass2>
+script, which simply calls the L<run()|/run> method.
+L<Astro::App::Satpass2::TUTORIAL|Astro::App::Satpass2::TUTORIAL> covers
+getting started with this script. If you do nothing else, see the
+tutorial on setting up an initialization file, since the L<satpass2>
+script will be much more easy to use if you configure some things up
+front.
 
-Before you can do anything useful with this package, you must tell it
-where you are. This is done by the L<set()|/set> method. The following
-code sets the object up for the White House, Washington DC, USA:
+You can also instantiate an C<Astro::App::Satpass2> object yourself and
+access all its functionality programmatically. If you are doing this you
+may still want to consult the
+L<TUTORIAL|Astro::App::Satpass2::TUTORIAL>, because the F<satpass2>
+commands correspond directly to C<Astro::App::Satpass2> methods.
 
- my $satpass2 = Astro::App::Satpass2->new();
- $satpass2->set( location => '1600 Pennsylvania Ave, Washington DC' );
- $satpass2->set( latitude => 38.898748, longitude => -77.037684 );
- $satpass2->set( height => 16.68 );   # Meters
+=head1 Optional Modules
 
-or, equivalently in the satpass2 script,
+An attempt has been made to keep the requirements of this module
+reasonably modest. But there are a number of optional modules which, if
+installed, give you increased functionality. If you do not install these
+initially and find you want the added functionality, you can always
+install them later. The optional modules are:
 
- $ satpass2
- ... front matter ...
- $satpass2> set location '1600 Pennsylvania Ave, Washington DC'
- $satpass2> set latitude 38.898748 longitude -77.037684
- $satpass2> set height 16.68
+=over
 
-The C<latitude> and C<longitude> are specified in decimal degrees by
-default, with south latitude and west longitude being negative. See
-L</SPECIFYING ANGLES> for other ways to specify angles.
+=item L<Astro::SIMBAD::Client|Astro::SIMBAD::Client>
 
-The C<height> above sea level is specified in meters. Strictly speaking,
-this should be height above the ellipsoid in use (WGS84 by default), but
-height above the geoid will probably be good enough, given the accuracy
-of the underlying forecast models. See L</SPECIFYING DISTANCES> for
-other ways to specify distances.
+This module looks up the positions of astronomical bodies in the SIMBAD
+database at L<http://simbad.u-strasbg.fr/>. This is only used by the
+C<lookup> subcommand of the L<sky()|/sky> method.
 
-The C<location> is informational only, and thus optional.
+=item L<Astro::SpaceTrack|Astro::SpaceTrack>
 
-In practice, you might want to make the above settings in an
-L</Initialization File>.
+This module retrieves satellite orbital elements from various sources.
+Since you have to have these to predict satellite positions, this is the
+least optional of the optional modules. Without it, you would have to
+download orbital elements some other way and then use the
+L<load()|/load> method to import them into C<Astro::App::Satpass2>.
 
-=head2 Satellite Passes
+=item L<Date::Manip|Date::Manip>
 
-Before you can predict the location of a satellite you must load data on
-its orbit into the application. There are a number of possible sources
-for this information, accessible through the L</st> (for Space Track)
-method. This method makes use of the
-L<Astro::SpaceTrack|Astro::SpaceTrack> package to retrieve orbital data
-from various sources.
+This module is a very flexible (and very large) time parser. If it is
+installed, C<Astro::App::Satpass2> will use it to parse times. If it is
+not available a home-grown ISO-8601-ish parser will be used. There are
+really three options here:
 
-The Space Track web site itself (L<http://www.space-track.org/>)
-requires registration, but a number of other sources of data do not.  If
-you are registered with Space Track, you may wish to configure the
-L<Astro::SpaceTrack|Astro::SpaceTrack> package with your username and
-password. To do this, you can use the code
+* If you have Perl 5.10 or above, you can install the latest version of
+L<Date::Manip|Date::Manip>.
 
- $satpass2->st( set =>
-     username => 'your_username',
-     password => 'your_password' );
+* If you a Perl before 5.10, the latest version of
+L<Date::Manip|Date::Manip> will not work, and you will have to install
+version 5.56. This version of C<Date::Manip> is known not to support
+summer time (or daylight saving time, if you will), and may have other
+deficiencies versus the current release.
 
-If you do not have a username and password, you will want to
+* The home-grown parser is
+L<Astro::App::Satpass2::ParseTime::ISO86O1|Astro::App::Satpass2::ParseTime::ISO8601>.
+This does not support summer time, nor time zones other than the user's
+default time and GMT. Dates and times must be specified as numeric
+year-month-day hour:minute:second, though there is some flexibility on
+punctuation, and as a convenience you can use C<yesterday>, C<today>, or
+C<tomorrow> in lieu of the C<year-month-day>.
 
- $satpass2->st( set => direct => 1 );
+=item L<DateTime|DateTime> and L<DateTime::TimeZone|DateTime::TimeZone>
 
-The equivalents in the F<satpass2> script are
+If both of these are available, C<Astro::App::Satpass2> will use them to
+format dates. If they are not, it will use C<POSIX::strftime>. If you
+are using C<POSIX::strftime>, time zones other than the default time
+zone and GMT are not supported, though if you set the L<tz|/tz>
+attribute C<Astro::App::Satpass2> will place its value in C<$ENV{TZ}>
+before calling C<strftime()> in case the underlying code pays attention
+to this.
 
- satpass2> st set username your_username password your_password
+If you have L<DateTime|DateTime> and
+L<DateTime::TimeZone|DateTime::TimeZone> installed,
+C<Astro::App::Satpass2> will let you use C<Cldr> time formats if you
+like, instead of C<strftime> formats.
 
-or
+=item L<Geo::WebService::Elevation::USGS|Geo::WebService::Elevation::USGS>
 
- satpass2> st set direct 1
+This module is only used by the L<height()|/height> method, or
+indirectly by the L<geocode()|/geocode> method. If you are not
+interested in these you do not need this module.
 
-The reason for setting C<direct> true is that some data sources (e.g.
-L<http://celestrak.com/>) maintain their own data, but can also be used
-to fetch data from Space Track. Setting L</direct> true tells
-L<Astro::SpaceTrack|Astro::SpaceTrack> to use the local data from such
-sites, not the Space Track data.
+=item L<SOAP::Lite|SOAP::Lite>
 
-For example, you can get data from NASA's Human Space Flight web site
-(covering the International Space Station and the Space Shuttle if
-flying) by:
+This module is used by the L<geocode()|/geocode> and L<height()|/height>
+methods. If you are not interested in these you do not need this module.
 
- $satpass2->st( qw{ spaceflight -all -effective } );
- or
- satpass2> st spaceflight -all -effective
+=item L<Time::HiRes|Time::HiRes>
 
-Unlike most other sources, this source contains predicted orbital
-elements for about the next week. The C<-all> requests all data;
-otherwise you just get the data that best represents the time the
-request was made. The C<-effective> requests effective date, which is
-not available from other sources and is kluged into the name line of the
-TLE. You can then forecast visibility using
+This module is only used by the L<time()|/time> method. If you are not
+interested in finding out how long things take to run, you do not need
+this module.
 
- $satpass2->pass();
- or
- satpass2> pass
+=item L<Time::y2038|Time::y2038>
 
-which forecasts visibility for the next week, starting at noon on the
-current day. You can also give an explicit start and end date for the
-prediction. See L<SPECIFYING TIMES|/SPECIFYING TIMES> for the details.
+This module is only needed if you are interested in times outside the
+range of times representable in your Perl. This was typically 1970
+through 2038 in 32-bit Perls before Perl 5.12. In Perl 5.12 the Y2038
+bug was fixed, and a much wider range of times is available. You may
+also find that a wider range of times is available in 64-bit Perls.
 
-=head2 Iridium Flares
+At least some versions of L<Time::y2038|Time::y2038> have had trouble on
+Windows-derived systems, including Cygwin. I<Caveat user.>
 
-Iridium flares are generated when an Iridium satellite reflects sunlight
-from one of its three main mission antennae (which are flat, shiny, and
-about the size of a door) to the observer. These are predictable because
-the Iridium satellites are maintained at a precise orientation. A bright
-flare can be as bright as the planet Venus, though it is only visible
-for a second or so.
-
-Predicting an Iridium flare is again a two-step process: first, obtain
-the orbital data for satellites in the Iridium constellation, and then
-predict the flares. You can get Iridium satellite data from Celestrak by
-
- $satpass2->st( qw{ celestrak iridium } );
- or
- satpass2> st celestrak iridium
-
-and then predict flares for the next week, starting at noon on the
-current day, with
-
- $satpass2->flare();
- or
- satpass2> flare
-
-Like the L</pass> method, the L</flare> method takes start time and end
-time as arguments; see L<SPECIFYING TIMES|/SPECIFYING TIMES> for the
-details. In addition, it takes a number of options, such as C<-spare> to
-predict flares from spare satellites as well as in-service satellites.
-You can see the L<flare()|/flare> for the details of these.
-
-=head2 Initialization File
-
-It would probably be more convenient to place the settings like your
-position and your Space Track username and password in an
-initialization file, so that they are executed automatically whenever
-you run the F<satpass2> script, invoke the L<run()|/run> method, or
-otherwise cause the initialization file to be run.
-
-The initialization file may contain blank lines, comments (beginning
-with C<#>), or commands. Commands are actually the names of interactive
-methods and arguments to those methods. Any arguments containing white
-space must be quoted. Lines may be continued by placing a back slash
-(C<\>) as the last character on the line.
-
-You can use the L<save()|/save> method to save your current settings to
-the default initialization file, or to the file of your choice if you
-specify its name. If an initialization file already exists, this method
-will ask for confirmation before overwriting it. If you write a file,
-its name will be displayed.
-
-The name and location of the initialization file are operating-system
-specific. You can use the L<initfile()|/initfile> method to display its
-name and location on your system, or see the L<initfile()|/initfile>
-documentation. This location and file name can be overridden by setting
-the C<SATPASS2INI> environment variable.
-
-Because this class is mostly command-compatible with the
-C<Astro-satpass> F<satpass> script, if an initialization file can not be
-found either through the C<SATPASS2INI> environment variable or in the
-default location, it will look for the F<satpass> initialization file
-and execute it if found. This is found either through the C<SATPASSINI>
-environment variable, or in the user's home directory as either
-satpass.ini (under MSWin32, VMS, or MacOS (i.e. classic)) or .satpass
-(under any other OS). You should expect this functionality to be retired
-when the C<satpass> script is withdrawn.
-
-The initialization file is read and executed under two circumstances:
-
-1) the user calls the L<run()|/run> method, or
-
-2) the user explicitly calls the L<init()|/init> method.
+=back
 
 =head1 METHODS
 
