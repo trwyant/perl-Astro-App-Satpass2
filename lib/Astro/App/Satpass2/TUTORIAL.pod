@@ -65,16 +65,26 @@ This tutorial will cover the following:
 If you already have configured the initialization file for the
 F<satpass> script packaged with L<Astro::Coord::ECI|Astro::Coord::ECI>,
 C<Astro::App::Satpass2> will read this script, making allowances for at
-least some of the incompatibilities between the two tools. Since the
-intent is to remove this functionality, you may at some time wish to
-convert your F<satpass> initialization file to a C<Astro::App::Satpass2>
+least some of the incompatibilities between the two tools.
+
+Since the intent is to remove the F<satpass> compatibility when
+F<satpass> is retired, you may at some time wish to convert your
+F<satpass> initialization file to a C<Astro::App::Satpass2>
 initialization file. To do this from inside the F<satpass2> script,
 simply issue the command
 
  satpass2> save -changes
 
 Subsequent runs of the F<satpass2> script will initialize from the new
-file.
+file. This form of the C<save> command just saves changes from the
+default configuration. If you wish to save everything, omit the
+C<-changes> option.
+
+Be aware that C<save> only saves the configuration of the
+C<Astro::App::Satpass2> object and its related helper objects. If your
+initialization file does other things, like download data and make
+predictions, these will not be written to the new file, and you must add
+them back by hand.
 
 =head2 Configuring manually
 
@@ -512,19 +522,20 @@ the macro exits. The example could be defined as a macro like this:
  satpass2> macro define iridium_flare \
  > "localize twilight flare_mag_night" \
  > "set twilight -1.8 flare_mag_night -1" \
- > "flare"
+ > "flare $@"
  satpass2>
 
-Note that the C<"flare"> did not need to be quoted, but it does no harm
-to do so, and it makes the documentation look nicer.
+The C<$@> takes any arguments you specified to the macro, and passes
+them to the C<flare> command. So if you say
 
-Then when you say
-
- satpass2> iridium_flare
+ satpass2> iridium_flare -noam 'today 12:00' +3
 
 The C<twilight> and C<flare_mag_night> settings will be changed, the
 flare prediction will be run, and the old C<twilight> and
-C<flare_mag_night> settings will be restored.
+C<flare_mag_night> settings will be restored. Because the macro
+arguments get passed to the C<flare> command, the prediction will be for
+the three days starting at noon today, and will exclude flares occurring
+between midnight and the beginning of morning twilight.
 
 Note that B<only> attributes of the C<Astro::App::Satpass2> object
 (those set with a C<set> command) can be localized; attributes of helper

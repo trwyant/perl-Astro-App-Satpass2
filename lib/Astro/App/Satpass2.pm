@@ -877,33 +877,40 @@ EOD
 }
 
 sub init {
-    my ( $self, $init_file ) = @_;
+    my ( $self, @args ) = @_;
+
+    my $opt = 'HASH' eq ref $args[0] ? shift @args : {};
+    my $init_file = shift @args;
 
     $self->{initfile} = undef;
 
     if (defined $init_file && $init_file ne '') {
 
-	if (-f $init_file) {
-	    $self->{initfile} = $init_file;
-	    return $self->source($init_file);
-	} else {
-	    $self->_wail("Initialization file $init_file not found");
-	}
+	-f $init_file
+	    or $self->_wail("Initialization file $init_file not found");
+
+	$self->{initfile} = $init_file;
+	return $self->source( { level1 => $opt->{level1} }, $init_file );
+
     } else {
+
 	foreach (
 	    sub { return $ENV{SATPASS2INI} },
 	    sub { $self->initfile( { quiet => 1 } ) },
 	    sub { return ( $ENV{SATPASSINI}, 1 ) },
 	    \&_init_file_01
 	) {
+
 	    my ( $fn, $level1 ) = $_->($self);
 	    defined $fn and $fn ne '' or next;
 	    chomp $fn;
 	    -f $fn or next;
 	    $self->{initfile} = $fn;
 	    return $self->source( { level1 => $level1 }, $fn);
+
 	}
     }
+
     return;
 }
 
@@ -1338,32 +1345,58 @@ sub quarters : Verb(dump!) {
 
 sub run {
     (my $self, local @ARGV) = @_;
+
+    # We can be called statically. If we are, instantiate.
     ref $self or $self = $self->new(warn => 1);
+
+    # If the undocumented first option is a code reference, use it to
+    # get input.
     my $in;
     ref $ARGV[0] eq 'CODE' and $in = shift @ARGV;
+
+    # Parse the command options. -level1 is undocumented.
     my %opt;
     GetOptions( \%opt, qw{ filter! initialization_file|initfile=s gmt!
-	help version },
+	help level1! version },
     )
 	or $self->_wail( "See the help method for valid options" );
+
+    # If -version, do it and return.
     if ( $opt{version} ) {
 	print $self->version();
 	return;
     }
+
+    # If -help, do it and return.
     if ( $opt{help} ) {
 	$self->help();
 	return;
     }
+
+    # Get an input routine if we do not already have one.
     $in ||= $self->_get_readline();
+
+    # Figure out whether we want to display the front matter.
     exists $opt{filter}
 	and $self->set(filter => delete ($opt{filter}));
+
+    # Display the front matter if desired.
     (!$self->get('filter') && $self->_get_interactive())
 	and print $self->version();
+
+    # Execute the initialization file.
     eval {
-	$self->init( delete $opt{initialization_file} );
+	$self->init(
+	    { level1 => delete $opt{level1} },
+	    delete $opt{initialization_file},
+	);
 	1;
     } or warn $@;	# Not _whinge, since presumably we already did.
+
+    # The remaining options set the corresponding attributes.
     %opt and $self->set(%opt);
+
+    # Execution loop. What exit() really does is a last on this.
 SATPASS2_EXECUTE:
     {
 	$self->_execute( @ARGV );
@@ -3057,12 +3090,22 @@ sub _read_continuation {
 #	This method goes away when the satpass functionality does.
 
 {
-    my %localize_map = (
-	date_format	=> 'formatter',
-	desired_equinox_dynamical	=> 'formatter',
-	gmt		=> 'formatter',
-	local_coord	=> 'formatter',
-	time_format	=> 'formatter',
+    my %helper_map = (
+	date_format	=> {
+	    helper	=> 'formatter',		# Helper obj attr. Req'd.
+	},
+	desired_equinox_dynamical	=> {
+	    helper	=> 'formatter',
+	},
+	gmt		=> {
+	    helper	=> 'formatter',
+	},
+	local_coord	=> {
+	    helper	=> 'formatter',
+	},
+	time_format	=> {
+	    helper	=> 'formatter',
+	},
     );
 
     my %filter = (
@@ -3081,7 +3124,8 @@ sub _read_continuation {
 	    my @output;
 	    my %duplicate;
 	    foreach my $token ( @things ) {
-		$token = $localize_map{$token} || $token;
+		$helper_map{$token}
+		    and $token = $helper_map{$token}{helper};
 		$duplicate{$token}++ or push @output, $token;
 	    }
 	    return join ' ', @output;
@@ -3090,18 +3134,67 @@ sub _read_continuation {
 	    my ( $verb, $line ) = @_;
 	    return ( 'location', $line );
 	},
+	set	=> sub {
+	    my ( $verb, $line ) = @_;
+	    eval {
+		require Text::ParseWords;
+		1;
+	    } or return $line;
+	    my @output = [ 'fubar' ];
+	    my @input = Text::ParseWords::quotewords( qr{ \s+ }smx, 1,
+		$line );
+	    shift @input;
+	    while ( @input ) {
+		my ( $attr, $val ) = splice @input, 0, 2;
+		if ( my $helper = $helper_map{$attr} ) {
+		    push @output, [ 'tell', $helper->{helper},
+			$helper->{attribute} || $attr, quoter( $val ) ];
+		} else {
+		    'show' eq $output[-1][0]
+			or push @output, [ 'set' ];
+		    push @{ $output[-1] }, $attr, quoter( $val );
+		}
+	    }
+	    shift @output;
+	    return ( map { join ' ', @{ $_ } } @output );
+	},
+	st	=> sub {
+	    my ( $verb, $line ) = @_;
+	    $line =~ s/ \b st \b /tell satpass/smx;
+	    return $line;
+	},
+	show	=> sub {
+	    my ( $verb, $line ) = @_;
+	    my @output = [ 'fubar' ];
+	    my @input = split qr{ \s+ }smx, $line;
+	    shift @input;
+	    foreach my $attr ( @input ) {
+		if ( my $helper = $helper_map{$attr} ) {
+		    push @output, [ 'tell', $helper->{helper},
+			$helper->{attribute} || $attr ];
+		} else {
+		    'show' eq $output[-1][0]
+			or push @output, [ 'show' ];
+		    push @{ $output[-1] }, $attr;
+		}
+	    }
+	    shift @output;
+	    return ( map { join ' ', @{ $_ } } @output );
+	},
     );
 
     sub _rewrite_level1_macros {
 	my ( $self ) = @_;
 
-	foreach my $macro ( values %{ $self->{macro} } ) {
+	while ( my ( $name, $macro ) = each %{ $self->{macro} } ) {
 
 	    delete $macro->{level1} or next;
 
 	    my ( $rewrote, @rslt );
 	    foreach ( @{ $macro->{def} } ) {
 		if ( m/ ( \S+ ) /smx
+			and ( not $self->{macro}{$1}
+			    or $1 eq $name )
 			and my $code = $filter{$1} ) {
 		    push @rslt, $code->( $1, $_ );
 		    $rewrote++;
@@ -4409,6 +4502,13 @@ are checked for, and the first one found is executed:
  - The file used by the satpass script.
 
 If none of these is found, this method returns nothing.
+
+If the initialization file is for F<satpass> rather than
+C<Astro::App::Satpass2>, any commands issued in it will be interpreted
+in their F<satpass> meaning, to the extent possible. Also, an attempt
+will be made to rewrite the commands in any macros defined into their
+C<Astro::App::Satpass2> equivalents. This rewriting is a purely textual
+operation, and you may want to verify your macro definitions.
 
 As a side effect, the name of the file actually used is stored in the
 L</initfile attribute>. This is cleared if the initialization file was

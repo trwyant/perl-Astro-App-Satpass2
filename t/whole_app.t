@@ -21,7 +21,7 @@ BEGIN {
 
 $| = 1;	## no critic (RequireLocalizedPunctuationVars)
 
-plan( tests => 181 );
+plan( tests => 190 );
 
 require_ok( 'Astro::App::Satpass2' )
     or BAIL_OUT( "Can not continue without loading Astro::App::Satpass2" );
@@ -720,6 +720,41 @@ EOD
 	'Geocode of White House returned expected latitude');
     _method( get => 'longitude', -77.037684,
 	'Geocode of White House returned expected longitude');
+}
+
+SKIP: {
+    my $tests = 9;
+    -f 't/rewrite_macros'
+	or skip( 'No macro file to rewrite', $tests );
+
+    _method( init => { level1 => 1 }, 't/rewrite_macros',
+	undef, 'Load satpass-format macros' );
+    _app( 'macro list farmers', <<'EOD', 'Rewrite almanac' );
+macro define farmers location \
+        almanac
+EOD
+    _app( 'macro list glint', 'flare -noam $@', 'Rewrite flare' );
+    _app( 'macro list burg', <<'EOD', 'Rewrite localize' );
+macro define burg "localize horizon formatter verbose"
+EOD
+    _app( 'macro list overtake', <<'EOD', 'Rewrite pass' );
+macro define overtake location \
+        pass
+EOD
+    _app( 'macro list exhibit', <<'EOD', 'Rewrite show' );
+macro define exhibit "tell formatter date_format" \
+        "show horizon verbose" \
+	"tell formatter time_format" \
+EOD
+    _app( 'macro list assign', <<'EOD', 'Rewrite set' );
+macro define assign "set horizon 10" \
+        "tell formatter date_format '%a %d-%b-%Y'" \
+	"tell formatter time_format '%I:%M:%S %p'" \
+	"set verbose 1 appulse 5" \
+	"tell formatter gmt 1"
+EOD
+    _app( 'macro list norad', '"st $@"', 'Rewrite st invocation' );
+    _app( 'macro list st', '"tell spacetrack $@"', 'Rewrite st use' );
 }
 
 cmp_ok(@{$app->{frame}}, '==', 1, 'Object frame stack clean') or eval {
