@@ -198,11 +198,11 @@ foreach ( keys %mutator, qw{ initfile } ) {
 
 my %shower = (
     date_format => \&_show_formatter_attribute,
-    formatter => \&_show_stringable,
+    formatter => \&_show_copyable,
     desired_equinox_dynamical => \&_show_formatter_attribute,
     gmt => \&_show_formatter_attribute,
     local_coord => \&_show_formatter_attribute,
-    time_parser => \&_show_stringable,
+    time_parser => \&_show_copyable,
     time_format => \&_show_formatter_attribute,
 );
 foreach ( keys %accessor ) { $shower{$_} ||= \&_show_unmodified }
@@ -1499,6 +1499,52 @@ sub _set_code_ref {
     return( $_[0]{$_[1]} = $_[2] );
 }
 
+# Set an attribute whose value is an Astro::App::Satpass2::Copier object
+# %arg is a hash of argument name/value pairs:
+#    {name} is the required name of the attribute to set;
+#    {value} is the required value of the attribute to set;
+#    {class} is the optional class that the object must be;
+#    {message} is an optional message to emit if the object can not be
+#	instantiated;
+
+sub _set_copyable {
+    my ( $self, %arg ) = @_;
+    my $old = $self->{$arg{name}};
+    my $obj;
+    if ( ref $arg{value} ) {
+	blessed( $arg{value} )
+	    or $self->_wail( "$arg{name} may not be unblessed reference" );
+	$obj = $arg{value};
+    } else {
+	if ( defined $arg{default} ) {
+	    defined $arg{value}
+		and '' ne $arg{value}
+		or $arg{value} = $arg{default};
+	}
+	my @args;
+	my $base = 0;
+	while ( $arg{value} =~ m/ (?: \A | [^\\] ) (?: \\ \\ )* , /smxg ) {
+	    push @args, substr $arg{value}, $base, $+[0] - $base - 1;
+	    $base = $+[0];
+	    $args[-1] =~ s/ \\ ( . ) /./smxg;
+	}
+	push @args, substr $arg{value}, $base;
+	my $pkg = shift @args;
+	my @prefix = @{ $arg{prefix} || [] };
+	my $cls = load_package( $pkg, @{ $arg{prefix} || [] } )
+	    or $self->_wail( "Unable to load $pkg" );
+	$obj = $cls->new( map { split qr{ = }smx, $_, 2 } @args )
+	    or $self->_wail( $arg{message} ||
+	    "Can not instantiate object from '$arg{value}'" );
+    }
+    defined $arg{class}
+	and not $obj->isa( $arg{class} )
+	and $self->_wail( "$arg{name} must be of class $arg{class}" );
+    blessed( $old ) and $old->can( 'copy' ) and $old->copy( $obj );
+    $self->{$arg{name}} = $obj;
+    return $arg{value};
+}
+
 sub _set_distance_meters {
     return ( $_[0]{$_[1]} = defined $_[2] ?
 	( $_[0]->_parse_distance( $_[2], '0m' ) * 1000 ) : $_[2] );
@@ -1512,7 +1558,7 @@ sub _set_ellipsoid {
 
 sub _set_formatter {
     my ( $self, $name, $val ) = @_;
-    return $self->_set_stringable(
+    return $self->_set_copyable(
 	name	=> $name,
 	value	=> $val,
 	message	=> 'Unknown formatter',
@@ -1560,55 +1606,9 @@ sub _set_stdout {
     return ($self->{$name} = $val);
 }
 
-# Set an attribute whose value is an Astro::App::Satpass2::Copier object
-# %arg is a hash of argument name/value pairs:
-#    {name} is the required name of the attribute to set;
-#    {value} is the required value of the attribute to set;
-#    {class} is the optional class that the object must be;
-#    {message} is an optional message to emit if the object can not be
-#	instantiated;
-
-sub _set_stringable {
-    my ( $self, %arg ) = @_;
-    my $old = $self->{$arg{name}};
-    my $obj;
-    if ( ref $arg{value} ) {
-	blessed( $arg{value} )
-	    or $self->_wail( "$arg{name} may not be unblessed reference" );
-	$obj = $arg{value};
-    } else {
-	if ( defined $arg{default} ) {
-	    defined $arg{value}
-		and '' ne $arg{value}
-		or $arg{value} = $arg{default};
-	}
-	my @args;
-	my $base = 0;
-	while ( $arg{value} =~ m/ (?: \A | [^\\] ) (?: \\ \\ )* , /smxg ) {
-	    push @args, substr $arg{value}, $base, $+[0] - $base - 1;
-	    $base = $+[0];
-	    $args[-1] =~ s/ \\ ( . ) /./smxg;
-	}
-	push @args, substr $arg{value}, $base;
-	my $pkg = shift @args;
-	my @prefix = @{ $arg{prefix} || [] };
-	my $cls = load_package( $pkg, @{ $arg{prefix} || [] } )
-	    or $self->_wail( "Unable to load $pkg" );
-	$obj = $cls->new( map { split qr{ = }smx, $_, 2 } @args )
-	    or $self->_wail( $arg{message} ||
-	    "Can not instantiate object from '$arg{value}'" );
-    }
-    defined $arg{class}
-	and not $obj->isa( $arg{class} )
-	and $self->_wail( "$arg{name} must be of class $arg{class}" );
-    blessed( $old ) and $old->can( 'copy' ) and $old->copy( $obj );
-    $self->{$arg{name}} = $obj;
-    return $arg{value};
-}
-
 sub _set_time_parser {
     my ( $self, $name, $val ) = @_;
-    return $self->_set_stringable(
+    return $self->_set_copyable(
 	name	=> $name,
 	value	=> $val,
 	class	=> 'Astro::App::Satpass2::ParseTime',
@@ -1705,17 +1705,17 @@ sub show : Verb(changes!,deprecated!,readonly!) {
     return $output;
 }
 
-sub _show_formatter_attribute {
-    my ( $self, $name ) = @_;
-    my $val = $self->{formatter}->decode( $name );
-    return ( qw{ tell formatter }, $name, $val );
-}
-
-sub _show_stringable {
+sub _show_copyable {
     my ( $self, $name ) = @_;
     my $obj = $self->get( $name );
     my $val = ref $obj || $obj;
     return ( 'set', $name, $val );
+}
+
+sub _show_formatter_attribute {
+    my ( $self, $name ) = @_;
+    my $val = $self->{formatter}->decode( $name );
+    return ( qw{ tell formatter }, $name, $val );
 }
 
 sub _show_unmodified {
