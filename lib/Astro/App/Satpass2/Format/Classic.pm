@@ -1857,10 +1857,12 @@ sub local_coord {
     if ( @args ) {
 	my $val = $args[0];
 	defined $val or $val = 'azel_rng';
+##	$self->{template}{$val}
+##	    or $self->warner()->wail(
+##		"Unknown local coordinate specification '$val'" );
 	$self->{template}{$val}
-	    or $self->warner()->wail(
-		"Unknown local coordinate specification '$val'" );
-	$self->template( local_coord => "%$val(\$*);" );
+	    and $val = "%$val(\$*);";
+	$self->template( local_coord => $val );
 	return $self->SUPER::local_coord( @args );
     } else {
 	return $self->SUPER::local_coord();
@@ -2530,11 +2532,11 @@ changes.
 =head1 DETAILS
 
 This class is intended to perform output formatting for
-L<Astro::App::Satpass2|Astro::App::Satpass2>, producing output similar to that
-produced by the F<satpass> script distributed with
+L<Astro::App::Satpass2|Astro::App::Satpass2>, producing output similar
+to that produced by the F<satpass> script distributed with
 L<Astro::Coord::ECI|Astro::Coord::ECI>. It is a subclass of
-L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>, and conforms to that
-interface.
+L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>, and
+conforms to that interface.
 
 This class does its job using a templating system. Each of the defined
 formatting methods makes use of one or more named templates to generate
@@ -2567,10 +2569,7 @@ implemented by the equivalent of
    '%elevation($*) %azimuth($*,bearing) %range($*);' );
  $f->template( local_coord => '%azel_rng($*);' );
 
-If you wanted to make C<'ECI'> a working value of local_coord, you
-could do it with code similar to the following:
-
- $f->template( ECI => '%eci_x($*) $eci_y($*) eci_z($*);' );
+See the L<local_coord|/local_coord> documentation for details.
 
 =head1 METHODS
 
@@ -2603,15 +2602,29 @@ the weasel word!) to adjust the default field width appropriately.
  print 'Local coord: ', $fmt->local_coord(), "\n";
  $fmt->local_coord( 'azel_rng' );
 
-This method overrides the L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
-L<local_coord()|Astro::App::Satpass2::Format/local_coord> method, and performs
-the same function.
+This method overrides the
+L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
+L<local_coord()|Astro::App::Satpass2::Format/local_coord> method, and
+performs the same function.
 
 When used as a mutator, it performs its function by checking to see if
 there is already a L</template> of the given name, and if so defining
 L</template> C<local_coord> to be the given template.  If there is no
 L</template> with the given name, the method croaks. If the given name is
 C<undef>, the default of C<azel_rng> is restored.
+
+Predefined local coordinates are
+
+ az_rng         => '%azimuth($*,bearing) %range($*);',
+ azel           => '%elevation($*) %azimuth($*,bearing);',
+ azel_rng       => '%elevation($*) %azimuth($*,bearing) %range($*);',
+ equatorial     => '%right_ascension($*) %declination($*);',
+ equatorial_rng => '%right_ascension($*) %declination($*) %range($*);',
+
+If you wanted to add C<'ECI'> as a valid value of local_coord, you
+could do it with code similar to the following:
+
+ $f->template( ECI => '%eci_x($*) $eci_y($*) eci_z($*);' );
 
 =head3 time_format
 
@@ -2641,9 +2654,10 @@ function. It uses template C<almanac>, which defaults to
  print $fmt->flare();
  print $fmt->flare( $flare_hash );
 
-This method overrides the L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
-L<flare()|Astro::App::Satpass2::Format/flare> method, and performs the same
-function. It uses template C<flare>, which defaults to
+This method overrides the
+L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
+L<flare()|Astro::App::Satpass2::Format/flare> method, and performs the
+same function. It uses template C<flare>, which defaults to
 
  %-date %-time %-12name %local_coord %magnitude
    %5angle(appulse,title=degrees from sun,missing=night)
