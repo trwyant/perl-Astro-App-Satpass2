@@ -919,7 +919,7 @@ sub new {
     $self->{template} = {};	# Templates
 
     while ( my ( $name, $def ) = each %template_definitions ) {
-	$self->template( $name => $def );
+	$self->_template( $name => $def );
     }
     return $self;
 }
@@ -1862,7 +1862,7 @@ sub local_coord {
 ##		"Unknown local coordinate specification '$val'" );
 	$self->{template}{$val}
 	    and $val = "%$val(\$*);";
-	$self->template( local_coord => $val );
+	$self->_template( local_coord => $val );
 	return $self->SUPER::local_coord( @args );
     } else {
 	return $self->SUPER::local_coord();
@@ -2346,6 +2346,25 @@ sub _set_phenomenon {
 }
 
 sub template {
+    my ( $self, $name, @value ) = @_;
+    if ( @value && 'local_coord' eq $name ) {
+	defined $value[0]
+	    or $self->warner()->wail(
+		"The $name template may not be deleted" );
+	$value[0] =~ m/ \A % ( \w+ ) [(] \$ [*] [)] ;? /smx
+	    and exists $self->{template}{$1}
+	    and $value[0] = $1;
+	@_ = ( $self, $value[0] );
+	goto &local_coord;
+    }
+    goto &_template;
+}
+
+# We split the actual template functionality from the public interface
+# so we can route the template for 'local_coord' through the
+# local_coord() method without having to work too hard to avoid an
+# infinite loop.
+sub _template {
     my ( $self, $name, @value ) = @_;
     if ( @value ) {
 	if ( defined $value[0] && 'undef' ne $value[0] ) {
@@ -3014,6 +3033,11 @@ If called with two arguments (the name of a template and the template
 itself), this method is a mutator that sets the named template. If the
 template is C<undef>, the named template is deleted. The object itself
 is returned, to allow call chaining.
+
+The C<local_coord> template is a special case, since it is used in the
+implementation of the L<local_coord()|/local_coord> method. It may not
+be deleted, and attempts to change it are routed through the
+L<local_coord()|/local_coord> method.
 
 =head1 FORMAT EFFECTORS
 
