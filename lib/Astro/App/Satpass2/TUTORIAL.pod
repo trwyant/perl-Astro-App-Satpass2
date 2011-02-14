@@ -520,13 +520,20 @@ a macro (among other things), so that the old values are restored when
 the macro exits. The example could be defined as a macro like this:
 
  satpass2> macro define iridium_flare \
- > "localize twilight flare_mag_night" \
- > "set twilight -1.8 flare_mag_night -1" \
- > "flare $@"
+ > 'localize twilight flare_mag_night' \
+ > 'set twilight -1.8 flare_mag_night -1' \
+ > 'flare $@'
  satpass2>
 
-The C<$@> takes any arguments you specified to the macro, and passes
-them to the C<flare> command. So if you say
+Note the use of single quotes rather than double quotes here. In double
+quotes, or outside quotes altogether, the C<$> is magical, and
+introduces something to be interpolated into the command. Exactly what
+is interpolated depends on what follows the C<$>. The C<$@> is replaced
+by the arguments of the macro (or whatever), but we do not want this to
+happen until the macro is expanded. Another way to defer expansion would
+be to escape the dollar sign with a back slash, i.e. C<"flare \$@">.
+
+So if you say
 
  satpass2> iridium_flare -noam 'today 12:00' +3
 
@@ -548,6 +555,63 @@ L<Astro::SpaceTrack|Astro::SpaceTrack> object,
 inside the appropriate scope. Yes, you can localize outside a macro (or
 any other localization scope), but it does no good to do so, because the
 old value is not restored until you exit, and what good is that?
+
+=head2 Reporting Position
+
+By default, anything that reports a position does it in elevation,
+azimuth and range. You may want some other units, such as right
+ascension and declination.
+
+Deciding what to display is the job of the C<formatter> helper object.
+Normally this is an
+L<Astro::App::Satpass2::Format::Classic|Astro::App::Satpass2::Format::Classic>,
+and for the full story you should see the documentation to that class.
+
+But there are a number of prepackaged coordinate sets:
+
+ az_rng --------- azimuth (with bearing) and range
+ azel ----------- elevation and azimuth (with bearing)
+ azel_rng ------- elevation, azimuth (with bearing) and range
+ equatorial ----- right ascension and declination
+ equatorial_rng - right ascension, declination and range
+
+By default, you get C<azel_rng>, but you can get any of the others via
+the L<local_coord()|Astro::App::Satpass2::Format::Classic/local_coord>
+method of the object. For example, if you want right ascension,
+declination and range, just
+
+ satpass2> tell formatter local_coord equatorial_rng
+
+If you want to do something other than the predefined coordinates, you
+can set the C<local_coord()> to a full
+L<Astro::App::Satpass2::Format::Classic|Astro::App::Satpass2::Format::Classic>
+template definition. For example, if you want azimuth (with bearing) and
+elevation,
+
+ satpass2> tell formatter local_coord \
+ > '%azimuth($*,bearing) %elevation($*)'
+
+The C<$*> is because internally C<local_coord> is treated like an
+individual format effector, and we want any arguments it was given to be
+passed through to the C<%azimuth> and C<%elevation> effectors. Note the
+use of quotes because of the embedded white space; they are single
+quotes to hide the C<$*> from the tokenizer, which if it sees it will do
+argument substitution.
+
+If you want to re-use the above definition, you can put something like
+the following in your configuration file:
+
+ tell formatter template AzEl '%azimuth($*,bearing) %elevation($*)'
+
+Then, when you want to use it, just
+
+ satpass2> tell formatter local_coord AzEl
+
+Template names are case-sensitive, so this does not conflict with the
+built-in C<azel>. You should always begin your own template names with
+an upper-case character to avoid conflicts with built-in template names.
+Yes, you can actually change the built-in C<azel> definition, but I am
+not completely sure it is a good idea to do so.
 
 =head1 AUTHOR
 
