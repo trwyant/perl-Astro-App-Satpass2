@@ -175,7 +175,7 @@ my %mutator = (
 				# 1 = whenever above horizon
 				# 2 = anytime
     visible => \&_set_unmodified, # 1 = only if sun down & sat illuminated
-    warn => \&_set_unmodified,	# True to warn/die; false to carp/croak.
+    warning => \&_set_warner_attribute,	# True to warn/die; false to carp/croak.
     warn_on_empty => \&_set_unmodified,
     				# True to have list commands warn on
 				# an empty list.
@@ -190,6 +190,7 @@ my %accessor = (
     perltime => \&_get_time_parser_attribute,
     time_format => \&_get_formatter_attribute,
     tz => \&_get_time_parser_attribute,
+    warning => \&_get_warner_attribute,
 );
 
 foreach ( keys %mutator, qw{ initfile } ) {
@@ -261,7 +262,7 @@ my %static = (
     tz => $ENV{TZ},
     verbose => 0,
     visible => 1,
-    warn => 0,
+    warning => 0,
     warn_on_empty => 1,
     webcmd => ''
 );
@@ -288,8 +289,13 @@ sub new {
 	and $got_astro_spacetrack
 	and $args{spacetrack} = $self->_get_spacetrack_default();
 
+    my $warner = $self->{_warner} = Astro::App::Satpass2::Warner->new(
+	warning => delete $args{warning}
+    );
+
     foreach my $name ( qw{ formatter time_parser } ) {
 	$self->set( $name => delete $args{$name} );
+	$self->tell( $name, warner => $warner );
     }
 
     $self->set( %args );
@@ -1347,7 +1353,7 @@ sub run {
     (my $self, local @ARGV) = @_;
 
     # We can be called statically. If we are, instantiate.
-    ref $self or $self = $self->new(warn => 1);
+    ref $self or $self = $self->new(warning => 1);
 
     # If the undocumented first option is a code reference, use it to
     # get input.
@@ -1653,6 +1659,13 @@ sub _set_tz {
 
 sub _set_unmodified {
     return ($_[0]{$_[1]} = $_[2]);
+}
+
+sub _set_warner_attribute {
+    my ( $self, $name, $val ) = @_;
+    defined $val and $val eq 'undef' and $val = undef;
+    $self->{_warner}->$name( $val );
+    return $val;
 }
 
 sub _set_webcmd {
@@ -2778,6 +2791,11 @@ sub _get_today_noon {
     return $gmt ? timegm(@time) : timelocal(@time);
 }
 
+sub _get_warner_attribute {
+    my ( $self, $name ) = @_;
+    return $self->{_warner}->$name();
+}
+
 #	@args = $self->_getopt(@args);
 #
 #	This subroutine determines the name of its caller, and parses
@@ -3148,11 +3166,15 @@ sub _read_continuation {
 		my ( $attr, $val ) = splice @input, 0, 2;
 		if ( my $helper = $helper_map{$attr} ) {
 		    push @output, [ 'tell', $helper->{helper},
-			$helper->{attribute} || $attr, quoter( $val ) ];
+			# not quoter( $val ) here, because presumably it
+			# is already quoted if it needs to be.
+			$helper->{attribute} || $attr, $val ];
 		} else {
 		    'show' eq $output[-1][0]
 			or push @output, [ 'set' ];
-		    push @{ $output[-1] }, $attr, quoter( $val );
+		    # not quoter( $val ) here, because presumably it is
+		    # already quoted if it needs to be.
+		    push @{ $output[-1] }, $attr, $val;
 		}
 	    }
 	    shift @output;
@@ -3874,21 +3896,14 @@ sub _user_home_dir {
 #	$self->_wail(...)
 #
 #	Either die or croak with the arguments, depending on the value
-#	of the 'warn' attribute. If we die, a trailing period and
+#	of the 'warning' attribute. If we die, a trailing period and
 #	newline are provided if necessary. If we croak, any trailing
 #	punctuation and newline are stripped.
 
 sub _wail {
     my ($self, @args) = @_;
-    my $msg = join '', @args;
-    chomp $msg;
-    if ($self->get('warn')) {
-	$msg =~ m/[.?!]\z/msx or $msg .= '.';
-	die $msg, "\n";
-    } else {
-	$msg =~ s/[.?!]\z//msx;
-	croak $msg;
-    }
+    $self->{_warner}->wail( @args );
+    return;	# We can't hit this, but Perl::Critic does not know that.
 }
 
 #	$self->_whinge(...)
@@ -3900,15 +3915,7 @@ sub _wail {
 
 sub _whinge {
     my ($self, @args) = @_;
-    my $msg = join '', @args;
-    chomp $msg;
-    if ($self->get('warn')) {
-	$msg =~ m/ [.?!] \z /msx or $msg .= '.';
-	warn $msg, "\n";
-    } else {
-	$msg =~ s/ [.?!] \z //msx;
-	carp $msg;
-    }
+    $self->{_warner}->whinge( @args );
     return;
 }
 
@@ -5739,7 +5746,7 @@ Sun.
 
 The default is 1 (i.e. true).
 
-=head2 warn
+=head2 warning
 
 This boolean attribute specifies whether warnings and errors are
 reported via C<carp> and C<croak>, or via C<warn> and C<die>. If true,

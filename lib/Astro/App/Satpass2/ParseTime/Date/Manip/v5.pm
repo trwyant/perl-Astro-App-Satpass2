@@ -37,7 +37,7 @@ sub delegate {
 
 sub parse_time_absolute {
     my ( $self, $string ) = @_;
-    $invalid and croak $invalid;
+    $invalid and $self->warner()->wail( $invalid );
     my $time = UnixDate( $string, '%s' ) - $epoch_offset;
     if ( $self->perltime() ) {
 	$time = timelocal( gmtime $time );
@@ -47,7 +47,7 @@ sub parse_time_absolute {
 
 sub perltime {
     my ( $self, @args ) = @_;
-    $invalid and croak $invalid;
+    $invalid and $self->warner()->wail( $invalid );
     if ( @args ) {
 	my $zone = $args[0] ? 'GMT' : $self->tz();
 	$zone = defined $zone ? "TZ=$zone" : $default_zone;
@@ -62,7 +62,7 @@ sub use_perltime {
 
 sub tz {
     my ( $self, @args ) = @_;
-    $invalid and croak $invalid;
+    $invalid and $self->warner()->wail( $invalid );
     if ( @args ) {
 	if ( $args[0] || looks_like_number( $args[0] ) ) {
 	    $ENV{TZ} = $args[0];	## no critic (RequireLocalizedPunctuationVars)

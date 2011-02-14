@@ -35,6 +35,7 @@ lib/Astro/App/Satpass2/FormatTime/POSIX/Strftime.pm
 lib/Astro/App/Satpass2/FormatTime/Strftime.pm
 lib/Astro/App/Satpass2/TUTORIAL.pod
 lib/Astro/App/Satpass2/Utils.pm
+lib/Astro/App/Satpass2/Warner.pm
 LICENSES/Artistic
 LICENSES/Copying
 t/basic.t

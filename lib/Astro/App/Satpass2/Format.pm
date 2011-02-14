@@ -29,20 +29,31 @@ my %static = (
 sub new {
     my ( $class, %args ) = @_;
     ref $class and $class = ref $class;
-    $class eq __PACKAGE__
-	and 'Astro::App::Satpass2::Test' ne caller
-	and croak __PACKAGE__, ' may not be instantiated. ',
-	    'Use a subclass';
+
     my $self = { %static };
     bless $self, $class;
+
+    $class eq __PACKAGE__
+	and 'Astro::App::Satpass2::Test' ne caller
+	and $self->warner()->wail( __PACKAGE__,
+	    ' may not be instantiated. Use a subclass' );
+
+    $args{warner}
+	and $self->warner( delete $args{warner} );
+
     exists $args{tz} or $args{tz} = $ENV{TZ};
+
     $self->time_formatter( delete $args{time_formatter} );
+    $self->time_formatter()->warner( $self->warner() );
+
     $args{date_format}
 	or $self->date_format( $self->time_formatter()->DATE_FORMAT() );
     $args{time_format}
 	or $self->time_format( $self->time_formatter()->TIME_FORMAT() );
+
     while ( my ( $name, $value ) = each %args ) {
-	$self->can( $name ) or croak "Method '$name' does not exist";
+	$self->can( $name )
+	    or $self->warner()->wail( "Method '$name' does not exist" );
 	$self->$name( $value );
     }
     return $self;
@@ -73,17 +84,25 @@ sub attribute_names {
 	};
     }
 
+    my %not_part_of_config = map { $_ => 1 } qw{ warner };
+
     sub config {
 	my ( $self, %args ) = @_;
 	my @data;
 
 	foreach my $name ( $self->attribute_names() ) {
+
+	    $not_part_of_config{$name}
+		and next;
+
 	    my $val = $self->$name();
+
 	    no warnings qw{ uninitialized };
 	    next if $args{changes} &&
 		$val eq ( $original_value{$name} ?
 		    $original_value{$name}->( $self, $name ) :
 		    undef );
+
 	    push @data, [ $name, $args{decode} ? $self->decode( $name )
 		: $val ];
 	}
@@ -145,7 +164,7 @@ sub time_formatter {
 	ref $fmtr or do {
 	    my $class = load_package( $fmtr,
 		'Astro::App::Satpass2::FormatTime' )
-		or croak "Can not load $fmtr";
+		or $self->warner()->wail( "Can not load $fmtr" );
 	    $fmtr = $class->new();
 	};
 	my $old = $self->{time_formatter}
@@ -169,6 +188,17 @@ sub tz {
     } else {
 	return $self->{tz};
     }
+}
+
+sub warner {
+    my ( $self, @args ) = @_;
+    if ( @args ) {
+	my $warner = $args[0];
+	if ( my $fmtr = $self->time_formatter() ) {
+	    $fmtr->warner( $warner );
+	}
+    }
+    return $self->SUPER::warner( @args );
 }
 
 __PACKAGE__->create_attribute_methods();

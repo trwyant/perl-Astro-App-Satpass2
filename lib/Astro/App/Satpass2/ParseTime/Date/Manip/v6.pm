@@ -44,7 +44,7 @@ sub dmd_zone {
 
 sub parse_time_absolute {
     my ( $self, $string ) = @_;
-    $invalid and croak $invalid;
+    $invalid and $self->warner()->wail( $invalid );
     my $dm = $self->_get_dm_field( 'object' );
     $dm->parse( $string ) and return;
     return $dm->secs_since_1970_GMT() - $epoch_offset;
@@ -56,7 +56,7 @@ sub use_perltime {
 
 sub tz {
     my ( $self, @args ) = @_;
-    $invalid and croak $invalid;
+    $invalid and $self->warner()->wail( $invalid );
     if ( @args ) {
 	my $zone = $args[0];
 	my $dm = $self->_get_dm_field( 'object' );

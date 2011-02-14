@@ -6,10 +6,13 @@ use warnings;
 use Carp;
 use Clone ();
 
+use Astro::App::Satpass2::Warner;
+use Scalar::Util qw{ blessed };
+
 our $VERSION = '0.000_12';
 
 sub attribute_names {
-    return ();
+    return ( qw{ warner } );
 }
 
 sub clone {
@@ -45,6 +48,27 @@ sub create_attribute_methods {
     return;
 }
 
+sub warner {
+    my ( $self, @args ) = @_;
+    if ( @args ) {
+	my $val = shift @args;
+	if ( ! defined $val ) {
+	    $val = Astro::App::Satpass2::Warner->new();
+	} elsif ( ! ref $val && $val->isa(
+		'Astro::App::Satpass2::Warner' ) ) {
+	    $val = Astro::App::Satpass2::Warner->new();
+	} elsif ( ! ( blessed( $val ) &&
+		$val->isa('Astro::App::Satpass2::Warner' ) ) ) {
+	    $self->warner()->wail(
+		'Warner must be undef or an Astro::App::Satpass2::Warner'
+	    );
+	}
+	$self->{warner} = $val;
+	return $self;
+    } else {
+	return $self->{warner} ||= Astro::App::Satpass2::Warner->new();
+    }
+}
 
 1;
 
@@ -75,13 +99,32 @@ Astro::App::Satpass2::Copier - Object copying functionality for Astro::App::Satp
 
 =head1 DETAILS
 
-B<This class is private> to the L<Astro::App::Satpass2|Astro::App::Satpass2> package.
-The author reserves the right to modify it in any way or retract it
-without prior notice.
+B<This class is private> to the
+L<Astro::App::Satpass2|Astro::App::Satpass2> package.  The author
+reserves the right to modify it in any way or retract it without prior
+notice.
 
 =head1 METHODS
 
 This class supports the following public methods:
+
+=head2 Accessors and Mutators
+
+=head3 warner
+
+ $obj->warner( undef );
+ my $warner = $obj->warner();
+
+This method is both accessor and mutator for the C<warner> attribute.
+
+If an argument is passed, it must be either an
+L<Astro::App::Satpass2::Warner|Astro::App::Satpass2::Warner> (either
+class or object), or C<undef> (which causes a new
+L<Astro::App::Satpass2::Warner|Astro::App::Satpass2::Warner> object to
+be created.)
+
+If no argument is passed, it is an accessor, returning the warner
+object. If no such object has been assigned, one will be generated.
 
 =head2 attribute_names
 

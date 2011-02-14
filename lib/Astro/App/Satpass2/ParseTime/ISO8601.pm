@@ -114,7 +114,8 @@ sub tz {
     if ( @args ) {
 	if ( defined $args[0] && $args[0] ne '' ) {
 	    $args[0] =~ m/ \A $zone_re \z /smxo
-		or croak "Invalid zone '$args[0]'";
+		or $self->warner()->wail(
+		    "Invalid zone '$args[0]'" );
 	    $self->{+__PACKAGE__}{tz} = [ $1, $2, $3, $4 ];
 	} else {
 	    delete $self->{+__PACKAGE__}{tz};

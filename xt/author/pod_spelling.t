@@ -137,6 +137,7 @@ USGS
 UT
 webcmd
 WGS
+whinge
 wyant
 YAML
 zoneinfo

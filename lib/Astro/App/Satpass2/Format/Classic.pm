@@ -1066,8 +1066,10 @@ sub _format_compiler {
 
 	# The format effector may have been abbreviated. Expand it.
 	$action = $tplt_abbr{$action}
-	    or croak "No format effector for ",
-		substr $tplt, $-[0], $+[0] - $-[0];
+	    or $self->warner()->wail(
+		"No format effector for ",
+		substr $tplt, $-[0], $+[0] - $-[0],
+	    );
 
 	# Stash the data for this format effector for easy access.
 	my $info = $format_effector{$action}
@@ -1309,22 +1311,25 @@ sub _format_compiler {
 		my ($name, $arg) = split '=', $_, 2;
 		defined $name or next;	# Might not have any arguments.
 		defined $tplt_args{$name}
-		    or croak "%$action($name) is not a known argument";
+		    or $self->warner()->wail(
+			"%$action($name) is not a known argument" );
 		$name = $tplt_args{$name};
 		$argument_def{$name}{standard}
 			and not $info->{forbid}{$name}
 		    or not $argument_def{$name}{standard}
 			and $info->{allow}{$name}
-		    or croak "%$action($name) is not allowed";
+		    or $self->warner()->wail(
+			"%$action($name) is not allowed" );
 		defined $arg
 		    or $arg = exists $argument_def{$name}{default} ?
 			$argument_def{$name}{default} : 1;
 		$args{$name} = $arg;
 		if ( $argument_def{$name}{selector} ) {
 		    exists $args{selected}
-			and croak 'Only one of ', join( ', ',
-			grep { $argument_def{$_}{selector} }
-			sort keys %argument_def ), ' allowed';
+			and $self->warner()->wail(
+			    'Only one of ', join( ', ',
+			    grep { $argument_def{$_}{selector} }
+			    sort keys %argument_def ), ' allowed' );
 		    $args{selected} = $name;
 		}
 	    }
@@ -1356,7 +1361,8 @@ sub _format_compiler {
 	$args->{units} or return;
 
 	my $type = $info->{units}
-	    or croak "%$action does not allow units= specification";
+	    or $self->warner()->wail(
+		"%$action does not allow units= specification" );
 	my $to;
 	exists $units{$type}{factor}{$args->{units}}
 	    and $to = $args->{units};
@@ -1366,16 +1372,19 @@ sub _format_compiler {
 	    foreach (keys %{$units{$type}{factor}}) {
 		m/ $re /smx or next;
 		$units
-		    and croak "%$action units abbreviation '$to' ",
-			"not unique";
+		    and $self->warner()->wail(
+			"%$action units abbreviation '$to' ",
+			'not unique' );
 		$units = $_;
 	    }
 	    $units
-		or croak "%$action units '$args->{units}' not valid";
+		or $self->warner()->wail(
+		    "%$action units '$args->{units}' not valid" );
 	    $to = $units;
 	}
 	$info->{forbid_units}{$to}
-	    and croak "%$action units '$args->{units}' not valid";
+	    and $self->warner()->wail(
+		"%$action units '$args->{units}' not valid" );
 	my $factor;
 	{	# Using as single-iteration loop.
 	    $factor = $units{$type}{factor}{$to};
@@ -1750,17 +1759,27 @@ sub _format_time_since_epoch {
 
     my %check = (
 	missing => sub {},
-	places => sub {$_[2] =~ m/ \D /smx
-		and croak "Places must be an integer"},
+	places => sub {
+	    my ( $self, $action, $name, $val ) = @_;
+	    $val =~ m/ \D /smx
+		and $self->warner()->wail( "Places must be an integer" );
+	    return;
+	},
 	title => sub {},
-	width => sub {$_[2] =~ m/ \D /smx
-		and croak "Width must be an integer"},
+	width => sub {
+	    my ( $self, $action, $name, $val ) = @_;
+	    $val =~ m/ \D /smx
+		and $self->warner()->wail( "Width must be an integer" );
+	    return;
+	},
 	units => sub {
-	    my ( $action, $name, $val ) = @_;
+	    my ( $self, $action, $name, $val ) = @_;
 	    my $units = $format_effector{$action}{units}
-		or croak "%$action does not support units";
+		or $self->warner()->wail(
+		    "%$action does not support units" );
 	    exists $units{$units}{factor}{$val}
-		or croak "'$val' is not a valid '$units'";
+		or $self->warner()->wail(
+		    "'$val' is not a valid '$units'" );
 	    return;
 	},
     );
@@ -1769,21 +1788,26 @@ sub _format_time_since_epoch {
     sub format_effector {
 	my ($self, $action, @args) = @_;
 	defined $action
-	    or croak 'No format effector specified';
+	    or $self->warner()->wail(
+		'No format effector specified' );
 	$format_effector{$action}
-	    or croak "No such format effector as '$action'";
+	    or $self->warner()->wail(
+		"No such format effector as '$action'" );
 	if (@args) {
 	    while (@args) {
 		my ( $name, $val ) = splice @args, 0, 2;
 		if ( defined $name && $name ne 'undef' ) {
 		    $check{$name}
-			or croak "No such format effector attribute as '$name'";
+			or $self->warner()->wail(
+			    "No such format effector attribute as '$name'"
+			);
 		    $format_effector{$action}{forbid}
 			and $format_effector{$action}{forbid}{$name}
-			and croak "Argument $name forbidden on %$action";
+			and $self->warner()->wail(
+			    "Argument $name forbidden on %$action" );
 		    delete $self->{_template_cache};
 		    if (defined $val && $val ne 'undef') {
-			$check{$name}->( $action, $name, $val );
+			$check{$name}->( $self, $action, $name, $val );
 			$self->{formatter}{$action}{$name} = $val;
 		    } else {
 			delete $self->{formatter}{$action}{$name};
@@ -1834,7 +1858,8 @@ sub local_coord {
 	my $val = $args[0];
 	defined $val or $val = 'azel_rng';
 	$self->{template}{$val}
-	    or croak "Unknown local coordinate specification '$val'";
+	    or $self->warner()->wail(
+		"Unknown local coordinate specification '$val'" );
 	$self->template( local_coord => "%$val(\$*);" );
 	return $self->SUPER::local_coord( @args );
     } else {
@@ -1870,8 +1895,9 @@ sub _macro_expand_single {
 	undef;
     defined $expansion or return $text;
     _any( $name, $recursion )
-	and croak "Circular reference to $name in ", join ' from ',
-	    @{ $recursion };
+	and $self->warner()->wail(
+	    "Circular reference to $name in ", join ' from ',
+	    @{ $recursion } );
     defined $args or $args = '';
     $args =~ s/ \A [(] //smx;
     $args =~ s/ [)] \z //smx;
@@ -2185,8 +2211,10 @@ sub _set {
     while (@args) {
 	my $name = shift @args;
 	my $code = $mutator{$name}
-	    or croak "Unknown or read-only ", __PACKAGE__,
-	    " attribute '$name'";
+	    or $self->warner()->wail(
+		"Unknown or read-only ", __PACKAGE__,
+		" attribute '$name'",
+	    );
 	$code->($self, $name, shift @args);
     }
     return $self;
@@ -2196,7 +2224,8 @@ sub _set_almanac {
     my ($self, $name, $value) = @_;
     if (defined $value) {
 	ref $value eq 'HASH'
-	    or croak "Value of almanac must be a hash reference";
+	    or $self->warner->wail(
+		"Value of almanac must be a hash reference" );
     }
     return ($self->{$name} = $value);
 }
@@ -2205,8 +2234,12 @@ sub _set_appulse {
     my ($self, $name, $value) = @_;
     if (defined $value) {
 	ref $value eq 'HASH'
-	    or croak "Value of appulse must be a hash reference";
-	exists $value->{body} or croak "Appulse hash must contain a body";
+	    or $self->warner()->wail(
+		"Value of appulse must be a hash reference" );
+	exists $value->{body}
+	    or $self->warner()->wail(
+		"Appulse hash must contain a body"
+	    );
 	return ($self->{$name} = $value);
     } else {
 	delete $self->{$name};
@@ -2218,8 +2251,11 @@ sub _set_center {
     my ($self, $name, $value) = @_;
     if (defined $value) {
 	ref $value eq 'HASH'
-	    or croak "Value of center must be a hash reference";
-	exists $value->{body} or croak "Center hash must contain a body";
+	    or $self->warner()->wail(
+		"Value of center must be a hash reference" );
+	exists $value->{body}
+	    or $self->warner()->wail(
+		"Center hash must contain a body" );
 	return ($self->{$name} = $value);
     } else {
 	delete $self->{$name};
@@ -2228,9 +2264,11 @@ sub _set_center {
 }
 
 sub _set_eci {
-    (defined $_[2] && !embodies($_[2], 'Astro::Coord::ECI'))
-	and croak "'$_[1]' value must be subclass of Astro::Coord::ECI";
-    return ($_[0]{$_[1]} = $_[2]);
+    my ($self, $name, $data) = @_;
+    (defined $data && !embodies($data, 'Astro::Coord::ECI'))
+	and $self->warner()->wail(
+	    "'$name' value must be subclass of Astro::Coord::ECI" );
+    return ($self->{$name} = $data);
 }
 
 sub _set_literal {
@@ -2240,9 +2278,10 @@ sub _set_literal {
 sub _set_phenomenon {
     my ($self, $name, $data) = @_;
     ref $data
-	or croak "Scalar phenomenon not understood";
+	or $self->warner()->wail( "Scalar phenomenon not understood" );
     ref $data eq 'HASH'
-	or croak "Reference to ", ref $data, " not understood";
+	or $self->warner()->wail(
+	    "Reference to ", ref $data, " not understood" );
     $self->_set(map {$_ => $data->{$_}} qw{body time
 	angle center magnitude mma status type
 	almanac
@@ -2322,9 +2361,9 @@ sub template {
 
 sub _template_fetcher {
     my ( $self, $name ) = @_;
-    defined $name or croak 'Template name undefined';
+    defined $name or $self->warner()->wail( 'Template name undefined' );
     defined $self->{template}{$name}
-	or croak "Template '$name' not defined";
+	or $self->warner()->wail( "Template '$name' not defined" );
     return ( $self->{_template_cache}{$name} ||=
 	$self->_format_compiler( $self->{template}{$name} ) );
 }

@@ -71,9 +71,11 @@ sub dumper {
 	    last;
 	}
 	ref $val
-	    or croak "Unknown or unavailable dumper class '$val'";
+	    or $self->warner()->wail(
+	    "Unknown or unavailable dumper class '$val'" );
     } elsif ( $ref ne 'CODE' ) {
-	croak 'Dumper must be a code ref or the name of a known class';
+	$self->warner()->wail(
+	    'Dumper must be a code ref or the name of a known class' );
     }
     $self->{+__PACKAGE__}{dumper} = $val;
     return $self;
