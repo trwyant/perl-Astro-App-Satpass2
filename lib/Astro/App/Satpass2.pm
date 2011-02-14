@@ -2095,7 +2095,7 @@ sub __tell__formatter {
     instance( $rslt, ref $object ) and return;
     ref $rslt and return $rslt;
     return join( ' ', map { quoter( $_ ) } 'tell', $attribute,
-	$method, $rslt ) . "\n";
+	$method, @args, $rslt ) . "\n";
 
 }
 
