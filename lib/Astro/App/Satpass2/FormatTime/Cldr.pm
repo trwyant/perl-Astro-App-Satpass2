@@ -5,9 +5,16 @@ use 5.006002;
 use strict;
 use warnings;
 
+use base qw{ Exporter };
+
 use Carp;
 
 our $VERSION = '0.000_12';
+
+our @EXPORT_OK = qw{
+    DATE_FORMAT FORMAT_TYPE ISO_8601_FORMAT TIME_FORMAT
+};
+our @EXPORT = @EXPORT_OK;	## no critic (ProhibitAutomaticExportation)
 
 use constant DATE_FORMAT => 'yyyy-MM-dd';
 
@@ -28,18 +35,26 @@ Astro::App::Satpass2::FormatTime::CLDR - Provide common functionality for CLDR-t
 =head1 SYNOPSIS
 
  package MyTimeFormatter;
- use base qw{ Astro::App::Satpass2::FormatTime::Cldr };
- use POSIX qw{ strftime };
+ use Astro::App::Satpass2::FormatTime::Cldr;
+ use DateTime;
+ use DateTime::TimeZone;
+
+ my $gmt = DateTime::TimeZone->new( name => 'UTC' );
  
  sub iso8601 {
      my ( $time ) = @_;
-     return strftime( __PACKAGE__->ISO_8601_FORMAT(), gmtime $time );
+     my $dt = DateTime->from_epoch(
+         epoch => $time,
+	 time_zone => $gmt, 
+     );
+     return $dt->format_cldr( ISO_8601_FORMAT );
  }
 
 =head1 NOTICE
 
-This package is private to the L<Astro::App::Satpass2|Astro::App::Satpass2> package.
-The author reserves the right to revoke it or change it without notice.
+This package is private to the
+L<Astro::App::Satpass2|Astro::App::Satpass2> package.  The author
+reserves the right to revoke it or change it without notice.
 
 =head1 DESCRIPTION
 
@@ -49,9 +64,10 @@ have here is a repository for common formats. These are implemented as
 manifest constants (i.e. C<use constant>), but are documented below as
 methods.
 
-=head1 METHODS
+=head1 MANIFEST CONSTANTS
 
-This class supports the following public methods:
+This class supports the following manifest constants, which are all
+exported by default:
 
 =head2 DATE_FORMAT
 

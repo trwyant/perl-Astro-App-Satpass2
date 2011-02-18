@@ -5,12 +5,10 @@ use 5.006002;
 use strict;
 use warnings;
 
-use base qw{
-    Astro::App::Satpass2::FormatTime::DateTime
-    Astro::App::Satpass2::FormatTime::Cldr
-};
+use base qw{ Astro::App::Satpass2::FormatTime::DateTime };
 
 use Carp;
+use Astro::App::Satpass2::FormatTime::Cldr;
 use DateTime;
 use DateTime::TimeZone;
 use POSIX ();

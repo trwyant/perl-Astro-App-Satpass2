@@ -24,7 +24,7 @@ eval {	## no critic (RequireCheckingReturnValueOfEval)
 };
 
 
-plan( tests => 45 );
+plan( tests => 42 );
 
 require_ok( 'Astro::App::Satpass2::Copier' )
     or BAIL_OUT();
@@ -35,10 +35,8 @@ isa_ok( 'Astro::App::Satpass2::FormatTime', 'Astro::App::Satpass2::Copier' );
 
 require_ok( 'Astro::App::Satpass2::FormatTime::POSIX::Strftime' );
 
-isa_ok( 'Astro::App::Satpass2::FormatTime::POSIX::Strftime', 'Astro::App::Satpass2::FormatTime' );
-
 isa_ok( 'Astro::App::Satpass2::FormatTime::POSIX::Strftime',
-    'Astro::App::Satpass2::FormatTime::Strftime' );
+    'Astro::App::Satpass2::FormatTime' );
 
 instantiate( 'Astro::App::Satpass2::FormatTime::POSIX::Strftime' );
 
@@ -48,7 +46,7 @@ SKIP: {
 	require DateTime;
 	require DateTime::TimeZone;
 	1;
-    } or skip( 'DateTime and/or DateTime::TimeZone not available', 10 );
+    } or skip( 'DateTime and/or DateTime::TimeZone not available', 8 );
 
     require_ok( 'Astro::App::Satpass2::FormatTime::DateTime' );
 
@@ -60,18 +58,12 @@ SKIP: {
     isa_ok( 'Astro::App::Satpass2::FormatTime::DateTime::Strftime',
 	'Astro::App::Satpass2::FormatTime::DateTime' );
 
-    isa_ok( 'Astro::App::Satpass2::FormatTime::DateTime::Strftime',
-	'Astro::App::Satpass2::FormatTime::Strftime' );
-
     instantiate( 'Astro::App::Satpass2::FormatTime::DateTime::Strftime' );
 
     require_ok( 'Astro::App::Satpass2::FormatTime::DateTime::Cldr' );
 
     isa_ok( 'Astro::App::Satpass2::FormatTime::DateTime::Cldr',
 	'Astro::App::Satpass2::FormatTime::DateTime' );
-
-    isa_ok( 'Astro::App::Satpass2::FormatTime::DateTime::Cldr',
-	'Astro::App::Satpass2::FormatTime::Cldr' );
 
     instantiate( 'Astro::App::Satpass2::FormatTime::DateTime::Cldr' );
 

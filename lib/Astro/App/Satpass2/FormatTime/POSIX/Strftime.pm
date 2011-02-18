@@ -5,12 +5,10 @@ use 5.006002;
 use strict;
 use warnings;
 
-use base qw{
-    Astro::App::Satpass2::FormatTime
-    Astro::App::Satpass2::FormatTime::Strftime
-};
+use base qw{ Astro::App::Satpass2::FormatTime };
 
 use Carp;
+use Astro::App::Satpass2::FormatTime::Strftime;
 use POSIX ();
 
 our $VERSION = '0.000_12';
@@ -69,12 +67,14 @@ Astro::App::Satpass2::FormatTime::POSIX::Strftime - Format time using POSIX::str
 =head1 NOTICE
 
 This class and its subclasses are private to the
-L<Astro::App::Satpass2|Astro::App::Satpass2> package. The author reserves the right to
-add, change, or retract functionality without notice.
+L<Astro::App::Satpass2|Astro::App::Satpass2> package. The author
+reserves the right to add, change, or retract functionality without
+notice.
 
 =head1 DETAILS
 
-This subclass of L<Astro::App::Satpass2::FormatTime|Astro::App::Satpass2::FormatTime>
+This subclass of
+L<Astro::App::Satpass2::FormatTime|Astro::App::Satpass2::FormatTime>
 formats times using C<POSIX::strftime>. Time zones other than the
 default local zone are handled by setting $ENV{TZ} from the L<tz|/tz>
 attribute before calling C<localtime()>, but this is unsupported by the

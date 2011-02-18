@@ -7,10 +7,10 @@ use warnings;
 
 use base qw{
     Astro::App::Satpass2::FormatTime::DateTime
-    Astro::App::Satpass2::FormatTime::Strftime
 };
 
 use Carp;
+use Astro::App::Satpass2::FormatTime::Strftime;
 use DateTime;
 use DateTime::TimeZone;
 use POSIX ();
@@ -41,8 +41,9 @@ Astro::App::Satpass2::FormatTime::DateTime::Strftime - Format time using DateTim
 =head1 NOTICE
 
 This class and its subclasses are private to the
-L<Astro::App::Satpass2|Astro::App::Satpass2> package. The author reserves the right to
-add, change, or retract functionality without notice.
+L<Astro::App::Satpass2|Astro::App::Satpass2> package. The author
+reserves the right to add, change, or retract functionality without
+notice.
 
 =head1 DETAILS
 
