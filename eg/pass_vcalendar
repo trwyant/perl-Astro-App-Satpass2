@@ -18,46 +18,46 @@ localize formatter
 # We intend to use %date(zone=z) to format the event begin and end. We
 # truncate the time to the previous minute.
 
-delegate formatter date_format %Y%m%dT%H%M00Z
+tell formatter date_format %Y%m%dT%H%M00Z
 
 # We intend to use %time to format the individual event times.
 
-delegate formatter time_format %I:%M:%S
+tell formatter time_format %I:%M:%S
 
 # Supress the automatically-generated headers.
 
-delegate formatter header 0
+tell formatter header 0
 
 # Provide the vCalendar event start tag, the start time, and the start
 # of the event summary.
 
-delegate formatter template pass_start "BEGIN:VEVENT%n;DTSTART:%date(zone=z)%n;\
+tell formatter template pass_start "BEGIN:VEVENT%n;DTSTART:%date(zone=z)%n;\
 DALARM:%date(delta=-360,zone=z)%n;SUMMARY:%*name"
 
 # Define the optional pass_finish template to provide the event end
 # time, and the event end tag
 
-delegate formatter template pass_finish %n;DTEND:%date(zone=z)%n;END:VEVENT%n
+tell formatter template pass_finish %n;DTEND:%date(zone=z)%n;END:VEVENT%n
 
 # Eliminate the blank line that is inserted by default between passes
 
-delegate formatter template pass_pad ''
+tell formatter template pass_pad ''
 
 # The individual pass events get concatenated to the summary, with no newline.
 
-delegate formatter template pass ' %*event %time Az %*.0azimuth(bearing) Ele %*.0elevation'
+tell formatter template pass ' %*event %time Az %*.0azimuth(bearing) Ele %*.0elevation'
 
 # Override the above for rise/set, to suppress the elevation.
 
-delegate formatter template pass_horizon ' %*event %time Az %*.0azimuth(bearing)'
+tell formatter template pass_horizon ' %*event %time Az %*.0azimuth(bearing)'
 
 # Override the general template for appulses
 
-delegate formatter template pass_appulse ' %*event %*name(appulse) %time Az %*.0azimuth(bearing) Ele %*.0elevation'
+tell formatter template pass_appulse ' %*event %*name(appulse) %time Az %*.0azimuth(bearing) Ele %*.0elevation'
 
 # We turn off the date display.
 
-delegate formatter template pass_date ''
+tell formatter template pass_date ''
 
 # Emit the start tag for the vCalendar data.
 
