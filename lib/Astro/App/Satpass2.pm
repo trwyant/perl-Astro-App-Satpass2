@@ -3182,7 +3182,7 @@ sub _read_continuation {
 	},
 	st	=> sub {
 	    my ( $verb, $line ) = @_;
-	    $line =~ s/ \b st \b /tell satpass/smx;
+	    $line =~ s/ \b st \b /tell spacetrack/smx;
 	    return $line;
 	},
 	show	=> sub {
