@@ -16,6 +16,14 @@ BEGIN {
 	exit;
     };
     eval {
+	require PPI;
+	PPI->VERSION( 1.215 );
+	1;
+    } or do {
+	print "1..0 # skip PPI 1.215 or greater required to criticize code.\n";
+	exit;
+    };
+    eval {
 	require Test::Perl::Critic;
 	# TODO package profile.
 	Test::Perl::Critic->import(

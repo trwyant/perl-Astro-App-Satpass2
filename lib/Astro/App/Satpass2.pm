@@ -5,8 +5,11 @@ use 5.006002;
 use strict;
 use warnings;
 
+use Carp;
+
 use Astro::App::Satpass2::ParseTime;
 use Astro::App::Satpass2::Utils qw{ instance load_package quoter };
+
 use Astro::Coord::ECI;
 use Astro::Coord::ECI::Moon;
 use Astro::Coord::ECI::Star;
@@ -15,7 +18,7 @@ use Astro::Coord::ECI::TLE qw{:constants};
 use Astro::Coord::ECI::TLE::Iridium;
 use Astro::Coord::ECI::TLE::Set;
 use Astro::Coord::ECI::Utils qw{:all};
-use Carp;
+
 use Clone ();
 use Cwd ();
 use File::Glob qw{ :glob };
@@ -317,7 +320,8 @@ sub alias : Verb() {
     return $output;
 }
 
-sub almanac : Verb(dump!,horizon|rise|set!,transit!,twilight!,quarter!) {
+sub almanac : Verb( dump!, horizon|rise|set!, transit!, twilight!,
+    quarter! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     _apply_boolean_default(
@@ -391,7 +395,7 @@ sub cd : Verb() {
     return;
 }
 
-sub choose : Verb(epoch=s) {
+sub choose : Verb( epoch=s ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     if ($opt->{epoch}) {
@@ -455,7 +459,7 @@ EOD
     }
 }
 
-sub echo : Verb(n!) {
+sub echo : Verb( n! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     my $output = join( ' ', @args );
@@ -602,10 +606,8 @@ sub export : Verb() {
     return;
 }
 
-# The following subroutine attributes MUST be on a single line, due to
-# the failure of PPI 1.213 to correctly handle multi-line attributes.
-sub flare :
-Verb(algorithm=s,am!,choose=s@,day!,dump!,pm!,questionable|spare!,quiet!)
+sub flare : Verb( algorithm=s, am!, choose=s@, day!, dump!, pm!,
+    questionable|spare!, quiet! )
 {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
@@ -681,7 +683,7 @@ Verb(algorithm=s,am!,choose=s@,day!,dump!,pm!,questionable|spare!,quiet!)
 
 {
 
-    sub geocode : Verb(debug!) {
+    sub geocode : Verb( debug! ) {
 	my ($self, @args) = @_;
 	return _geocode_us($self, $self->_getopt(@args));
     }
@@ -798,7 +800,7 @@ sub get {
     return $accessor{$name}->($self, $name);
 }
 
-sub height : Verb(debug!) {
+sub height : Verb( debug! ) {
     my ($self, @args) = @_;
     return _height_us($self, $self->_getopt(@args));
 }
@@ -921,7 +923,7 @@ sub init {
 }
 
 
-sub initfile : Verb(create-directory!,quiet!) {
+sub initfile : Verb( create-directory!, quiet! ) {
 
     my ( $self, @args ) = @_;
     (my $opt, @args) = $self->_getopt(@args);
@@ -959,7 +961,7 @@ sub _init_file_01 {
     return wantarray ? ( $inifile, 1 ) : $inifile;
 }
 
-sub list : Verb(choose=s@) {
+sub list : Verb( choose=s@ ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     my $bodies = $self->{bodies};
@@ -978,7 +980,7 @@ sub list : Verb(choose=s@) {
     return $output;
 }
 
-sub load : Verb(verbose!) {
+sub load : Verb( verbose! ) {
     my ( $self, @names ) = @_;
     ( my $opt, @names ) = $self->_getopt( @names );
     @names or $self->_wail( 'No file names specified' );
@@ -996,7 +998,7 @@ sub load : Verb(verbose!) {
     return;
 }
 
-sub localize : Verb(all|except!) {
+sub localize : Verb( all|except! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     foreach my $name ( @args ) {
@@ -1100,10 +1102,10 @@ sub location : Verb() {
 
 }
 
-# The following subroutine attributes MUST be on a single line, due to
-# the failure of PPI 1.213 to correctly handle multi-line attributes.
-sub pass :
-Verb(choose=s@,appulse!,chronological!,dump!,horizon|rise|set!,illumination!,quiet!,transit|maximum|culmination!) {
+sub pass : Verb( choose=s@, appulse!, chronological!, dump!,
+    horizon|rise|set!, illumination!, quiet!,
+    transit|maximum|culmination! )
+{
     my ($self, @args) = @_;
 
     (my $opt, @args) = $self->_getopt(@args);
@@ -1240,7 +1242,7 @@ sub phase : Verb() {
 
 # TODO -- handling -realtime.
 
-sub position : Verb(choose=s@,questionable|spare!,quiet!,realtime!) {
+sub position : Verb( choose=s@, questionable|spare!, quiet!, realtime! ) {
     my ($self, @args) = @_;
 
     my ($opt, $time, $endtm, $interval) = $self->_getopt(@args);
@@ -1312,7 +1314,7 @@ sub position : Verb(choose=s@,questionable|spare!,quiet!,realtime!) {
 
 }
 
-sub quarters : Verb(dump!) {
+sub quarters : Verb( dump! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     $self->_parse_time_reset();
@@ -1415,7 +1417,7 @@ SATPASS2_EXECUTE:
     return;
 }
 
-sub save : Verb(changes!,overwrite!) {
+sub save : Verb( changes!, overwrite! ) {
     my ($self, @args) = @_;
     my ($opt, $fn) = $self->_getopt(@args);
     defined $fn or $fn = $self->initfile( { 'create-directory' => 1 } );
@@ -1675,7 +1677,7 @@ sub _set_webcmd {
     return ($self->{$name} = $val);
 }
 
-sub show : Verb(changes!,deprecated!,readonly!) {
+sub show : Verb( changes!, deprecated!, readonly! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     foreach my $name ( qw{ deprecated readonly } ) {
@@ -1865,7 +1867,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 
 }
 
-sub source : Verb(optional!) {
+sub source : Verb( optional! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     my $output;
@@ -1913,81 +1915,13 @@ sub st : Verb() {	## no critic (RequireArgUnpacking)
     return;
 }
 
-# The following subroutine attributes MUST be on a single line, due to
-# the failure of PPI 1.213 to correctly handle multi-line attributes.
-
-=begin comment
-
-sub st :
-Verb(all!,changes!,descending!,effective!,last5!,sort=s,end_epoch=s,rcs!,start_epoch=s,tle!,verbose!) {
-    my ($self, @args) = @_;
-    $self->_deprecation_notice( method => 'st' );
-    $self->_parse_time_reset();
-    my $st = $self->_get_spacetrack();
-    (my $opt, @args) = $self->_getopt(@args);
-    my $func = shift @args or $self->_wail("No st function specified");
-    $func eq 'show' and $func = 'getv';
-    $func eq 'get' and $func = 'getv';
-
-    my $output;
-    if ($func eq 'getv') {
-	@args or @args = $st->attribute_names();
-	my $dflt;
-	$opt->{changes} and $dflt = $self->_get_spacetrack_default();
-	foreach my $name (@args) {
-	    my $val = $st->getv( $name );
-	    if ($dflt) {
-		no warnings qw{uninitialized};
-		$val eq $dflt->getv( $name )
-		    and next;
-	    }
-	    $output .= "st set $name " . quoter ( $val ) . "\n";
-	}
-    } elsif ($func eq 'localize') {
-	foreach my $key (@args) {
-	    exists $self->{frame}[-1]{spacetrack}{$key}
-		or $self->{frame}[-1]{spacetrack}{$key} =
-		$st->get ($key)->content
-	}
-    } else {
-	($func !~ m/ \A _ /smx && $st->can ($func))
-	    or $self->_wail("No such st method as '$func'");
-	$opt->{start_epoch}
-	    and $opt->{start_epoch} = $self->_parse_time(
-	    $opt->{start_epoch} );
-	$opt->{end_epoch}
-	    and $opt->{end_epoch} = $self->_parse_time(
-	    $opt->{end_epoch} );
-	$func eq 'set' or unshift @args, $opt;
-	my ($rslt, @rest) = $st->$func( @args );
-	my $content = $st->content_type || '';
-	if (!$rslt->is_success) {
-	    $self->_wail($rslt->status_line);
-	} elsif ($content eq 'orbit') {
-	    push @{$self->{bodies}},
-		Astro::Coord::ECI::TLE->parse ($rslt->content);
-	    $opt->{verbose} and $output .= $rslt->content . "\n";
-	} elsif ($content eq 'iridium-status') {
-	    $self->_iridium_status (@rest);
-	    $opt->{verbose} and $output .= $rslt->content . "\n";
-	} elsif ($content || $opt->{verbose}) {
-	    $output .= $rslt->content . "\n";
-	}
-    }
-    return $output;
-}
-
-=end comment
-
-=cut
-
 # TODO I must have thought -reload would be good for something, but it
 # appears I never implemented it.
 
 {
     my @status_code_map = qw{+ S -};
 
-    sub status : Verb(name!,reload!) {
+    sub status : Verb( name!, reload! ) {
 	my ($self, @args) = @_;
 	(my $opt, @args) = $self->_getopt(@args);
 	@args or @args = qw{show};
@@ -2256,7 +2190,7 @@ sub time : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
 # undocumented. When we do, the formatter method loses its leading
 # underscore.
 
-sub tle : Verb(celestia!,verbose!) {
+sub tle : Verb( celestia!, verbose! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     my $bodies = @args ? _choose([@args], $self->{bodies}) : $self->{bodies};
@@ -2281,7 +2215,7 @@ sub unexport : Verb() {
 }
 
 
-sub validate : Verb(quiet!) {
+sub validate : Verb( quiet! ) {
     my ($self, @args) = @_;
 
     (my $opt, @args) = $self->_getopt(@args);
