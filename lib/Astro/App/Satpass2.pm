@@ -87,9 +87,9 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 #
 #	The 'Verb' attribute identifies the subroutine as representing a
 #	cvsx command. If it has options, they should be specified inside
-#	parentheses as a comma-separated list of option specifications
-#	appropriate for Getopt::Long. For example:
-#	    sub foo : Verb(bar,baz=s)
+#	parentheses as a whitespace-separated list of option
+#	specifications appropriate for Getopt::Long. For example:
+#	    sub foo : Verb(bar baz=s)
 #	specifies that 'foo' is a command, taking options -bar, and
 #	-baz; the latter takes a string value.
 
@@ -113,7 +113,7 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 	    };
 	    if ($want{$1}) {
 		$attr{$code}{$1} = defined $2 ?
-		    [ split qr{ \s* , \s* }smx, $2 ] :
+		    [ split qr{ \s+ }smx, $2 ] :
 		    [];
 	    } else {
 		push @rslt, $_;
@@ -320,8 +320,8 @@ sub alias : Verb() {
     return $output;
 }
 
-sub almanac : Verb( choose=s@, dump!, horizon|rise|set!, transit!,
-    twilight!, quarter! ) {
+sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! 
+    twilight! quarter! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     _apply_boolean_default(
@@ -611,8 +611,8 @@ sub export : Verb() {
     return;
 }
 
-sub flare : Verb( algorithm=s, am!, choose=s@, day!, dump!, pm!,
-    questionable|spare!, quiet! )
+sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm!
+    questionable|spare! quiet! )
 {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
@@ -928,7 +928,7 @@ sub init {
 }
 
 
-sub initfile : Verb( create-directory!, quiet! ) {
+sub initfile : Verb( create-directory! quiet! ) {
 
     my ( $self, @args ) = @_;
     (my $opt, @args) = $self->_getopt(@args);
@@ -1107,8 +1107,8 @@ sub location : Verb() {
 
 }
 
-sub pass : Verb( choose=s@, appulse!, chronological!, dump!,
-    horizon|rise|set!, illumination!, quiet!,
+sub pass : Verb( choose=s@ appulse! chronological! dump! 
+    horizon|rise|set! illumination! quiet! 
     transit|maximum|culmination! )
 {
     my ($self, @args) = @_;
@@ -1247,7 +1247,7 @@ sub phase : Verb() {
 
 # TODO -- handling -realtime.
 
-sub position : Verb( choose=s@, questionable|spare!, quiet!, realtime! ) {
+sub position : Verb( choose=s@ questionable|spare! quiet! realtime! ) {
     my ($self, @args) = @_;
 
     my ($opt, $time, $endtm, $interval) = $self->_getopt(@args);
@@ -1422,7 +1422,7 @@ SATPASS2_EXECUTE:
     return;
 }
 
-sub save : Verb( changes!, overwrite! ) {
+sub save : Verb( changes! overwrite! ) {
     my ($self, @args) = @_;
     my ($opt, $fn) = $self->_getopt(@args);
     defined $fn or $fn = $self->initfile( { 'create-directory' => 1 } );
@@ -1682,7 +1682,7 @@ sub _set_webcmd {
     return ($self->{$name} = $val);
 }
 
-sub show : Verb( changes!, deprecated!, readonly! ) {
+sub show : Verb( changes! deprecated! readonly! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     foreach my $name ( qw{ deprecated readonly } ) {
@@ -1926,7 +1926,7 @@ sub st : Verb() {	## no critic (RequireArgUnpacking)
 {
     my @status_code_map = qw{+ S -};
 
-    sub status : Verb( name!, reload! ) {
+    sub status : Verb( name! reload! ) {
 	my ($self, @args) = @_;
 	(my $opt, @args) = $self->_getopt(@args);
 	@args or @args = qw{show};
@@ -2195,7 +2195,7 @@ sub time : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
 # undocumented. When we do, the formatter method loses its leading
 # underscore.
 
-sub tle : Verb( celestia!, verbose! ) {
+sub tle : Verb( celestia! verbose! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     my $bodies = @args ? _choose([@args], $self->{bodies}) : $self->{bodies};
