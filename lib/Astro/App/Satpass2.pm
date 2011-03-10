@@ -320,8 +320,8 @@ sub alias : Verb() {
     return $output;
 }
 
-sub almanac : Verb( dump!, horizon|rise|set!, transit!, twilight!,
-    quarter! ) {
+sub almanac : Verb( choose=s@, dump!, horizon|rise|set!, transit!,
+    twilight!, quarter! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     _apply_boolean_default(
@@ -352,7 +352,12 @@ sub almanac : Verb( dump!, horizon|rise|set!, transit!, twilight!,
 #	complaining about the lack of an almanac() method as
 #	appropriate.
 
-    foreach my $body (@{$self->{sky}}) {
+    my @sky = @{ $opt->{choose} ?
+	    scalar _choose($opt->{choose}, $self->{sky}) :
+	    $self->{sky} }
+	or $self->_wail( 'No bodies selected' );
+
+    foreach my $body ( @sky ) {
 	$body->can ('almanac') or do {
 	    $self->_whinge(
 		ref $body, ' does not support the almanac method');
@@ -4110,6 +4115,7 @@ to specify times.
 
 The following options are recognized:
 
+ -choose chooses objects to report;
  -dump produces debugging output;
  -horizon produces rise/set times;
  -quarter produces quarter events;
@@ -4118,9 +4124,14 @@ The following options are recognized:
  -transit reports transit across zenith or (sometimes) nadir;
  -twilight reports begin/end of twilight.
 
-Option -dump is unsupported in the sense that the author makes no
+Option C<-dump> is unsupported in the sense that the author makes no
 commitments as to what it does, nor does he commit not to change or
 remove it without notice.
+
+Option C<-choose> chooses which objects to report. It takes as an
+argument the names of one or more bodies (case-insensitive), separated
+by commas, and it can be specified multiple times. If C<-choose> is not
+specified, all objects in the sky are reported.
 
 The other options specify what output to produce. If none are specified,
 all are turned on by default. If only negated options are specified
