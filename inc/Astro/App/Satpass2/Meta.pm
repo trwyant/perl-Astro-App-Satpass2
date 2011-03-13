@@ -25,14 +25,14 @@ sub distribution {
 sub requires {
     my ( $self, @extra ) = @_;
     return {
-	'Astro::Coord::ECI'	=> 0,
-	'Astro::Coord::ECI::Moon'	=> 0,
-	'Astro::Coord::ECI::Star'	=> 0,
-	'Astro::Coord::ECI::Sun'	=> 0,
-	'Astro::Coord::ECI::TLE'	=> 0,
-	'Astro::Coord::ECI::TLE::Iridium'	=> 0,
-	'Astro::Coord::ECI::TLE::Set'	=> 0,
-	'Astro::Coord::ECI::Utils'	=> 0,
+	'Astro::Coord::ECI'	=> 0.015,
+	'Astro::Coord::ECI::Moon'	=> 0.015,
+	'Astro::Coord::ECI::Star'	=> 0.015,
+	'Astro::Coord::ECI::Sun'	=> 0.015,
+	'Astro::Coord::ECI::TLE'	=> 0.015,
+	'Astro::Coord::ECI::TLE::Iridium'	=> 0.015,
+	'Astro::Coord::ECI::TLE::Set'	=> 0.015,
+	'Astro::Coord::ECI::Utils'	=> 0.015,
 	'Carp'			=> 0,
 	'Clone'			=> 0,
 	'Cwd'			=> 0,

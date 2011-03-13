@@ -898,20 +898,12 @@ $tst->method_ok( tz => undef, 'Can make zone undef' );
 $tst->format_is('%time;', "    Time\n23:23:41",
     'Time of day (round trip on tz)');
 
-SKIP: {
-
-    eval { Astro::Coord::ECI::TLE->VERSION( 0.015 ); 1 }
-	or $tst->skip(
-	'Test requires Astro::Coord::ECI::TLE v0.015 or above', 1 );
-
-    $tst->format_is('%tle;', <<'EOD', 'TLE of satellite');
+$tst->format_is('%tle;', <<'EOD', 'TLE of satellite');
 
 ISS --effective 2008/283/10:23:02.000
 1 25544U 98067A   08283.45349537  .00007111 10240-12  82345-4 0  4565
 2 25544  51.6426 159.8765 0004029 198.7654 279.8765 15.72108062567893
 EOD
-
-}
 
 $tst->method_ok( format_effector =>
     status => missing => '<none>',
