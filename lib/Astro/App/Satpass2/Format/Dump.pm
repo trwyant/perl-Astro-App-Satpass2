@@ -92,7 +92,7 @@ sub _dump {
 
 # TODO when code works, _tle_celestia loses the leading underscore.
 foreach my $method ( qw{
-    almanac flare list location pass phase position tle
+    alias almanac flare list location pass phase position tle
     _tle_celestia tle_verbose }
 ) {
     no strict qw{ refs };

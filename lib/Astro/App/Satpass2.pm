@@ -306,18 +306,16 @@ sub new {
     return $self;
 }
 
-sub alias : Verb() {
-    my ($self, @args) = @_;
-    my $output = undef;
-    if (@args) {
-	Astro::Coord::ECI::TLE->alias (@args);
+sub alias : Verb( dump! ) {
+    my ( $self, @args ) = @_;
+    ( my $opt, @args ) = $self->_getopt( @args );
+    if ( @args ) {
+	Astro::Coord::ECI::TLE->alias( @args );
+	return;
     } else {
-	my %rslt = Astro::Coord::ECI::TLE->alias ();
-	foreach my $key (sort keys %rslt) {
-	    $output .= "$key => $rslt{$key}\n";
-	}
+	return $self->_format_data(
+	    alias => { Astro::Coord::ECI::TLE->alias() }, $opt );
     }
-    return $output;
 }
 
 sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! 
@@ -344,9 +342,6 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit!
 ##	"$self->{twilight} twilight (@{[rad2deg $self->{_twilight}]} degrees)";
 
     my @almanac;
-    my $output;
-    $self->{frame}[-1]{level1}
-	and $output .= $self->location();
 
 #	Iterate through the background bodies, accumulating data or
 #	complaining about the lack of an almanac() method as
@@ -372,14 +367,19 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit!
 
 #	Sort the almanac data by date, and display the results.
 
-    my $fmt = $self->_get_formatter_object( $opt );
-    $output .= $fmt->almanac();
-    foreach (sort {$a->{time} <=> $b->{time}} @almanac) {
-	$opt->{$_->{almanac}{event}}
-	    and $output .= $fmt->almanac( $_ );
-    }
-
-    return $output;
+    $self->{frame}[-1]{level1}
+	and return $self->location() . $self->_format_data(
+	    almanac => [
+		sort { $a->{time} <=> $b->{time} }
+		grep { $opt->{$_->{almanac}{event}} }
+		@almanac
+	    ], $opt );
+    return $self->_format_data(
+	almanac => [
+	    sort { $a->{time} <=> $b->{time} }
+	    grep { $opt->{$_->{almanac}{event}} }
+	    @almanac
+	], $opt );
 
 }
 
@@ -592,7 +592,7 @@ sub exit : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
 
     eval {	## no critic (RequireCheckingReturnValueOfEval)
 	no warnings qw{exiting};
-	last SATPASS2_EXECUTE
+	last SATPASS2_EXECUTE;
     };
     $self->_whinge("$@Exiting Perl");
     exit;
@@ -657,13 +657,9 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm!
 	push @active, $tle;
     }
     @active or $self->_wail("No bodies capable of flaring");
-    my $output;
 
     my @flares;
     foreach my $tle (@active) {
-	$opt->{debug}
-	    and $output .= join ("\t", $tle->get ('id'), $tle->get
-		('name'), ref $tle) . "\n";
 	eval {
 	    push @flares, $tle->flare ($sta, $pass_start, $pass_end);
 	    1;
@@ -673,16 +669,12 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm!
 	};
     }
 
-    my $fmt = $self->_get_formatter_object( $opt );
-    $output .= $fmt->flare();
-
-    foreach my $fd (sort {$a->{time} <=> $b->{time}} @flares) {
-
-	next if $fd->{magnitude} > $flare_mag[$fd->{type} eq 'day'];
-	$output .= $fmt->flare( $fd );
-    }
-
-    return $output;
+    return $self->_format_data(
+	flare => [
+	    sort { $a->{time} <=> $b->{time} }
+	    grep { $_->{magnitude} > $flare_mag['day' eq $_->{type}] }
+	    @flares
+	], $opt );
 
 }
 
@@ -969,20 +961,18 @@ sub _init_file_01 {
 sub list : Verb( choose=s@ ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
+
     my $bodies = $self->{bodies};
     $opt->{choose} and $bodies = _choose($opt->{choose}, $bodies);
-    my $output;
+
     if (@$bodies) {
-	my $fmt = $self->_get_formatter_object( $opt );
-	$output = $fmt->list();
-	foreach my $tle (@$bodies) {
-	    $output .= $fmt->list( $tle );
-	}
+	return $self->_format_data(
+	    list => $bodies, $opt );
     } else {
 	$self->{warn_on_empty}
 	    and $self->_whinge("The observing list is empty");
     }
-    return $output;
+    return;
 }
 
 sub load : Verb( verbose! ) {
@@ -1039,12 +1029,11 @@ sub _localize {
     return;
 }
 
-sub location : Verb() {
+sub location : Verb( dump! ) {
     my ( $self, @args ) = @_;
     (my $opt, @args) = $self->_getopt(@args);
-    my $fmt = $self->_get_formatter_object( $opt );
-    return $fmt->location() . $fmt->location(
-	$self->_get_station() );
+    return $self->_format_data(
+	location => $self->_get_station(), $opt );
 }
 
 {
@@ -1129,11 +1118,10 @@ sub pass : Verb( choose=s@ appulse! chronological! dump!
 	or $self->_wail("No bodies selected");
     my $pass_step = shift || 60;
 
+    # TODO {level1} code
     my $output;
     $self->{frame}[-1]{level1}
 	and $output .= $self->location();
-
-    my $fmt = $self->_get_formatter_object( $opt );
 
 #	Decide which model to use.
 
@@ -1143,13 +1131,6 @@ sub pass : Verb( choose=s@ appulse! chronological! dump!
 
     my $horizon = deg2rad ($self->{horizon});
     my $appulse = deg2rad ($self->{appulse});
-
-    if ($opt->{debug}) {
-	foreach my $tle ( $self->_aggregate (\@bodies)) {
-	    $output .= join ("\t", $tle->get ('id'),
-		$tle->get ('name'), ref $tle) . "\n";
-	}
-    }
 
 #	Foreach body to be modelled
 
@@ -1173,8 +1154,8 @@ sub pass : Verb( choose=s@ appulse! chronological! dump!
 	    );
 	}
 
-	my @passes;
-	eval { @passes = $self->_pass_select_event( $opt, $tle->pass (
+	eval {
+	    push @accumulate, $self->_pass_select_event( $opt, $tle->pass (
 		$sta, $pass_start, $pass_end, $self->{sky} ) );
 	    1;
 	} or do {
@@ -1182,28 +1163,20 @@ sub pass : Verb( choose=s@ appulse! chronological! dump!
 	    $opt->{quiet} or $self->_whinge($@);
 	    next;
 	};
-	@passes or next;
-
-	if ( $opt->{chronological} ) {
-	    push @accumulate, @passes;
-	} else {
-	    $output .= $fmt->pass( $tle );
-
-	    foreach my $pass (@passes) {
-		$output .= $fmt->pass( $pass );
-	    }
-	}
     }
 
-    if ( @accumulate ) {
-	$output .= $fmt->pass();
-	foreach my $pass ( sort { $a->{time} <=> $b->{time} }
-	    @accumulate ) {
-	    $output .= $fmt->pass( $pass );
-	}
+    $opt->{chronological}
+	and @accumulate = sort { $a->{time} <=> $b->{time} }
+	    @accumulate;
+
+    if ( $self->{frame}[-1]{level1} ) {
+	return $self->location() .
+	$self->_format_data(
+	    pass => \@accumulate, $opt );
     }
 
-    return $output;
+    return $self->_format_data(
+	pass => \@accumulate, $opt );
 }
 
 {
@@ -1235,36 +1208,30 @@ sub phase : Verb() {
     (my $opt, @args) = $self->_getopt(@args);
     $self->_parse_time_reset();
     my $time = $self->_parse_time (shift @args, time );
-    my $fmt = $self->_get_formatter_object( $opt );
 
-    my $output = $fmt->phase();
-    foreach my $body (@{$self->{sky}}) {
-	$body->can ('phase') or next;
-	$output .= $fmt->phase( $body->universal( $time ) );
-    }
-    return $output;
+    my @sky = @{ $opt->{choose} ?
+	    scalar _choose($opt->{choose}, $self->{sky}) :
+	    $self->{sky} }
+	or $self->_wail( 'No bodies selected' );
+    return $self->_format_data(
+	phase => [
+	    map { $_->universal( $time ) }
+	    grep { $_->can( 'phase' ) }
+	    @sky
+	], $opt );
 }
 
-# TODO -- handling -realtime.
-
-sub position : Verb( choose=s@ questionable|spare! quiet! realtime! ) {
+sub position : Verb( choose=s@ questionable|spare! quiet! ) {
     my ($self, @args) = @_;
 
-    my ($opt, $time, $endtm, $interval) = $self->_getopt(@args);
-    $opt->{realtime}
-	and $self->_wail("The -realtime option is not supported");
+    my ( $opt, $time ) = $self->_getopt(@args);
 
     if ( defined $time ) {
 	$self->_parse_time_reset();
 	$time = $self->_parse_time($time);
-	$endtm = $self->_parse_time ($endtm ||
-	    ($opt->{realtime} ? '+10' : '+0'));
     } else {
-	$endtm = $time = time;
+	$time = time;
     }
-    $endtm >= $time
-	or $self->_wail("The end time must not be before the start time");
-    $interval ||= ($opt->{realtime} ? 10 : 60);
     my $twilight = $self->{_twilight};
 
 
@@ -1273,86 +1240,78 @@ sub position : Verb( choose=s@ questionable|spare! quiet! realtime! ) {
     my $sta = $self->_get_station();
     $sta->universal($time);
 
-#	Set up the output and get the formatter.
-
-    my $output;
-    my $fmt = $self->_get_formatter_object( $opt );
-
 
     my @list = ( $self->_aggregate( $self->{bodies} ), @{$self->{sky}});
     $opt->{choose}
 	and @list = _choose($opt->{choose}, \@list);
 
-    my $sun;
     foreach my $body (@list) {
 	$body->represents( 'Astro::Coord::ECI::TLE' ) or next;
 	$body->get('inertial')
 	    and $body->set( model => $self->{model} );
-	$sun ||= Astro::Coord::ECI::Sun->new();
     }
 
-    my $fmt_hash = {
-	questionable => $opt->{questionable},
-	station => $sta,
-	sun => $sun,
-	twilight => $twilight,
-    };
-    $output .= $fmt->position();
-    while ($time <= $endtm) {
-	$sun and $sun->universal($time);
-	foreach my $body (@list) {
-	    eval {$body->universal ($time); 1;}
-		or do {
-		$@ =~ m/ $interrupted /smxo and $self->_wail($@);
-		$opt->{quiet} or $self->_whinge($@);
-		next;
-	    };
-	    $fmt_hash->{body} = $body;
-	    $output .= $fmt->position( $fmt_hash );
-
-	}
-
-	$time += $interval;
+    my @good;
+    foreach my $body (@list) {
+	eval {
+	    $body->universal ($time);
+	    push @good, $body;
+	    1;
+	} or do {
+	    $@ =~ m/ $interrupted /smxo and $self->_wail($@);
+	    $opt->{quiet} or $self->_whinge($@);
+	    next;
+	};
     }
 
-    return $output;
-
+    return $self->_format_data(
+	position => {
+	    bodies		=> \@good,
+	    questionable	=> $opt->{questionable},
+	    station		=> $self->_get_station()->universal(
+		$time ),
+	    time		=> $time,
+	    twilight		=> $self->{_twilight},
+	}, $opt );
 }
 
-sub quarters : Verb( dump! ) {
+sub quarters : Verb( choose=s@ dump! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     $self->_parse_time_reset();
     my $start = $self->_parse_time ($args[0], $self->_get_today_midnight());
     my $end = $self->_parse_time ($args[1] || '+30');
 
-    my @data;
+    my @sky = @{ $opt->{choose} ?
+	    scalar _choose($opt->{choose}, $self->{sky}) :
+	    $self->{sky} }
+	or $self->_wail( 'No bodies selected' );
+
+    my @almanac;
 
 #	Iterate over any background objects, accumulating all
 #	quarter-phases of each until we get one after the
 #	end time. We silently ignore bodies that do not support
 #	the next_quarter() method.
 
-    foreach my $body (@{$self->{sky}}) {
+    foreach my $body ( @sky ) {
 	next unless $body->can ('next_quarter_hash');
 	$body->universal ($start);
 
 	while (1) {
 	    my $hash = $body->next_quarter_hash();
 	    $hash->{time} > $end and last;
-	    push @data, $hash;
+	    push @almanac, $hash;
 	}
     }
 
 #	Sort and display the quarter-phase information.
 
-    my $fmt = $self->_get_formatter_object( $opt );
-    my $output = $fmt->almanac();
-    foreach (sort {$a->{time} <=> $b->{time}} @data) {
-	$output .= $fmt->almanac( $_ );
-    }
-
-    return $output;
+    return $self->_format_data(
+	almanac => [
+	    sort { $a->{time} <=> $b->{time} }
+	    @almanac
+	], $opt );
 
 }
 
@@ -2199,15 +2158,10 @@ sub tle : Verb( celestia! verbose! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     my $bodies = @args ? _choose([@args], $self->{bodies}) : $self->{bodies};
-    my $fmt = $self->_get_formatter_object( $opt );
     my $method = $opt->{celestia} ? '_tle_celestia' :
 	$opt->{verbose} ? 'tle_verbose' : 'tle';
-    my $output = $fmt->$method();
-    foreach my $tle (@$bodies) {
-	$tle->get( 'inertial' ) or next;
-	$output .= $fmt->$method( $tle );
-    }
-    return $output;
+    return $self->_format_data(
+	$method => $bodies, $opt );
 }
 
 
@@ -2420,6 +2374,11 @@ sub _choose {
 	return defined $deprecate{$type}{$name};
     }
 
+}
+
+sub _format_data {
+    my ( $self, $action, $data, $opt ) = @_;
+    return $self->_get_formatter_object( $opt )->$action( $data );
 }
 
 #	$frames = $satpass2->_frame_push($type, \@args);
@@ -4688,11 +4647,8 @@ in the observing list and in the sky. For bodies on the observing list
 that can flare, flare status is displayed for all sources of flares on
 the body.
 
-There are three arguments. The first is the start time of the
-computation (see L<SPECIFYING TIMES|/SPECIFYING TIMES>), which defaults
-to the current time. The second is the end time of the computation,
-which defaults to the start time. The third is the interval between
-successive positions, in seconds, which defaults to 60.
+There is one argument, which is the time for the computation, which
+defaults to the current time.
 
 The following options may be specified:
 
@@ -4712,9 +4668,9 @@ Bodies that produce errors will not be included in the output.
 
 C<-spare> is a synonym for C<-questionable>.
 
-Please note that the C<-realtime> option, which was present in the
-original F<satpass> script, has been retracted. If you need this, please
-contact the author.
+The C<endtime> and C<interval> arguments and the C<-realtime> option,
+which were present in the original F<satpass> script, have been
+retracted. If you need any of these, please contact the author.
 
 =head2 quarters
 
@@ -6064,13 +6020,15 @@ initialization file.
 
 =item position
 
-The method generates position information for a single time or a range
-of times, but the F<satpass> C<-realtime> functionality has been
+The method generates position information for a single time. The
+F<satpass> time range and C<-realtime> functions have been
 revoked. This function was added when I had vague dreams of figuring out
 how to drive a telescope off the output, but so far those dreams are
 unrealized, and I can think of no other use for the functionality. The
 rewritten output mechanism is not capable of actually displaying output
-in realtime anyway.
+in realtime, and handling multiple times in a system that separates
+formatting from computation appeared to be too difficult to tackle
+without an incentive.
 
 =back
 
