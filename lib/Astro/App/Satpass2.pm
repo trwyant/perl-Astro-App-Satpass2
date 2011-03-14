@@ -665,7 +665,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm!
 	    push @flares, $tle->flare ($sta, $pass_start, $pass_end);
 	    1;
 	} or do {
-	    $@ =~ m/ $interrupted /smxo and $self->_wail($@);
+	    $@ =~ m/ \Q$interrupted\E /smxo and $self->_wail($@);
 	    $opt->{quiet} or $self->_whinge($@);
 	};
     }
@@ -1155,9 +1155,8 @@ sub pass : Verb( choose=s@ appulse! chronological! dump!
 		$sta, $pass_start, $pass_end, $self->{sky} ) );
 	    1;
 	} or do {
-	    $@ =~ m/ $interrupted /smxo and $self->_wail($@);
+	    $@ =~ m/ \Q$interrupted\E /smxo and $self->_wail($@);
 	    $opt->{quiet} or $self->_whinge($@);
-	    next;
 	};
     }
 
@@ -1254,9 +1253,8 @@ sub position : Verb( choose=s@ questionable|spare! quiet! ) {
 	    push @good, $body;
 	    1;
 	} or do {
-	    $@ =~ m/ $interrupted /smxo and $self->_wail($@);
+	    $@ =~ m/ \Q$interrupted\E /smxo and $self->_wail($@);
 	    $opt->{quiet} or $self->_whinge($@);
-	    next;
 	};
     }
 
