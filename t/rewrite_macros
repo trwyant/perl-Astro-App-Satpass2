@@ -1,8 +1,8 @@
-macro define farmers almanac
-macro define glint "flare -am $@"
-macro define burg "localize horizon date_format time_format verbose gmt"
-macro define overtake "pass $@"
-macro define exhibit "show date_format horizon verbose time_format"
-macro define assign "set horizon 10 date_format '%a %d-%b-%Y' time_format '%I:%M:%S %p' verbose 1 appulse 5 gmt 1"
-macro define norad "st $@"
-macro define st "st $@"
+macro farmers almanac
+macro glint 'flare -am $@'
+macro burg 'localize horizon date_format time_format verbose gmt'
+macro overtake 'pass $@'
+macro exhibit 'show date_format horizon verbose time_format'
+macro assign "set horizon 10 date_format '%a %d-%b-%Y' time_format '%I:%M:%S %p' verbose 1 appulse 5 gmt 1"
+macro norad 'st $@'
+macro st "st $@"

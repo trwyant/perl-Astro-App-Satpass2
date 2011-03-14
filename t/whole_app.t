@@ -182,7 +182,7 @@ EOD
 _app("set location 'Royal Observatory, Greenwich England'",
     undef, "Set our location's name");
 _app('show location',
-    'set location "Royal Observatory, Greenwich England"',
+    q<set location 'Royal Observatory, Greenwich England'>,
     'Name of location');
 _app('location', <<'EOD', 'Location command with name');
 Location: Royal Observatory, Greenwich England
@@ -192,7 +192,8 @@ _app('set date_format %d/%m/%Y time_format "%I:%M:%S %p"',
     undef, 'Set date and time format');
 _app('show date_format', 'tell formatter date_format %d/%m/%Y',
     'Show date format');
-_app('show time_format', 'tell formatter time_format "%I:%M:%S %p"',
+_app('show time_format',
+    q<tell formatter time_format '%I:%M:%S %p'>,
     'Show time format');
 _app('tell formatter date_format %Y/%m/%d',
     undef, 'Set date format directly');
@@ -647,6 +648,41 @@ _app('list', <<'EOD', 'List the valid items');
  88888                          1980/10/01 23:41:24 01:29:37
 EOD
 
+_method( init => { level1 => 1 }, 't/rewrite_macros',
+    undef, 'Load satpass-format macros' );
+_app( 'macro list farmers', <<'EOD', 'Rewrite almanac' );
+macro define farmers location \
+    almanac
+EOD
+_app( 'macro list glint', <<'EOD', 'Rewrite flare' );
+macro define glint 'flare -noam $@'
+EOD
+_app( 'macro list burg', <<'EOD', 'Rewrite localize' );
+macro define burg 'localize horizon formatter verbose'
+EOD
+_app( 'macro list overtake', <<'EOD', 'Rewrite pass' );
+macro define overtake location \
+    'pass $@'
+EOD
+_app( 'macro list exhibit', <<'EOD', 'Rewrite show' );
+macro define exhibit 'tell formatter date_format' \
+    'show horizon verbose' \
+    'tell formatter time_format'
+EOD
+_app( 'macro list assign', <<'EOD', 'Rewrite set' );
+macro define assign 'set horizon 10' \
+    'tell formatter date_format "%a %d-%b-%Y"' \
+    'tell formatter time_format "%I:%M:%S %p"' \
+    'set verbose 1 appulse 5' \
+    'tell formatter gmt 1'
+EOD
+_app( 'macro list norad', <<'EOD', 'Rewrite st invocation' );
+macro define norad 'st $@'
+EOD
+_app( 'macro list st', <<'EOD', 'Rewrite st use' );
+macro define st 'tell spacetrack $@'
+EOD
+
 SKIP: {
     -d 't' or skip ("No t directory found", 1);
     my $t = File::Spec->catfile(&getcwd, 't');
@@ -678,7 +714,7 @@ SKIP: {
     _method( execute =>
 	    'geocode "1600 Pennsylvania Ave, Washington DC"', <<'EOD',
 
-set location "1600 Pennsylvania Ave NW Washington DC 20502"
+set location '1600 Pennsylvania Ave NW Washington DC 20502'
 set latitude 38.898748
 set longitude -77.037684
 EOD
@@ -690,41 +726,6 @@ EOD
 	'Geocode of White House returned expected latitude');
     _method( get => 'longitude', -77.037684,
 	'Geocode of White House returned expected longitude');
-}
-
-SKIP: {
-    my $tests = 9;
-    -f 't/rewrite_macros'
-	or skip( 'No macro file to rewrite', $tests );
-
-    _method( init => { level1 => 1 }, 't/rewrite_macros',
-	undef, 'Load satpass-format macros' );
-    _app( 'macro list farmers', <<'EOD', 'Rewrite almanac' );
-macro define farmers location \
-        almanac
-EOD
-    _app( 'macro list glint', 'flare -noam $@', 'Rewrite flare' );
-    _app( 'macro list burg', <<'EOD', 'Rewrite localize' );
-macro define burg "localize horizon formatter verbose"
-EOD
-    _app( 'macro list overtake', <<'EOD', 'Rewrite pass' );
-macro define overtake location \
-        pass
-EOD
-    _app( 'macro list exhibit', <<'EOD', 'Rewrite show' );
-macro define exhibit "tell formatter date_format" \
-        "show horizon verbose" \
-	"tell formatter time_format" \
-EOD
-    _app( 'macro list assign', <<'EOD', 'Rewrite set' );
-macro define assign "set horizon 10" \
-        "tell formatter date_format '%a %d-%b-%Y'" \
-	"tell formatter time_format '%I:%M:%S %p'" \
-	"set verbose 1 appulse 5" \
-	"tell formatter gmt 1"
-EOD
-    _app( 'macro list norad', '"st $@"', 'Rewrite st invocation' );
-    _app( 'macro list st', '"tell spacetrack $@"', 'Rewrite st use' );
 }
 
 cmp_ok(@{$app->{frame}}, '==', 1, 'Object frame stack clean') or eval {

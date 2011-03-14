@@ -31,6 +31,7 @@ use IPC::System::Simple qw{ capturex };
 use POSIX qw{ floor };
 use Scalar::Util qw{ blessed openhandle };
 use Text::Abbrev;
+use Text::ParseWords ();	# Used only for {level1} stuff.
 
 use constant ASTRO_SPACETRACK_VERSION => 0.050;
 
@@ -1118,11 +1119,6 @@ sub pass : Verb( choose=s@ appulse! chronological! dump!
 	or $self->_wail("No bodies selected");
     my $pass_step = shift || 60;
 
-    # TODO {level1} code
-    my $output;
-    $self->{frame}[-1]{level1}
-	and $output .= $self->location();
-
 #	Decide which model to use.
 
     my $model = $self->{model};
@@ -1837,15 +1833,46 @@ sub source : Verb( optional! ) {
     my $output;
     my $fn = shift @args or $self->_wail("File name required");
     if ( my $fh = IO::File->new( $fn, '<' ) ) {
+
+	my $fetcher = $opt->{level1} ? sub {
+	    my $buffer = <$fh>;
+	    defined $buffer
+		or return $buffer;
+	    $buffer =~ m/ \A \s* \z /sxm
+		and return $buffer;
+	    $buffer =~ m/ \A \s* [#] /sxm
+		and return $buffer;
+
+	    # TODO the following applies only to macros; for others we
+	    # merely want ' to become ", since the level1 '
+	    # interpolates. But we _don't_ want to add quotes to
+	    # arguments, since they are presumably already quoted
+	    # correctly.
+	    my $append = '';
+	    $buffer =~ s/ ( \s* \\? \n ) //sxm
+		and $append = $1;
+	    my @input = Text::ParseWords::quotewords( qr{ \s+ }smx, 0,
+		$buffer );
+	    foreach ( @input ) {
+		m/ ['"\\\s] /sxm or next;
+		s/ (?: \A | (?<= [^\\] ) ) (?: \\\\ )* ' /"/sxmg;
+		substr $_, 0, 0, q<'>;
+		$_ .= q<'>;
+	    }
+	    return join( ' ', @input ) . $append;
+	} : sub {
+	    return <$fh>;
+	};
+
 	my $frames = $self->_frame_push( source => [@args] );
 	# Note that level1 is unsupported, and works only when the
 	# options are passed as a hash. It will go away when support for
 	# the original satpass script is dropped.
 	$self->{frame}[-1]{level1} = $opt->{level1};
 	my $err;
-	my $ok = eval { while ( <$fh> ) {
-		if ( defined ( my $buffer = $self->execute( sub { return
-				<$fh> }, $_ ) ) ) {
+	my $ok = eval { while ( defined( my $input =  $fetcher->() ) ) {
+		if ( defined ( my $buffer = $self->execute( $fetcher,
+				$input ) ) ) {
 		    $output .= $buffer;
 		}
 	    }
@@ -1858,7 +1885,7 @@ sub source : Verb( optional! ) {
 	$opt->{optional}
 	    or $self->_wail("Failed to open $fn: $!");
     }
-    $self->_rewrite_level1_macros();
+    $opt->{level1} and $self->_rewrite_level1_macros();
     return $output;
 }
 
@@ -3052,11 +3079,7 @@ sub _read_continuation {
 	},
 	set	=> sub {
 	    my ( $verb, $line ) = @_;
-	    eval {
-		require Text::ParseWords;
-		1;
-	    } or return $line;
-	    my @output = [ 'fubar' ];
+	    my @output = [ 'fubar' ];	# Prime the pump.
 	    my @input = Text::ParseWords::quotewords( qr{ \s+ }smx, 1,
 		$line );
 	    shift @input;
@@ -3068,14 +3091,14 @@ sub _read_continuation {
 			# is already quoted if it needs to be.
 			$helper->{attribute} || $attr, $val ];
 		} else {
-		    'show' eq $output[-1][0]
+		    'set' eq $output[-1][0]
 			or push @output, [ 'set' ];
 		    # not quoter( $val ) here, because presumably it is
 		    # already quoted if it needs to be.
 		    push @{ $output[-1] }, $attr, $val;
 		}
 	    }
-	    shift @output;
+	    shift @output;	# Get rid of the pump priming.
 	    return ( map { join ' ', @{ $_ } } @output );
 	},
 	st	=> sub {
