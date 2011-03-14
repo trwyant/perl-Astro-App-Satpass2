@@ -615,12 +615,9 @@ SKIP: {
 	    $app->pass('20090401T000000Z', '+1')
 	} || $@,
 	<<'EOD',
-
- 25544 - ISS (ZARYA)
-
     Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
-2009/04/01
+2009/04/01     25544 - ISS (ZARYA)
 19:33:00  20.1 297.2 NW      883.9  43.8855  -14.4029   355.3 lit   rise
 19:34:40  62.9 243.8 SW      393.9  40.2759   -7.4548   353.9 lit   apls
 19:34:40  63.4 244.2 SW   364322.7        0.5 degrees from Moon
@@ -899,9 +896,10 @@ EOD
 
 	# If, after all this rigamarole, we have a username and
 	# password, retrieve the desired data, returning a failure
-	# message if we fail.
+	# message if we fail. We have to go through dispatch() to get
+	# the Satpass2-style dates made into seconds since epoch.
 	eval {
-	    $app_obj->tell( spacetrack => @stcmd);
+	    $app_obj->dispatch( tell => spacetrack => @stcmd);
 	    1;
 	} or return "Failed to retrieve data from Space Track: $@";
 

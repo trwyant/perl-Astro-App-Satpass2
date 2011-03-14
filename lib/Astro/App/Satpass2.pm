@@ -368,13 +368,6 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit!
 
 #	Sort the almanac data by date, and display the results.
 
-    $self->{frame}[-1]{level1}
-	and return $self->location() . $self->_format_data(
-	    almanac => [
-		sort { $a->{time} <=> $b->{time} }
-		grep { $opt->{$_->{almanac}{event}} }
-		@almanac
-	    ], $opt );
     return $self->_format_data(
 	almanac => [
 	    sort { $a->{time} <=> $b->{time} }
@@ -545,6 +538,8 @@ sub execute {
 	$#{$self->{frame}} >= $frame_depth
 	    and delete $self->{frame}[ $frame_depth ]{localout};
 
+=begin comment
+
 	if ( defined $output ) {
 ##	    $output =~ m/ \n \z /smx or $output .= "\n";
 	    my $ref = ref $stdout;
@@ -560,6 +555,13 @@ sub execute {
 		$stdout->print( $output );
 	    }
 	}
+
+=end comment
+
+=cut
+
+	$self->_execute_output( $output,
+	    defined $stdout ? $stdout : \$accum );
 
 	$extern and last;
     }
@@ -582,6 +584,28 @@ sub _execute {
 	    $self->execute( $in, shift @args );
 	    1;
 	} or warn $@;	# Not _whinge, since presumably we already did.
+    }
+    return;
+}
+
+#	$satpass2->_execute_output( $output, $stdout );
+#
+#	If $output is defined, sends it to $stdout.
+
+sub _execute_output {
+    my ( $self, $output, $stdout ) = @_;
+    defined $output or return;
+    my $ref = ref $stdout;
+    if ( !defined $stdout ) {
+	return $output;
+    } elsif ( $ref eq 'SCALAR' ) {
+	$$stdout .= $output;
+    } elsif ( $ref eq 'CODE' ) {
+	$stdout->( $output );
+    } elsif ( $ref eq 'ARRAY' ) {
+	push @$stdout, split qr{ (?<=\n) }smx, $output;
+    } else {
+	$stdout->print( $output );
     }
     return;
 }
@@ -630,7 +654,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm!
     my @flare_mag = ($self->{flare_mag_night}, $self->{flare_mag_day});
 
     _apply_boolean_default(
-	$opt, $self->{frame}[-1]{level1}, qw{ am day pm } );
+	$opt, 0, qw{ am day pm } );
 
 #	Decide which model to use.
 
@@ -1164,12 +1188,6 @@ sub pass : Verb( choose=s@ appulse! chronological! dump!
 	and @accumulate = sort { $a->{time} <=> $b->{time} }
 	    @accumulate;
 
-    if ( $self->{frame}[-1]{level1} ) {
-	return $self->location() .
-	$self->_format_data(
-	    pass => \@accumulate, $opt );
-    }
-
     return $self->_format_data(
 	pass => \@accumulate, $opt );
 }
@@ -1322,8 +1340,8 @@ sub run {
 
     # Parse the command options. -level1 is undocumented.
     my %opt;
-    GetOptions( \%opt, qw{ filter! initialization_file|initfile=s gmt!
-	help level1! version },
+    GetOptions( \%opt, qw{ echo! filter! initialization_file|initfile=s
+	gmt!  help level1! version },
     )
 	or $self->_wail( "See the help method for valid options" );
 
@@ -1342,9 +1360,11 @@ sub run {
     # Get an input routine if we do not already have one.
     $in ||= $self->_get_readline();
 
-    # Figure out whether we want to display the front matter.
-    exists $opt{filter}
-	and $self->set(filter => delete ($opt{filter}));
+    # Some options get processed before we initialize.
+    foreach my $name ( qw{ echo filter } ) {
+	exists $opt{$name}
+	    and $self->set( $name => delete( $opt{$name} ) );
+    }
 
     # Display the front matter if desired.
     (!$self->get('filter') && $self->_get_interactive())
@@ -1352,10 +1372,10 @@ sub run {
 
     # Execute the initialization file.
     eval {
-	$self->init(
-	    { level1 => delete $opt{level1} },
-	    delete $opt{initialization_file},
-	);
+	$self->_execute_output( $self->init(
+		{ level1 => delete $opt{level1} },
+		delete $opt{initialization_file},
+	    ), $self->get( 'stdout' ) );
 	1;
     } or warn $@;	# Not _whinge, since presumably we already did.
 
@@ -1832,32 +1852,15 @@ sub source : Verb( optional! ) {
     my $fn = shift @args or $self->_wail("File name required");
     if ( my $fh = IO::File->new( $fn, '<' ) ) {
 
+	my @level1_cache;
+	my $level1_context = {};
 	my $fetcher = $opt->{level1} ? sub {
+	    @level1_cache
+		and return shift @level1_cache;
 	    my $buffer = <$fh>;
-	    defined $buffer
-		or return $buffer;
-	    $buffer =~ m/ \A \s* \z /sxm
-		and return $buffer;
-	    $buffer =~ m/ \A \s* [#] /sxm
-		and return $buffer;
-
-	    # TODO the following applies only to macros; for others we
-	    # merely want ' to become ", since the level1 '
-	    # interpolates. But we _don't_ want to add quotes to
-	    # arguments, since they are presumably already quoted
-	    # correctly.
-	    my $append = '';
-	    $buffer =~ s/ ( \s* \\? \n ) //sxm
-		and $append = $1;
-	    my @input = Text::ParseWords::quotewords( qr{ \s+ }smx, 0,
-		$buffer );
-	    foreach ( @input ) {
-		m/ ['"\\\s] /sxm or next;
-		s/ (?: \A | (?<= [^\\] ) ) (?: \\\\ )* ' /"/sxmg;
-		substr $_, 0, 0, q<'>;
-		$_ .= q<'>;
-	    }
-	    return join( ' ', @input ) . $append;
+	    @level1_cache = $self->_rewrite_level1_command(
+		$buffer, $level1_context );
+	    return shift @level1_cache;
 	} : sub {
 	    return <$fh>;
 	};
@@ -2867,7 +2870,6 @@ sub _macro {
     my ($self, $name, @args) = @_;
     $self->{macro}{$name} or $self->_wail("No such macro as '$name'");
     my $frames = $self->_frame_push(macro => [@args]);
-    $self->{frame}[-1]{level1} = $self->{macro}{$name}{level1};
     my $macro = $self->{frame}[-1]{macro}{$name} =
 	delete $self->{macro}{$name};
     my $output;
@@ -3012,6 +3014,76 @@ sub _read_continuation {
     $self->{echo} and $self->_whinge( $prompt, $more );
     $more =~ m/ \n \z /smx or $more .= "\n";
     return $more;
+}
+
+#	$self->_rewrite_level1_command( $buffer, $context );
+#
+#	This method rewrites a level1 command to its current form. The
+#	arguments are the buffer containing the command, and an
+#	initially-empty hash reference, which the method will use to
+#	preserve context across lines of command. NOTE that more than
+#	one rewritten command may be returned (e.g. 'almanac' into
+#	( 'location', 'almanac' ).
+
+{
+
+    my %level1_map = (
+	almanac	=> sub {
+	    return ( 'location', $_[0] );
+	},
+	flare	=> sub {
+	    local $_ = $_[0];
+	    s/ (?<= \s ) - ( am|pm|day ) \b /-no$1/sxmg;
+	    return $_;
+	},
+	pass	=> sub {
+	    return ( 'location', $_[0] );
+	},
+    );
+
+    sub _rewrite_level1_command {
+	my ( $self, $buffer, $context ) = @_;
+
+	my $command = delete $context->{command};
+
+	defined $buffer
+	    or return $buffer;
+	$buffer =~ m/ \A \s* \z /sxm
+	    and return $buffer;
+	$buffer =~ m/ \A \s* [#] /sxm
+	    and return $buffer;
+
+	if ( ! defined $command ) {
+	    $buffer =~ m/ \A \s* ( \w+ ) /sxm
+		or return $buffer;
+	    $command = $1;
+	}
+	my $append = '';
+	$buffer =~ s/ ( \s* \\? \n ) //sxm
+	    and $append = $1;
+	$append =~ m/ \\ /sxm
+	    and $context->{command} = $command;
+
+	if ( 'macro' eq $command ) {
+
+	    my @input = Text::ParseWords::quotewords( qr{ \s+ }smx, 0,
+		$buffer );
+	    foreach ( @input ) {
+		m/ ['"\\\s] /sxm or next;
+		s/ (?: \A | (?<= [^\\] ) ) (?: \\\\ )* ' /"/sxmg;
+		substr $_, 0, 0, q<'>;
+		$_ .= q<'>;
+	    }
+	    return join( ' ', @input ) . $append;
+
+	}
+
+	my $code = $level1_map{$command}
+	    or return $buffer;
+
+	return $code->( $buffer );
+
+    }
 }
 
 #	$self->_rewrite_level1_macros();
@@ -4723,6 +4795,7 @@ options and commands to be passed to the application.
 
 The valid options are:
 
+ -echo to turn on command echoing;
  -filter to suppress banner text;
  -gmt to output time in GMT;
  -initfile name of the initialization file to use;
