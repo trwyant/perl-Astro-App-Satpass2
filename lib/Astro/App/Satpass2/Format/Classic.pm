@@ -1023,8 +1023,12 @@ sub flare {
     $array or $self->warner()->wail( 'Argument is required' );
     my $output = $self->_format_execute( header => 'flare' );
     foreach my $hash ( @{ $array } ) {
+	my $appulse;
+	'day' eq $hash->{type}
+	    or $appulse = delete $hash->{appulse};
 	$output .= $self->_set( phenomenon => $hash )
 	    ->_format_execute( format => 'flare' );
+	$appulse and $hash->{appulse} = $appulse;
     }
     return $output;
 }
