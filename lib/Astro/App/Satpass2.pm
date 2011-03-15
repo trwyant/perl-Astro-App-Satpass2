@@ -3066,13 +3066,14 @@ sub _read_continuation {
 
 	if ( 'macro' eq $command ) {
 
-	    my @input = Text::ParseWords::quotewords( qr{ \s+ }smx, 0,
+	    my @input = Text::ParseWords::quotewords( qr{ \s+ }smx, 1,
 		$buffer );
 	    foreach ( @input ) {
 		m/ ['"\\\s] /sxm or next;
-		s/ (?: \A | (?<= [^\\] ) ) (?: \\\\ )* ' /"/sxmg;
-		substr $_, 0, 0, q<'>;
-		$_ .= q<'>;
+		no warnings qw{ uninitialized };
+		s/ (?: \A | (?<= [^\\] ) ) ( \\\\ )* ' /$1"/sxmg;
+		substr $_, 0, 1, q<'>;
+		substr $_, -1, 1, q<'>;
 	    }
 	    return join( ' ', @input ) . $append;
 
