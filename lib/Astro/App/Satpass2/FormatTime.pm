@@ -34,10 +34,18 @@ sub attribute_names {
     return ( qw{ gmt tz } );
 }
 
-sub format_datetime_width {
-    my ( $self, $tplt ) = @_;
-    if ( $tplt =~ m/ (?: \A | (?<= [^%] ) ) % (?: \z | (?= [^%] ) ) /smx
-	) {
+{
+
+    my %cache;
+
+    sub format_datetime_width {
+	my ( $self, $tplt ) = @_;
+
+	my $class = ref $self;
+
+	exists $cache{$class}{$tplt}
+	    and return $cache{$class}{$tplt};
+
 	my ( $time, $wid ) = $self->_format_datetime_width_try( $tplt, undef,
 	    year => 2100 );
 	( $time, $wid ) = $self->_format_datetime_width_try( $tplt, $time,
@@ -46,21 +54,21 @@ sub format_datetime_width {
 	    day => 1 .. 7 );
 	( $time, $wid ) = $self->_format_datetime_width_try( $tplt, $time,
 	    hour => 6, 18 );
-	return $wid;
-    } else {
-	$tplt =~ s/ %% /%/smxg;
-	return length $tplt;
+
+	return ( $cache{$class}{$tplt} = $wid );
     }
+
 }
 
 sub _format_datetime_width_try {
     my ( $self, $tplt, $time, $name, @try ) = @_;
-    my $wid = 0;
+    my $wid;
     my $max_trial;
     foreach my $trial ( @try ) {
-	$time = $self->__format_datetime_width_adjust_object( $time, $name, $trial );
+	$time = $self->__format_datetime_width_adjust_object(
+	    $time, $name, $trial );
 	my $size = length $self->format_datetime( $tplt, $time );
-	$size > $wid or next;
+	defined $wid and $size <= $wid and next;
 	$wid = $size;
 	$max_trial = $trial;
     }
