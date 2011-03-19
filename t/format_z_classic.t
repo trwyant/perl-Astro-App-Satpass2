@@ -890,11 +890,17 @@ $tst->format_fail('%time(center);', '%time(center) is not allowed',
 $tst->format_fail('%time(station);', '%time(station) is not allowed',
     'Station time is not allowed');
 $tst->method_ok( gmt => 0, 'Can turn off gmt' );
-$tst->method_ok( tz => 'EST5EDT', 'Can zet zone to Eastern US' );
-$tst->format_is( '%time', "    Time\n19:23:41",
-    'Time of day (Eastern US)' );
+SKIP: {
+    eval {
+	require Astro::App::Satpass2::FormatTime::DateTime::Strftime;
+	1;
+    } or $tst->skip ( 'DateTime not available', 3 );
+    $tst->method_ok( tz => 'CST6CDT', 'Can set zone to Central US' );
+    $tst->format_is( '%time', "    Time\n18:23:41",
+	'Time of day (Central US)' );
+    $tst->method_ok( tz => undef, 'Can make zone undef' );
+}
 $tst->method_ok( gmt => 1, 'Can turn gmt back on' );
-$tst->method_ok( tz => undef, 'Can make zone undef' );
 $tst->format_is('%time;', "    Time\n23:23:41",
     'Time of day (round trip on tz)');
 
