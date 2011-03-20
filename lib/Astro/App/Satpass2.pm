@@ -1208,11 +1208,13 @@ sub pass : Verb( choose=s@ appulse! chronological! dump!
     # being an argument. The modified passes are returned.
     sub _pass_select_event {
 	my ( $self, $opt, @passes ) = @_;
+	my @rslt;
 	foreach my $pass ( @passes ) {
 	    @{ $pass->{events} } = grep {
-		$opt->{ $selector[ $_->{event} ] } } @{ $pass->{events} };
+		$opt->{ $selector[ $_->{event} ] } } @{ $pass->{events} }
+		and push @rslt, $pass;
 	}
-	return @passes
+	return @rslt
     }
 }
 

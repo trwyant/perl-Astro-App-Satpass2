@@ -1943,8 +1943,6 @@ sub _macro_expand_single {
 	my $output = $self->_format_execute( header => 'pass' );
 
 	foreach my $pass ( @{ $array } ) {
-	    @{ $pass->{events} }
-		or next;
 
 	    my $first_event = 1;
 	    foreach my $event ( @{ $pass->{events} } ) {
