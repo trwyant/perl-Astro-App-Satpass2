@@ -84,6 +84,13 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 #	command you would specify:
 #	    sub foo : Configure(pass_through) Verb
 #
+#	Flatten(boolean)
+#
+#	The 'Flatten' attribute tells the option parser whether or not
+#	to flatten array references in the arguments into arrays. The
+#	default is to flatten, but you can turn this off with
+#	Flatten(0).
+#
 #	Verb(options)
 #
 #	The 'Verb' attribute identifies the subroutine as representing a
@@ -97,7 +104,7 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 {
     my (%attr, %want);
     BEGIN {
-	%want = map {$_ => 1} qw{Configure Verb};
+	%want = map {$_ => 1} qw{Configure Flatten Verb};
     }
 
     sub FETCH_CODE_ATTRIBUTES {
@@ -378,14 +385,16 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit!
 }
 
 sub begin : Verb() {
-    my ($self, @args) = @_;
+    my ( $self, @args ) = @_;
+    ( my $opt, @args ) = $self->_getopt( @args );
     $self->_frame_push(
 	begin => @args ? \@args : $self->{frame}[-1]{args});
     return;
 }
 
 sub cd : Verb() {
-    my ($self, $dir) = @_;
+    my ( $self, @args ) = @_;
+    ( my $opt, my $dir ) = $self->_getopt( @args );
     if (defined($dir)) {
 	chdir $dir or $self->_wail("Can not cd to $dir: $!");
     } else {
@@ -437,13 +446,15 @@ sub dispatch {
 }
 
 sub drop : Verb() {
-    my ($self, @args) = @_;
+    my ( $self, @args ) = @_;
+    ( my $opt, @args ) = $self->_getopt( @args );
     $self->{bodies} = _choose({invert => 1}, \@args, $self->{bodies});
     return;
 }
 
 sub dump : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
-    my ( $self, $arg ) = @_;
+    my ( $self, @args ) = @_;
+    ( my $opt, my $arg ) = $self->_getopt( @args );
     if ( 'twilight' eq $arg ) {
 	return <<"EOD";
 twilight => @{[ $self->{twilight} ]}
@@ -625,7 +636,8 @@ sub exit : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
 }
 
 sub export : Verb() {
-    my ($self, $name, @args) = @_;
+    my ( $self, @args ) = @_;
+    ( my $opt, my $name, @args ) = $self->_getopt( @args );
     if ($mutator{$name}) {
 	@args and $self->set ($name, shift @args);
 	$self->{exported}{$name} = 1;
@@ -800,7 +812,8 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm!
 }
 
 sub geodetic : Verb() {
-    my ( $self, $name, $lat, $lon, $alt ) = @_;
+    my ( $self, @args ) = @_;
+    my ( $opt, $name, $lat, $lon, $alt ) = $self->_getopt( @args );
     @_ == 5 or $self->_wail( "Want exactly four arguments" );
     my $body = Astro::Coord::ECI::TLE->new(
 	name => $name,
@@ -859,7 +872,8 @@ sub _height_us {
 	utils => 'Astro::Coord::ECI::Utils',
     );
     sub help : Verb() {
-	my ($self, $arg) = @_;
+	my ( $self, @args ) = @_;
+	my ( $opt, $arg ) = $self->_getopt( @args );
 	if ( my $cmd = $self->get( 'webcmd' ) ) {
 	    $self->system( $cmd,
 		"http://search.cpan.org/~wyant/Astro-App-Satpass2-$VERSION/");
@@ -1076,7 +1090,8 @@ sub location : Verb( dump! ) {
     }
 
     sub macro : Verb() {
-	my ($self, @args) = @_;
+	my ( $self, @args ) = @_;
+	( my $opt, @args ) = $self->_getopt( @args );
 	my $cmd;
 	if (!@args) {
 	    $cmd = 'brief';
@@ -1453,8 +1468,9 @@ EOD
     return $output;
 }
 
-sub set : Verb() {	## no critic (ProhibitAmbiguousNames)
-    my ($self, @args) = @_;
+sub set : Verb() Flatten(0) {	## no critic (ProhibitAmbiguousNames)
+    my ( $self, @args ) = @_;
+    ( my $opt, @args ) = $self->_getopt( @args );
     $self->{time_parser} and $self->_parse_time_reset();
     while (@args) {
 	my ( $name, $value ) = splice @args, 0, 2;
@@ -1834,7 +1850,8 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
     );
 
     sub sky : Verb() {
-	my ($self, @args) = @_;
+	my ( $self, @args ) = @_;
+	( my $opt, @args ) = $self->_getopt( @args );
 	my $verb = lc ( shift @args || 'list' );
 
 	if ( my $code = $handler{$verb} ) {
@@ -1893,7 +1910,8 @@ sub source : Verb( optional! ) {
 }
 
 sub st : Verb() {	## no critic (RequireArgUnpacking)
-    my ( $self, $func, @args ) = @_;
+    my ( $self, @args ) = @_;
+    ( my $opt, my $func, @args ) = $self->_getopt( @args );
     $self->_deprecation_notice( method => 'st' );
     if ( 'localize' eq $func ) {
 	my $st = $self->_get_spacetrack();
@@ -1954,7 +1972,8 @@ sub st : Verb() {	## no critic (RequireArgUnpacking)
 }
 
 sub system : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
-    my ($self, $verb, @args) = @_;
+    my ( $self, @args ) = @_;
+    ( my $opt, my $verb, @args ) = $self->_getopt( @args );
     @args = map {
 	bsd_glob( $_, GLOB_NOCHECK | GLOB_BRACE | GLOB_QUOTE )
     } @args;
@@ -1980,7 +1999,8 @@ sub tell : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
 }
 
 sub _tell_interactive {
-    my ( $self, $attribute, $method, @args ) = @_;
+    my ( $self, $attribute, $method, @args ) = map {
+	'ARRAY' eq ref $_ ?  @{ $_ } : $_ } @_;
     my $code = $self->can( "__tell__${attribute}__$method" ) ||
 	$self->can( "__tell__$attribute" ) ||
 	$self->_wail( "Can not tell $attribute" );
@@ -2164,9 +2184,8 @@ sub __tell__spacetrack__getv {
 
 *__tell__time_parser__config = \&__tell__formatter__config;
 
-
-sub time : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
-    my ($self, @args) = @_;
+sub time : method Verb() {	## no critic (ProhibitBuiltInHomonyms,RequireArgUnpacking)
+    my ($self, @args) = map { 'ARRAY' eq ref $_ ? @{ $_ } : $_ } @_;
     $got_time_hires or $self->_wail( 'Time::HiRes not available' );
     my $start = Time::HiRes::time();
     my $output = $self->dispatch(@args);
@@ -2197,6 +2216,7 @@ sub tle : Verb( celestia! verbose! ) {
 
 sub unexport : Verb() {
     my ( $self, @args ) = @_;
+    ( my $opt, @args ) = $self->_getopt( @args );
     foreach my $name ( @args ) {
 	delete $self->{exported}{$name};
     }
@@ -2743,10 +2763,13 @@ sub _get_warner_attribute {
     sub _getopt {
 	local @ARGV = @_;
 	my $self = shift @ARGV;
-	return @ARGV
-	    if 'HASH' eq ref $ARGV[0];
 	my @data = caller(1);
 	my $code = \&{$data[3]};
+	my $unwrap = _get_attr( $code, 'Flatten' ) || [ 1 ];
+	$unwrap->[0]
+	    and @ARGV = map { 'ARRAY' eq ref $_ ? @{ $_ } : $_ } @ARGV; ## no critic (RequireLocalizedPunctuationVars)
+	return @ARGV
+	    if 'HASH' eq ref $ARGV[0];
 	my $lgl = _get_attr($code, 'Verb') || [];
 	my %opt;
 	my $err;
@@ -4104,12 +4127,9 @@ Most methods simply correspond to commands in the C<satpass2> script,
 and the arguments correspond to arguments in the script. Such methods
 will be identified in the following as 'interactive methods.'
 
-A few methods are used for manipulating the C<Astro::App::Satpass2> object
-itself, or for doing things not available to the C<satpass2> script.
-These are identified as 'non-interactive methods.'
-
-When the documentation specifies that a method takes options, they may
-be specified either as command-style options or as a hash.
+When the documentation specifies that an interactive method takes
+options, they may be specified either as command-style options or as a
+hash.
 
 If options are specified command-style, the option name must be preceded
 by a dash, and may be abbreviated. Option arguments are either specified
@@ -4126,6 +4146,15 @@ option C<bar> and string option C<baz> in any of the following ways:
  $satpass2->foo( '-bar', -baz => 'burfle' );
  $satpass2->foo( '-bar', '-baz=burfle' );
  $satpass2->foo( { bar => 1, baz => 'burfle' } );
+
+For ease of use with templating systems such as F<Template-Toolkit> most
+interactive methods flatten array references in their argument list. The
+only exception is the C<set()> method, which may need to receive an
+array reference as the value of an attribute.
+
+A few methods are used for manipulating the C<Astro::App::Satpass2> object
+itself, or for doing things not available to the C<satpass2> script.
+These are identified as 'non-interactive methods.'
 
 When the documentation says 'nothing is returned', this means the
 subroutine returns with a C<return> statement without an argument, which
