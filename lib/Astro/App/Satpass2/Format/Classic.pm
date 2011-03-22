@@ -888,22 +888,22 @@ NORAD ID: %*id%n
     Epoch of data: %#epoch GMT%n
     Effective date of data: %*effective(missing=<none>) GMT%n
     Classification status: %classification%n
-    Mean motion: %*.*meanmotion degrees/minute%n
-    First derivative of motion: %*.*firstderivative degrees/minute squared%n
-    Second derivative of motion: %*.*secondderivative degrees/minute cubed%n
-    B Star drag term: %*bstardrag%n
+    Mean motion: %*.8meanmotion degrees/minute%n
+    First derivative of motion: %*.8firstderivative degrees/minute squared%n
+    Second derivative of motion: %*.5secondderivative degrees/minute cubed%n
+    B Star drag term: %*.5bstardrag%n
     Ephemeris type: %ephemeristype%n
-    Inclination of orbit: %*.*inclination degrees%n
-    Right ascension of ascending node: %*.*ascendingnode%n
-    Eccentricity: %eccentricity%n
-    Argument of perigee: %*.*argumentofperigee degrees from ascending node%n
-    Mean anomaly: %*.*meananomaly; degrees%n
+    Inclination of orbit: %*.4inclination degrees%n
+    Right ascension of ascending node: %*.0ascendingnode%n
+    Eccentricity: %*.7eccentricity%n
+    Argument of perigee: %*.4argumentofperigee degrees from ascending node%n
+    Mean anomaly: %*.4meananomaly; degrees%n
     Element set number: %*elementnumber%n
     Revolutions at epoch: %*revolutionsatepoch%n
     Period (derived): %*period%n
-    Semimajor axis (derived): %*.*semimajor kilometers%n
-    Perigee altitude (derived): %*.*perigee kilometers%n
-    Apogee altitude (derived): %*.*apoapsis kilometers%n
+    Semimajor axis (derived): %*.1semimajor kilometers%n
+    Perigee altitude (derived): %*.1perigee kilometers%n
+    Apogee altitude (derived): %*.1apoapsis kilometers%n
 EOD
 );
 

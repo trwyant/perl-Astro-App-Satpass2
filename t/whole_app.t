@@ -312,21 +312,21 @@ NORAD ID: 11801
     Effective date of data: <none> GMT
     Classification status: U
     Mean motion: 0.57134462 degrees/minute
-    First derivative of motion: 2.48455381944444e-06 degrees/minute squared
-    Second derivative of motion: 0 degrees/minute cubed
-    B Star drag term: 1.4311e-02
+    First derivative of motion: 2.48455382e-06 degrees/minute squared
+    Second derivative of motion: 0.00000e+00 degrees/minute cubed
+    B Star drag term: 1.43110e-02
     Ephemeris type:
     Inclination of orbit: 46.7916 degrees
-    Right ascension of ascending node: 15:21:44.496000
-    Eccentricity:  0.73180
+    Right ascension of ascending node: 15:21:44
+    Eccentricity: 0.7318036
     Argument of perigee: 47.4722 degrees from ascending node
     Mean anomaly: 10.4117 degrees
     Element set number:
     Revolutions at epoch:
     Period (derived): 10:30:08
-    Semimajor axis (derived): 24347.281726148 kilometers
-    Perigee altitude (derived): 151.716308738674 kilometers
-    Apogee altitude (derived): 35786.5731435573 kilometers
+    Semimajor axis (derived): 24347.3 kilometers
+    Perigee altitude (derived): 151.7 kilometers
+    Apogee altitude (derived): 35786.6 kilometers
 EOD
 _app('macro brief', undef, 'Brief macro listing, without macros');
 _app('macro define place location', undef, "Define 'place' macro");

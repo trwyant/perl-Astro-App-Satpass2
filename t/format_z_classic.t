@@ -1076,22 +1076,22 @@ NORAD ID: 25544
     Epoch of data: 2008-10-09 10:53:02 GMT
     Effective date of data: 2008-10-09 10:23:02 GMT
     Classification status: U
-    Mean motion: 3.930270155 degrees/minute
+    Mean motion: 3.93027015 degrees/minute
     First derivative of motion: 1.23456789e-08 degrees/minute squared
-    Second derivative of motion: 1.23456789e-20 degrees/minute cubed
-    B Star drag term: 8.2345e-05
+    Second derivative of motion: 1.23457e-20 degrees/minute cubed
+    B Star drag term: 8.23450e-05
     Ephemeris type: 0
     Inclination of orbit: 51.6426 degrees
-    Right ascension of ascending node: 10:39:30.360000
-    Eccentricity:  0.00040
+    Right ascension of ascending node: 10:39:30
+    Eccentricity: 0.0004029
     Argument of perigee: 198.7654 degrees from ascending node
     Mean anomaly: 279.8765 degrees
     Element set number: 456
     Revolutions at epoch: 56789
     Period (derived): 01:31:36
-    Semimajor axis (derived): 6731.51857320361 kilometers
-    Perigee altitude (derived): 350.669444370469 kilometers
-    Apogee altitude (derived): 356.093702036757 kilometers
+    Semimajor axis (derived): 6731.5 kilometers
+    Perigee altitude (derived): 350.7 kilometers
+    Apogee altitude (derived): 356.1 kilometers
 EOD
 
 1;
