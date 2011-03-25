@@ -3813,6 +3813,47 @@ sub _user_home_dir {
 			last;
 		    }
 		}
+		if ( '<<' eq $rslt[-1]{mode} ) {	# Heredoc
+		    delete $rslt[-1]{redirect};
+		    delete $rslt[-1]{type};
+		    delete $rslt[-1]{mode};
+		    my $quote = '';
+		    while ( $inx < $len ) {
+			my $next = substr $buffer, $inx++, 1;
+			if ( $next =~ m/ \s /smx ) {
+			    $quote or last;
+			    $rslt[-1]{token} .= $next;
+			} else {
+			    '' eq $rslt[-1]{token}
+				and $next =~ m/ ['"] /smx
+				and $quote = $next
+				or $rslt[-1]{token} .= $next;
+			    $quote
+				and $next eq $quote
+				and $rslt[-1]{token} ne ''
+				and last;
+			}
+		    }
+		    $quote and $rslt[-1]{token} =~ s/ . \z //sxm;
+		    my $terminator = $rslt[-1]{token};
+		    my $look_for = $terminator . "\n";
+		    $rslt[-1]{token} = '';
+		    $rslt[-1]{expand} = $quote ne "'";
+		    while ( 1 ) {
+			my $buffer = $self->_read_continuation( $in,
+			    "Here doc terminator $terminator not found" );
+			$buffer eq $look_for and last;
+			$rslt[-1]{token} .= $buffer;
+		    }
+		    if ( $quote ne "'" ) {
+			$rslt[-1]{token} = _tokenize(
+			    $self,
+			    { single => 1, noredirect => 1, in => $in },
+			    $rslt[-1]{token}, $args
+			);
+		    }
+		    push @rslt, {};	# New token
+		}
 
 	    # If the token already exists at this point, the current
 	    # character, whatever it is, is simply appended to it.
@@ -3836,11 +3877,24 @@ sub _user_home_dir {
 	    } else {
 		$rslt[-1]{token} .= $char;
 	    }
+
+	    # If we're at the end of the buffer but we're inside quotes,
+	    # we need to read another line.
+	    if ( $inx >= $len && ( $absquote || $relquote ) ) {
+		$buffer .= $self->_read_continuation( $in,
+		    $absquote ? 'Unclosed single quote' :
+			'Unclosed double quote'
+		);
+		$len = length $buffer;
+	    }
+
 	}
 
 	# We have run through the entire string to be tokenized. If
 	# there are unclosed quotes of either sort, we declare an error
-	# here.
+	# here. This should actually not happen, since we allow
+	# multi-line quotes, and if we have run out of input we catch it
+	# above.
 
 	$absquote and $self->_wail( 'Unclosed terminal single quote' );
 	$relquote and $self->_wail( 'Unclosed terminal double quote' );
@@ -5985,6 +6039,12 @@ One of the angle bracket characters (C<< < >> or C<< > >>) or the
 vertical bar character (C<|>) introduce a redirection specification
 (and, incidentally, a new token). Anything after the meta-characters in
 the same token is taken to be the file or program name.
+
+The only redirections that actually work at the moment are C<< > >>
+(output redirection), C<<< >> >>> (output redirection with append), and
+C<< << >> (here documents, which are not really a redirection). Unless
+the here document terminator is enclosed in single quotes, interpolation
+is done inside the here document.
 
 Any unquoted token or redirection file name which begins with a tilde
 (C<~>) has tilde expansion performed on everything up to the first slash

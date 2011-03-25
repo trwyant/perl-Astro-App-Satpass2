@@ -74,6 +74,14 @@ baz"
 EOD
     or dump_tokens();
 
+tokenize( <<'EOD', [ [ "foo bar\nbaz\n" ], {} ] )
+<<END_OF_DATA
+foo bar
+baz
+END_OF_DATA
+EOD
+    or dump_tokens();
+
 tokenize( q{foo"bar\\nbaz"}, [ [ "foobar\nbaz" ], {} ] )
     or dump_tokens();
 
@@ -155,6 +163,27 @@ tokenize( q{"$foo"}, [ [ 'bar' ], {} ] )
     or dump_tokens();
 
 tokenize( q{'$foo'}, [ [ '$foo' ], {} ] )
+    or dump_tokens();
+
+tokenize( <<'EOD', [ [ "bar\n" ], {} ] )
+<<END_OF_DOCUMENT
+$foo
+END_OF_DOCUMENT
+EOD
+    or dump_tokens();
+
+tokenize( <<'EOD', [ [ "bar\n" ], {} ] )
+<<"END_OF_DOCUMENT"
+$foo
+END_OF_DOCUMENT
+EOD
+    or dump_tokens();
+
+tokenize( <<'EOD', [ [ "\$foo\n" ], {} ] )
+<<'END_OF_DOCUMENT'
+$foo
+END_OF_DOCUMENT
+EOD
     or dump_tokens();
 
 =begin comment
@@ -442,6 +471,11 @@ tokenize( '$$', [ [ $$ ], {} ] )
 	my @args = @_;
 	my $opt = ref $args[0] eq 'HASH' ? shift @args : {};
 	my ( $source, $tokens, $name ) = @args;
+	if ( $source =~ m/ \n /sxm ) {
+	    my @src = split qr{ (?<= \n ) }sxm, $source;
+	    $source = shift @src;
+	    $opt->{in} = sub { return shift @src };
+	}
 	@got = ();
 	if ( ! defined $name ) {
 	    ( $name = $source ) =~ s/ ( $escape_re ) / $escape_char{$1}
