@@ -3461,6 +3461,16 @@ sub _user_home_dir {
 	qr{ [$keys] }smx;
     };
 
+    my %escape = (
+	t	=> "\t",
+	n	=> "\n",
+	r	=> "\r",
+	f	=> "\f",
+	b	=> "\b",
+	a	=> "\a",
+	e	=> "\e",
+    );
+
     sub _tokenize {
 	my ($self, @parms) = @_;
 	my $opt = ref $parms[0] eq 'HASH' ? shift @parms : {};
@@ -3523,6 +3533,8 @@ sub _user_home_dir {
 			$opt->{single} or push @rslt, {};	# New token
 		    }
 		    $len = length $buffer;
+		} elsif ( $relquote ) {
+		    $rslt[-1]{token} .= $escape{$next} || $next;
 		} else {
 		    $rslt[-1]{token} .= $next;
 		}

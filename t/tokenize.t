@@ -68,6 +68,15 @@ tokenize( q{foo"bar"}, [ [ 'foobar' ], {} ] )
 tokenize( qq{foo"bar\nbaz"}, [ [ "foobar\nbaz" ], {} ] )
     or dump_tokens();
 
+tokenize( <<'EOD', [ [ "foobar\nbaz" ], {} ] )
+foo"bar
+baz"
+EOD
+    or dump_tokens();
+
+tokenize( q{foo"bar\\nbaz"}, [ [ "foobar\nbaz" ], {} ] )
+    or dump_tokens();
+
 tokenize( q{foo#bar}, [ [ 'foo#bar' ], {} ] )
     or dump_tokens();
 
