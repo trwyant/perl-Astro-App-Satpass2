@@ -168,6 +168,7 @@ my %mutator = (
     location => \&_set_unmodified,
     longitude => \&_set_angle,
     model => \&_set_model,
+    max_mirror_angle => \&_set_angle,
     perltime => \&_set_time_parser_attribute,
     prompt => \&_set_unmodified,
     simbad_url => \&_set_unmodified,
@@ -260,6 +261,8 @@ my %static = (
     latitude => undef,		# degrees
     lit => 1,
     longitude => undef,		# degrees
+    max_mirror_angle => rad2deg(
+	Astro::Coord::ECI::TLE::Iridium->DEFAULT_MAX_MIRROR_ANGLE ),
     model => 'model',
 #   pending => undef,		# Continued input line if it exists.
     perltime => 0,
@@ -661,6 +664,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm!
 	and $self->_wail("End time must be after start time");
     my $sta = $self->_get_station();
 
+    my $max_mirror_angle = deg2rad( $self->{max_mirror_angle} );
     my $horizon = deg2rad ($self->{horizon});
     my $twilight = $self->{_twilight};
     my @flare_mag = ($self->{flare_mag_night}, $self->{flare_mag_day});
@@ -687,6 +691,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm!
 	    twilight => $twilight,
 	    model => $model,
 	    am => $opt->{am},
+	    max_mirror_angle => $max_mirror_angle,
 	    day => $opt->{day},
 	    pm => $opt->{pm},
 	    extinction => $self->{extinction},
@@ -5631,6 +5636,19 @@ See L</SPECIFYING ANGLES> for ways to specify an angle. This attribute
 is returned in decimal degrees.
 
 There is no default; you must specify a value.
+
+=head2 max_mirror_angle
+
+This numeric attribute specifies the maximum mirror angle for an Iridium
+flare, in degrees. This is the angle subtended by the observer and the
+reflection of the Sun as seen from the satellite. See the
+L<Astro::Coord::ECI::TLE::Iridium|Astro::Coord::ECI::TLE::Iridium>
+documentation for more detail. You should not normally need to modify
+this value.
+
+The default is the same as for
+L<Astro::Coord::ECI::TLE::Iridium|Astro::Coord::ECI::TLE::Iridium>.
+Again, see that documentation for more detail.
 
 =head2 model
 
