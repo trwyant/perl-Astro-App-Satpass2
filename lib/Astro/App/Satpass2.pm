@@ -1944,30 +1944,42 @@ sub st : Verb() {	## no critic (RequireArgUnpacking)
 	@args or @args = qw{show};
 
 	my $verb = lc (shift (@args) || 'show');
-	$verb = 'show' if $verb eq 'iridium';	# Cover deprecated option.
+
+	if ( $verb eq 'iridium' ) {
+	    $self->_deprecation_notice( status => 'iridium' );
+	    $verb = 'show';
+	}
 
 	my $output;
+
 	if ($verb eq 'add' || $verb eq 'drop') {
+
 	    Astro::Coord::ECI::TLE->status ($verb, @args);
 	    foreach my $tle (@{$self->{bodies}}) {
 		$tle->get ('id') == $args[0] and $tle->rebless ();
 	    }
+
 	} elsif ($verb eq 'clear') {
+
 	    Astro::Coord::ECI::TLE->status ($verb, @args);
 	    foreach my $tle (@{$self->{bodies}}) {
 		$tle->rebless ();
 	    }
+
 	} elsif ($verb eq 'show' || $verb eq 'list') {
+
 	    my @data = Astro::Coord::ECI::TLE->status ('show');
 	    @data = sort {$a->[3] cmp $b->[3]} @data if $opt->{name};
 	    @args and @data = map {$_->[2]} @{_choose(\@args,
 		    [map {[$_->[0], $_->[3], $_]} @data])};
 	    $output .= '';	# Don't want it to be undef.
+
 	    foreach my $tle (@data) {
 		$output .= join (' ', map {quoter($_)} 'status', 'add',
 		    $tle->[0], $tle->[1], $status_code_map[$tle->[2]],
 		    $tle->[3], $tle->[4]) . "\n";
 	    }
+
 	} else {
 	    Astro::Coord::ECI::TLE->status ($verb, @args);
 	}
@@ -2408,6 +2420,9 @@ sub _choose {
 	},
 	method => {
 	    st	=> 0,
+	},
+	status	=> {
+	    iridium	=> 1,
 	},
     );
 
@@ -3122,7 +3137,7 @@ sub _read_continuation {
 #
 #	This method rewrites all macros defined by a satpass
 #	initialization file (as opposed to a satpass2 initialization
-#	file) to be satpass2-compatable. It also clears the level1 flag
+#	file) to be satpass2-compatible. It also clears the level1 flag
 #	so that the satpass-compatible functionality is not invoked.
 #
 #	Specifically it:
@@ -5123,13 +5138,19 @@ entry. The arguments are OID, type, status, name, and comment. The type
 would typically be 'iridium', and status typically '+' (operational),
 'S' (spare), or '-' (failed). Name and comment default to empty.
 
-clear - clears the status table. You can specify a type, and only that
-type would be cleared, but currently there is only one type.
+C<clear> - clears the status table. You can specify a type, and only
+that type would be cleared, but currently there is only one type.
 
-drop - drops an entry from the status table. The argument is the OID.
+C<drop> - drops an entry from the status table. The argument is the OID.
 
-show - displays the status table, formatted as a series of 'status add'
-commands.
+C<iridium> - deprecated synonym for C<show>, available for backward
+compatibility with F<satpass>. This will be dropped when support for
+compatibility with that script is dropped.
+
+C<list> - a synonym for C<show>.
+
+C<show> - displays the status table, formatted as a series of 'status
+add' commands.
 
 There are two options:
 
@@ -6092,9 +6113,14 @@ The following differences from F<satpass> are known to exist:
 
 =head2 Tokenization
 
+In the C<satpass> script, all quotes interpolated, but in this package
+only C<"> interpolates.
+
 Assigning a new value to an undefined positional parameter is no longer
 allowed. The F<satpass> script allowed C<${1:=Foo}>, but this package
 does not. The idea was to be consistent with C<bash(1)>.
+
+Here documents are now supported.
 
 =head2 Added commands/methods
 
@@ -6246,6 +6272,12 @@ rewritten output mechanism is not capable of actually displaying output
 in realtime, and handling multiple times in a system that separates
 formatting from computation appeared to be too difficult to tackle
 without an incentive.
+
+=item status
+
+The C<iridium> subcommand is deprecated, and will be removed when it is
+removed from the C<satpass> script, or when support for compatibility
+with C<satpass> is dropped.
 
 =back
 
