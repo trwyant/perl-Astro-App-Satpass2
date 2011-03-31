@@ -21,7 +21,7 @@ BEGIN {
 
 $| = 1;	## no critic (RequireLocalizedPunctuationVars)
 
-plan( tests => 190 );
+plan( tests => 195 );
 
 require_ok( 'Astro::App::Satpass2' )
     or BAIL_OUT( "Can not continue without loading Astro::App::Satpass2" );
@@ -269,7 +269,6 @@ _app('echo Able \\',
     'was I, ere I saw Elba.',
     'Able was I, ere I saw Elba.',
     'Assembly of continued line.');
-# TODO test flare (how without TLEs)?
 # TODO test height when/if implemented
 # TODO test help when/if implemented
 _app('list', undef, 'The list command, with an empty list');
@@ -280,6 +279,19 @@ _app('list', <<'EOD', 'List the loaded items');
    OID Name                     Epoch               Period
  88888                          1980/10/01 23:41:24 01:29:37
  11801                          1980/08/17 07:06:40 10:30:08
+EOD
+_app('status clear', undef, 'Clear status for testing' );
+_app('status', '', 'Nothing in status' );
+_app(q{status add 88888 iridium + 'Iridium 88888'}, undef,
+    'Pretend OID 88888 is an Iridium' );
+_app('status', <<'EOD', 'Iridium 88888 in status');
+status add 88888 iridium + 'Iridium 88888' ''
+EOD
+_app(q{flare '19801013T000000Z' '+1'}, <<'EOD', 'Predict flare' );
+                                                                Degre
+                                                                 From   Center Center
+Date       Time     Name         Eleva  Azimuth      Range Magn   Sun  Azimuth  Range
+1980/10/13 05:43:26               29.9  48.1 NE      412.9 -0.4 night  76.2 E    49.9
 EOD
 _app('choose 88888', undef, 'Keep OID 88888, losing all others');
 _app('list', <<'EOD', 'Check that the list now includes only 88888');
@@ -628,7 +640,6 @@ EOD
     );
 }
     
-# TODO test status (maybe just work)
 # TODO test system (how?)
 # TODO test time (how?)
 

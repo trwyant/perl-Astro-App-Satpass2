@@ -1962,6 +1962,7 @@ sub st : Verb() {	## no critic (RequireArgUnpacking)
 	    @data = sort {$a->[3] cmp $b->[3]} @data if $opt->{name};
 	    @args and @data = map {$_->[2]} @{_choose(\@args,
 		    [map {[$_->[0], $_->[3], $_]} @data])};
+	    $output .= '';	# Don't want it to be undef.
 	    foreach my $tle (@data) {
 		$output .= join (' ', map {quoter($_)} 'status', 'add',
 		    $tle->[0], $tle->[1], $status_code_map[$tle->[2]],

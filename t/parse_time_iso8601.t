@@ -45,7 +45,7 @@ BEGIN {
 
 }
 
-plan( tests => 86 );
+plan( tests => 87 );
 
 require_ok( 'Astro::App::Satpass2::ParseTime' );
 
@@ -157,6 +157,9 @@ time_is( $pt, parse => '2009',
 time_is( $pt, parse => '2009Z',
     timegm( 0, 0, 0, 1, 0, 109 ),
     q{Parse ISO-8601 '2009Z'} );
+time_is( $pt, parse => '19801013T000000Z',
+    timegm( 0, 0, 0, 13, 9, 80 ),
+    q{Parse ISO-8601 '19801013T000000Z'} );
 
 time_is( $pt, parse => '20090102162337',
     timelocal( 37, 23, 16, 2, 0, 109 ),
