@@ -24,7 +24,6 @@ lib/Astro/App/Satpass2/ParseTime/Date/Manip/v5.pm
 lib/Astro/App/Satpass2/ParseTime/Date/Manip/v6.pm
 lib/Astro/App/Satpass2/Copier.pm
 lib/Astro/App/Satpass2/Format.pm
-lib/Astro/App/Satpass2/Format/Classic.pm
 lib/Astro/App/Satpass2/Format/Dump.pm
 lib/Astro/App/Satpass2/Format/Template.pm
 lib/Astro/App/Satpass2/Format/Template/Provider.pm
@@ -51,7 +50,6 @@ t/format_time_datetime_cldr.t
 t/format_time_posix_strftime.t
 t/format_value.t
 t/format_z.t
-t/format_z_classic.t
 t/format_z_dump.t
 t/parse_time_iso8601.t
 t/parse_time_date_manip_5.t
