@@ -253,7 +253,7 @@ my %static = (
     filter => 0,
     flare_mag_day => -6,
     flare_mag_night => 0,
-    formatter => 'Astro::App::Satpass2::Format::Classic',	# Formatter class.
+    formatter => 'Astro::App::Satpass2::Format::Template',	# Formatter class.
     geometric => 1,
     height => undef,		# meters
 #   initfile => undef,		# Set by init()
@@ -1349,6 +1349,18 @@ sub quarters : Verb( choose=s@ dump! ) {
 
 }
 
+sub report : Verb() {
+    my ( $self, @args ) = @_;
+
+    ( my $opt, my $template, @args ) = $self->_getopt( @args );
+
+    return $self->_format_data( report => {
+	    arg	=> \@args,
+	    sp	=> $self,
+	    template	=> $template,
+	} );
+}
+
 sub run {
     (my $self, local @ARGV) = @_;
 
@@ -1571,7 +1583,7 @@ sub _set_formatter {
 	name	=> $name,
 	value	=> $val,
 	message	=> 'Unknown formatter',
-	default	=> 'Astro::App::Satpass2::Format::Classic',
+	default	=> 'Astro::App::Satpass2::Format::Template',
 	prefix	=> [ 'Astro::App::Satpass2::Format' ]
     );
 }
@@ -4904,6 +4916,22 @@ The following option is available:
 
 The -dump option should be considered a troubleshooting tool, which may
 change or disappear without notice.
+
+=head2 report
+
+ $output = $satpass2->report( $template, @arg )
+ satpass2> report template arg ...
+
+This interactive method runs the given template file in the formatter,
+passing it the given arguments. The output is returned. If the formatter
+does not support this functionality, an exception is thrown.
+
+If the formatter B<does> support this method, it is passed a reference
+to a hash containing the following keys:
+
+ arg      => \@arg
+ sp       => $self      # i.e. the invocant
+ template => $template
 
 =head2 run
 

@@ -24,7 +24,7 @@ eval {	## no critic (RequireCheckingReturnValueOfEval)
 };
 
 
-plan( tests => 42 );
+plan( tests => 50 );
 
 require_ok( 'Astro::App::Satpass2::Copier' )
     or BAIL_OUT();
@@ -89,6 +89,27 @@ require_ok( 'Astro::App::Satpass2::Format::Classic' )
 isa_ok( 'Astro::App::Satpass2::Format::Classic', 'Astro::App::Satpass2::Format' );
 
 instantiate( 'Astro::App::Satpass2::Format::Classic' );
+
+require_ok( 'Astro::App::Satpass2::FormatValue' )
+    or BAIL_OUT();
+
+instantiate( 'Astro::App::Satpass2::FormatValue' );
+
+require_ok( 'Astro::App::Satpass2::Format::Template::Provider' )
+    or BAIL_OUT();
+
+isa_ok( 'Astro::App::Satpass2::Format::Template::Provider',
+    'Template::Provider' );
+
+instantiate( 'Astro::App::Satpass2::Format::Template::Provider' );
+
+require_ok( 'Astro::App::Satpass2::Format::Template' )
+    or BAIL_OUT();
+
+isa_ok( 'Astro::App::Satpass2::Format::Template',
+    'Astro::App::Satpass2::Format' );
+
+instantiate( 'Astro::App::Satpass2::Format::Template' );
 
 require_ok( 'Astro::App::Satpass2::ParseTime' );
 

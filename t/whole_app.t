@@ -288,10 +288,11 @@ _app('status', <<'EOD', 'Iridium 88888 in status');
 status add 88888 iridium + 'Iridium 88888' ''
 EOD
 _app(q{flare '19801013T000000Z' '+1'}, <<'EOD', 'Predict flare' );
-                                                                Degre
-                                                                 From   Center Center
-Date       Time     Name         Eleva  Azimuth      Range Magn   Sun  Azimuth  Range
-1980/10/13 05:43:26               29.9  48.1 NE      412.9 -0.4 night  76.2 E    49.9
+                                                     Degre
+                                                      From   Center Center
+Time     Name         Eleva  Azimuth      Range Magn   Sun  Azimuth  Range
+1980/10/13
+05:43:26               29.9  48.1 NE      412.9 -0.4 night  76.2 E    49.9
 EOD
 _app('choose 88888', undef, 'Keep OID 88888, losing all others');
 _app('list', <<'EOD', 'Check that the list now includes only 88888');
@@ -454,8 +455,7 @@ EOD
     'Calculate passes over Greenwich' );
 _app('set local_coord equatorial_rng', undef, 'Specify equatorial + range');
 _app('pass 19801013T000000Z +1', <<'EOD',
-            Right
-    Time Ascensio Decli      Range Latitude Longitude Altitud Illum Event
+    Time Right As Decli      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13     88888 -
 05:39:02 05:30:58 -36.6     1687.8  37.2228   -6.0197   204.9 lit   rise
@@ -495,8 +495,7 @@ EOD
     'Ensure we get azimuth + range' );
 _app('set local_coord equatorial', undef, 'Specify equatorial only');
 _app('pass 19801013T000000Z +1', <<'EOD',
-            Right
-    Time Ascensio Decli Latitude Longitude Altitud Illum Event
+    Time Right As Decli Latitude Longitude Altitud Illum Event
 
 1980/10/13     88888 -
 05:39:02 05:30:58 -36.6  37.2228   -6.0197   204.9 lit   rise
@@ -524,8 +523,7 @@ _app('pass -chronological 19801013T000000Z +1', <<'EOD',
 EOD
     'Pass in chronological format' );
 _app("phase '20090401T000000Z'", <<'EOD', 'Phase of moon April 1 2009');
-                             Phas                  Frac
-      Date     Time     Name Angl Phase             Lit
+      Date     Time     Name Phas Phase             Lit
 2009/04/01 00:00:00     Moon   69 waxing crescent    32%
 EOD
 {
@@ -548,8 +546,7 @@ EOD
 	'Set local_coord to \'equatorial_rng\'');
     _app("position '20090401T000000Z'", <<'EOD',
 2009/04/01 00:00:00
-                    Right
-            Name Ascensio Decli      Range               Epoch Illum
+            Name Right As Decli      Range               Epoch Illum
              Sun 00:41:56   4.5  1.495e+08
             Moon 05:13:53  26.0   369373.2
 EOD
@@ -632,7 +629,7 @@ SKIP: {
 2009/04/01     25544 - ISS (ZARYA)
 19:33:00  20.1 297.2 NW      883.9  43.8855  -14.4029   355.3 lit   rise
 19:34:40  62.9 243.8 SW      393.9  40.2759   -7.4548   353.9 lit   apls
-19:34:40  63.4 244.2 SW   364322.7        0.5 degrees from Moon
+          63.4 244.2 SW   364322.7   0.5 degrees from Moon
 19:34:50  65.2 219.2 SW      386.7  39.8859   -6.7979   353.8 lit   max
 19:36:40  20.0 140.2 SE      880.4  35.3860   -0.1266   352.2 lit   set
 EOD

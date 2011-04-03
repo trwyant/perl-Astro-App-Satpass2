@@ -44,6 +44,7 @@ sub requires {
 	'POSIX'			=> 0,
 	'Scalar::Util'		=> 0,
 ##	'Task::Weaken'		=> 0,
+	'Template'		=> 2.21,
 	'Time::Local'		=> 0,
 	@extra,
     };

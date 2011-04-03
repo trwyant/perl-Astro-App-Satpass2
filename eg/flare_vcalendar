@@ -31,22 +31,26 @@ tell formatter header 0
 
 # Template to provide output in vCalendar format.
 
-tell formatter template flare "BEGIN:VEVENT%n;DTSTART:%date(zone=z)%n;\
-DALARM:%date(delta=-360,zone=z)%n;\
-SUMMARY:%*name %time Az %*.0azimuth(bearing) Ele %*.0elevation; Mag \
-%magnitude %*.0angle(appulse,append= deg from Sun,missing=night)%n;\
-DTEND:%date(delta=60,zone=z)%n;END:VEVENT%n"
+tell formatter template flare <<'EOD'
+BEGIN:VCALENDAR
+[% FOREACH item IN data -%]
+BEGIN:VEVENT
+DTSTART:[% item.date( zone = z ) %]
+DALARM:[% item.date( delta = -360, zone = z ) %]
+SUMMARY:[% item.name( width = '' ) %] [% item.time %] Az [% item.azimuth(
+    width = '', places = 0, bearing = 2 ) %] Ele [% item.elevation(
+    width = '', places = 0 ) %] Mag [% item.magnitude %]
+    [%- IF 'day' == item.type( width = '' ) %]
+	[%= item.appulse.angle( append = ' deg from Sun' ) %]
+    [%- ELSE =%]
+	night
+    [%- END %]
+DTEND:[% item.date( delta = 60, zone = z ) %]
+END:VEVENT
+[% END -%]
+END:VCALENDAR
+EOD
 
-# Emit the start tag for the vCalendar data.
-
-echo BEGIN:VCALENDAR
-
-# Do the pass calculation. The -chronological is used for its side effect
-# of placing the satellite name with the individual pass, rather than at
-# the top of the data.
+# Do the flare calculation.
 
 flare $@
-
-# Emit the end tag for the vCalendar data.
-
-echo END:VCALENDAR

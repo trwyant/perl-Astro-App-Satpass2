@@ -26,6 +26,8 @@ lib/Astro/App/Satpass2/Copier.pm
 lib/Astro/App/Satpass2/Format.pm
 lib/Astro/App/Satpass2/Format/Classic.pm
 lib/Astro/App/Satpass2/Format/Dump.pm
+lib/Astro/App/Satpass2/Format/Template.pm
+lib/Astro/App/Satpass2/Format/Template/Provider.pm
 lib/Astro/App/Satpass2/FormatTime.pm
 lib/Astro/App/Satpass2/FormatTime/Cldr.pm
 lib/Astro/App/Satpass2/FormatTime/DateTime.pm
@@ -33,6 +35,7 @@ lib/Astro/App/Satpass2/FormatTime/DateTime/Cldr.pm
 lib/Astro/App/Satpass2/FormatTime/DateTime/Strftime.pm
 lib/Astro/App/Satpass2/FormatTime/POSIX/Strftime.pm
 lib/Astro/App/Satpass2/FormatTime/Strftime.pm
+lib/Astro/App/Satpass2/FormatValue.pm
 lib/Astro/App/Satpass2/TUTORIAL.pod
 lib/Astro/App/Satpass2/Utils.pm
 lib/Astro/App/Satpass2/Warner.pm
@@ -40,10 +43,13 @@ LICENSES/Artistic
 LICENSES/Copying
 t/basic.t
 t/data.tle
+t/format_template.t
+t/format_template_provider.t
 t/format_time.t
 t/format_time_datetime_strftime.t
 t/format_time_datetime_cldr.t
 t/format_time_posix_strftime.t
+t/format_value.t
 t/format_z.t
 t/format_z_classic.t
 t/format_z_dump.t

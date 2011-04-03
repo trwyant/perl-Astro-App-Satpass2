@@ -63,7 +63,7 @@ This tutorial will cover the following:
 =head2 Configuring from a F<satpass> initialization file
 
 If you already have configured the initialization file for the
-F<satpass> script packaged with L<Astro::Coord::ECI|Astro::Coord::ECI>,
+F<satpass> script packaged in the C<Astro-satpass> distribution,
 C<Astro::App::Satpass2> will read this script, making allowances for at
 least some of the incompatibilities between the two tools.
 
@@ -176,12 +176,12 @@ This is the functionality that tells you when you can go out and see a
 satellite, assuming clear skies and a satellite large enough to be
 visible. Visible passes require three things to happen:
 
-* The satellite must be above the horizon (of course!).
+* The satellite must be above the horizon (of course!),
 
 * The Sun must be shining on the satellite (they do not have lights),
 and
 
-* The Sun must not be shining where you are (otherwise the sky is to
+* The Sun must not be shining where you are (otherwise the sky is too
 bright to see the satellite).
 
 The example is for the International Space Station, and we will
@@ -267,10 +267,10 @@ below a given distance below the horizon.
 
 By default, C<Astro::App::Satpass2> uses civil twilight to decide
 whether it is day or night. This is defined as the point at which the
-Sun is 6 degrees below the horizon. For a dimmer satellite, you may want
-to use nautical twilight (9 degrees below the horizon) or astronomical
-twilight (12 degrees below the horizon). You can change to nautical
-twilight using
+upper limb of the Sun is 6 degrees below the horizon. For a dimmer
+satellite, you may want to use nautical twilight (9 degrees below the
+horizon) or astronomical twilight (12 degrees below the horizon). You
+can change to nautical twilight using
 
  satpass2> set twilight nautical
 
@@ -409,7 +409,7 @@ If you want to display your location, just issue the
  satpass2> location
 
 command. The output of this can be directed to a file, just as the
-location of any other command. For a nice list of passes and flares for
+output of any other command. For a nice list of passes and flares for
 your refrigerator door, you can do something like this:
 
  satpass2> location >this_week.txt
@@ -564,7 +564,7 @@ ascension and declination.
 
 Deciding what to display is the job of the C<formatter> helper object.
 Normally this is an
-L<Astro::App::Satpass2::Format::Classic|Astro::App::Satpass2::Format::Classic>,
+L<Astro::App::Satpass2::Format::Template|Astro::App::Satpass2::Format::Template>,
 and for the full story you should see the documentation to that class.
 
 But there are a number of prepackaged coordinate sets:
@@ -576,42 +576,29 @@ But there are a number of prepackaged coordinate sets:
  equatorial_rng - right ascension, declination and range
 
 By default, you get C<azel_rng>, but you can get any of the others via
-the L<local_coord()|Astro::App::Satpass2::Format::Classic/local_coord>
-method of the object. For example, if you want right ascension,
-declination and range, just
+the L<local_coord()|Astro::App::Satpass2::Format/local_coord>
+method of the formatter object. For example, if you want right
+ascension, declination and range, just
 
  satpass2> tell formatter local_coord equatorial_rng
 
-If you want to do something other than the predefined coordinates, you
-can set the C<local_coord()> to a full
-L<Astro::App::Satpass2::Format::Classic|Astro::App::Satpass2::Format::Classic>
-template definition. For example, if you want azimuth (with bearing) and
-elevation,
+L<Astro::App::Satpass2::Format::Template|Astro::App::Satpass2::Format::Template>
+defines these local coordinates in terms of L<Template-Toolkit|Template>
+templates, so you can add definitions, or change the existing
+definitions, in the same way that you would change one of the reporting
+templates, using that formatter's
+L<template()|Astro::App::Satpass2::Format::Template/template> method.
+For example, to make C<azel> report azimuth first,
 
- satpass2> tell formatter local_coord \
- > '%azimuth($*,bearing) %elevation($*)'
+ satpass2> tell formatter template azel <<'EOD'
+ > [% data.azimuth( bearing = 2 ) %]
+ >     [%= data.elevation %]
+ > EOD
 
-The C<$*> is because internally C<local_coord> is treated like an
-individual format effector, and we want any arguments it was given to be
-passed through to the C<%azimuth> and C<%elevation> effectors. Note the
-use of quotes because of the embedded white space; they are single
-quotes to hide the C<$*> from the tokenizer, which if it sees it will do
-argument substitution.
-
-If you want to re-use the above definition, you can put something like
-the following in your configuration file:
-
- tell formatter template AzEl '%azimuth($*,bearing) %elevation($*)'
-
-Then, when you want to use it, just
-
- satpass2> tell formatter local_coord AzEl
-
-Template names are case-sensitive, so this does not conflict with the
-built-in C<azel>. You should always begin your own template names with
-an upper-case character to avoid conflicts with built-in template names.
-Yes, you can actually change the built-in C<azel> definition, but I am
-not completely sure it is a good idea to do so.
+See the
+L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
+documentation for what format effectors are available. The C<data>
+object will contain the data you want to format.
 
 =head1 AUTHOR
 

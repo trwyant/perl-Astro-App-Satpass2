@@ -25,6 +25,7 @@ all_pod_files_spelling_ok ();
 __DATA__
 apoapsis
 appulse
+appulsed
 appulses
 argumentofperigee
 ascendingnode
@@ -74,6 +75,8 @@ ini
 init
 initfile
 instantiator
+invocant
+invocant's
 ish
 jan
 JSON
@@ -89,7 +92,7 @@ noappulse
 noquarter
 NORAD
 observability
-OID
+oid
 op
 org
 pc
@@ -128,6 +131,7 @@ tokenization
 tokenized
 tokenizing
 trampoline
+tt
 tz
 uk
 unexport

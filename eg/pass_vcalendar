@@ -24,51 +24,38 @@ tell formatter date_format %Y%m%dT%H%M00Z
 
 tell formatter time_format %I:%M:%S
 
-# Supress the automatically-generated headers.
-
-tell formatter header 0
-
-# Provide the vCalendar event start tag, the start time, and the start
-# of the event summary.
-
-tell formatter template pass_start "BEGIN:VEVENT%n;DTSTART:%date(zone=z)%n;\
-DALARM:%date(delta=-360,zone=z)%n;SUMMARY:%*name"
-
-# Define the optional pass_finish template to provide the event end
-# time, and the event end tag
-
-tell formatter template pass_finish %n;DTEND:%date(zone=z)%n;END:VEVENT%n
-
-# Eliminate the blank line that is inserted by default between passes
-
-tell formatter template pass_pad ''
-
 # The individual pass events get concatenated to the summary, with no newline.
 
-tell formatter template pass ' %*event %time Az %*.0azimuth(bearing) Ele %*.0elevation'
+tell formatter template pass <<'EOD'
+BEGIN:VCALENDAR
+[% FOR pass IN data %]
+    [%- events = pass.events %]
+    [%- evt = events() %]
+BEGIN:VEVENT
+DTSTART:[% evt.date( zone = z) %]
+DALARM:[% evt.date( delta = -360, zone = z ) %]
+SUMMARY:[% evt.name( width = '' ) %]
+    [%- WHILE evt %]
+	[%- evt_name = evt.event( width = '' ) %]
+	[%- end_date = evt.date( zone = z ) %]
+	[%= evt.event( width = '' ) %]
+	[%= evt.time %] Az
+	[%= evt.azimuth( width = '', places = 0, bearing = 2 ) %]
+	[%- IF 'apls' == evt_name %]
+	    [%= evt.appulse.name( width = '' ) %]
+	[%- END %]
+	[%- IF 'rise' != evt_name and 'set' != evt_name %] Ele
+	    [%= evt.elevation( width = '', places = 0 ) %]
+	[%- END %]
+	[%- evt = events() %]
+    [%- END %]
+DTEND:[% end_date %]
+END:VEVENT
+[%- END %]
+END:VCALENDAR
+EOD
 
-# Override the above for rise/set, to suppress the elevation.
-
-tell formatter template pass_horizon ' %*event %time Az %*.0azimuth(bearing)'
-
-# Override the general template for appulses
-
-tell formatter template pass_appulse ' %*event %*name(appulse) %time Az %*.0azimuth(bearing) Ele %*.0elevation'
-
-# We turn off the date display.
-
-tell formatter template pass_date ''
-
-# Emit the start tag for the vCalendar data.
-
-echo BEGIN:VCALENDAR
-
-# Do the pass calculation. The -chronological is used for its side effect
-# of placing the satellite name with the individual pass, rather than at
-# the top of the data.
+# Do the pass calculation. I do not know that the vcal format requires
+# the data to be chronological, but ...
 
 pass -chronological ${1:-today noon} ${2:-+8}
-
-# Emit the end tag for the vCalendar data.
-
-echo END:VCALENDAR
