@@ -523,6 +523,9 @@ sub report {
 
 sub template {
     my ( $self, $name, @value ) = @_;
+    defined $name
+	or $self->warner()->wail( 'Template name not specified' );
+
     if ( @value ) {
 	$self->{template}->__satpass2_template( $name, $value[0] );
 	return $self;
