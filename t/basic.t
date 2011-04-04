@@ -24,7 +24,7 @@ eval {	## no critic (RequireCheckingReturnValueOfEval)
 };
 
 
-plan( tests => 50 );
+plan( tests => 47 );
 
 require_ok( 'Astro::App::Satpass2::Copier' )
     or BAIL_OUT();
@@ -82,13 +82,6 @@ require_ok( 'Astro::App::Satpass2::Format::Dump' )
 isa_ok( 'Astro::App::Satpass2::Format::Dump', 'Astro::App::Satpass2::Format' );
 
 instantiate( 'Astro::App::Satpass2::Format::Dump' );
-
-require_ok( 'Astro::App::Satpass2::Format::Classic' )
-    or BAIL_OUT();
-
-isa_ok( 'Astro::App::Satpass2::Format::Classic', 'Astro::App::Satpass2::Format' );
-
-instantiate( 'Astro::App::Satpass2::Format::Classic' );
 
 require_ok( 'Astro::App::Satpass2::FormatValue' )
     or BAIL_OUT();
