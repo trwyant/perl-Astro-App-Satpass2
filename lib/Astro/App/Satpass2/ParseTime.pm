@@ -60,7 +60,7 @@ sub base {
 
 {
 
-    my %skip = map { $_ => 1 } qw{ base };
+    my %skip = map { $_ => 1 } qw{ base warner };
 
     sub config {
 	my ( $self, %args ) = @_;
