@@ -388,49 +388,6 @@ sub __default {
     return $value;
 }
 
-{
-
-    sub export {
-	my ( $self, $tplt, $file ) = @_;
-	if ( '*' eq $tplt ) {
-	    foreach my $name ( sort
-		$self->{template}->__satpass2_defined_templates() ) {
-		$self->_export( $name, File::Spec->catfile( $file,
-			"$name.tt" ) );
-	    }
-	} else {
-	    $self->_export( $tplt, $file );
-	}
-	return $self;
-    }
-
-    my %command = (
-	tle_verbose	=> q{sp.tle( arg )},
-	tle_celestia	=> q{sp.tle( arg )},
-    );
-
-    sub _export {
-	my ( $self, $name, $file ) = @_;
-	defined( my $template = $self->{template}->__satpass2_template(
-		$name ) )
-	    or $self->warner()->wail( "No such template as '$name'" );
-	my $fh = $self->_export_file( $file );
-	print { $fh } $template;
-	return;
-    }
-
-    sub _export_file {
-	my ( $self, $file ) = @_;
-	if ( defined $file && $file ne '-' ) {
-	    open my $fh, '>', $file
-		or $self->warner()->wail( "Failed to open $file: $!" );
-	    return $fh;
-	} else {
-	    return *STDOUT;
-	}
-    }
-}
-
 sub flare {
     my ( $self, $array ) = @_;
 
@@ -1191,18 +1148,6 @@ If called as a mutator, you still get back the object reference.
 
 If a subclass overrides this method, the override should either perform
 the decoding itself, or delegate to C<SUPER::decode>.
-
-=head3 export
-
- $fmt->export( 'almanac', 'almanac.tt' );
-
-This method writes the named canned template (in this case 'almanac') to
-the given L<Template-Toolkit|Template> file (in this case 'almanac.tt').
-If the file name is undefined or F<->, the canned template is written to
-standard out.
-
-The exported template should be usable as-is by the L<report()|/report>
-method.
 
 =head3 report
 
