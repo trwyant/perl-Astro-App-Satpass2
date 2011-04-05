@@ -1354,18 +1354,6 @@ sub quarters : Verb( choose=s@ dump! ) {
 
 }
 
-sub report : Verb() {
-    my ( $self, @args ) = @_;
-
-    ( my $opt, my $template, @args ) = $self->_getopt( @args );
-
-    return $self->_format_data( report => {
-	    arg	=> \@args,
-	    sp	=> $self,
-	    template	=> $template,
-	} );
-}
-
 sub run {
     (my $self, local @ARGV) = @_;
 
@@ -2747,12 +2735,21 @@ sub _helper_get_object {
     my %parse_input = (
 	formatter	=> {
 	    desired_equinox_dynamical => sub {
-		my ( $self, @args ) = @_;
+		my ( $self, $opt, @args ) = @_;
 		if ( $args[0] ) {
 		    $self->_parse_time_reset();
 		    $args[0] = $self->_parse_time( $args[0], 0 );
 		}
 		return @args;
+	    },
+	    report	=> sub {
+		my ( $self, $opt, $template, @args ) = @_;
+		$opt->{raw} = 1;
+		return {
+		    arg	=> \@args,
+		    sp	=> $self,
+		    template	=> $template,
+		};
 	    },
 	},
     );
@@ -2769,11 +2766,11 @@ sub _helper_get_object {
 	my $object = $self->_helper_get_object( $name );
 	$method !~ m/ \A _ /smx and $object->can( $method )
 	    or $self->_wail("No such $name method as '$method'");
-	$opt->{raw} and return $object->$method( @args );
 
 	@args
 	    and $parse_input{$name}{$method}
-	    and @args = $parse_input{$name}{$method}->( $self, @args );
+	    and @args = $parse_input{$name}{$method}->( $self, $opt, @args );
+	$opt->{raw} and return $object->$method( @args );
 	my $rslt = $object->decode( $method, @args );
 
 	instance( $rslt, ref $object ) and return;
@@ -4526,6 +4523,28 @@ attribute>, and any results returned. Normally it will be used to
 configure the formatter object. See the documentation on the formatter
 class in use for further details.
 
+When calling formatter methods via this method (as opposed to retrieving
+the formatter method with C<get( 'formatter' )> and then calling the
+methods directly on the formatter object) there are a couple cases in
+which the input is transformed:
+
+=over
+
+=item desired_equinox_dynamical
+
+The argument, if any, is parsed using the time parser.
+
+=item report
+
+When called natively, this method takes a single argument, which is a
+hash reference. When called via C<formatter()>, the hash is constructed
+from the arguments, with the first argument being the contents of the
+C<{template}> key, a reference to the subsequent arguments being the
+C<{arg}> key, and the invocant being the C<{sp}> key. The C<-raw> option
+is forced true, so that you just get the text of the report back.
+
+=back
+
 This method takes the following options:
 
 =over
@@ -4941,22 +4960,6 @@ The following option is available:
 
 The -dump option should be considered a troubleshooting tool, which may
 change or disappear without notice.
-
-=head2 report
-
- $output = $satpass2->report( $template, @arg )
- satpass2> report template arg ...
-
-This interactive method runs the given template file in the formatter,
-passing it the given arguments. The output is returned. If the formatter
-does not support this functionality, an exception is thrown.
-
-If the formatter B<does> support this method, it is passed a reference
-to a hash containing the following keys:
-
- arg      => \@arg
- sp       => $self      # i.e. the invocant
- template => $template
 
 =head2 run
 
