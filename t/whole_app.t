@@ -31,7 +31,7 @@ isa_ok($app, 'Astro::App::Satpass2')
     or BAIL_OUT("Can not continue without Astro::App::Satpass2 object");
 _method( set => autoheight => undef, stdout => undef, undef,
     'Clear autoheight and stdout' );
-_method( qw{ tell formatter gmt 0 }, undef,
+_method( qw{ formatter gmt 0 }, undef,
     'Set formatter gmt false' );
 
 # NOTICE
@@ -49,26 +49,25 @@ _method( qw{ tell formatter gmt 0 }, undef,
 
 $app->set( execute_filter => sub {
 	my ( $self, $args ) = @_;
-	@{ $args } > 3
-	    and $args->[0] eq 'tell'
-	    and $args->[1] eq 'formatter'
-	    and $args->[2] eq 'gmt'
+	@{ $args } > 2
+	    and $args->[0] eq 'formatter'
+	    and $args->[1] eq 'gmt'
 	    and return;
 	return 1;
     }
 );
 
 my $can_filter = 1;
-_app( 'tell formatter gmt 1', undef,
+_app( 'formatter gmt 1', undef,
     'Attempt to set gmt with filter in place' );
-ok( ! $app->tell( formatter => 'gmt' ), 'Confirm gmt still false' )
+ok( ! $app->formatter( 'gmt' ), 'Confirm gmt still false' )
     or $can_filter = 0;
 # NOTICE
 # The execute_filter attribute is undocumented and unsupported.
 $app->set( execute_filter => sub { return 1 } );
-_app( 'tell formatter gmt 1', undef,
+_app( 'formatter gmt 1', undef,
     'Attempt to set gmt with no filter in place' );
-ok( $app->tell( formatter => 'gmt' ), 'Confirm gmt now true' );
+ok( $app->formatter( 'gmt' ), 'Confirm gmt now true' );
 
 
 {
@@ -190,20 +189,20 @@ Location: Royal Observatory, Greenwich England
 EOD
 _app('set date_format %d/%m/%Y time_format "%I:%M:%S %p"',
     undef, 'Set date and time format');
-_app('show date_format', 'tell formatter date_format %d/%m/%Y',
+_app('show date_format', 'formatter date_format %d/%m/%Y',
     'Show date format');
 _app('show time_format',
-    q<tell formatter time_format '%I:%M:%S %p'>,
+    q<formatter time_format '%I:%M:%S %p'>,
     'Show time format');
-_app('tell formatter date_format %Y/%m/%d',
+_app('formatter date_format %Y/%m/%d',
     undef, 'Set date format directly');
-_app('tell formatter time_format %H:%M:%S',
+_app('formatter time_format %H:%M:%S',
     undef, 'Set time format directly');
-_app('tell formatter date_format',
-    'tell formatter date_format %Y/%m/%d',
+_app('formatter date_format',
+    'formatter date_format %Y/%m/%d',
     'Show date format directly');
-_app('tell formatter time_format',
-    'tell formatter time_format %H:%M:%S',
+_app('formatter time_format',
+    'formatter time_format %H:%M:%S',
     'Show time format directly');
 _app("almanac '20090401T000000Z'",
     <<'EOD', 'Almanac for April Fools 2009');
@@ -670,22 +669,22 @@ macro define overtake location \
     'pass $@'
 EOD
 _app( 'macro list exhibit', <<'EOD', 'Rewrite show' );
-macro define exhibit 'tell formatter date_format' \
+macro define exhibit 'formatter date_format' \
     'show horizon verbose' \
-    'tell formatter time_format'
+    'formatter time_format'
 EOD
 _app( 'macro list assign', <<'EOD', 'Rewrite set' );
 macro define assign 'set horizon 10' \
-    'tell formatter date_format "%a %d-%b-%Y"' \
-    'tell formatter time_format "%I:%M:%S %p"' \
+    'formatter date_format "%a %d-%b-%Y"' \
+    'formatter time_format "%I:%M:%S %p"' \
     'set verbose 1 appulse 5' \
-    'tell formatter gmt 1'
+    'formatter gmt 1'
 EOD
 _app( 'macro list norad', <<'EOD', 'Rewrite st invocation' );
 macro define norad 'st $@'
 EOD
 _app( 'macro list st', <<'EOD', 'Rewrite st use' );
-macro define st 'tell spacetrack $@'
+macro define st 'spacetrack $@'
 EOD
 
 SKIP: {
@@ -835,7 +834,7 @@ sub _do_test {
 	    require Astro::SpaceTrack;
 	    1;
 	} or return ($bypass = "Astro::SpaceTrack not available");
-	$app_obj->tell( qw{ spacetrack set with_name 1 } );
+	$app_obj->spacetrack( qw{ set with_name 1 } );
 
 	# If we do not have a Space Track username or password, try to
 	# scavenge one from the user's profile.
@@ -848,19 +847,16 @@ sub _do_test {
 		$app2->set( execute_filter => sub {
 			my ( $self, $args ) = @_;
 			return @{ $args } > 2
-			    && $args->[0] eq 'st'
+			    && ( $args->[0] eq 'st' ||
+				$args->[0] eq 'spacetrack' )
 			    && $args->[1] eq 'set'
 			    || @{ $args } > 1
 			    && $args->[0] eq 'source'
-			    || @{ $args } > 3
-			    && $args->[0] eq 'tell'
-			    && $args->[1] eq 'spacetrack'
-			    && $args->[2] eq 'set'
 			    ;
 		    } );
 		$app2->init();
 		$app_obj->execute(
-		    $app2->dispatch( qw{ tell spacetrack show username password } )
+		    $app2->dispatch( qw{ spacetrack show username password } )
 		);
 	    };
 	}
@@ -886,13 +882,13 @@ EOD
 		    or return ($bypass = $message);
 		my $pass = _prompt('Enter Space Track password: ')
 		    or return ($bypass = $message);
-		$app_obj->tell( 'spacetrack', 'set',
+		$app_obj->spacetrack( 'set',
 		    username => $user, password => $pass);
 		eval {
-		    $app_obj->tell( qw{ spacetrack login } );
+		    $app_obj->spacetrack( 'login' );
 		    1;
 		} and last;
-		$app_obj->tell( 'spacetrack', 'set',
+		$app_obj->spacetrack( 'set',
 		    username => '', password => '');
 		$@ =~ m/401/ and do {
 		    warn $@, "\n";
@@ -907,7 +903,7 @@ EOD
 	# message if we fail. We have to go through dispatch() to get
 	# the Satpass2-style dates made into seconds since epoch.
 	eval {
-	    $app_obj->dispatch( tell => spacetrack => @stcmd);
+	    $app_obj->dispatch( spacetrack => @stcmd);
 	    1;
 	} or return "Failed to retrieve data from Space Track: $@";
 
