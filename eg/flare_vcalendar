@@ -19,24 +19,20 @@ localize formatter
 # We intend to use %date(zone=z) to format the event begin and end. We
 # truncate the time to the previous minute.
 
-tell formatter date_format %Y%m%dT%H%M00Z
+formatter date_format %Y%m%dT%H%M00Z
 
 # We intend to use %time to format the individual event times.
 
-tell formatter time_format %I:%M:%S
-
-# Supress the automatically-generated headers.
-
-tell formatter header 0
+formatter time_format %I:%M:%S
 
 # Template to provide output in vCalendar format.
 
-tell formatter template flare <<'EOD'
+formatter template flare <<'EOD'
 BEGIN:VCALENDAR
 [% FOREACH item IN data -%]
 BEGIN:VEVENT
-DTSTART:[% item.date( zone = z ) %]
-DALARM:[% item.date( delta = -360, zone = z ) %]
+DTSTART:[% item.date( zone = 'z' ) %]
+DALARM:[% item.date( delta = -360, zone = 'z' ) %]
 SUMMARY:[% item.name( width = '' ) %] [% item.time %] Az [% item.azimuth(
     width = '', places = 0, bearing = 2 ) %] Ele [% item.elevation(
     width = '', places = 0 ) %] Mag [% item.magnitude %]
@@ -45,7 +41,7 @@ SUMMARY:[% item.name( width = '' ) %] [% item.time %] Az [% item.azimuth(
     [%- ELSE =%]
 	night
     [%- END %]
-DTEND:[% item.date( delta = 60, zone = z ) %]
+DTEND:[% item.date( delta = 60, zone = 'z' ) %]
 END:VEVENT
 [% END -%]
 END:VCALENDAR

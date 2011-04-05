@@ -18,26 +18,26 @@ localize formatter
 # We intend to use %date(zone=z) to format the event begin and end. We
 # truncate the time to the previous minute.
 
-tell formatter date_format %Y%m%dT%H%M00Z
+formatter date_format %Y%m%dT%H%M00Z
 
 # We intend to use %time to format the individual event times.
 
-tell formatter time_format %I:%M:%S
+formatter time_format %I:%M:%S
 
 # The individual pass events get concatenated to the summary, with no newline.
 
-tell formatter template pass <<'EOD'
+formatter template pass <<'EOD'
 BEGIN:VCALENDAR
 [% FOR pass IN data %]
     [%- events = pass.events %]
     [%- evt = events() %]
 BEGIN:VEVENT
-DTSTART:[% evt.date( zone = z) %]
-DALARM:[% evt.date( delta = -360, zone = z ) %]
+DTSTART:[% evt.date( zone = 'z' ) %]
+DALARM:[% evt.date( delta = -360, zone = 'z' ) %]
 SUMMARY:[% evt.name( width = '' ) %]
     [%- WHILE evt %]
 	[%- evt_name = evt.event( width = '' ) %]
-	[%- end_date = evt.date( zone = z ) %]
+	[%- end_date = evt.date( zone = 'z' ) %]
 	[%= evt.event( width = '' ) %]
 	[%= evt.time %] Az
 	[%= evt.azimuth( width = '', places = 0, bearing = 2 ) %]
