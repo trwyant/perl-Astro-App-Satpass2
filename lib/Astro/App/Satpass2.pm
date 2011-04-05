@@ -10,14 +10,14 @@ use Carp;
 use Astro::App::Satpass2::ParseTime;
 use Astro::App::Satpass2::Utils qw{ instance load_package quoter };
 
-use Astro::Coord::ECI;
-use Astro::Coord::ECI::Moon;
-use Astro::Coord::ECI::Star;
-use Astro::Coord::ECI::Sun;
-use Astro::Coord::ECI::TLE qw{:constants};
-use Astro::Coord::ECI::TLE::Iridium;
-use Astro::Coord::ECI::TLE::Set;
-use Astro::Coord::ECI::Utils qw{:all};
+use Astro::Coord::ECI 0.037;
+use Astro::Coord::ECI::Moon 0.037;
+use Astro::Coord::ECI::Star 0.037;
+use Astro::Coord::ECI::Sun 0.037;
+use Astro::Coord::ECI::TLE 0.037 qw{:constants};
+use Astro::Coord::ECI::TLE::Iridium 0.037;	# This really needs 0.037.
+use Astro::Coord::ECI::TLE::Set 0.037;
+use Astro::Coord::ECI::Utils 0.037 qw{:all};
 
 use Clone ();
 use Cwd ();
@@ -652,7 +652,7 @@ sub export : Verb() {
 }
 
 sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm!
-    questionable|spare! quiet! )
+    questionable|spare! quiet! zone=s )
 {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
@@ -668,6 +668,9 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm!
     my $horizon = deg2rad ($self->{horizon});
     my $twilight = $self->{_twilight};
     my @flare_mag = ($self->{flare_mag_night}, $self->{flare_mag_day});
+    my $zone = exists $opt->{zone} ? $opt->{zone} :
+	$self->{formatter}->gmt() ? 0 :
+	$self->{formatter}->tz() || undef;
 
     _apply_boolean_default(
 	$opt, 0, qw{ am day pm } );
@@ -685,16 +688,17 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm!
     {
 	$tle->can_flare ($opt->{questionable}) or next;
 	$tle->set (
-	    algorithm => $opt->{algorithm} || 'fixed',
-	    backdate => $self->{backdate},
-	    horizon => $horizon,
-	    twilight => $twilight,
-	    model => $model,
-	    am => $opt->{am},
+	    algorithm	=> $opt->{algorithm} || 'fixed',
+	    backdate	=> $self->{backdate},
+	    horizon	=> $horizon,
+	    twilight	=> $twilight,
+	    model	=> $model,
+	    am		=> $opt->{am},
 	    max_mirror_angle => $max_mirror_angle,
-	    day => $opt->{day},
-	    pm => $opt->{pm},
-	    extinction => $self->{extinction},
+	    day		=> $opt->{day},
+	    pm		=> $opt->{pm},
+	    extinction	=> $self->{extinction},
+	    zone	=> $zone,
 	);
 	push @active, $tle;
     }
