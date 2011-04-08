@@ -185,6 +185,20 @@ EOD
 [%- END -%]
 EOD
 
+    pass_events => <<'EOD',
+[% DEFAULT data = sp.pass( arg ) -%]
+[% IF title %]
+    [%- title.date %] [% title.time %]
+        [%= title.oid %] [% title.event %]
+        [%= title.illumination %] [% title.local_coord %]
+[% END -%]
+[% FOREACH evt IN data.events %]
+    [%- evt.date %] [% evt.time %]
+        [%= evt.oid %] [% evt.event %]
+        [%= evt.illumination %] [% evt.local_coord %]
+[% END -%]
+EOD
+
     phase => <<'EOD',
 [% DEFAULT data = sp.phase( arg ) -%]
 [% IF title %]
@@ -441,6 +455,12 @@ sub pass {
     my ( $self, $array ) = @_;
 
     return $self->_tt( pass => $self->_wrap( $array ) );
+}
+
+sub pass_events {
+    my ( $self, $array ) = @_;
+
+    return $self->_tt( pass_events => $self->_wrap( $array ) );
 }
 
 sub phase {
@@ -963,11 +983,11 @@ It uses template C<pass>, which defaults to
  [% END -%]
  [% FOR pass IN data %]
      [%- events = pass.events %]
-     [%- evt = events() %]
+     [%- evt = events.first %]
  
      [%- evt.date %]    [% evt.oid %] - [% evt.name( width = '' ) %]
  
-     [%- WHILE evt %]
+     [%- FOREACH evt IN events %]
          [%- evt.time %]
              [%= evt.local_coord %]
              [%= evt.latitude %]
@@ -982,10 +1002,32 @@ It uses template C<pass>, which defaults to
                  [%= apls.local_coord %]
                  [%= apls.angle %] degrees from [% apls.name( width = '' ) %]
          [%- END %]
-         [%- evt = events() %]
  
      [%- END %]
  [%- END -%]
+
+=head3 pass_events
+
+ print $fmt->pass_events( [ \%pass_hash ... ] );	# Pass data
+
+This method overrides the
+L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
+L<pass_events()|Astro::App::Satpass2::Format/pass_events> method, and
+performs the same function.
+
+It uses template C<pass_events>, which defaults to
+
+ [% DEFAULT data = sp.pass( arg ) -%]
+ [% IF title %]
+     [%- title.date %] [% title.time %]
+         [%= title.oid %] [% title.event %]
+         [%= title.illumination %] [% title.local_coord %]
+ [% END -%]
+ [% FOREACH evt IN data.events %]
+     [%- evt.date %] [% evt.time %]
+         [%= evt.oid %] [% evt.event %]
+         [%= evt.illumination %] [% evt.local_coord %]
+ [% END -%]
 
 =head3 phase
 

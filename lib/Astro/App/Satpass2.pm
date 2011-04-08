@@ -1152,7 +1152,7 @@ sub location : Verb( dump! ) {
 }
 
 sub pass : Verb( choose=s@ appulse! chronological! dump! 
-    horizon|rise|set! illumination! quiet! 
+    events! horizon|rise|set! illumination! quiet! 
     transit|maximum|culmination! )
 {
     my ($self, @args) = @_;
@@ -1214,12 +1214,19 @@ sub pass : Verb( choose=s@ appulse! chronological! dump!
 	};
     }
 
-    $opt->{chronological}
-	and @accumulate = sort { $a->{time} <=> $b->{time} }
-	    @accumulate;
+    my $template;
+
+    if ( $opt->{events} ) {
+	$template = 'pass_events';
+    } else {
+	$template = 'pass';
+	$opt->{chronological}
+	    and @accumulate = sort { $a->{time} <=> $b->{time} }
+		@accumulate;
+    }
 
     return $self->_format_data(
-	pass => \@accumulate, $opt );
+	$template => \@accumulate, $opt );
 }
 
 {
@@ -4937,6 +4944,10 @@ chronological for a particular satellite.
 C<-dump> is a debugging tool. It is unsupported in the sense that the
 author reserves the right to change or revoke its functionality without
 notice.
+
+C<-events> causes the output to be individual events rather than passes.
+These events will be displayed in chronological order irrespective of
+satellite. The C<-chronological> option is not needed for this.
 
 C<-horizon> selects the satellite rise and set for display. Synonyms are
 C<-rise> and C<-set> -- that is C<-rise> selects both rise and set, as

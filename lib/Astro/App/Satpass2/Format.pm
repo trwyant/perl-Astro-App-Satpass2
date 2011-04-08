@@ -537,7 +537,6 @@ L<location|Astro::App::Satpass2/location> command. Its argument is
 presumed to be an L<Astro::Coord::ECI|Astro::Coord::ECI> object. This
 description should be appropriate for a ground station.
 
-
 =head3 pass
 
  print $fmt->pass( [ \%pass_hash ... ] );
@@ -547,6 +546,16 @@ the L<pass|Astro::App::Satpass2/pass> command. Its argument is a
 reference to an array of hash references, which are presumed to be
 output from the L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE>
 C<pass()> method.
+
+=head3 pass_events
+
+ print $fmt->pass_events( [ \%pass_hash ... ] );
+
+This method is intended to format a description of the individual events
+of satellite passes for the L<pass|Astro::App::Satpass2/pass> command
+with the C<-events> option. Its argument is a reference to an array of
+hash references, which are presumed to be output from the
+L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE> C<pass()> method.
 
 =head3 phase
 

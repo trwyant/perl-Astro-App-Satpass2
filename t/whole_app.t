@@ -21,7 +21,7 @@ BEGIN {
 
 $| = 1;	## no critic (RequireLocalizedPunctuationVars)
 
-plan( tests => 195 );
+plan( tests => 196 );
 
 require_ok( 'Astro::App::Satpass2' )
     or BAIL_OUT( "Can not continue without loading Astro::App::Satpass2" );
@@ -446,7 +446,17 @@ _app('pass -noillumination 19801015T000000Z +1', <<'EOD',
 05:30:12  63.7 297.6 NW      239.9  51.8981   -1.3250   215.8 lit   max
 05:34:08   0.0  25.1 NE     1789.5  64.9426   15.6750   228.8 lit   set
 EOD
-    'Calculate passes over Greenwich' );
+    'Calculate passes over Greenwich, without illumination events' );
+
+_app('pass -events 19801015T000000Z +1', <<'EOD',
+Date       Time     OID    Event Illum Eleva  Azimuth      Range
+1980/10/15 05:26:29  88888 rise  shdw    0.0 210.3 SW     1693.5
+1980/10/15 05:27:33  88888 lit   lit     4.7 212.0 SW     1220.1
+1980/10/15 05:30:12  88888 max   lit    63.7 297.6 NW      239.9
+1980/10/15 05:34:08  88888 set   lit     0.0  25.1 NE     1789.5
+EOD
+    'Calculate pass events over Greenwich' );
+
 _app('pass -horizon -transit 19801015T000000Z +1', <<'EOD',
     Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
