@@ -441,7 +441,8 @@ sub dispatch {
 	$verb =~ s/ \A core [.] //smx;
 	$code = $self->can($verb)
 	    and _get_attr($code, 'Verb')
-	    or $self->_wail("Unknown interactive method '$verb'");
+##	    or $self->_wail("Unknown interactive method '$verb'");
+	    or confess("Unknown interactive method '$verb'");
     }
 ##    $self->{_interactive} = \$verb;	# Any local variable will do.
 ##    weaken ($self->{_interactive});	# Goes away when $verb does.
@@ -3153,8 +3154,6 @@ sub _read_continuation {
 	$append =~ m/ \\ /sxm
 	    and $context->{command} = $command;
 
-=begin comment
-
 	if ( 'macro' eq $command ) {
 
 	    my @input = Text::ParseWords::quotewords( qr{ \s+ }smx, 1,
@@ -3169,9 +3168,7 @@ sub _read_continuation {
 
 	}
 
-=end comment
-
-=cut
+=begin comment
 
 	my $handler = $level1_requote{$command} || $level1_requote{''};
 	my ( $this_quote, $start_pos );
@@ -3189,6 +3186,10 @@ sub _read_continuation {
 		$start_pos = undef;
 	    }
 	}
+
+=end comment
+
+=cut
 
 	my $code = $level1_map{$command}
 	    or return $buffer;
