@@ -104,6 +104,7 @@ ok( $app->formatter( 'gmt' ), 'Confirm gmt now true' );
     $got = $@ || $buffer;
     chomp $got;
     is($got, "Who could travel much faster than light.", "Output to code");
+
     $buffer = [];
     $got = eval {
 	$app->set(stdout => $buffer);
@@ -112,14 +113,17 @@ ok( $app->formatter( 'gmt' ), 'Confirm gmt now true' );
     } || $@ || 'Failed: no exception recorded';
     chomp $got;
     is($got, "    She set out one day", "Output to an array ref");
+
     $got = eval {$app->set(stdout => undef);
 	$app->execute("echo '    In a relative way'")};
     $@ and $got = $@;
     chomp $got;
     is($got, "    In a relative way", "Output returned");
+
     $got = eval {$app->execute('# And returned the previous night.')};
     $@ and $got = $@;
     is($got, undef, "Comments should be ignored");
+
     $got = eval {$app->execute(' ')};
     $@ and $got = $@;
     is($got, undef, "Blank lines should be ignored");
