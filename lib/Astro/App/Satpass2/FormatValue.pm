@@ -377,10 +377,7 @@ sub earth {
 sub events {
     my ( $self ) = @_;
 
-    my $events = $self->_get( data => 'events' )
-	or return;
-
-    my @evts = @{ $events };
+    my @evts = $self->__raw_events();
 
     return sub {
 	@evts or return;
@@ -388,6 +385,18 @@ sub events {
 	$arg{data} = shift @evts;
 	return $self->new( %arg );
     }
+}
+
+sub __raw_events {
+    my ( $self ) = @_;
+
+    my $events = $self->_get( data => 'events' )
+	or return;
+
+    'ARRAY' eq ref $events
+	or return;
+
+    return @{ $events };
 }
 
 sub reflections {

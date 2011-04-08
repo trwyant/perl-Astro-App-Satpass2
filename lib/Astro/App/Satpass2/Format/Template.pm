@@ -342,6 +342,11 @@ sub new {
     return $self;
 }
 
+sub attribute_names {
+    my ( $self ) = @_;
+    return ( $self->SUPER::attribute_names(), qw{ while_max } );
+}
+
 sub alias {
     my ( $self, $hash ) = @_;
     return $self->_tt( alias => $hash );
@@ -462,12 +467,18 @@ sub report {
     my ( $self, $data ) = @_;
 
     $data = { %{ $data } };	# Shallow clone
-    $data->{title} = $self->_wrap( undef );
+    $data->{all_events} ||= sub {
+	my ( $data ) = @_;
+	return $self->_all_events( $data );
+    };
     $data->{default} ||= $self->__default();
+    $data->{title} = $self->_wrap( undef );
 
     my $output;
 
     eval {
+
+	local $Template::Directive::WHILE_MAX = $self->while_max() || 1000;
 
 	$self->{tt}->process( $data->{template}, $data, \$output )
 	    or die $self->{tt}->error();
@@ -524,6 +535,35 @@ sub tz {
     }
 }
 
+sub _all_events {
+    my ( $self, $data ) = @_;
+    'ARRAY' eq ref $data or return;
+
+=begin comment
+
+    my @events = sort { $a->{time} <=> $b->{time} }
+	map { @{ $_->{events} } }
+	grep { 'ARRAY' eq ref $_->{events} }
+	@{ $data }
+	or return;
+
+=end comment
+
+=cut
+
+    my @events;
+    foreach my $pass ( @{ $data } ) {
+	push @events, $pass->__raw_events();
+    }
+    @events or return;
+    @events = sort { $a->{time} <=> $b->{time} } @events;
+
+    return sub {
+	@events or return;
+	return $self->_wrap( shift @events );
+    };
+}
+
 #	_is_report()
 #
 #	Returns true if the report() method is above us on the call
@@ -549,8 +589,14 @@ sub _tt {
 
     $default ||= $self->__default();
 
+    local $Template::Directive::WHILE_MAX = $self->while_max() || 1000;
+
     my $output;
     $self->{tt}->process( $action, {
+	    all_events	=> sub {
+		my ( $data ) = @_;
+		return $self->_all_events( $data );
+	    },
 	    data	=> $data,
 	    title	=> ( $self->header() ?
 		$self->_wrap( undef, $default ) : undef ),
@@ -601,6 +647,8 @@ sub _wrap {
 
     return $data;
 }
+
+__PACKAGE__->create_attribute_methods();
 
 1;
 
@@ -733,6 +781,15 @@ actually implemented as templates, as follows:
 
 These definitions can be changed, or new local coordinates added, using
 the L<template()|/template> method.
+
+=head3 while_max
+
+This attribute gives you access to the L<Template-Toolkit|Template>
+C<WHILE_MAX> setting, which limits the number of iterations through a
+C<WHILE> loop. Because of the way C<Template-Toolkit> works, changes to
+this made after the first use of C<Template-Toolkit> have no effect.
+
+The default is 1000.
 
 =head2 Formatters
 
