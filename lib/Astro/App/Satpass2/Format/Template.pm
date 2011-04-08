@@ -461,16 +461,17 @@ sub report {
     my ( $self, $data ) = @_;
 
     $data = { %{ $data } };	# Shallow clone
-    $data->{all_events} ||= sub {
-	my ( $data ) = @_;
-	return $self->_all_events( $data );
-    };
     $data->{default} ||= $self->__default();
     $data->{title} = $self->_wrap( undef );
 
     my $output;
 
     eval {
+
+	local $Template::Stash::LIST_OPS->{events} = sub {
+	    my @args = @_;
+	    return $self->_all_events( @args );
+	};
 
 	$self->{tt}->process( $data->{template}, $data, \$output )
 	    or die $self->{tt}->error();
@@ -550,10 +551,18 @@ sub _all_events {
     @events or return;
     @events = sort { $a->{time} <=> $b->{time} } @events;
 
+=begin comment
+
     return sub {
 	@events or return;
 	return $self->_wrap( shift @events );
     };
+
+=end comment
+
+=cut
+
+    return [ map { $self->_wrap( $_ ) } @events ];
 }
 
 #	_is_report()
@@ -581,12 +590,13 @@ sub _tt {
 
     $default ||= $self->__default();
 
+    local $Template::Stash::LIST_OPS->{events} = sub {
+	my @args = @_;
+	return $self->_all_events( @args );
+    };
+
     my $output;
     $self->{tt}->process( $action, {
-	    all_events	=> sub {
-		my ( $data ) = @_;
-		return $self->_all_events( $data );
-	    },
 	    data	=> $data,
 	    title	=> ( $self->header() ?
 		$self->_wrap( undef, $default ) : undef ),
