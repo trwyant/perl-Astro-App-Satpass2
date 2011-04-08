@@ -195,6 +195,8 @@ use constant NONE => undef;
 		"Argument '$name' must be a hash reference" );
 	}
 
+=begin comment
+
 	if ( defined( my $time = $self->_get( data => 'time' ) ) ) {
 	    foreach my $key ( qw{ body station } ) {
 		my $obj = $self->_get_eci( $key )
@@ -202,6 +204,10 @@ use constant NONE => undef;
 		$obj->universal( $time );
 	    }
 	}
+
+=end comment
+
+=cut
 
 	$self->{desired_equinox_dynamical} =
 	    $args{desired_equinox_dynamical} || 0;
@@ -374,6 +380,8 @@ sub earth {
     return $earth;
 }
 
+=begin comment
+
 sub events {
     my ( $self ) = @_;
 
@@ -385,6 +393,15 @@ sub events {
 	$arg{data} = shift @evts;
 	return $self->new( %arg );
     }
+}
+
+=end comment
+
+=cut
+
+sub events {
+    my ( $self ) = @_;
+    return [ map { $self->clone( data => $_ ) } $self->__raw_events() ];
 }
 
 sub __raw_events {
@@ -1477,6 +1494,22 @@ $formatter_data{semiminor} = $formatter_data{semimajor};
 $formatter_data{illumination} = $formatter_data{event};
 $formatter_data{time} = $formatter_data{date};
 
+sub _fetch {
+    my ( $self, $info, $name, $arg ) = @_;
+
+    if ( ! $self->{internal}{time_set} ) {
+	if ( defined( my $time = $self->_get( data => 'time' ) ) ) {
+	    foreach my $key ( qw{ body station } ) {
+		my $obj = $self->_get_eci( $key )
+		    or next;
+		$obj->universal( $time );
+	    }
+	}
+	$self->{internal}{time_set} = 1;
+    }
+    return $info->{fetch}->( $self, $name, $arg );
+}
+
 while ( my ( $name, $info ) = each %formatter_data ) {
     __PACKAGE__->can( $name ) and next;
 
@@ -1489,7 +1522,7 @@ while ( my ( $name, $info ) = each %formatter_data ) {
 
 	my $value = $self->{title} ?
 	    NONE :
-	    $info->{fetch}->( $self, $name, \%arg );
+	    $self->_fetch( $info, $name, \%arg );
 
 	my @rslt;
 	foreach my $parm ( $info->{chain} ?
@@ -2375,16 +2408,13 @@ Earth.
 
 =head3 events
 
- my $events = $fmt->events();
- while ( my $event = $events->() ) {
+ foreach my $event ( @{ $fmt->events() || [] } ) {
      ... do something with the event ...
  }
 
-This method returns a reference to a code snippet that acts as an
-iterator for the contents of the C<{events}> key of the invocant's data.
-Each call to the code reference returns an
-C<Astro::App::Satpass2::FormatValue> object representing the next event,
-until all events have been returned. Subsequent calls return C<undef>.
+This method returns a reference to an array of
+C<Astro::App::Satpass2::FormatValue> objects manufactured out of the
+contents of the C<{events}> key of the invocant's data.
 
 =head3 reflections
 

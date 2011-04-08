@@ -161,11 +161,11 @@ EOD
 [% END -%]
 [% FOR pass IN data %]
     [%- events = pass.events %]
-    [%- evt = events() %]
+    [%- evt = events.first %]
 
     [%- evt.date %]    [% evt.oid %] - [% evt.name( width = '' ) %]
 
-    [%- WHILE evt %]
+    [%- FOREACH evt IN events %]
         [%- evt.time %]
             [%= evt.local_coord %]
             [%= evt.latitude %]
@@ -180,7 +180,6 @@ EOD
                 [%= apls.local_coord %]
                 [%= apls.angle %] degrees from [% apls.name( width = '' ) %]
         [%- END %]
-        [%- evt = events() %]
 
     [%- END %]
 [%- END -%]
@@ -342,11 +341,6 @@ sub new {
     return $self;
 }
 
-sub attribute_names {
-    my ( $self ) = @_;
-    return ( $self->SUPER::attribute_names(), qw{ while_max } );
-}
-
 sub alias {
     my ( $self, $hash ) = @_;
     return $self->_tt( alias => $hash );
@@ -478,8 +472,6 @@ sub report {
 
     eval {
 
-	local $Template::Directive::WHILE_MAX = $self->while_max() || 1000;
-
 	$self->{tt}->process( $data->{template}, $data, \$output )
 	    or die $self->{tt}->error();
 
@@ -588,8 +580,6 @@ sub _tt {
     _is_report() and return $data;
 
     $default ||= $self->__default();
-
-    local $Template::Directive::WHILE_MAX = $self->while_max() || 1000;
 
     my $output;
     $self->{tt}->process( $action, {
@@ -781,15 +771,6 @@ actually implemented as templates, as follows:
 
 These definitions can be changed, or new local coordinates added, using
 the L<template()|/template> method.
-
-=head3 while_max
-
-This attribute gives you access to the L<Template-Toolkit|Template>
-C<WHILE_MAX> setting, which limits the number of iterations through a
-C<WHILE> loop. Because of the way C<Template-Toolkit> works, changes to
-this made after the first use of C<Template-Toolkit> have no effect.
-
-The default is 1000.
 
 =head2 Formatters
 
