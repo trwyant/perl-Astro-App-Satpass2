@@ -3083,6 +3083,53 @@ sub _read_continuation {
 	},
     );
 
+    my %level1_requote = (
+	# In a macro definition:
+	macro	=> {
+	    # In single-quoted strings,
+	    q{'}	=> sub {
+		# escaped interpolations and double quotes may be
+		# unescaped,
+		s{ (?: \A | (?<! \\ ) ) ( (?: \\\\ )* ) \\ ( [\@\$\"] )
+		}{$1$2}sxmg;
+		# and the string remains single-quoted.
+		$_ = qq{'$_'};
+		return;
+	    },
+	    # In double-quoted strings,
+	    q{"}	=> sub {
+		# escaped interpolations and double quotes may be
+		# unescaped,
+		s{ (?: \A | (?<! \\ ) ) ( (?: \\\\ )* ) \\ ( [\@\$\"] )
+		}{$1$2}sxmg;
+		# unescaped single quotes become double quotes,
+		s/ (?: \A | (?<! \\ ) ) ( (?: \\\\ )* ) ' /$1"/sxmg;
+		# and the string becomes single-quoted.
+		$_ = qq{'$_'};
+		return;
+	    },
+	},
+	# Anywhere else
+	''	=> {
+	    # In single-quoted strings,
+	    q{'}	=> sub {
+		# unescaped double quotes must be escaped,
+		s/ (?: \A | (?<! \\ ) ) ( (?: \\\\ )* ) " /$1\\"/sxmg;
+		# escaped single quotes may be unescaped,
+		s/ (?: \A | (?<! \\ ) ) ( (?: \\\\ )* ) \\ ' /$1'/sxmg;
+		# and the string becomes double-quoted.
+		$_ = qq{"$_"};
+		return;
+	    },
+	    # In double-quoted strings,
+	    q{"}	=> sub {
+		# no changes need to be made.
+		$_ = qq{"$_"};
+		return;
+	    },
+	},
+    );
+
     sub _rewrite_level1_command {
 	my ( $self, $buffer, $context ) = @_;
 
@@ -3106,19 +3153,41 @@ sub _read_continuation {
 	$append =~ m/ \\ /sxm
 	    and $context->{command} = $command;
 
+=begin comment
+
 	if ( 'macro' eq $command ) {
 
 	    my @input = Text::ParseWords::quotewords( qr{ \s+ }smx, 1,
 		$buffer );
 	    foreach ( @input ) {
 		m/ ['"\\\s] /sxm or next;
-		no warnings qw{ uninitialized };
-		s/ (?: \A | (?<= [^\\] ) ) ( \\\\ )* ' /$1"/sxmg;
+		s/ (?: \A | (?<= [^\\] ) ) ( (?: \\\\ )* ) ' /$1"/sxmg;
 		substr $_, 0, 1, q<'>;
 		substr $_, -1, 1, q<'>;
 	    }
 	    return join( ' ', @input ) . $append;
 
+	}
+
+=end comment
+
+=cut
+
+	my $handler = $level1_requote{$command} || $level1_requote{''};
+	my ( $this_quote, $start_pos );
+	while ( $buffer =~ m/ (?: \A | (?<! \\ ) ) (?: \\\\ )* ( ['"] ) /sxmg
+	) {
+	    if ( ! defined $start_pos ) {
+		$start_pos = $+[0] - 1;
+		$this_quote = $1;
+	    } elsif ( $1 eq $this_quote ) {
+		my $length = $+[0] - $start_pos;
+		local $_ = substr $buffer, $start_pos + 1, $length - 2;
+		$handler->{$this_quote}->();
+		substr $buffer, $start_pos, $length, $_;
+		pos( $buffer ) = $start_pos + length $_;
+		$start_pos = undef;
+	    }
 	}
 
 	my $code = $level1_map{$command}
