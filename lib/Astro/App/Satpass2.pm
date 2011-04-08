@@ -84,13 +84,6 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 #	command you would specify:
 #	    sub foo : Configure(pass_through) Verb
 #
-#	Flatten(boolean)
-#
-#	The 'Flatten' attribute tells the option parser whether or not
-#	to flatten array references in the arguments into arrays. The
-#	default is to flatten, but you can turn this off with
-#	Flatten(0).
-#
 #	Verb(options)
 #
 #	The 'Verb' attribute identifies the subroutine as representing a
@@ -104,7 +97,7 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 {
     my (%attr, %want);
     BEGIN {
-	%want = map {$_ => 1} qw{Configure Flatten Verb};
+	%want = map {$_ => 1} qw{Configure Verb};
     }
 
     sub FETCH_CODE_ATTRIBUTES {
@@ -1488,7 +1481,7 @@ EOD
     return $output;
 }
 
-sub set : Verb() Flatten(0) {	## no critic (ProhibitAmbiguousNames)
+sub set : Verb() {	## no critic (ProhibitAmbiguousNames)
     my ( $self, @args ) = @_;
     ( my $opt, @args ) = $self->_getopt( @args );
     $self->{time_parser} and $self->_parse_time_reset();
@@ -2717,9 +2710,6 @@ sub _get_warner_attribute {
 	my $self = shift @ARGV;
 	my @data = caller(1);
 	my $code = \&{$data[3]};
-	my $unwrap = _get_attr( $code, 'Flatten' ) || [ 1 ];
-	$unwrap->[0]
-	    and @ARGV = map { 'ARRAY' eq ref $_ ? @{ $_ } : $_ } @ARGV; ## no critic (RequireLocalizedPunctuationVars)
 	return @ARGV
 	    if 'HASH' eq ref $ARGV[0];
 	my $lgl = _get_attr($code, 'Verb') || [];
