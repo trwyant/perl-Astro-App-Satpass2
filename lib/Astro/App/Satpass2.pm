@@ -441,8 +441,7 @@ sub dispatch {
 	$verb =~ s/ \A core [.] //smx;
 	$code = $self->can($verb)
 	    and _get_attr($code, 'Verb')
-##	    or $self->_wail("Unknown interactive method '$verb'");
-	    or confess("Unknown interactive method '$verb'");
+	    or $self->_wail("Unknown interactive method '$verb'");
     }
 ##    $self->{_interactive} = \$verb;	# Any local variable will do.
 ##    weaken ($self->{_interactive});	# Goes away when $verb does.
