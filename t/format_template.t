@@ -275,10 +275,10 @@ is( $ft->position( {
             Moon 16:26:42 -17.2   406685.1
 EOD
 
-is( $ft->report( {
-	    arg	=> [ qw{ sailor } ],
-	    template => \"Hello, [% arg.0 %]!\n",
-	} ), <<'EOD', 'Report' );
+is( $ft->report(
+	arg	=> [ qw{ sailor } ],
+	template => \"Hello, [% arg.0 %]!\n",
+    ), <<'EOD', 'Report' );
 Hello, sailor!
 EOD
 

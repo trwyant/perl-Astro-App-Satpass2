@@ -2749,11 +2749,11 @@ sub _helper_get_object {
 	    report	=> sub {
 		my ( $self, $opt, $template, @args ) = @_;
 		$opt->{raw} = 1;
-		return {
+		return (
 		    arg	=> \@args,
 		    sp	=> $self,
 		    template	=> $template,
-		};
+		);
 	    },
 	},
     );
@@ -4609,12 +4609,26 @@ The argument, if any, is parsed using the time parser.
 
 =item report
 
-When called natively, this method takes a single argument, which is a
-hash reference. When called via C<formatter()>, the hash is constructed
-from the arguments, with the first argument being the contents of the
-C<{template}> key, a reference to the subsequent arguments being the
-C<{arg}> key, and the invocant being the C<{sp}> key. The C<-raw> option
-is forced true, so that you just get the text of the report back.
+The following arguments are passed to
+L<Astro::App::Satpass2::Format::Template|Astro::App::Satpass2::Format::Template>
+L<report()|Astro::App::Satpass2::Format::Template/report>:
+
+ sp       => the invocant of this method;
+ template => the first argument to this method;
+ arg      => [ all arguments after the first ].
+
+An example may help.
+
+ my $output = $self->formatter( report => qw{ foo bar baz } )
+
+is equivalent to
+
+ my $fmtr = $self->get( 'formatter' );
+ my $output = $fmtr->report(
+     template => 'foo',
+     arg      => [ 'bar', 'baz' ],
+     sp       => $self,
+ );
 
 =back
 

@@ -479,18 +479,20 @@ sub position {
 }
 
 sub report {
-    my ( $self, $data ) = @_;
+    my ( $self, %data ) = @_;
 
-    $data = { %{ $data } };	# Shallow clone
-    my $template = delete $data->{template}
+    my $template = delete $data{template}
 	or $self->warner()->wail( 'template argument is required' );
-    $data->{default} ||= $self->__default();
-    $data->{title} = $self->header() ?
-	$self->_wrap( undef, $data->{default} ) :
+
+    $data{default} ||= $self->__default();
+
+    $data{title} = $self->header() ?
+	$self->_wrap( undef, $data{default} ) :
 	undef;
-    if ( 'ARRAY' eq ref $data->{arg} ) {
-	my @arg = @{ $data->{arg} };
-	$data->{arg} = Astro::App::Satpass2::Wrap::Array->new( \@arg );
+
+    if ( 'ARRAY' eq ref $data{arg} ) {
+	my @arg = @{ $data{arg} };
+	$data{arg} = Astro::App::Satpass2::Wrap::Array->new( \@arg );
     }
 
     my $output;
@@ -500,7 +502,7 @@ sub report {
 	return $self->_all_events( @args );
     };
 
-    $self->{tt}->process( $template, $data, \$output )
+    $self->{tt}->process( $template, \%data, \$output )
 	or $self->warner()->wail( $self->{tt}->error() );
 
     # TODO would love to use \h here, but that needs 5.10.
@@ -615,25 +617,11 @@ sub _tt {
 
     _is_report() and return $data;
 
-    $default ||= $self->__default();
-
-    local $Template::Stash::LIST_OPS->{events} = sub {
-	my @args = @_;
-	return $self->_all_events( @args );
-    };
-
-    my $output;
-    $self->{tt}->process( $action, {
-	    data	=> $data,
-	    title	=> ( $self->header() ?
-		$self->_wrap( undef, $default ) : undef ),
-	}, \$output )
-	or $self->warner()->wail( $self->{tt}->error() )
-    ;
-
-    # TODO would love to use \h here, but that needs 5.10.
-    $output =~ s/ [ \t]+ (?= \n ) //sxmg;
-    return $output;
+    return $self->report(
+	template	=> $action,
+	data	=> $data,
+	default	=> $default,
+    );
 }
 
 sub _wrap {
@@ -1248,22 +1236,24 @@ the decoding itself, or delegate to C<SUPER::decode>.
 
 =head3 report
 
- $fmt->report( 'almanac.tt', \%arg );
+ $fmt->report( template => $template, ... );
 
-The first argument to this method is a L<Template-Toolkit|Template>
-file, which is to be executed. This template will be passed the C<%arg>
-hash as its variable hash. In addition to what was passed in, a
-C<{title}> key will be added, containing an empty
-L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
-object configured to generate titles, not data.
+The arguments to this method are name/value pairs. The C<template>
+argument is required, and is either the name of a template file, or a
+reference to a string containing the template. All other arguments are
+passed to C<Template-Toolkit> as variables. If argument C<arg> is
+specified and its value is an array reference, the value is enclosed in
+an
+L<Astro::App::Satpass2::Wrap::Array|Astro::App::Satpass2::Wrap::Array>
+object, since by convention this is the argument passed back to
+L<Astro::App::Satpass2|Astro::App::Satpass2> methods.
 
 The canned templates can also be run as reports, and in fact will be
-taken in preference to files of the same name. If you do this, the
-C<%arg> hash will need to have an
-L<Astro::App::Satpass2|Astro::App::Satpass2> object in key C<{sp}>. If
-you want titles, you will also need to provide an
-C<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
-object in key C<{title}>, instantiated with C<< title => 1 >>.
+taken in preference to files of the same name. If you do this, you will
+need to pass the relevant L<Astro::App::Satpass2|Astro::App::Satpass2>
+object as the C<sp> argument, since by convention the canned templates
+all look to that variable to compute their data if they do not already
+have a C<data> variable.
 
 =head3 template
 
