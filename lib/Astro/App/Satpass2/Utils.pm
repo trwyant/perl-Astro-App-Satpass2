@@ -12,8 +12,15 @@ use Scalar::Util qw{ blessed looks_like_number };
 
 our $VERSION = '0.000_12';
 
-our @EXPORT_OK = qw{ instance load_package quoter };
+our @EXPORT_OK = qw{ has_method instance load_package quoter };
 
+sub has_method {
+    my ( $object, $method ) = @_;
+
+    ref $object or return;
+    blessed( $object ) or return;
+    return $object->can( $method );
+}
 
 sub instance {
     my ( $object, $class ) = @_;
@@ -88,6 +95,15 @@ default.
 =head1 SUBROUTINES
 
 This module supports the following exportable subroutines:
+
+=head2 has_method
+
+ has_method( $object, $method );
+
+This exportable subroutine returns a code reference to the named method
+if the given object has the method, or a false value otherwise. What you
+actually get is the result of C<< $invocant->can( $method ) >> if the
+invocant is a blessed reference, or a return otherwise.
 
 =head2 instance
 

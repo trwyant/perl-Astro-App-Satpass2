@@ -21,7 +21,7 @@ BEGIN {
 
 $| = 1;	## no critic (RequireLocalizedPunctuationVars)
 
-plan( tests => 196 );
+plan( tests => 198 );
 
 require_ok( 'Astro::App::Satpass2' )
     or BAIL_OUT( "Can not continue without loading Astro::App::Satpass2" );
@@ -665,6 +665,18 @@ _app('list', <<'EOD', 'List the valid items');
    OID Name                     Epoch               Period
  88888                          1980/10/01 23:41:24 01:29:37
 EOD
+
+_app( 'status drop 88888', undef, 'OID 88888 no longer Iridium' );
+
+_app( 'formatter report position 19801013T053956Z', <<'EOD',
+1980/10/13 05:39:56
+            Name Eleva  Azimuth      Range               Epoch Illum
+           88888  61.4 109.6 E       233.2 1980/10/01 23:41:24 lit
+             Sun -10.6  91.2 E   1.492e+08
+            Moon -50.2  63.6 NE   406827.8
+        Arcturus  -3.2  60.9 NE  3.471e+14
+EOD
+    'Position run from template' );
 
 _method( init => { level1 => 1 }, 't/rewrite_macros',
     undef, 'Load satpass-format macros' );

@@ -5,7 +5,7 @@ use strict; use warnings;
 use Carp;
 
 use Astro::App::Satpass2::FormatTime;
-use Astro::App::Satpass2::Utils qw{ instance };
+use Astro::App::Satpass2::Utils qw{ has_method instance };
 use Astro::Coord::ECI::Sun;
 use Astro::Coord::ECI::TLE qw{ :constants };
 use Astro::Coord::ECI::Utils qw{ deg2rad embodies julianday PI rad2deg TWOPI };
@@ -1636,28 +1636,19 @@ sub _apply_dimension {
 sub _arguments {
     my @arg = @_;
 
+    my $obj = shift @arg;
     my $hash = 'HASH' eq ref $arg[-1] ? pop @arg : {};
 
     my ( @clean, @append );
     foreach my $item ( @arg ) {
-	if ( instance( $item,
-		'Astro::App::Satpass2::FormatValue::Argument' ) ) {
-	    my $reftype = reftype( $item );
-	    if ( 'ARRAY' eq $reftype ) {
-		push @append, @{ $item };
-	    } elsif ( 'HASH' eq $reftype ) {
-		push @append, %{ $item };
-	    } else {
-		push @append, ${ $item };
-	    }
+	if ( has_method( $item, 'dereference' ) ) {
+	    push @append, $item->dereference();
 	} else {
 	    push @clean, $item;
 	}
     }
 
-    @clean % 2 or splice @clean, 1, 0, 'title';
-
-    my $obj = shift @clean;
+    @clean % 2 and splice @clean, 0, 0, 'title';
 
     return ( $obj, %{ $hash }, @clean, @append );
 }
@@ -2465,7 +2456,8 @@ named arguments are seen, you can not pass a hash as the last argument.
 * C<Template-Toolkit> seems to have a strong preference for dealing with
 arrays as references. But array references are not flattened when passed
 as arguments. If the caller wants an array reference flattened, it must
-be blessed into class C<Astro::App::Satpass2::FormatValue::Argument>.
+be made into an instance of
+L<Astro::App::Satpass2::Wrap::Array|Astro::App::Satpass2::Wrap::Array>.
 This is really (I think and hope!) only a problem for whoever writes the
 code reference that gets passed to the C<local_coordinates> argument of
 C<new()> (i.e. me).
@@ -2479,8 +2471,9 @@ order:
 
 =item 2) everything else except
 
-=item 3) references blessed into
-C<Astro::App::Satpass2::FormatValue::Argument>.
+=item 3)
+L<Astro::App::Satpass2::Wrap::Array|Astro::App::Satpass2::Wrap::Array>
+objects, which are expanded and put last.
 
 =back
 

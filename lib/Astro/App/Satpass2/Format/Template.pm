@@ -9,6 +9,7 @@ use Carp;
 
 use Astro::App::Satpass2::Format::Template::Provider;
 use Astro::App::Satpass2::FormatValue;
+use Astro::App::Satpass2::Wrap::Array;
 use Astro::Coord::ECI::TLE qw{ :constants };
 use Astro::Coord::ECI::Utils qw{
     deg2rad embodies julianday PI rad2deg TWOPI
@@ -481,23 +482,29 @@ sub report {
     my ( $self, $data ) = @_;
 
     $data = { %{ $data } };	# Shallow clone
+    my $template = delete $data->{template}
+	or $self->warner()->wail( 'template argument is required' );
     $data->{default} ||= $self->__default();
-    $data->{title} = $self->_wrap( undef );
+    $data->{title} = $self->header() ?
+	$self->_wrap( undef, $data->{default} ) :
+	undef;
+    if ( 'ARRAY' eq ref $data->{arg} ) {
+	my @arg = @{ $data->{arg} };
+	$data->{arg} = Astro::App::Satpass2::Wrap::Array->new( \@arg );
+    }
 
     my $output;
 
-    eval {
+    local $Template::Stash::LIST_OPS->{events} = sub {
+	my @args = @_;
+	return $self->_all_events( @args );
+    };
 
-	local $Template::Stash::LIST_OPS->{events} = sub {
-	    my @args = @_;
-	    return $self->_all_events( @args );
-	};
+    $self->{tt}->process( $template, $data, \$output )
+	or $self->warner()->wail( $self->{tt}->error() );
 
-	$self->{tt}->process( $data->{template}, $data, \$output )
-	    or die $self->{tt}->error();
-
-	1;
-    } or $self->warner()->wail( $@ );
+    # TODO would love to use \h here, but that needs 5.10.
+    $output =~ s/ [ \t]+ (?= \n ) //sxmg;
 
     return $output;
 }
@@ -651,8 +658,8 @@ sub _wrap {
 		my $output;
 		$self->{tt}->process( $self->local_coord(), {
 			data	=> $data,
-			arg	=> bless( \@arg,
-			    'Astro::App::Satpass2::FormatValue::Argument' ),
+			arg	=>
+			    Astro::App::Satpass2::Wrap::Array->new( \@arg ),
 			title	=> ( $self->header() ?
 			    $self->_wrap( undef, $default ) : undef ),
 		    }, \$output );
