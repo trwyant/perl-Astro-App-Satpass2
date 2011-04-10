@@ -21,7 +21,7 @@ BEGIN {
 
 $| = 1;	## no critic (RequireLocalizedPunctuationVars)
 
-plan( tests => 198 );
+plan( tests => 189 );
 
 require_ok( 'Astro::App::Satpass2' )
     or BAIL_OUT( "Can not continue without loading Astro::App::Satpass2" );
@@ -678,41 +678,6 @@ _app( 'formatter report position 19801013T053956Z', <<'EOD',
 EOD
     'Position run from template' );
 
-_method( init => { level1 => 1 }, 't/rewrite_macros',
-    undef, 'Load satpass-format macros' );
-_app( 'macro list farmers', <<'EOD', 'Rewrite almanac' );
-macro define farmers location \
-    almanac
-EOD
-_app( 'macro list glint', <<'EOD', 'Rewrite flare' );
-macro define glint 'flare -noam $@'
-EOD
-_app( 'macro list burg', <<'EOD', 'Rewrite localize' );
-macro define burg 'localize horizon formatter verbose'
-EOD
-_app( 'macro list overtake', <<'EOD', 'Rewrite pass' );
-macro define overtake location \
-    'pass $@'
-EOD
-_app( 'macro list exhibit', <<'EOD', 'Rewrite show' );
-macro define exhibit 'formatter date_format' \
-    'show horizon verbose' \
-    'formatter time_format'
-EOD
-_app( 'macro list assign', <<'EOD', 'Rewrite set' );
-macro define assign 'set horizon 10' \
-    'formatter date_format "%a %d-%b-%Y"' \
-    'formatter time_format "%I:%M:%S %p"' \
-    'set verbose 1 appulse 5' \
-    'formatter gmt 1'
-EOD
-_app( 'macro list norad', <<'EOD', 'Rewrite st invocation' );
-macro define norad 'st $@'
-EOD
-_app( 'macro list st', <<'EOD', 'Rewrite st use' );
-macro define st 'spacetrack $@'
-EOD
-
 SKIP: {
     -d 't' or skip ("No t directory found", 1);
     my $t = File::Spec->catfile(&getcwd, 't');
@@ -821,6 +786,7 @@ sub _do_test {
     my ($got, $want, $title) = @_;
     defined $want and chomp $want;
     if ($@) {
+	defined $want or $want = 'unknown error';
 	chomp $@;
 	@_ = ($@, qr/ \A @{[ quotemeta $want ]} /smx, $title);
 	goto &like;

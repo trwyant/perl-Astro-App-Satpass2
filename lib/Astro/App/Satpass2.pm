@@ -1876,47 +1876,69 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 
 }
 
+sub _source_reader {
+    my ( $self, $source, $opt ) = @_;
+
+    defined $source
+	or $self->_wail( "Source name, handle or reference required" );
+
+    openhandle( $source )
+	and return sub { return scalar <$source> };
+
+    if ( ! ref $source ) {
+	my $fh = IO::File->new( $source, '<' )
+	    or do {
+	    $opt->{optional} and return;
+	    $self->_wail( "Failed to open $source: $!" );
+	};
+	return sub { return scalar <$fh> };
+    }
+
+    if ( 'ARRAY' eq ref $source ) {
+	my $inx = 0;
+	return sub { return $source->[$inx++] };
+    }
+
+    $self->_wail( 'Can not source a reference to ', ref $source );
+    return;	# Can't get here, but Perl::Critic does not know that.
+}
+
 sub source : Verb( optional! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     my $output;
-    my $fn = shift @args or $self->_wail("File name required");
-    if ( my $fh = IO::File->new( $fn, '<' ) ) {
+    my $reader = $self->_source_reader( shift @args, $opt )
+	or return;
 
-	my @level1_cache;
-	my $level1_context = {};
-	my $fetcher = $opt->{level1} ? sub {
-	    @level1_cache
-		and return shift @level1_cache;
-	    my $buffer = <$fh>;
-	    @level1_cache = $self->_rewrite_level1_command(
-		$buffer, $level1_context );
-	    return shift @level1_cache;
-	} : sub {
-	    return <$fh>;
-	};
+    my @level1_cache;
+    my $level1_context = {};
+    my $fetcher = $opt->{level1} ? sub {
+	@level1_cache
+	    and return shift @level1_cache;
+	my $buffer = $reader->();
+	@level1_cache = $self->_rewrite_level1_command(
+	    $buffer, $level1_context );
+	return shift @level1_cache;
+    } : $reader;
 
-	my $frames = $self->_frame_push( source => [@args] );
-	# Note that level1 is unsupported, and works only when the
-	# options are passed as a hash. It will go away when support for
-	# the original satpass script is dropped.
-	$self->{frame}[-1]{level1} = $opt->{level1};
-	my $err;
-	my $ok = eval { while ( defined( my $input =  $fetcher->() ) ) {
-		if ( defined ( my $buffer = $self->execute( $fetcher,
-				$input ) ) ) {
-		    $output .= $buffer;
-		}
+    my $frames = $self->_frame_push( source => [@args] );
+    # Note that level1 is unsupported, and works only when the
+    # options are passed as a hash. It will go away when support for
+    # the original satpass script is dropped.
+    $self->{frame}[-1]{level1} = $opt->{level1};
+    my $err;
+    my $ok = eval { while ( defined( my $input =  $fetcher->() ) ) {
+	    if ( defined ( my $buffer = $self->execute( $fetcher,
+			    $input ) ) ) {
+		$output .= $buffer;
 	    }
-	    1;
-	} or $err = $@;
-	close $fh;
-	$self->_frame_pop( $frames );
-	$ok or $self->_whinge( $err );
-    } else {
-	$opt->{optional}
-	    or $self->_wail("Failed to open $fn: $!");
-    }
+	}
+	1;
+    } or $err = $@;
+
+    $self->_frame_pop( $frames );
+    $ok or $self->_whinge( $err );
+
     $opt->{level1} and $self->_rewrite_level1_macros();
     return $output;
 }
@@ -3153,6 +3175,8 @@ sub _read_continuation {
 	$append =~ m/ \\ /sxm
 	    and $context->{command} = $command;
 
+=begin comment
+
 	if ( 'macro' eq $command ) {
 
 	    my @input = Text::ParseWords::quotewords( qr{ \s+ }smx, 1,
@@ -3167,7 +3191,9 @@ sub _read_continuation {
 
 	}
 
-=begin comment
+=end comment
+
+=cut
 
 	my $handler = $level1_requote{$command} || $level1_requote{''};
 	my ( $this_quote, $start_pos );
@@ -3186,14 +3212,12 @@ sub _read_continuation {
 	    }
 	}
 
-=end comment
-
-=cut
-
 	my $code = $level1_map{$command}
-	    or return $buffer;
+	    or return $buffer . $append;
 
-	return $code->( $buffer );
+	my @rslt = $code->( $buffer );
+	$rslt[-1] .= $append;
+	return @rslt;
 
     }
 }
