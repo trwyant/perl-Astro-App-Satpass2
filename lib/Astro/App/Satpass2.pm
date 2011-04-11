@@ -2423,6 +2423,7 @@ sub _frame_push {
     push @{$self->{frame}}, {
 	type => $type,
 	args => $args,
+	define => {},		# Macro defaults done with :=
 	local => {},
 	localout => undef,	# Output for statement.
 	macro => {},
@@ -2958,9 +2959,13 @@ sub _macro {
 #	degreesDminutesMsecondsS and returns the angle in degrees.
 
 sub _parse_angle {
-    my $angle = shift;
+    my ( $angle ) = @_;
     defined $angle or return;
+
     if ( $angle =~ m/ : /smx ) {
+
+	# TODO do the precision thing like I did below with dms. But
+	# first I need tests.
 	my ($h, $m, $s) = split ':', $angle;
 	$s ||= 0;
 	$m ||= 0;
@@ -2968,14 +2973,25 @@ sub _parse_angle {
 	$m += $s / 60;
 	$h += $m / 60;
 	$angle = $h * 360 / 24;
+
     } elsif ( $angle =~
 	m{ \A ( [-+] )? (\d*) d
 	    ( \d* (?: [.] \d*)? ) (?: m
 	    ( \d* (?: [.] \d* )? ) s? )? \z
 	}smxi ) {
-	$angle = ((($4 || 0) / 60) + ($3 || 0)) / 60 + ($2 || 0);
-	$angle = -$angle if $1 && $1 eq '-';
+	my ( $sgn, $deg, $min, $sec ) = ( $1, $2, $3, $4 );
+	$angle = ( ( ( $sec || 0 ) / 60 ) + ( $min || 0 ) ) / 60 +
+	    ( $deg || 0 );
+	$angle = -$angle if $sgn && $sgn eq '-';
+	foreach ( [ 4, $sec ], [ 2, $min ], [ 0, $deg ] ) {
+	    my ( $places, $value ) = @{ $_ };
+	    $value =~ m/ [.] (\d+) /sxm
+		and $places += length $1;
+	    $angle = sprintf '%.*f', $places, $angle;
+	    return $angle + 0;
+	}
     }
+
     return $angle;
 }
 
@@ -3827,7 +3843,7 @@ sub _user_home_dir {
 			} elsif (exists $mutator{$name}) {
 			    $self->set($name => $value);
 			} else {
-			    $self->{exported}{$name} = $value;
+			    $self->{frame}[-1]{define}{$name} = $value;
 			}
 
 		    # If the cabbalistic sign is '?', we throw an
@@ -4084,7 +4100,15 @@ sub _user_home_dir {
 	exists $self->{exported}{$name}
 	    and return $self->{exported}{$name};
 
-	return $ENV{$name};
+	defined $ENV{$name}
+	    and return $ENV{$name};
+
+	foreach my $frame ( reverse @{ $self->{frame} } ) {
+	    defined $frame->{define}{$name}
+		and return $frame->{define}{$name};
+	}
+
+	return;
     }
 }
 
