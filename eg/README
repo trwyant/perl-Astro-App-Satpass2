@@ -26,3 +26,10 @@ pass_vcalendar - A source file, to be executed by, for example,
 	loaded, and displays the results in vCalendar format.
 
 	CAVEAT: The same as for flare_vcalendar.
+
+tle_stellarium.tt - A Template-Toolkit file to display TLE data in the
+	format needed for Stellarium planetarium software. You would use
+	this from Astro::App::Satpass2 by loading the orbital elements
+	you want, and then issuing the command
+	    satpass2> formatter report eg/tle_stellarium.tt
+	All options to the tle command work here (e.g. -choose).
