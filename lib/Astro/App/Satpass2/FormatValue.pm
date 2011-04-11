@@ -216,10 +216,6 @@ use constant NONE => undef;
 
 	$self->{overflow} = $args{overflow} || 0;
 
-	$self->{provider} = $args{provider} || '';
-	defined $self->{provider}
-	    or $self->{provider} = '';
-
 	defined( $self->{local_coordinates} = $args{local_coordinates} )
 	    or $self->{local_coordinates} = \&__local_coord_azel_rng;
 	ref $self->{local_coordinates}
@@ -2291,11 +2287,6 @@ If this optional argument is true (in the Perl sense, i.e. anything but
 C<undef>, C<0>, or C<''>) fields will be allowed to overflow their
 widths. If false (the default) too-long strings will be truncated on the
 right, and too-long numeric fields will generally be C<*>-filled.
-
-=item provider
-
-This optional argument supplies the value for the
-L<provider()|/provider> formatter method. The default is C<''>.
 
 =item time_format
 
