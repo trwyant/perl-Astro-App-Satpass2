@@ -12,20 +12,25 @@ BEGIN {
 	Test::More->import();
 	1;
     } or do {
-	print "1..0 # skip Test::More 0.40 required\\n";
+	print "1..0 # skip Test::More 0.40 required\n";
 	exit;
-    }
+    };
+
+    eval {
+	require lib;
+	lib->import( 'inc' );
+	require Astro::App::Satpass2::Test::App;
+	Astro::App::Satpass2::Test::App->import();
+	1;
+    } or do {
+	print "1..0 # Astro::App::Satpass2::Test::App required\n";
+	exit;
+    };
 }
 
-use Scalar::Util qw{ blessed };
-
-plan( 'no_plan' );
+plan 'no_plan';
 
 use Astro::App::Satpass2;
-
-sub class ($);
-sub execute (@);
-sub method (@);
 
 class   'Astro::App::Satpass2';
 
@@ -42,33 +47,33 @@ method  set => execute_filter => sub {
 method  source => { level1 => 1 }, [ 'almanac' ], undef,
     q{Rewrite 'almanac'};
 
-is(     scalar @commands, 2, q{Expect two commands from 'almanac'} );
+is      scalar @commands, 2, q{Expect two commands from 'almanac'};
 
-is_deeply( $commands[0], [ 'location' ], q{First command is 'location'} );
+is_deeply $commands[0], [ 'location' ], q{First command is 'location'};
 
-is_deeply( $commands[1], [ 'almanac' ], q{Second command is 'almanac'} );
+is_deeply $commands[1], [ 'almanac' ], q{Second command is 'almanac'};
 
 @commands = ();
 
 method  source => { level1 => 1 }, [ 'flare -am "today noon" \\', '+1' ],
     undef, q{Rewrite 'flare -am "today noon" +1'};
 
-is(     scalar @commands, 1, q{Expect one command from 'flare ...'} );
+is      scalar @commands, 1, q{Expect one command from 'flare ...'};
 
-is_deeply( $commands[0], [ 'flare', '-noam', 'today noon', '+1' ],
-    q{Command is 'flare -noam ...'});
+is_deeply $commands[0], [ 'flare', '-noam', 'today noon', '+1' ],
+    q{Command is 'flare -noam ...'};
 
 @commands = ();
 
 method  source => { level1 => 1 }, [ 'pass "today noon" +2' ], undef,
 q{Rewrite 'pass "today noon" +1'};
 
-is(     scalar @commands, 2, q{Expect two commands from 'pass ...'} );
+is      scalar @commands, 2, q{Expect two commands from 'pass ...'};
 
-is_deeply( $commands[0], [ 'location' ], q{First command is 'location'} );
+is_deeply $commands[0], [ 'location' ], q{First command is 'location'};
 
-is_deeply( $commands[1], [ 'pass', 'today noon', '+2' ],
-    q{Second command is 'pass ...'} );
+is_deeply $commands[1], [ 'pass', 'today noon', '+2' ],
+    q{Second command is 'pass ...'};
 
 method  set => execute_filter => sub { return 1 }, undef,
     'Enable execution';
@@ -117,47 +122,6 @@ EOD
 execute 'macro list st', <<'EOD', 'Rewrite st use';
 macro define st 'spacetrack $@'
 EOD
-
-
-# end of tests
-
-my $app;
-
-sub execute (@) {	## no critic (RequireArgUnpacking)
-    splice @_, 0, 0, 'execute';
-    goto &method;
-}
-
-sub class ($) {
-    ( $app ) = @_;
-    return;
-}
-
-sub method (@) {	## no critic (RequireArgUnpacking)
-    my ( $method, @args ) = @_;
-    my ( $want, $title ) = splice @args, -2;
-    my $got;
-    if ( eval { $got = $app->$method( @args ); 1 } ) {
-	'new' eq $method and $app = $got;
-	blessed( $got ) and $got = undef;
-	foreach ( $want, $got ) {
-	    defined and not ref and chomp;
-	}
-	@_ = ( $got, $want, $title );
-	ref $want eq 'Regexp' ? goto &like :
-	    ref $want ? goto &is_deeply : goto &is;
-    } else {
-	$got = $@;
-	chomp $got;
-	defined $want or $want = 'unknown error';
-	ref $want eq 'Regexp'
-	    or $want = qr<\Q$want>smx;
-	@_ = ( $got, $want, $title );
-	goto &like;
-    }
-}
-
-
 
 1;
 

@@ -14,6 +14,7 @@ inc/Astro/App/Satpass2/Build.pm
 inc/Astro/App/Satpass2/Meta.pm
 inc/Astro/App/Satpass2/Recommend.pm
 inc/Astro/App/Satpass2/Test.pm
+inc/Astro/App/Satpass2/Test/App.pm
 inc/Astro/App/Satpass2/Test/Format.pm
 inc/Astro/App/Satpass2/Test/ParseTime.pm
 lib/Astro/App/Satpass2.pm
