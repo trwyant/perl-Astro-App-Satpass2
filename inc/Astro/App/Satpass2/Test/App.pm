@@ -12,13 +12,35 @@ use Carp;
 use Scalar::Util qw{ blessed };
 use Test::More 0.40;
 
+use Astro::App::Satpass2;
+
 our @EXPORT = qw{
+    check_access
     class
     execute
     method
 };
 
-my $app;
+my $app = 'Astro::App::Satpass2';
+
+sub check_access ($) {
+    my ( $url ) = @_;
+
+    eval {
+	require LWP::UserAgent;
+	1;
+    } or return "Can not load LWP::UserAgent";
+
+    my $ua = LWP::UserAgent->new()
+	or return "Can not instantiate LWP::UserAgent";
+
+    my $rslt = $ua->get( $url )
+	or return "Can not get $url";
+
+    $rslt->is_success or return $rslt->status_line;
+
+    return;
+}
 
 sub class ($) {
     ( $app ) = @_;
@@ -46,12 +68,17 @@ sub method (@) {	## no critic (RequireArgUnpacking)
     } else {
 	$got = $@;
 	chomp $got;
-	defined $want or $want = 'unknown error';
+	defined $want or $want = 'Unexpected error';
 	ref $want eq 'Regexp'
 	    or $want = qr<\Q$want>smx;
 	@_ = ( $got, $want, $title );
 	goto &like;
     }
+}
+
+sub Astro::App::Satpass2::__TEST__frame_stack_depth {
+    my ( $self ) = @_;
+    return scalar @{ $self->{frame} };
 }
 
 sub Astro::App::Satpass2::__TEST__is_exported {
@@ -78,28 +105,129 @@ __END__
 
 =head1 NAME
 
-Astro::App::Satpass2::Test::App - <<< replace boilerplate >>>
+Astro::App::Satpass2::Test::App - Help test Astro::App::Satpass2;
 
 =head1 SYNOPSIS
 
-<<< replace boilerplate >>>
+ use lib qw{ inc };
+ use Astro::App::Satpass2::Test::App;
+ 
+ ... set location ...
+ 
+ execute 'almanac 20100401T000000Z', <<'EOD', 'Test almanac'
+ ... expected almanac output ...
+ EOD
+
 
 =head1 DESCRIPTION
 
-<<< replace boilerplate >>>
+This entire module is private to the C<Astro-App-Satpass2> distribution.
+It may be changed or retracted without notice. This documentation is for
+the convenience of the author.
+
+This module exports subroutines to help test the
+L<Astro::App::Satpass2|Astro::App::Satpass2> class. It works by holding
+an C<Astro::App::Satpass2> object. The exported subroutines generally
+perform tests on this object.
+
+=head1 SUBROUTINES
+
+This module exports the following subroutines:
+
+=head2 check_access
+
+ SKIP: {
+     my $tests = 2;
+     my $rslt;
+     $rslt = check_access 'http://celestrak.com/'
+         and skip $rslt, $tests
+     ... two tests ...
+ }
+
+This subroutine checks access to the given URL. It returns a false value
+if it has access to the URL, or an appropriate message otherwise.
+Besides the usual reasons of net connectivity or host availability, it
+may fail because L<LWP::UserAgent|LWP::UserAgent> can not be loaded.
+
+=head2 class
+
+ class 'Astro::App::Satpass2';
+
+This subroutine replaces the stored object (if any) with the given class
+name. The stored object is initialized to C<'Astro::App::Satpass2'>.
+
+=head2 execute
+
+ execute 'location', <<'EOD', 'Verify location';
+ Location: 1600 Pennsylvania Ave NW Washington DC 20502
+           Latitude 38.8987, longitude -77.0377, height 17 m
+ EOD
+
+This subroutine calls the C<execute()> method on the stored object and
+tests the result. The last argument is the test name; the next-to-last
+is the expected result.  All other arguments are arguments to
+C<execute()>.
+
+This is really just a convenience wrapper for L<method()|/method>.
+
+=head2 method
+
+ method 'new', undef, 'Instantiate a new object';
+ method get => 'twilight', 'civil', 'Confirm civil twilight';
+ method set => twilight => 'astronomical', undef,
+     'Set astronomical twilight';
+
+This subroutine calls an arbitrary method on the stored object and tests
+the result. The last argument is the test name, and the next-to-last
+argument is the desired result. The first argument is the method name,
+and all other arguments (if any) are arguments to the method. If the
+method is 'new', the result becomes the new stored object.
+
+If the method fails, the desired value is compared to the exception
+using C<like()>, after converting the desired value to a C<Regex> if
+needed.
+
+If the method returns a blessed reference, the return for testing
+purposes is set to C<undef>. In this case, all we're doing is testing to
+see if the method call succeeded.
+
+If the desired result is a C<Regexp>, the results are tested with
+C<like()>. If it is any other reference, the test is done with
+C<is_deeply()>. Otherwise, they are tested with C<is()>.
 
 =head1 METHODS
 
-This class supports the following public methods:
+This module also does some aspect-oriented programming (read: 'violates
+encapsulation') by placing the following methods in the
+L<Astro::App::Satpass2|Astro::App::Satpass2> name space:
 
-=head1 ATTRIBUTES
+=head2 __TEST__frame_stack_depth
 
-This class has the following attributes:
+ method __TEST__frame_stack_depth => 1, 'Stack is empty';
 
+This method returns the context frame stack depth. There is always 1
+frame, even when the stack is nominally empty.
+
+=head2 __TEST__is_exported
+
+ method __TEST__is_exported => 'foo', 1, 'Foo is exported';
+
+This method returns C<1> if the given variable is currently exported,
+and C<0> otherwise.
+
+=head2 __TEST__raw_attr
+
+ method __TEST__raw_attr => '_twilight', '%.3f', -0.215,
+     'Twilight in radians';
+
+This method bypasses the accessors and accesses attribute values
+directly. It takes one or two arguments. The first is the name of the
+hash key to be accessed. The second argument, which is optional, is an
+C<sprintf> format to run the value through.
 
 =head1 SEE ALSO
 
-<<< replace or remove boilerplate >>>
+L<Astro::App::Satpass2|Astro::App::Satpass2>.
 
 =head1 SUPPORT
 
