@@ -4,22 +4,19 @@
 	"hintColor": [0.4, 0.4, 0.4],
 	"satellites":
 	{
-[% FOREACH item IN data %]
+[%- prefix = '' %][% FOREACH item IN data %][% prefix %]
 		[%- tle = item.tle.split( "\n" ) %]
 		"[% item.name( missing = 'oid', width = '' ) %]":
 		{
 			"comms": [],
 			"groups": [],
 			"hintColor": [0.3, 0.2, 0],
-			"lastUpdated": [% time.time(
-				format = '%Y-%m-%dT%H:%M:%S',
-				zone = 'Z' ) %]
 			"orbitVisible": false,
 			"tle1": "[% tle.-2 %]",
 			"tle2": "[% tle.-1 %]",
 			"visible": true
-		},
-[% END -%]
+		}
+[%- prefix = ',' %][% END %]
 	},
 	"shortName": "satellite orbital data"
 }
