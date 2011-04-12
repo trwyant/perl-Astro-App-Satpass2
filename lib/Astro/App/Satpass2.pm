@@ -2131,9 +2131,7 @@ sub system : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
     my @exported = keys %{ $self->{exported} };
     local @ENV{@exported} = map { $mutator{$_} ? $self->get( $_ ) :
 	$self->{exported}{$_} } @exported;
-    if ( 'CODE' eq ref $verb ) {	# For testing, and undocumented
-	return $verb->( @args );
-    } elsif ( defined $stdout && -t $stdout ) {
+    if ( defined $stdout && -t $stdout ) {
 	CORE::system {$verb} $verb, @args;
 	return;
     } else {
