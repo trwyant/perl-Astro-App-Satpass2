@@ -605,23 +605,6 @@ L<tle|Astro::App::Satpass2/tle> command. Its argument is presumed to be
 a reference to an array of
 L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE> objects.
 
-=begin comment
-
-# TODO when the code works, _tle_celestia loses its leading underscore.
-# =head3 _tle_celestia
-
- print $fmt->tle_celestia( [ $body ... ] );
-
-This method is intended to format the TLE data for the bodies
-appropriately for input to the Celestia program. Its argument is
-presumed to be a reference to an array of
-L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE> objects.
-
-This method is also unsupported because I have not yet gotten results
-that put the International Space Station where it actually is.
-
-=end comment
-
 =head3 tle_verbose
 
  print $fmt->tle_verbose( [ $body ... ] );

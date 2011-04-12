@@ -2155,21 +2155,11 @@ sub time_parser : Verb() {
     goto &_helper_handler;
 }
 
-
-# TODO the Celestia functionality. Currently, it gives a file that is
-# syntactically valid, but does not give the correct position. What is
-# really needed is for Celestia to implement the right model, but it
-# would also be nice to KNOW we're generating the correct Keplerian
-# ellipse. Until we do, this functionality is UNSUPPORTED and
-# undocumented. When we do, the formatter method loses its leading
-# underscore.
-
-sub tle : Verb( celestia! verbose! ) {
+sub tle : Verb( verbose! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     my $bodies = @args ? _choose([@args], $self->{bodies}) : $self->{bodies};
-    my $method = $opt->{celestia} ? '_tle_celestia' :
-	$opt->{verbose} ? 'tle_verbose' : 'tle';
+    my $method = $opt->{verbose} ? 'tle_verbose' : 'tle';
     return $self->_format_data(
 	$method => $bodies, $opt );
 }
