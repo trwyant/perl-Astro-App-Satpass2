@@ -7,11 +7,11 @@ BEGIN {
 
     eval {
 	require Test::More;
-	Test::More->VERSION( 0.40 );
+	Test::More->VERSION( 0.52 );
 	Test::More->import();
 	1;
     } or do {
-	print "1..0 # skip Test::More 0.40 or above required.\n";
+	print "1..0 # skip Test::More 0.52 or above required.\n";
 	exit;
     };
 
@@ -44,7 +44,7 @@ foreach my $file (@check) {
     my @stat = stat $file;
     my $executable = $stat[2] & oct( 111 ) ||
 	defined $_ && m/ \A \# ! .* perl /smx;
-    ok( !$executable, "File $file is not executable" );
+    ok !$executable, "File $file is not executable";
 }
 
 1;

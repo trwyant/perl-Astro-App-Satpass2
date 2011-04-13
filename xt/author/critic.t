@@ -8,7 +8,7 @@ use File::Spec;
 BEGIN {
     eval {
 	require Test::More;
-	Test::More->VERSION(0.40);
+	Test::More->VERSION(0.52);
 	Test::More->import();
 	1;
     } or do {
