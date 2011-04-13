@@ -3,21 +3,30 @@ package main;
 use strict;
 use warnings;
 
-use lib qw{ inc };
+BEGIN {
+    eval {
+	require Test::More;
+	Test::More->VERSION( 0.52 );
+	Test::More->import();
+	1;
+    } or do {
+	print "1..0 # skip Test::More 0.52 required\\n";
+	exit;
+    }
+}
 
 BEGIN {
     eval {
-	require Astro::App::Satpass2::Test::ParseTime;
-	Astro::App::Satpass2::Test::ParseTime->import();
+	require lib;
+	lib->import( 'inc' );
+	require Astro::App::Satpass2::Test::App;
+	Astro::App::Satpass2::Test::App->import();
 	1;
     } or do {
-	print "1..0 # skip Test::More 0.40 or greater not available\n";
+	plan skip_all => 'Astro::App::Satpass2::Test::App not available';
 	exit;
     };
-
 }
-
-my $test_mocktime;
 
 BEGIN {
 
@@ -25,7 +34,7 @@ BEGIN {
 	require Date::Manip;
 	1;
     } or do {
-	plan( skip_all => 'Date::Manip not available' );
+	plan skip_all => 'Date::Manip not available';
 	exit;
     };
 
@@ -33,9 +42,8 @@ BEGIN {
     Date::Manip->import();
     ( my $test = $ver ) =~ s/ _ //smxg;
     $test >= 6 or do {
-	plan( skip_all =>
-	    "Date::Manip $ver installed; this test is for 6.00 or greater"
-	);
+	plan skip_all =>
+	    "Date::Manip $ver installed; this test is for 6.00 or greater";
 	exit;
     };
 
@@ -48,97 +56,93 @@ BEGIN {
 	Time::Local->import( qw{ timegm timelocal } );
 	1;
     } or do {
-	plan( skip_all =>
-	    'Time::y2038 or Time::Local required' );
+	plan skip_all => 'Time::y2038 or Time::Local required';
 	exit;
-    };
-
-    $test_mocktime = eval {
-	require Test::MockTime;
-	Test::MockTime->import( qw{ restore_time set_fixed_time } );
-	1;
     };
 
 }
 
-plan( tests => 24 );
+plan tests => 25;
 
-require_ok( 'Astro::App::Satpass2::ParseTime' );
+require_ok 'Astro::App::Satpass2::ParseTime';
 
-my $pt = eval {
-    Astro::App::Satpass2::ParseTime->new( 'Astro::App::Satpass2::ParseTime::Date::Manip' );
-} or diag( 'Failed to instantiate Astro::App::Satpass2::ParseTime: ' . $@ );
+class 'Astro::App::Satpass2::ParseTime';
 
-isa_ok( $pt, 'Astro::App::Satpass2::ParseTime::Date::Manip::v6' );
+method new => 'Astro::App::Satpass2::ParseTime::Date::Manip', undef,
+    'Instantiate';
 
-isa_ok( $pt, 'Astro::App::Satpass2::ParseTime' );
+method isa => 'Astro::App::Satpass2::ParseTime::Date::Manip::v6',
+    'true', 'Object is an
+    Astro::App::Satpass2::ParseTime::Date::Manip::v6';
 
-is( $pt->delegate(),
+method isa => 'Astro::App::Satpass2::ParseTime', 'true',
+    'Object is an Astro::App::Satpass2::ParseTime';
+
+method 'delegate',
     'Astro::App::Satpass2::ParseTime::Date::Manip::v6',
-    'Delegate is Astro::App::Satpass2::ParseTime::Date::Manip::v6'
-);
+    'Delegate is Astro::App::Satpass2::ParseTime::Date::Manip::v6';
 
-ok( ! $pt->use_perltime(), 'Does not use perltime' );
+method 'use_perltime', 'false', 'Does not use perltime';
 
-time_is( $pt, parse => '20100202T120000Z',
+method parse => '20100202T120000Z',
     timegm( 0, 0, 12, 2, 1, 110 ),
-    'Parse noon on Groundhog Day 2010', );
+    'Parse noon on Groundhog Day 2010';
 
 my $base = timegm( 0, 0, 0, 1, 3, 109 );	# April 1, 2009 GMT;
 use constant ONE_DAY => 86400;			# One day, in seconds.
 use constant HALF_DAY => 43200;			# 12 hours, in seconds.
 
-time_ok( $pt, base => $base, 'Set base time to 01-Apr-2009 GMT' );
+method base => $base, undef, 'Set base time to 01-Apr-2009 GMT';
 
-time_is( $pt, parse => '+0', $base, 'Parse of +0 returns base time' );
+method parse => '+0', $base, 'Parse of +0 returns base time';
 
-time_is( $pt, parse => '+1', $base + ONE_DAY,
-    'Parse of +1 returns one day later than base time' );
+method parse => '+1', $base + ONE_DAY,
+    'Parse of +1 returns one day later than base time';
 
-time_is( $pt, parse => '+0', $base + ONE_DAY,
-    'Parse of +0 now returns one day later than base time' );
+method parse => '+0', $base + ONE_DAY,
+    'Parse of +0 now returns one day later than base time';
 
-time_ok( $pt, 'reset', 'Reset to base time' );
+method 'reset', undef, 'Reset to base time';
 
-time_is( $pt, parse => '+0', $base, 'Parse of +0 returns base time again' );
+method parse => '+0', $base, 'Parse of +0 returns base time again';
 
-time_is( $pt, parse => '+0 12', $base + HALF_DAY,
-    q{Parse of '+0 12' returns base time plus 12 hours} );
+method parse => '+0 12', $base + HALF_DAY,
+    q{Parse of '+0 12' returns base time plus 12 hours};
 
-time_ok( $pt, 'reset', 'Reset to base time again' );
+method 'reset', undef, 'Reset to base time again';
 
-time_is( $pt, parse => '-0', $base, 'Parse of -0 returns base time' );
+method parse => '-0', $base, 'Parse of -0 returns base time';
 
-time_is( $pt, parse => '-0 12', $base - ONE_DAY / 2,
-    'Parse of \'-0 12\' returns 12 hours before base time' );
+method parse => '-0 12', $base - HALF_DAY,
+    'Parse of \'-0 12\' returns 12 hours before base time';
 
-time_ok( $pt, perltime => 1, 'Set perltime true' );
+method perltime => 1, undef, 'Set perltime true';
 
-time_is( $pt, parse => '20090101T000000',
+method parse => '20090101T000000',
     timelocal( 0, 0, 0, 1, 0, 109 ),
-    'Parse ISO-8601 20090101T000000' );
+    'Parse ISO-8601 20090101T000000';
 
-time_is( $pt, parse => '20090701T000000',
+method parse => '20090701T000000',
     timelocal( 0, 0, 0, 1, 6, 109 ),
-    'Parse ISO-8601 20090701T000000' );
+    'Parse ISO-8601 20090701T000000';
 
-time_ok( $pt, perltime => 0, 'Set perltime false' );
+method perltime => 0, undef, 'Set perltime false';
 
-time_is( $pt, parse => '20090101T000000',
+method parse => '20090101T000000',
     timelocal( 0, 0, 0, 1, 0, 109 ),
-    'Parse ISO-8601 20090101T000000, no help from perltime' );
+    'Parse ISO-8601 20090101T000000, no help from perltime';
 
-time_is( $pt, parse => '20090701T000000',
+method parse => '20090701T000000',
     timelocal( 0, 0, 0, 1, 6, 109 ),
-    'Parse ISO-8601 20090701T000000, no help from perltime' );
+    'Parse ISO-8601 20090701T000000, no help from perltime';
 
-time_is( $pt, parse => '20090101T000000Z',
+method parse => '20090101T000000Z',
     timegm( 0, 0, 0, 1, 0, 109 ),
-    'Parse ISO-8601 20090101T000000Z' );
+    'Parse ISO-8601 20090101T000000Z';
 
-time_is( $pt, parse => '20090701T000000Z',
+method parse => '20090701T000000Z',
     timegm( 0, 0, 0, 1, 6, 109 ),
-    'Parse ISO-8601 20090701T000000Z' );
+    'Parse ISO-8601 20090701T000000Z';
 
 1;
 

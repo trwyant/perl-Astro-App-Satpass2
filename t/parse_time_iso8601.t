@@ -3,18 +3,29 @@ package main;
 use strict;
 use warnings;
 
-use lib qw{ inc };
+BEGIN {
+    eval {
+	require Test::More;
+	Test::More->VERSION( 0.52 );
+	Test::More->import();
+	1;
+    } or do {
+	print "1..0 # skip Test::More 0.52 required\\n";
+	exit;
+    }
+}
 
 BEGIN {
     eval {
-	require Astro::App::Satpass2::Test::ParseTime;
-	Astro::App::Satpass2::Test::ParseTime->import();
+	require lib;
+	lib->import( 'inc' );
+	require Astro::App::Satpass2::Test::App;
+	Astro::App::Satpass2::Test::App->import();
 	1;
     } or do {
-	print "1..0 # skip Test::More 0.40 or greater not available\n";
+	plan skip_all => 'Astro::App::Satpass2::Test::App not available';
 	exit;
     };
-
 }
 
 my $test_mocktime;
@@ -32,8 +43,8 @@ BEGIN {
 	Time::Local->import( qw{ timegm timelocal } );
 	1;
     } or do {
-	plan( skip_all =>
-	    'Time::y2038 or Time::Local required' );
+	plan skip_all =>
+	    'Time::y2038 or Time::Local required';
 	exit;
     };
 
@@ -45,290 +56,351 @@ BEGIN {
 
 }
 
-plan( tests => 87 );
+plan tests => 88;
 
-require_ok( 'Astro::App::Satpass2::ParseTime' );
+require_ok 'Astro::App::Satpass2::ParseTime';
 
-my $pt = eval {
-    Astro::App::Satpass2::ParseTime->new( 'Astro::App::Satpass2::ParseTime::ISO8601' );
-} or diag( 'Failed to instantiate Astro::App::Satpass2::ParseTime: ' . $@ );
+class 'Astro::App::Satpass2::ParseTime';
 
-isa_ok( $pt, 'Astro::App::Satpass2::ParseTime::ISO8601' );
+method new => 'Astro::App::Satpass2::ParseTime::ISO8601', undef, 'Instantiate';
 
-isa_ok( $pt, 'Astro::App::Satpass2::ParseTime' );
+method isa => 'Astro::App::Satpass2::ParseTime::ISO8601', 'true',
+    'Object isa Astro::App::Satpass2::ParseTime::ISO8601';
 
-is( $pt->delegate(),
+method isa => 'Astro::App::Satpass2::ParseTime', 'true',
+    'Object isa Astro::App::Satpass2::ParseTime';
+
+method 'delegate',
     'Astro::App::Satpass2::ParseTime::ISO8601',
-    'Delegate is Astro::App::Satpass2::ParseTime::ISO8601'
-);
+    'Delegate is Astro::App::Satpass2::ParseTime::ISO8601';
 
 
-ok( ! $pt->use_perltime(), 'Does not use perltime' );
+method 'use_perltime', 'false', 'Does not use perltime';
 
 my $base = timegm( 0, 0, 0, 1, 3, 109 );	# April 1, 2009 GMT;
 use constant ONE_DAY => 86400;			# One day, in seconds.
 use constant HALF_DAY => 43200;			# 12 hours, in seconds.
 
-time_ok( $pt, base => $base, 'Set base time to 01-Apr-2009 GMT' );
+method base => $base, undef, 'Set base time to 01-Apr-2009 GMT';
 
-time_is( $pt, parse => '+0', $base, 'Parse of +0 returns base time' );
+method parse => '+0', $base, 'Parse of +0 returns base time';
 
-time_is( $pt, parse => '+1', $base + ONE_DAY,
-    'Parse of +1 returns one day later than base time' );
+method parse => '+1', $base + ONE_DAY,
+    'Parse of +1 returns one day later than base time';
 
-time_is( $pt, parse => '+0', $base + ONE_DAY,
-    'Parse of +0 now returns one day later than base time' );
+method parse => '+0', $base + ONE_DAY,
+    'Parse of +0 now returns one day later than base time';
 
-time_ok( $pt, 'reset', 'Reset to base time' );
+method 'reset', undef, 'Reset to base time';
 
-time_is( $pt, parse => '+0', $base, 'Parse of +0 returns base time again' );
+method parse => '+0', $base, 'Parse of +0 returns base time again';
 
-time_is( $pt, parse => '+0 12', $base + HALF_DAY,
-    q{Parse of '+0 12' returns base time plus 12 hours} );
+method parse => '+0 12', $base + HALF_DAY,
+    q{Parse of '+0 12' returns base time plus 12 hours};
 
-time_ok( $pt, 'reset', 'Reset to base time again' );
+method 'reset', undef, 'Reset to base time again';
 
-time_is( $pt, parse => '-0', $base, 'Parse of -0 returns base time' );
+method parse => '-0', $base, 'Parse of -0 returns base time';
 
-time_is( $pt, parse => '-0 12', $base - ONE_DAY / 2,
-    'Parse of \'-0 12\' returns 12 hours before base time' );
+method parse => '-0 12', $base - HALF_DAY,
+    'Parse of \'-0 12\' returns 12 hours before base time';
 
-time_ok( $pt, perltime => 1, 'Set perltime true' );
+method perltime => 1, undef, 'Set perltime true';
 
-time_is( $pt, parse => '20090101T000000',
+method parse => '20090101T000000',
     timelocal( 0, 0, 0, 1, 0, 109 ),
-    'Parse ISO-8601 20090101T000000' );
+    'Parse ISO-8601 20090101T000000';
 
-time_is( $pt, parse => '20090701T000000',
+method parse => '20090701T000000',
     timelocal( 0, 0, 0, 1, 6, 109 ),
-    'Parse ISO-8601 20090701T000000' );
+    'Parse ISO-8601 20090701T000000';
 
-time_ok( $pt, perltime => 0, 'Set perltime false' );
+method perltime => 0, undef, 'Set perltime false';
 
-time_is( $pt, parse => '20090101T000000',
+method parse => '20090101T000000',
     timelocal( 0, 0, 0, 1, 0, 109 ),
-    'Parse ISO-8601 20090101T000000, no help from perltime' );
+    'Parse ISO-8601 20090101T000000, no help from perltime';
 
-time_is( $pt, parse => '20090701T000000',
+method parse => '20090701T000000',
     timelocal( 0, 0, 0, 1, 6, 109 ),
-    'Parse ISO-8601 20090701T000000, no help from perltime' );
+    'Parse ISO-8601 20090701T000000, no help from perltime';
 
-time_is( $pt, parse => '20090101T000000Z',
+method parse => '20090101T000000Z',
     timegm( 0, 0, 0, 1, 0, 109 ),
-    'Parse ISO-8601 20090101T000000Z' );
+    'Parse ISO-8601 20090101T000000Z';
 
-time_is( $pt, parse => '20090701T000000Z',
+method parse => '20090701T000000Z',
     timegm( 0, 0, 0, 1, 6, 109 ),
-    'Parse ISO-8601 20090701T000000Z' );
+    'Parse ISO-8601 20090701T000000Z';
 
-time_is( $pt, parse => '20090702162337',
+method parse => '20090702162337',
     timelocal( 37, 23, 16, 2, 6, 109 ),
-    q{Parse ISO-8601 '20090702162337'} );
-time_is( $pt, parse => '20090702162337Z',
+    q{Parse ISO-8601 '20090702162337'};
+
+method parse => '20090702162337Z',
     timegm( 37, 23, 16, 2, 6, 109 ),
-    q{Parse ISO-8601 '20090702162337Z'} );
-time_is( $pt, parse => '200907021623',
+    q{Parse ISO-8601 '20090702162337Z'};
+
+method parse => '200907021623',
     timelocal( 0, 23, 16, 2, 6, 109 ),
-    q{Parse ISO-8601 '200907021623'} );
-time_is( $pt, parse => '200907021623Z',
+    q{Parse ISO-8601 '200907021623'};
+
+method parse => '200907021623Z',
     timegm( 0, 23, 16, 2, 6, 109 ),
-    q{Parse ISO-8601 '200907021623Z'} );
-time_is( $pt, parse => '2009070216',
+    q{Parse ISO-8601 '200907021623Z'};
+
+method parse => '2009070216',
     timelocal( 0, 0, 16, 2, 6, 109 ),
-    q{Parse ISO-8601 '2009070216'} );
-time_is( $pt, parse => '2009070216Z',
+    q{Parse ISO-8601 '2009070216'};
+
+method parse => '2009070216Z',
     timegm( 0, 0, 16, 2, 6, 109 ),
-    q{Parse ISO-8601 '2009070216Z'} );
-time_is( $pt, parse => '20090702',
+    q{Parse ISO-8601 '2009070216Z'};
+
+method parse => '20090702',
     timelocal( 0, 0, 0, 2, 6, 109 ),
-    q{Parse ISO-8601 '20090702'} );
-time_is( $pt, parse => '20090702Z',
+    q{Parse ISO-8601 '20090702'};
+
+method parse => '20090702Z',
     timegm( 0, 0, 0, 2, 6, 109 ),
-    q{Parse ISO-8601 '20090702Z'} );
-time_is( $pt, parse => '200907',
+    q{Parse ISO-8601 '20090702Z'};
+
+method parse => '200907',
     timelocal( 0, 0, 0, 1, 6, 109 ),
-    q{Parse ISO-8601 '200907'} );
-time_is( $pt, parse => '200907Z',
+    q{Parse ISO-8601 '200907'};
+
+method parse => '200907Z',
     timegm( 0, 0, 0, 1, 6, 109 ),
-    q{Parse ISO-8601 '200907Z'} );
-time_is( $pt, parse => '2009',
+    q{Parse ISO-8601 '200907Z'};
+
+method parse => '2009',
     timelocal( 0, 0, 0, 1, 0, 109 ),
-    q{Parse ISO-8601 '2009'} );
-time_is( $pt, parse => '2009Z',
+    q{Parse ISO-8601 '2009'};
+
+method parse => '2009Z',
     timegm( 0, 0, 0, 1, 0, 109 ),
-    q{Parse ISO-8601 '2009Z'} );
-time_is( $pt, parse => '19801013T000000Z',
+    q{Parse ISO-8601 '2009Z'};
+
+method parse => '19801013T000000Z',
     timegm( 0, 0, 0, 13, 9, 80 ),
-    q{Parse ISO-8601 '19801013T000000Z'} );
+    q{Parse ISO-8601 '19801013T000000Z'};
 
-time_is( $pt, parse => '20090102162337',
+method parse => '20090102162337',
     timelocal( 37, 23, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '20090102162337'} );
-time_is( $pt, parse => '20090102162337Z',
-    timegm( 37, 23, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '20090102162337Z'} );
-time_is( $pt, parse => '200901021623',
-    timelocal( 0, 23, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '200901021623'} );
-time_is( $pt, parse => '200901021623Z',
-    timegm( 0, 23, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '200901021623Z'} );
-time_is( $pt, parse => '2009010216',
-    timelocal( 0, 0, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '2009010216'} );
-time_is( $pt, parse => '2009010216Z',
-    timegm( 0, 0, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '2009010216Z'} );
-time_is( $pt, parse => '20090102',
-    timelocal( 0, 0, 0, 2, 0, 109 ),
-    q{Parse ISO-8601 '20090102'} );
-time_is( $pt, parse => '20090102Z',
-    timegm( 0, 0, 0, 2, 0, 109 ),
-    q{Parse ISO-8601 '20090102Z'} );
-time_is( $pt, parse => '200901',
-    timelocal( 0, 0, 0, 1, 0, 109 ),
-    q{Parse ISO-8601 '200901'} );
-time_is( $pt, parse => '200901Z',
-    timegm( 0, 0, 0, 1, 0, 109 ),
-    q{Parse ISO-8601 '200901Z'} );
+    q{Parse ISO-8601 '20090102162337'};
 
-time_is( $pt, parse => '20090102162337+00',
+method parse => '20090102162337Z',
     timegm( 37, 23, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '20090102162337+00'} );
-time_is( $pt, parse => '20090102162337+0030',
+    q{Parse ISO-8601 '20090102162337Z'};
+
+method parse => '200901021623',
+    timelocal( 0, 23, 16, 2, 0, 109 ),
+    q{Parse ISO-8601 '200901021623'};
+
+method parse => '200901021623Z',
+    timegm( 0, 23, 16, 2, 0, 109 ),
+    q{Parse ISO-8601 '200901021623Z'};
+
+method parse => '2009010216',
+    timelocal( 0, 0, 16, 2, 0, 109 ),
+    q{Parse ISO-8601 '2009010216'};
+
+method parse => '2009010216Z',
+    timegm( 0, 0, 16, 2, 0, 109 ),
+    q{Parse ISO-8601 '2009010216Z'};
+
+method parse => '20090102',
+    timelocal( 0, 0, 0, 2, 0, 109 ),
+    q{Parse ISO-8601 '20090102'};
+
+method parse => '20090102Z',
+    timegm( 0, 0, 0, 2, 0, 109 ),
+    q{Parse ISO-8601 '20090102Z'};
+
+method parse => '200901',
+    timelocal( 0, 0, 0, 1, 0, 109 ),
+    q{Parse ISO-8601 '200901'};
+
+method parse => '200901Z',
+    timegm( 0, 0, 0, 1, 0, 109 ),
+    q{Parse ISO-8601 '200901Z'};
+
+method parse => '20090102162337+00',
+    timegm( 37, 23, 16, 2, 0, 109 ),
+    q{Parse ISO-8601 '20090102162337+00'};
+
+method parse => '20090102162337+0030',
     timegm( 37, 53, 15, 2, 0, 109 ),
-    q{Parse ISO-8601 '20090102162337+0030'} );
-time_is( $pt, parse => '20090102162337+01',
+    q{Parse ISO-8601 '20090102162337+0030'};
+
+method parse => '20090102162337+01',
     timegm( 37, 23, 15, 2, 0, 109 ),
-    q{Parse ISO-8601 '20090102162337+01'} );
-time_is( $pt, parse => '20090102162337-0030',
+    q{Parse ISO-8601 '20090102162337+01'};
+
+method parse => '20090102162337-0030',
     timegm( 37, 53, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '20090102162337-0030'} );
-time_is( $pt, parse => '20090102162337-01',
+    q{Parse ISO-8601 '20090102162337-0030'};
+
+method parse => '20090102162337-01',
     timegm( 37, 23, 17, 2, 0, 109 ),
-    q{Parse ISO-8601 '20090102162337-01'} );
+    q{Parse ISO-8601 '20090102162337-01'};
 
-time_is( $pt, parse => '20090102T162337',
+method parse => '20090102T162337',
     timelocal( 37, 23, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '20090102T162337'} );
-time_is( $pt, parse => '20090102T162337Z',
-    timegm( 37, 23, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '20090102T162337Z'} );
+    q{Parse ISO-8601 '20090102T162337'};
 
-time_is( $pt, parse => '2009/1/2 16:23:37',
-    timelocal( 37, 23, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '2009/1/2 16:23:37'} );
-time_is( $pt, parse => '2009/1/2 16:23:37 Z',
+method parse => '20090102T162337Z',
     timegm( 37, 23, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '2009/1/2 16:23:37 Z'} );
-time_is( $pt, parse => '2009/1/2 16:23',
+    q{Parse ISO-8601 '20090102T162337Z'};
+
+method parse => '2009/1/2 16:23:37',
+    timelocal( 37, 23, 16, 2, 0, 109 ),
+    q{Parse ISO-8601 '2009/1/2 16:23:37'};
+
+method parse => '2009/1/2 16:23:37 Z',
+    timegm( 37, 23, 16, 2, 0, 109 ),
+    q{Parse ISO-8601 '2009/1/2 16:23:37 Z'};
+
+method parse => '2009/1/2 16:23',
     timelocal( 0, 23, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '2009/1/2 16:23'} );
-time_is( $pt, parse => '2009/1/2 16:23 Z',
-    timegm( 0, 23, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '2009/1/2 16:23 Z'} );
-time_is( $pt, parse => '2009/1/2 16',
-    timelocal( 0, 0, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '2009/1/2 16'} );
-time_is( $pt, parse => '2009/1/2 16 Z',
-    timegm( 0, 0, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '2009/1/2 16 Z'} );
-time_is( $pt, parse => '2009/1/2',
-    timelocal( 0, 0, 0, 2, 0, 109 ),
-    q{Parse ISO-8601 '2009/1/2'} );
-time_is( $pt, parse => '2009/1/2 Z',
-    timegm( 0, 0, 0, 2, 0, 109 ),
-    q{Parse ISO-8601 '2009/1/2 Z'} );
-time_is( $pt, parse => '2009/1',
-    timelocal( 0, 0, 0, 1, 0, 109 ),
-    q{Parse ISO-8601 '2009/1'} );
-time_is( $pt, parse => '2009/1 Z',
-    timegm( 0, 0, 0, 1, 0, 109 ),
-    q{Parse ISO-8601 '2009/1 Z'} );
-time_is( $pt, parse => '2009',
-    timelocal( 0, 0, 0, 1, 0, 109 ),
-    q{Parse ISO-8601 '2009'} );
-time_is( $pt, parse => '2009 Z',
-    timegm( 0, 0, 0, 1, 0, 109 ),
-    q{Parse ISO-8601 '2009 Z'} );
+    q{Parse ISO-8601 '2009/1/2 16:23'};
 
-time_is( $pt, parse => '09/1/2 16:23:37',
-    timelocal( 37, 23, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '09/1/2 16:23:37'} );
-time_is( $pt, parse => '09/1/2 16:23:37 Z',
-    timegm( 37, 23, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '09/1/2 16:23:37 Z'} );
-time_is( $pt, parse => '09/1/2 16:23',
-    timelocal( 0, 23, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '09/1/2 16:23'} );
-time_is( $pt, parse => '09/1/2 16:23 Z',
+method parse => '2009/1/2 16:23 Z',
     timegm( 0, 23, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '09/1/2 16:23 Z'} );
-time_is( $pt, parse => '09/1/2 16',
+    q{Parse ISO-8601 '2009/1/2 16:23 Z'};
+
+method parse => '2009/1/2 16',
     timelocal( 0, 0, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '09/1/2 16'} );
-time_is( $pt, parse => '09/1/2 16 Z',
+    q{Parse ISO-8601 '2009/1/2 16'};
+
+method parse => '2009/1/2 16 Z',
     timegm( 0, 0, 16, 2, 0, 109 ),
-    q{Parse ISO-8601 '09/1/2 16 Z'} );
-time_is( $pt, parse => '09/1/2',
+    q{Parse ISO-8601 '2009/1/2 16 Z'};
+
+method parse => '2009/1/2',
     timelocal( 0, 0, 0, 2, 0, 109 ),
-    q{Parse ISO-8601 '09/1/2'} );
-time_is( $pt, parse => '09/1/2 Z',
+    q{Parse ISO-8601 '2009/1/2'};
+
+method parse => '2009/1/2 Z',
     timegm( 0, 0, 0, 2, 0, 109 ),
-    q{Parse ISO-8601 '09/1/2 Z'} );
-time_is( $pt, parse => '09/1',
+    q{Parse ISO-8601 '2009/1/2 Z'};
+
+method parse => '2009/1',
     timelocal( 0, 0, 0, 1, 0, 109 ),
-    q{Parse ISO-8601 '09/1'} );
-time_is( $pt, parse => '09/1 Z',
+    q{Parse ISO-8601 '2009/1'};
+
+method parse => '2009/1 Z',
     timegm( 0, 0, 0, 1, 0, 109 ),
-    q{Parse ISO-8601 '09/1 Z'} );
+    q{Parse ISO-8601 '2009/1 Z'};
+
+method parse => '2009',
+    timelocal( 0, 0, 0, 1, 0, 109 ),
+    q{Parse ISO-8601 '2009'};
+
+method parse => '2009 Z',
+    timegm( 0, 0, 0, 1, 0, 109 ),
+    q{Parse ISO-8601 '2009 Z'};
+
+method parse => '09/1/2 16:23:37',
+    timelocal( 37, 23, 16, 2, 0, 109 ),
+    q{Parse ISO-8601 '09/1/2 16:23:37'};
+
+method parse => '09/1/2 16:23:37 Z',
+    timegm( 37, 23, 16, 2, 0, 109 ),
+    q{Parse ISO-8601 '09/1/2 16:23:37 Z'};
+
+method parse => '09/1/2 16:23',
+    timelocal( 0, 23, 16, 2, 0, 109 ),
+    q{Parse ISO-8601 '09/1/2 16:23'};
+
+method parse => '09/1/2 16:23 Z',
+    timegm( 0, 23, 16, 2, 0, 109 ),
+    q{Parse ISO-8601 '09/1/2 16:23 Z'};
+
+method parse => '09/1/2 16',
+    timelocal( 0, 0, 16, 2, 0, 109 ),
+    q{Parse ISO-8601 '09/1/2 16'};
+
+method parse => '09/1/2 16 Z',
+    timegm( 0, 0, 16, 2, 0, 109 ),
+    q{Parse ISO-8601 '09/1/2 16 Z'};
+
+method parse => '09/1/2',
+    timelocal( 0, 0, 0, 2, 0, 109 ),
+    q{Parse ISO-8601 '09/1/2'};
+
+method parse => '09/1/2 Z',
+    timegm( 0, 0, 0, 2, 0, 109 ),
+    q{Parse ISO-8601 '09/1/2 Z'};
+
+method parse => '09/1',
+    timelocal( 0, 0, 0, 1, 0, 109 ),
+    q{Parse ISO-8601 '09/1'};
+
+method parse => '09/1 Z',
+    timegm( 0, 0, 0, 1, 0, 109 ),
+    q{Parse ISO-8601 '09/1 Z'};
 
 SKIP: {
 
-    $test_mocktime or skip( 'Unable to load Test::MockTime', 12 );
+    my $tests = 12;
+
+    $test_mocktime
+	or skip 'Unable to load Test::MockTime', $tests;
 
     set_fixed_time('2009-07-01T06:00:00Z');
 
-    time_is( $pt, parse => 'yesterday Z',
+    method parse => 'yesterday Z',
 	timegm( 0, 0, 0, 30, 5, 109 ),
-	q{Parse ISO-8601 'yesterday Z'} );
-    time_is( $pt, parse => 'yesterday 9:30Z',
+	q{Parse ISO-8601 'yesterday Z'};
+
+    method parse => 'yesterday 9:30Z',
 	timegm( 0, 30, 9, 30, 5, 109 ),
-	q{Parse ISO-8601 'yesterday 9:30Z'} );
-    time_is( $pt, parse => 'today Z',
+	q{Parse ISO-8601 'yesterday 9:30Z'};
+
+    method parse => 'today Z',
 	timegm( 0, 0, 0, 1, 6, 109 ),
-	q{Parse ISO-8601 'today Z'} );
-    time_is( $pt, parse => 'today 9:30Z',
+	q{Parse ISO-8601 'today Z'};
+
+    method parse => 'today 9:30Z',
 	timegm( 0, 30, 9, 1, 6, 109 ),
-	q{Parse ISO-8601 'today 9:30Z'} );
-    time_is( $pt, parse => 'tomorrow Z',
+	q{Parse ISO-8601 'today 9:30Z'};
+
+    method parse => 'tomorrow Z',
 	timegm( 0, 0, 0, 2, 6, 109 ),
-	q{Parse ISO-8601 'tomorrow Z'} );
-    time_is( $pt, parse => 'tomorrow 9:30Z',
+	q{Parse ISO-8601 'tomorrow Z'};
+
+    method parse => 'tomorrow 9:30Z',
 	timegm( 0, 30, 9, 2, 6, 109 ),
-	q{Parse ISO-8601 'tomorrow 9:30Z'} );
+	q{Parse ISO-8601 'tomorrow 9:30Z'};
 
     restore_time();
+
     set_fixed_time( timelocal( 0, 0, 6, 1, 6, 109 ) );
 
-    time_is( $pt, parse => 'yesterday',
+    method parse => 'yesterday',
 	timelocal( 0, 0, 0, 30, 5, 109 ),
-	q{Parse ISO-8601 'yesterday'} );
-    time_is( $pt, parse => 'yesterday 9:30',
+	q{Parse ISO-8601 'yesterday'};
+
+    method parse => 'yesterday 9:30',
 	timelocal( 0, 30, 9, 30, 5, 109 ),
-	q{Parse ISO-8601 'yesterday 9:30'} );
-    time_is( $pt, parse => 'today',
+	q{Parse ISO-8601 'yesterday 9:30'};
+
+    method parse => 'today',
 	timelocal( 0, 0, 0, 1, 6, 109 ),
-	q{Parse ISO-8601 'today'} );
-    time_is( $pt, parse => 'today 9:30',
+	q{Parse ISO-8601 'today'};
+
+    method parse => 'today 9:30',
 	timelocal( 0, 30, 9, 1, 6, 109 ),
-	q{Parse ISO-8601 'today 9:30'} );
-    time_is( $pt, parse => 'tomorrow',
+	q{Parse ISO-8601 'today 9:30'};
+
+    method parse => 'tomorrow',
 	timelocal( 0, 0, 0, 2, 6, 109 ),
-	q{Parse ISO-8601 'tomorrow'} );
-    time_is( $pt, parse => 'tomorrow 9:30',
+	q{Parse ISO-8601 'tomorrow'};
+
+    method parse => 'tomorrow 9:30',
 	timelocal( 0, 30, 9, 2, 6, 109 ),
-	q{Parse ISO-8601 'tomorrow 9:30'} );
+	q{Parse ISO-8601 'tomorrow 9:30'};
 
     restore_time();
 

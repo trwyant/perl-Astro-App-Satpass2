@@ -62,6 +62,16 @@ sub method (@) {	## no critic (RequireArgUnpacking)
 	foreach ( $want, $got ) {
 	    defined and not ref and chomp;
 	}
+	if ( defined $want ) {
+	    if ( 'true' eq $want ) {
+		@_ = ( $got, $title );
+		goto &ok;
+	    }
+	    if ( 'false' eq $want ) {
+		@_ = ( !$got, $title );
+		goto &ok;
+	    }
+	}
 	@_ = ( $got, $want, $title );
 	ref $want eq 'Regexp' ? goto &like :
 	    ref $want ? goto &is_deeply : goto &is;
@@ -190,6 +200,10 @@ needed.
 If the method returns a blessed reference, the return for testing
 purposes is set to C<undef>. In this case, all we're doing is testing to
 see if the method call succeeded.
+
+If the desired result is C<'true'> or C<'false'>, the result of the
+method call is tested with C<ok()>. If the desired result is C<'false'>,
+the actual result is logically inverted before the test.
 
 If the desired result is a C<Regexp>, the results are tested with
 C<like()>. If it is any other reference, the test is done with
