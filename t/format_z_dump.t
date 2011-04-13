@@ -3,43 +3,79 @@ package main;
 use strict;
 use warnings;
 
-use lib qw{ inc };
+BEGIN {
+    eval {
+	require Test::More;
+	Test::More->VERSION( 0.52 );
+	Test::More->import();
+	1;
+    } or do {
+	print "1..0 # skip Test::More 0.52 required\\n";
+	exit;
+    }
+}
 
-use Astro::App::Satpass2::Test::Format;
+BEGIN {
+    eval {
+	require lib;
+	lib->import( 'inc' );
+	require Astro::App::Satpass2::Test::App;
+	Astro::App::Satpass2::Test::App->import();
+	1;
+    } or do {
+	plan skip_all => 'Astro::App::Satpass2::Test::App not available';
+	exit;
+    };
+}
 
-my $tst = Astro::App::Satpass2::Test::Format->new(
-    'Astro::App::Satpass2::Format::Dump' );
+plan tests => 18;
 
-$tst->plan( tests => 17 );
+require_ok 'Astro::App::Satpass2::Format::Dump';
 
-$tst->require_ok();
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'new';
 
-$tst->can_ok( 'new' );
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'date_format';
 
-$tst->can_ok( 'date_format' );
-$tst->can_ok( 'gmt' );
-$tst->can_ok( 'local_coord' );
-$tst->can_ok( 'provider' );
-$tst->can_ok( 'time_format' );
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'gmt';
 
-$tst->can_ok( 'almanac' );
-$tst->can_ok( 'flare' );
-$tst->can_ok( 'list' );
-$tst->can_ok( 'location' );
-$tst->can_ok( 'pass' );
-$tst->can_ok( 'phase' );
-$tst->can_ok( 'position' );
-$tst->can_ok( 'tle' );
-$tst->can_ok( 'tle_verbose' );
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'local_coord';
+
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'provider';
+
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'time_format';
+
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'almanac';
+
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'flare';
+
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'list';
+
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'location';
+
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'pass';
+
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'pass_events';
+
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'phase';
+
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'position';
+
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'tle';
+
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'tle_verbose';
+
+class 'Astro::App::Satpass2::Format::Dump';
 
 SKIP: {
+
+    my $tests = 1;
 
     eval {
 	require Data::Dumper;
 	1;
-    } or $tst->skip( 'Data::Dumper not available', 1 );
+    } or skip 'Data::Dumper not available', $tests ;
 
-    $tst->new_ok();
+    method 'new', undef, 'Instantiate';
 
 }
 

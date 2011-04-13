@@ -34,7 +34,7 @@ if ( $mmv >= 6.4501 ) {
     };
     $attr{META_MERGE} = {
 	build_requires => {
-	    'Test::More'	=> 0.400,
+	    'Test::More'	=> 0.52,
 	},
 	dynamic_config => 1,
 	resources => {

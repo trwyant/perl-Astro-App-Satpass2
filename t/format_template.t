@@ -8,16 +8,16 @@ use warnings;
 BEGIN {
     eval {
 	require Test::More;
-	Test::More->VERSION( 0.40 );
+	Test::More->VERSION( 0.52 );
 	Test::More->import();
 	1;
     } or do {
-	print "1..0 # skip Test::More 0.40 required\\n";
+	print "1..0 # skip Test::More 0.52 required\\n";
 	exit;
     }
 }
 
-plan( 'no_plan' );
+plan tests => 16;
 
 use Astro::App::Satpass2::Format::Template;
 use Astro::Coord::ECI;
@@ -54,15 +54,15 @@ $sat->rebless( 'iridium' );
 
 my $ft = Astro::App::Satpass2::Format::Template->new()->gmt( 1 );
 
-ok( $ft, 'Instantiate Astro::App::Satpass2::Format::Template' );
+ok $ft, 'Instantiate Astro::App::Satpass2::Format::Template';
 
-is( $ft->alias( { foo => 'bar', baz => 'burfle' } ), <<'EOD',
+is $ft->alias( { foo => 'bar', baz => 'burfle' } ), <<'EOD',
 baz => burfle
 foo => bar
 EOD
-    'Alias' );
+    'Alias';
 
-is( $ft->almanac( [ {
+is $ft->almanac( [ {
 		almanac	=> {
 		    description	=> 'Moon rise',
 		    detail		=> 1,
@@ -92,13 +92,13 @@ is( $ft->almanac( [ {
 		station	=> $sta,
 		time	=> timegm( 40, 2, 22, 1, 3, 111 ),
 	    },
-	] ), <<'EOD', 'Almanac' );
+	] ), <<'EOD', 'Almanac';
 2011-04-01 09:38:08 Moon rise
 2011-04-01 15:46:20 Moon transits meridian
 2011-04-01 22:02:40 Moon set
 EOD
 
-is( $ft->flare( [
+is $ft->flare( [
 	    {
 		angle => 0.262059013150469,
 		appulse => {
@@ -131,7 +131,7 @@ is( $ft->flare( [
 		    -42588590.3666171,
 		),
 	    },
-	] ), <<'EOD', 'Flare' );
+	] ), <<'EOD', 'Flare';
                                                      Degre
                                                       From   Center Center
 Time     Name         Eleva  Azimuth      Range Magn   Sun  Azimuth  Range
@@ -139,17 +139,17 @@ Time     Name         Eleva  Azimuth      Range Magn   Sun  Azimuth  Range
 10:07:45 None          28.3 131.1 SE      410.9  3.9 night 300.8 NW  412.5
 EOD
 
-is( $ft->list( [ $sat ] ), <<'EOD', 'List' );
+is $ft->list( [ $sat ] ), <<'EOD', 'List';
    OID Name                     Epoch               Period
  88888 None                     1980-10-01 23:41:24 01:29:37
 EOD
 
-is( $ft->location( $sta ), <<'EOD', 'Location' );
+is $ft->location( $sta ), <<'EOD', 'Location';
 Location: 1600 Pennsylvania Ave NW Washington DC 20502
           Latitude 38.8987, longitude -77.0377, height 17 m
 EOD
 
-is( $ft->pass( [
+is $ft->pass( [
 	    {
 		body	=> $sat,
 		events	=> [
@@ -186,7 +186,7 @@ is( $ft->pass( [
 		],
 		time => timegm( 0, 8, 10, 13, 9, 80 ),
 	    },
-	] ), <<'EOD', 'Pass' );
+	] ), <<'EOD', 'Pass';
     Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980-10-13     88888 - None
@@ -196,16 +196,16 @@ is( $ft->pass( [
 EOD
 
 $moon->universal( timegm( 0, 0, 4, 1, 3, 111 ) );
-is( $ft->phase( [ $moon ] ), <<'EOD', 'Phase' );
+is $ft->phase( [ $moon ] ), <<'EOD', 'Phase';
       Date     Time     Name Phas Phase             Lit
 2011-04-01 04:00:00     Moon  333 waning crescent     5%
 EOD
 
-is( $ft->position( {
+is $ft->position( {
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
 	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
-	} ), <<'EOD', 'Position' );
+	} ), <<'EOD', 'Position';
 1980-10-13 10:07:45
             Name Eleva  Azimuth      Range               Epoch Illum
             None  28.4 130.7 SE      409.9 1980-10-01 23:41:24 lit
@@ -216,11 +216,11 @@ is( $ft->position( {
 EOD
 
 $ft->local_coord( 'azel' );
-is( $ft->position( {
+is $ft->position( {
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
 	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
-	} ), <<'EOD', 'Position, local_coord = azel' );
+	} ), <<'EOD', 'Position, local_coord = azel';
 1980-10-13 10:07:45
             Name Eleva  Azimuth               Epoch Illum
             None  28.4 130.7 SE 1980-10-01 23:41:24 lit
@@ -231,11 +231,11 @@ is( $ft->position( {
 EOD
 
 $ft->local_coord( 'az_rng' );
-is( $ft->position( {
+is $ft->position( {
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
 	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
-	} ), <<'EOD', 'Position, local_coord = az_rng' );
+	} ), <<'EOD', 'Position, local_coord = az_rng';
 1980-10-13 10:07:45
             Name  Azimuth      Range               Epoch Illum
             None 130.7 SE      409.9 1980-10-01 23:41:24 lit
@@ -246,11 +246,11 @@ is( $ft->position( {
 EOD
 
 $ft->local_coord( 'equatorial' );
-is( $ft->position( {
+is $ft->position( {
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
 	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
-	} ), <<'EOD', 'Position, local_coord = azel' );
+	} ), <<'EOD', 'Position, local_coord = azel';
 1980-10-13 10:07:45
             Name Right As Decli               Epoch Illum
             None 09:17:51  -8.5 1980-10-01 23:41:24 lit
@@ -261,11 +261,11 @@ is( $ft->position( {
 EOD
 
 $ft->local_coord( 'equatorial_rng' );
-is( $ft->position( {
+is $ft->position( {
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
 	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
-	} ), <<'EOD', 'Position, local_coord = azel' );
+	} ), <<'EOD', 'Position, local_coord = azel';
 1980-10-13 10:07:45
             Name Right As Decli      Range               Epoch Illum
             None 09:17:51  -8.5      409.9 1980-10-01 23:41:24 lit
@@ -275,10 +275,10 @@ is( $ft->position( {
             Moon 16:26:42 -17.2   406685.1
 EOD
 
-is( $ft->report(
+is $ft->report(
 	arg	=> [ qw{ sailor } ],
 	template => \"Hello, [% arg.0 %]!\n",
-    ), <<'EOD', 'Report' );
+    ), <<'EOD', 'Report';
 Hello, sailor!
 EOD
 
@@ -286,13 +286,13 @@ EOD
 # not use them for subsequent tests, but if we do will probably need to
 # reset them.
 
-is( $ft->tle( [ $sat ] ), <<'EOD', 'Tle' );
+is $ft->tle( [ $sat ] ), <<'EOD', 'Tle';
 None
 1 88888U          80275.98708465  .00073094  13844-3  66816-4 0    8
 2 88888  72.8435 115.9689 0086731  52.6988 110.5714 16.05824518  105
 EOD
 
-is( $ft->tle_verbose( [ $sat ] ), <<'EOD', 'Tle verbose' );
+is $ft->tle_verbose( [ $sat ] ), <<'EOD', 'Tle verbose';
 NORAD ID: 88888
     Name: None
     International launch designator:

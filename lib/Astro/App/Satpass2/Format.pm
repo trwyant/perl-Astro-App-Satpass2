@@ -15,8 +15,8 @@ our $VERSION = '0.000_12';
 use constant DEFAULT_LOCAL_COORD => 'azel_rng';
 
 # Note that the fact that new() works when called from
-# Astro::App::Satpass2::Test is unsupported and undocumented, and the
-# functionality may be revoked or changed without warning.
+# Astro::App::Satpass2::Test::App is unsupported and undocumented, and
+# the functionality may be revoked or changed without warning.
 
 my %static = (
     desired_equinox_dynamical => 0,
@@ -34,7 +34,7 @@ sub new {
     bless $self, $class;
 
     $class eq __PACKAGE__
-	and 'Astro::App::Satpass2::Test' ne caller
+	and 'Astro::App::Satpass2::Test::App' ne caller
 	and $self->warner()->wail( __PACKAGE__,
 	    ' may not be instantiated. Use a subclass' );
 

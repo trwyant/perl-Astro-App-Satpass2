@@ -3,41 +3,78 @@ package main;
 use strict;
 use warnings;
 
-use lib qw{ inc };
+BEGIN {
+    eval {
+	require Test::More;
+	Test::More->VERSION( 0.52 );
+	Test::More->import();
+	1;
+    } or do {
+	print "1..0 # skip Test::More 0.52 required\\n";
+	exit;
+    }
+}
 
-use Astro::App::Satpass2::Test::Format;
+BEGIN {
+    eval {
+	require lib;
+	lib->import( 'inc' );
+	require Astro::App::Satpass2::Test::App;
+	Astro::App::Satpass2::Test::App->import();
+	1;
+    } or do {
+	plan skip_all => 'Astro::App::Satpass2::Test::App not available';
+	exit;
+    };
+}
 
-my $tst = Astro::App::Satpass2::Test::Format->new( 'Astro::App::Satpass2::Format' );
+plan tests => 23;
 
-$tst->plan( tests => 21 );
+require_ok 'Astro::App::Satpass2::Format';
 
-$tst->require_ok();
+can_ok 'Astro::App::Satpass2::Format' => 'new';
 
-$tst->can_ok( 'new' );
-$tst->can_ok( 'date_format' );
-$tst->can_ok( 'desired_equinox_dynamical' );
-$tst->can_ok( 'gmt' );
-$tst->can_ok( 'local_coord' );
-$tst->can_ok( 'provider' );
-$tst->can_ok( 'time_format' );
-$tst->can_ok( 'tz' );
+can_ok 'Astro::App::Satpass2::Format' => 'date_format';
 
-$tst->new_ok();		# Works only from Astro::App::Satpass2::Test.
-$tst->method_is( date_format => '%Y-%m-%d',
-    q{Default date_format is '%Y-%m-%d'} );
-$tst->method_equals( desired_equinox_dynamical => 0,
-    'Default desired_equinox_dynamical is 0' );
-$tst->method_equals( gmt => 1,
-    'Test framework sets gmt to 1' );
-$tst->method_is( local_coord => 'azel_rng',
-    q{Default local_coord is 'azel_rng' } );
-$tst->method_is( provider => 'Astro::App::Satpass2::Test::Format',
-    q{Test framework sets provider to 'Astro::App::Satpass2::Test::Format'} );
-$tst->method_is( time_format => '%H:%M:%S',
-    q{Default time_format is '%H:%M:%S'} );
-$tst->method_is( tz => undef, 'Default time zone is undefined' );
-$tst->method_ok( tz => 'est5edt', 'Set time zone' );
-$tst->method_is( tz => 'est5edt', 'Got back same time zone' );
+can_ok 'Astro::App::Satpass2::Format' => 'desired_equinox_dynamical';
+
+can_ok 'Astro::App::Satpass2::Format' => 'gmt';
+
+can_ok 'Astro::App::Satpass2::Format' => 'local_coord';
+
+can_ok 'Astro::App::Satpass2::Format' => 'provider';
+
+can_ok 'Astro::App::Satpass2::Format' => 'time_format';
+
+can_ok 'Astro::App::Satpass2::Format' => 'tz';
+
+class 'Astro::App::Satpass2::Format';
+
+method 'new', undef, 'Instantiate';
+
+method gmt => 1, undef, 'Set gmt to 1';
+
+method 'gmt', 1, 'Confirm gmt set to 1';
+
+method date_format => '%Y-%m-%d', q{Default date_format is '%Y-%m-%d'};
+
+method desired_equinox_dynamical => 0,
+    'Default desired_equinox_dynamical is 0';
+
+method local_coord => 'azel_rng',
+    q{Default local_coord is 'azel_rng'};
+
+method provider => 'Test provider', undef, 'Set provider';
+
+method 'provider', 'Test provider', 'Confirm provider set';
+
+method time_format => '%H:%M:%S', q{Default time_format is '%H:%M:%S'};
+
+method tz => undef, 'Default time zone is undefined';
+
+method tz => 'est5edt', undef, 'Set time zone';
+
+method tz => 'est5edt', 'Got back same time zone';
 
 my $expect_time_formatter = eval {
     require DateTime;
@@ -45,27 +82,28 @@ my $expect_time_formatter = eval {
     'Astro::App::Satpass2::FormatTime::DateTime::Strftime';
 } || 'Astro::App::Satpass2::FormatTime::POSIX::Strftime';
 
-$tst->method_is( config => decode => 1,
+method config => decode => 1,
     [
 	[ date_format			=> '%Y-%m-%d' ],
 	[ desired_equinox_dynamical	=> 0 ],
 	[ gmt				=> 1 ],
 	[ header			=> 1 ],
 	[ local_coord			=> 'azel_rng' ],
-	[ provider			=> 'Astro::App::Satpass2::Test::Format' ],
+	[ provider			=> 'Test provider' ],
 	[ time_format			=> '%H:%M:%S' ],
 	[ time_formatter		=> $expect_time_formatter ],
 	[ tz				=> 'est5edt' ],
     ],
-    'Dump configuration' );
-$tst->method_is( config => decode => 1, changes => 1,
+    'Dump configuration';
+
+method config => decode => 1, changes => 1,
     [
 	[ gmt				=> 1 ],
-	[ provider			=> 'Astro::App::Satpass2::Test::Format' ],
+	[ provider			=> 'Test provider' ],
 	[ time_formatter		=> $expect_time_formatter ],
 	[ tz				=> 'est5edt' ],
     ],
-    'Dump configuration changes' );
+    'Dump configuration changes';
 
 1;
 

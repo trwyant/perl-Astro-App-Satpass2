@@ -3,47 +3,92 @@ package main;
 use strict;
 use warnings;
 
-use lib qw{ inc };
+BEGIN {
+    eval {
+	require Test::More;
+	Test::More->VERSION( 0.52 );
+	Test::More->import();
+	1;
+    } or do {
+	print "1..0 # skip Test::More 0.52 required\\n";
+	exit;
+    }
+}
 
-use Astro::App::Satpass2::Test::Format;
-use Time::Local;
+BEGIN {
+    eval {
+	require lib;
+	lib->import( 'inc' );
+	require Astro::App::Satpass2::Test::App;
+	Astro::App::Satpass2::Test::App->import();
+	1;
+    } or do {
+	plan skip_all => 'Astro::App::Satpass2::Test::App not available';
+	exit;
+    };
+}
 
-my $tst = Astro::App::Satpass2::Test::Format->new(
-    'Astro::App::Satpass2::FormatTime::DateTime::Cldr' );
+BEGIN {
+    eval {
+	require DateTime;
+	require DateTime::TimeZone;
+	1;
+    } or do {
+	plan skip_all => 'DateTime or DateTime::TimeZone not available';
+	exit;
+    };
+}
 
-eval {
-    require DateTime;
-    require DateTime::TimeZone;
-    1;
-} or do {
-    $tst->plan(
-	skip_all => 'DateTime and/or DateTime::TimeZone not available' );
-    exit;
-};
+BEGIN {
+    eval {
+	require Time::Local;
+	Time::Local->import();
+	1;
+    } or do {
+	plan skip_all => 'Time::Local not available';
+	exit;
+    };
+}
 
-$tst->plan( tests => 13 );
+plan tests => 15;
 
-$tst->require_ok();
+require_ok 'Astro::App::Satpass2::FormatTime::DateTime::Cldr';
 
-$tst->can_ok( 'new' );
-$tst->can_ok( 'attribute_names' );
-$tst->can_ok( 'copy' );
-$tst->can_ok( 'gmt' );
-$tst->can_ok( 'format_datetime' );
-$tst->can_ok( 'format_datetime_width' );
-$tst->can_ok( 'tz' );
+can_ok 'Astro::App::Satpass2::FormatTime::DateTime::Cldr' => 'new';
 
-$tst->new_ok();
+can_ok 'Astro::App::Satpass2::FormatTime::DateTime::Cldr' => 'attribute_names';
+
+can_ok 'Astro::App::Satpass2::FormatTime::DateTime::Cldr' => 'copy';
+
+can_ok 'Astro::App::Satpass2::FormatTime::DateTime::Cldr' => 'gmt';
+
+can_ok 'Astro::App::Satpass2::FormatTime::DateTime::Cldr' => 'format_datetime';
+
+can_ok 'Astro::App::Satpass2::FormatTime::DateTime::Cldr' =>
+	'format_datetime_width';
+
+can_ok 'Astro::App::Satpass2::FormatTime::DateTime::Cldr' => 'tz';
+
+class 'Astro::App::Satpass2::FormatTime::DateTime::Cldr';
+
+method 'new', undef, 'Instantiate';
+
+method gmt => 1, undef, 'Turn on gmt attribute';
+
+method 'gmt', 1, 'The gmt attribute is on';
 
 my $time = timegm( 0, 0, 0, 1, 3, 111 );	# midnight 1-Apr-2011
-$tst->method_ok( 'gmt', 'Harness turned on gmt attribute' );
-$tst->method_is( format_datetime => 'yyyy/MM/dd HH:mm:SS', $time,
-    '2011/04/01 00:00:00', 'Implicit GMT time' );
-$tst->method_is( format_datetime_width => 'yyyy/MM/dd HH:mm:SS', 19,
-    'Compute width required for format' );
-$tst->method( gmt => 0 );			# Turn off gmt attr
-$tst->method_is( format_datetime => 'yyyy/MM/dd HH:mm:SS', $time, 1,
-    '2011/04/01 00:00:00', 'Explicit GMT time' );
+
+method format_datetime => 'yyyy/MM/dd HH:mm:SS', $time,
+    '2011/04/01 00:00:00', 'Implicit GMT time';
+
+method format_datetime_width => 'yyyy/MM/dd HH:mm:SS', 19,
+    'Compute width required for format';
+
+method gmt => 0, undef, 'Turn off gmt';
+
+method format_datetime => 'yyyy/MM/dd HH:mm:SS', $time, 1,
+    '2011/04/01 00:00:00', 'Explicit GMT time';
 
 1;
 
