@@ -36,7 +36,7 @@ $| = 1;	## no critic (RequireLocalizedPunctuationVars)
 
 use Astro::App::Satpass2;
 
-plan tests => 203;
+plan tests => 205;
 
 class   'Astro::App::Satpass2';
 
@@ -228,6 +228,12 @@ execute 'show appulse', 'set appulse 10', 'Appulse value now 10';
 execute 'set latitude 51d28m38s', undef, 'Set latitude';
 
 execute 'show latitude', 'set latitude 51.4772', 'Latitude value';
+
+execute 'set longitude 18:51:51', undef,
+    'Longitude in right ascension notation, just to test parse';
+
+execute 'show longitude', 'set longitude 282.962',
+    'Confirm results of right ascenscion parse';
 
 execute 'set longitude 0', undef, 'Set longitude';
 

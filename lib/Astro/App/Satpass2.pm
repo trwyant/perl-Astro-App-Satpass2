@@ -2940,6 +2940,32 @@ sub _macro {
     return $output;
 }
 
+#	$angle = _parse_angle_parts ( @parts );
+#
+#	Joins parts of angles into an angle.
+#	The @parts array is array references describing the parts in
+#	decreasing significance, with [0] being the value, and [1] being
+#	the number in the next larger part. For the first piece, [1]
+#	should be the number in an entire circle.
+
+sub _parse_angle_parts {
+    my @parts = @_;
+    my $angle = 0;
+    my $circle = 1;
+    my $places;
+    foreach ( @parts ) {
+	my ( $part, $size ) = @{ $_ };
+	defined $part or last;
+	$circle *= $size;
+	$angle = $angle * $size + $part;
+	$places = $part =~ m/ [.] ( \d+ ) /smx ? length $1 : 0;
+    }
+    $angle *= 360 / $circle;
+    if ( my $mag = sprintf '%d', $circle / 360 ) {
+	$places += length $mag;
+    }
+    return sprintf( '%.*f', $places, $angle ) + 0;
+}
 
 #	$angle = _parse_angle ($string)
 
@@ -2952,15 +2978,12 @@ sub _parse_angle {
 
     if ( $angle =~ m/ : /smx ) {
 
-	# TODO do the precision thing like I did below with dms. But
-	# first I need tests.
 	my ($h, $m, $s) = split ':', $angle;
-	$s ||= 0;
-	$m ||= 0;
-	$h ||= 0;
-	$m += $s / 60;
-	$h += $m / 60;
-	$angle = $h * 360 / 24;
+	return _parse_angle_parts(
+	    [ $h => 24 ],
+	    [ $m => 60 ],
+	    [ $s => 60 ],
+	);
 
     } elsif ( $angle =~
 	m{ \A ( [-+] )? (\d*) d
@@ -2968,16 +2991,13 @@ sub _parse_angle {
 	    ( \d* (?: [.] \d* )? ) s? )? \z
 	}smxi ) {
 	my ( $sgn, $deg, $min, $sec ) = ( $1, $2, $3, $4 );
-	$angle = ( ( ( $sec || 0 ) / 60 ) + ( $min || 0 ) ) / 60 +
-	    ( $deg || 0 );
-	$angle = -$angle if $sgn && $sgn eq '-';
-	foreach ( [ 4, $sec ], [ 2, $min ], [ 0, $deg ] ) {
-	    my ( $places, $value ) = @{ $_ };
-	    $value =~ m/ [.] (\d+) /sxm
-		and $places += length $1;
-	    $angle = sprintf '%.*f', $places, $angle;
-	    return $angle + 0;
-	}
+	$angle = _parse_angle_parts(
+	    [ $deg => 360 ],
+	    [ $min => 60 ],
+	    [ $sec => 60 ],
+	);
+	$sgn and '-' eq $sgn and return -$angle;
+	return $angle;
     }
 
     return $angle;
