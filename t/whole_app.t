@@ -9,11 +9,11 @@ BEGIN {
 
     eval {
 	require Test::More;
-	Test::More->VERSION( 0.40 );
+	Test::More->VERSION( 0.52 );
 	Test::More->import();
 	1;
     } or do {
-	print "1..0 # skip Test::More version 0.40 or above not available.\n";
+	print "1..0 # skip Test::More version 0.52 or above not available.\n";
 	exit;
     };
 
