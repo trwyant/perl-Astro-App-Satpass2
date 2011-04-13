@@ -195,20 +195,6 @@ use constant NONE => undef;
 		"Argument '$name' must be a hash reference" );
 	}
 
-=begin comment
-
-	if ( defined( my $time = $self->_get( data => 'time' ) ) ) {
-	    foreach my $key ( qw{ body station } ) {
-		my $obj = $self->_get_eci( $key )
-		    or next;
-		$obj->universal( $time );
-	    }
-	}
-
-=end comment
-
-=cut
-
 	$self->{desired_equinox_dynamical} =
 	    $args{desired_equinox_dynamical} || 0;
 
@@ -375,25 +361,6 @@ sub earth {
     $earth->{data}{station} = Astro::Coord::ECI->new()->ecef( 0, 0, 0 );
     return $earth;
 }
-
-=begin comment
-
-sub events {
-    my ( $self ) = @_;
-
-    my @evts = $self->__raw_events();
-
-    return sub {
-	@evts or return;
-	my %arg = %{ $self };	# Shallow clone
-	$arg{data} = shift @evts;
-	return $self->new( %arg );
-    }
-}
-
-=end comment
-
-=cut
 
 sub events {
     my ( $self ) = @_;

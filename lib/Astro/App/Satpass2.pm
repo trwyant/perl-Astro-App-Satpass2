@@ -545,28 +545,6 @@ sub execute {
 	$#{$self->{frame}} >= $frame_depth
 	    and delete $self->{frame}[ $frame_depth ]{localout};
 
-=begin comment
-
-	if ( defined $output ) {
-##	    $output =~ m/ \n \z /smx or $output .= "\n";
-	    my $ref = ref $stdout;
-	    if ( !defined $stdout ) {
-		$accum .= $output;
-	    } elsif ( $ref eq 'SCALAR' ) {
-		$$stdout .= $output;
-	    } elsif ( $ref eq 'CODE' ) {
-		$stdout->( $output );
-	    } elsif ( $ref eq 'ARRAY' ) {
-		push @$stdout, split qr{ (?<=\n) }smx, $output;
-	    } else {
-		$stdout->print( $output );
-	    }
-	}
-
-=end comment
-
-=cut
-
 	$self->_execute_output( $output,
 	    defined $stdout ? $stdout : \$accum );
 
@@ -1692,35 +1670,24 @@ sub show : Verb( changes! deprecated! readonly! ) {
 	exists $opt->{$name} or $opt->{$name} = 1;
     }
     my $output;
+
     @args or @args = sort grep {
 	!$nointeractive{$_} &&
 	( $opt->{deprecated} ||
 	    !$self->_deprecation_in_progress( attribute => $_ ) &&
        	( $opt->{readonly} || exists  $mutator{$_} ) )
     } keys %accessor;
+
     foreach my $name (@args) {
 	exists $shower{$name}
 	    or $self->_wail("No such attribute as '$name'");
-
-=begin comment
-
-	my $val = $shower{$name}->( $self, $name );
-	if ($opt->{changes}) {
-	    no warnings qw{uninitialized};
-	    $static{$name} eq $val and next;
-	}
-	exists $mutator{$name} or $output .= '# ';
-	$output .= "set $name " . quoter( $val ) . "\n";
-
-=end comment
-
-=cut
 
 	my @val = $shower{$name}->( $self, $name );
 	if ( $opt->{changes} ) {
 	    no warnings qw{ uninitialized };
 	    $static{$name} eq $val[-1] and next;
 	}
+
 	exists $mutator{$name} or unshift @val, '#';
 	$output .= join ' ', map { quoter( $_ ) } @val;
 	$output .= "\n";
@@ -3198,26 +3165,6 @@ sub _read_continuation {
 	    and $append = $1;
 	$append =~ m/ \\ /sxm
 	    and $context->{command} = $command;
-
-=begin comment
-
-	if ( 'macro' eq $command ) {
-
-	    my @input = Text::ParseWords::quotewords( qr{ \s+ }smx, 1,
-		$buffer );
-	    foreach ( @input ) {
-		m/ ['"\\\s] /sxm or next;
-		s/ (?: \A | (?<= [^\\] ) ) ( (?: \\\\ )* ) ' /$1"/sxmg;
-		substr $_, 0, 1, q<'>;
-		substr $_, -1, 1, q<'>;
-	    }
-	    return join( ' ', @input ) . $append;
-
-	}
-
-=end comment
-
-=cut
 
 	my $handler = $level1_requote{$command} || $level1_requote{''};
 	my ( $this_quote, $start_pos );

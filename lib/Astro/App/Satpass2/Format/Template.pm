@@ -529,35 +529,12 @@ sub _all_events {
     my ( $self, $data ) = @_;
     'ARRAY' eq ref $data or return;
 
-=begin comment
-
-    my @events = sort { $a->{time} <=> $b->{time} }
-	map { @{ $_->{events} } }
-	grep { 'ARRAY' eq ref $_->{events} }
-	@{ $data }
-	or return;
-
-=end comment
-
-=cut
-
     my @events;
     foreach my $pass ( @{ $data } ) {
 	push @events, $pass->__raw_events();
     }
     @events or return;
     @events = sort { $a->{time} <=> $b->{time} } @events;
-
-=begin comment
-
-    return sub {
-	@events or return;
-	return $self->_wrap( shift @events );
-    };
-
-=end comment
-
-=cut
 
     return [ map { $self->_wrap( $_ ) } @events ];
 }
