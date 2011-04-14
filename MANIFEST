@@ -43,6 +43,8 @@ LICENSES/Artistic
 LICENSES/Copying
 t/basic.t
 t/data.tle
+t/format.t
+t/format_dump.t
 t/format_template.t
 t/format_template_provider.t
 t/format_time.t
@@ -50,8 +52,6 @@ t/format_time_datetime_strftime.t
 t/format_time_datetime_cldr.t
 t/format_time_posix_strftime.t
 t/format_value.t
-t/format_z.t
-t/format_z_dump.t
 t/parse_time_iso8601.t
 t/parse_time_date_manip_5.t
 t/parse_time_date_manip_6.t
