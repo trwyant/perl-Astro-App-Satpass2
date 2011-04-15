@@ -15,12 +15,12 @@
 
 localize formatter
 
-# We intend to use %date(zone=z) to format the event begin and end. We
+# We intend to use date(units='z') to format the event begin and end. We
 # truncate the time to the previous minute.
 
 formatter date_format %Y%m%dT%H%M00Z
 
-# We intend to use %time to format the individual event times.
+# We intend to use time() to format the individual event times.
 
 formatter time_format %I:%M:%S
 
@@ -28,16 +28,15 @@ formatter time_format %I:%M:%S
 
 formatter template pass <<'EOD'
 BEGIN:VCALENDAR
-[% FOR pass IN data %]
-    [%- events = pass.events %]
-    [%- evt = events() %]
+[%- FOR pass IN data %]
+[%- events = pass.events %]
 BEGIN:VEVENT
-DTSTART:[% evt.date( zone = 'z' ) %]
-DALARM:[% evt.date( delta = -360, zone = 'z' ) %]
-SUMMARY:[% evt.name( width = '' ) %]
-    [%- WHILE evt %]
+DTSTART:[% events.first.date( units = 'z' ) %]
+DALARM:[% events.first.date( delta = -360, units = 'z' ) %]
+SUMMARY:[% events.first.name( width = '' ) %]
+    [%- FOREACH evt IN events %][% punct %]
 	[%- evt_name = evt.event( width = '' ) %]
-	[%- end_date = evt.date( zone = 'z' ) %]
+	[%- end_date = evt.date( delta = 30, units = 'z' ) %]
 	[%= evt.event( width = '' ) %]
 	[%= evt.time %] Az
 	[%= evt.azimuth( width = '', places = 0, bearing = 2 ) %]
@@ -47,7 +46,7 @@ SUMMARY:[% evt.name( width = '' ) %]
 	[%- IF 'rise' != evt_name and 'set' != evt_name %] Ele
 	    [%= evt.elevation( width = '', places = 0 ) %]
 	[%- END %]
-	[%- evt = events() %]
+        [%- punct = ';' %]
     [%- END %]
 DTEND:[% end_date %]
 END:VEVENT
