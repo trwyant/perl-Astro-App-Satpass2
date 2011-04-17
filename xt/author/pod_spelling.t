@@ -55,6 +55,7 @@ edt
 edu
 elementnumber
 ephemeristype
+equivocated
 EST
 exportable
 firstderivative

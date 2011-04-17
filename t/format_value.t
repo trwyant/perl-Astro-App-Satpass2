@@ -73,7 +73,7 @@ sub create (@);
 sub method (@);
 sub method_good (@);
 
-plan( 'no_plan' );
+plan( tests => 250 );
 
 my %default;
 my $time_formatter = Astro::App::Satpass2::FormatTime->new()->gmt( 1 );
@@ -164,8 +164,10 @@ method angle => [ places => 2, units => 'radians' ], ' 1.57',
     'Angle specifically in radians';
 method angle => [ width => 2, units => 'bearing' ], 'E ',
     'Angle specifically in bearing';
+method angle => [ width => '', bearing => 2, units => 'bearing' ], 'E',
+    'Angle in bearing with no width';
 $default{bearing}{table} = [
-    [], [ qw{ n e s w } ], [ qw{ n ne e se s sw w nw } ] ];
+    [ qw{ n e s w } ], [ qw{ n ne e se s sw w nw } ] ];
 method angle => [ width => 2, units => 'bearing' ], 'e ',
     'Angle specifically in bearing with custom bearing text';
 delete $default{bearing};
@@ -615,10 +617,11 @@ method station => [], time => '23:23:41',
     'Time for observing station is the same as for satellite';
 $time_formatter->gmt( 0 );	# Turn off GMT
 SKIP: {
+    my $tests = 1;
     eval {
 	require Astro::App::Satpass2::FormatTime::DateTime::Strftime;
 	1;
-    } or skip( 'DateTime not available', 3 );
+    } or skip 'DateTime not available', $tests;
     $time_formatter->tz( 'MST7MDT' );	# Zone to US Mountain
     method time => '17:23:41', 'Time of day, Mountain';
     $time_formatter->tz( undef );	# Zone back to default

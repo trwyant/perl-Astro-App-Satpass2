@@ -876,12 +876,13 @@ my %formatter_data = (	# For generating formatters
 
 	    if ( defined $value ) {
 		my $ab = { %{ $arg } };	# Shallow clone
-		$ab->{width} = delete $ab->{bearing};
+		$ab->{width} and $ab->{width} = $ab->{bearing};
 		$ab->{units} = 'bearing';
 		delete $arg->{append};
 		return ( $arg, $ab );
 	    } else {
-		$arg->{width} += $arg->{bearing} + 1;
+		$arg->{width}
+		    and $arg->{width} += $arg->{bearing} + 1;
 		return $arg;
 	    }
 	},
@@ -1742,7 +1743,13 @@ sub _get_tle_attr {
 
 	$table ||= \@bearings;
 
-	my $inx = min( $arg->{width} || 2, scalar @{ $table } ) - 1;
+	$arg->{bearing}
+	    or $arg->{bearing} = ( $arg->{width} || 2 );
+	$arg->{width}
+	    and $arg->{bearing} > $arg->{width}
+	    and $arg->{bearing} = $arg->{width};
+
+	my $inx = min( $arg->{bearing} || 2, scalar @{ $table } ) - 1;
 	my $tags = $table->[$inx];
 	my $bins = @{ $tags };
 	$inx = floor ($value / TWOPI * $bins + .5) % $bins;
@@ -3979,6 +3986,17 @@ C<phase> = name of phase ('new', 'waxing crescent', and so on);
 
 C<right_ascension> = angle in hours, minutes, and seconds of right
 ascension.
+
+When the angle units are specified as C<< units => 'bearing' >>, the
+precision of the bearing is specified by the C<bearing> argument. That
+is, C<< bearing => 1 >> gets you the cardinal points (C<N>, C<E>, C<S>
+and C<W>), C<< bearing => 2 >> gets you the semi-cardinal points, and
+similarly for C<< bearing => 3 >>. If C<bearing> is not specified it
+defaults to the same value as the C<width> argument, or C<2> if no width
+is specified.  The net result is that you need to specify the C<bearing>
+argument if you specify C<< width => '' >> and do not like the default
+of C<2>. Yes, I could have equivocated on C<places>, but this seemed
+more straight forward.
 
 The default is normally degrees, though this is overridden for
 L<right_ascension|/right_ascension>.
