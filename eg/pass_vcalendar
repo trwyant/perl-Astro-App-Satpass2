@@ -28,13 +28,17 @@ formatter time_format %I:%M:%S
 
 formatter template pass <<'EOD'
 BEGIN:VCALENDAR
+[%- space = ' ' %]
 [%- FOR pass IN data %]
 [%- events = pass.events %]
+[%- punct = ' -' %]
 BEGIN:VEVENT
 DTSTART:[% events.first.date( units = 'z' ) %]
 DALARM:[% events.first.date( delta = -360, units = 'z' ) %]
 SUMMARY:[% events.first.name( width = '' ) %]
     [%- FOREACH evt IN events %][% punct %]
+
+	[%- space %]
 	[%- evt_name = evt.event( width = '' ) %]
 	[%- end_date = evt.date( delta = 30, units = 'z' ) %]
 	[%= evt.event( width = '' ) %]
@@ -46,7 +50,7 @@ SUMMARY:[% events.first.name( width = '' ) %]
 	[%- IF 'rise' != evt_name and 'set' != evt_name %] Ele
 	    [%= evt.elevation( width = '', places = 0 ) %]
 	[%- END %]
-        [%- punct = ';' %]
+        [%- punct = '\\;' %]
     [%- END %]
 DTEND:[% end_date %]
 END:VEVENT
