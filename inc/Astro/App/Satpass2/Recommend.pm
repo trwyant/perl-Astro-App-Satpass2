@@ -136,6 +136,7 @@ EOD
 
     sub _recommend_time_y2038 {
 	eval { require Time::y2038; 1 } and return;
+	5.012 <= $] and return;
 	my $recommendation = <<'EOD';
     * Time::y2038 is not installed.
       This module is not required, but if installed allows you to do
@@ -147,17 +148,11 @@ EOD
       running under $^O, so you may be better off just accepting the
       restricted time range.
 EOD
-	5.012 <= $] and return $recommendation .= <<'EOD';
-      Since you appear to have Perl 5.012 or above, you may well not
-      need Time::y2038, since at Perl 5.012 extended time functionality
-      was bundled into the core. Time::y2038 will be used, though, if it
-      is available.
-EOD
 	( $Config{use64bitint} || $Config{use64bitall} )
 	    and $recommendation .= <<'EOD';
       Since your Perl appears to support 64-bit integers, you may well
       not need Time::y2038 to do computations for times outside the
-      so-called 'usual range.' Time::HiRes will be used, though, if it
+      so-called 'usual range.' Time::y2038 will be used, though, if it
       is available.
 EOD
 	return $recommendation;
