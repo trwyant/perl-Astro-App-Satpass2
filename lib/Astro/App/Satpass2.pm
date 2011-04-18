@@ -6593,6 +6593,15 @@ The F<satpass> mutator forced the sign to be negative. The
 C<Astro::App::Satpass2> mutator does not. Note that a positive setting
 means the Sun is above the horizon.
 
+=item tz
+
+This attribute is deprecated. It is properly an attribute of
+C<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format> and
+C<Astro::App::Satpass2::ParseTime|Astro::App::Satpass2::ParseTime>.
+These should not have been combined because there is no way to ensure
+that the packages underlying each of these takes the same time zone
+specifications.
+
 =back
 
 =head1 ENVIRONMENT VARIABLES
