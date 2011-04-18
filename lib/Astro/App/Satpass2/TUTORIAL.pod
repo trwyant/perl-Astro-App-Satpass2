@@ -468,7 +468,7 @@ it with something like
 
  satpass2> formatter tz MST7MDT
 
-(for Mountan time). If it works, fine. If not, you can make it work by
+(for Mountain time). If it works, fine. If not, you can make it work by
 installing C<DateTime|DateTime> and
 C<DateTime::TimeZone|DateTime::TimeZone>. Doing this also gives you the
 Olson database zone names (e.g. C<America/New_York>) if you prefer
@@ -480,7 +480,7 @@ something like
 
  satpass2> time_parser tz MST7MDT
 
-The C<time_parser> and C<formatter> time zones are set seperately not
+The C<time_parser> and C<formatter> time zones are set separately not
 only so that you can make them different, but because the author can not
 guarantee that the underlying modules will accept the same settings.
 
