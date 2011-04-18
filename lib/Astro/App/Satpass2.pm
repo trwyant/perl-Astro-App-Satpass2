@@ -6569,29 +6569,29 @@ macro. This attribute will be dropped when support for F<satpass> is
 =item gmt
 
 This attribute is deprecated. It is properly an attribute of
-L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>, and is implemented as a
-wrapper for that class' C<gmt> attribute. It will be dropped when
-support for F<satpass> is dropped.
+L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>, and is
+implemented as a wrapper for that class' C<gmt> attribute. It will be
+dropped when support for F<satpass> is dropped.
 
 =item local_coord
 
 This attribute is deprecated. It is properly an attribute of
-L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>, and is implemented as a
-wrapper for that class' C<local_coord> attribute. It will be dropped
-when support for F<satpass> is dropped.
+L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>, and is
+implemented as a wrapper for that class' C<local_coord> attribute. It
+will be dropped when support for F<satpass> is dropped.
 
 =item time_format
 
 This attribute is deprecated. It is properly an attribute of
-L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>, and is implemented as a
-wrapper for that class' C<time_format> attribute. It will be dropped
-when support for F<satpass> is dropped.
+L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>, and is
+implemented as a wrapper for that class' C<time_format> attribute. It
+will be dropped when support for F<satpass> is dropped.
 
 =item twilight
 
 The F<satpass> mutator forced the sign to be negative. The
-C<Astro::App::Satpass2> mutator does not. Note that a positive setting means
-the Sun is above the horizon.
+C<Astro::App::Satpass2> mutator does not. Note that a positive setting
+means the Sun is above the horizon.
 
 =back
 
