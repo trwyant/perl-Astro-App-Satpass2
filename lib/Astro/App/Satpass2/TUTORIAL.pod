@@ -77,7 +77,7 @@ simply issue the command
 
 Subsequent runs of the F<satpass2> script will initialize from the new
 file. This form of the C<save> command just saves changes from the
-default configuration. If you wish to save everything, omit the
+default configuration. If you wish to save all configuration, omit the
 C<-changes> option.
 
 Be aware that C<save> only saves the configuration of the
@@ -137,12 +137,12 @@ executive mansion as our location.
  satpass2> # their data from Space Track when we ask for
  satpass2> # it. We are assuming no Space Track username,
  satpass2> # so we tell them to just give us what they have.
- satpass2> tell spacetrack set direct 1
+ satpass2> spacetrack set direct 1
  satpass2>
- satpass2> # Some data sources come with or without the
+ satpass2> # Some data sources come either with or without the
  satpass2> # actual name of the spacecraft. We want the name
  satpass2> # if it is available.
- satpass2> tell spacetrack set with_name 1
+ satpass2> spacetrack set with_name 1
  satpass2>
  satpass2> # Save our configuration. All we really need to
  satpass2> # save are the changes from the default.
@@ -197,7 +197,7 @@ point.
  satpass2> # effective date, since there may be Space Shuttle
  satpass2> # data also, and that information is not usable
  satpass2> # until the actual launch.
- satpass2> tell spacetrack spaceflight -all -effective
+ satpass2> spacetrack spaceflight -all -effective
  satpass2>
  satpass2> # Make the default pass prediction, which is for
  satpass2> # seven days starting today at noon.
@@ -318,7 +318,7 @@ download the orbital data and predict the flare from the data.
  ... front matter ...
  satpass2>
  satpass2> # Download the data on Iridium satellites.
- satpass2> tell spacetrack celestrak iridium
+ satpass2> spacetrack celestrak iridium
  satpass2>
  satpass2> # Predict flares for the next seven days,
  satpass2> # starting today at noon.
@@ -387,8 +387,8 @@ completely invisible during the day, so day and night have separate
 settings to control the minimum reportable brightness.
 C<Astro::App::Satpass2> uses the C<flare_mag_day> setting to determine
 the dimmest reportable flare during the day; this defaults to C<-6>. The
-dimmest reportable flare at night is determined by the C<flare_mag_day>
-setting, which defaults to C<0>.
+dimmest reportable flare at night is determined by the
+C<flare_mag_night> setting, which defaults to C<0>.
 
 In order to duplicate (fairly closely) the Iridium flares reported by
 L<http://www.heavens-above.com/>, you will want to tweak
@@ -443,6 +443,46 @@ is a separate subsystem all to itself. So:
 
 This section covers things that are beyond just getting the application
 up and running.
+
+=head2 Time Zones
+
+By default, times are reported in your local zone. Summer time/daylight
+saving time is accounted for (unless the underlying Perl is broken),
+even when predictions cross the boundary between standard and summer
+time. But you may want some other zone. There are two cases here,
+depending on what optional modules you have installed.
+
+Without any optional modules, the only supported zone other than your
+default local zone is GMT. You can get GMT output by
+
+ satpass2> formatter gmt 1
+
+The default ISO-8601-ish time parser does not have a corresponding
+setting, but does allow you to append a C<'Z'> to the time to specify
+GMT.
+
+The formatter object also has a C<tz> setting, but this is unsupported
+because it relies on the C<TZ> environment variable, and the author has
+no control over whether your OS' POSIX code supports this. You can try
+it with something like
+
+ satpass2> formatter tz MST7MDT
+
+(for Mountan time). If it works, fine. If not, you can make it work by
+installing C<DateTime|DateTime> and
+C<DateTime::TimeZone|DateTime::TimeZone>. Doing this also gives you the
+Olson database zone names (e.g. C<America/New_York>) if you prefer
+these.
+
+Similarly, if you install the optional L<Date::Manip|Date::Manip>
+module, you can set a default input zone other than your own by
+something like
+
+ satpass2> time_parser tz MST7MDT
+
+The C<time_parser> and C<formatter> time zones are set seperately not
+only so that you can make them different, but because the author can not
+guarantee that the underlying modules will accept the same settings.
 
 =head2 Multiple Locations
 
@@ -581,6 +621,8 @@ method of the formatter object. For example, if you want right
 ascension, declination and range, just
 
  satpass2> tell formatter local_coord equatorial_rng
+
+=head2 User-defined Positions
 
 L<Astro::App::Satpass2::Format::Template|Astro::App::Satpass2::Format::Template>
 defines these local coordinates in terms of L<Template-Toolkit|Template>
