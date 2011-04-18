@@ -878,7 +878,6 @@ my %formatter_data = (	# For generating formatters
 		my $ab = { %{ $arg } };	# Shallow clone
 		$ab->{width} and $ab->{width} = $ab->{bearing};
 		$ab->{units} = 'bearing';
-		delete $arg->{append};
 		return ( $arg, $ab );
 	    } else {
 		$arg->{width}
@@ -1496,8 +1495,6 @@ while ( my ( $name, $info ) = each %formatter_data ) {
 	    push @rslt, $self->_apply_dimension(
 		$name => $value, $parm, $info->{dimension} );
 
-	    defined $parm->{append}
-		and $rslt[-1] .= $parm->{append};
 	}
 
 	return join ' ', @rslt;
@@ -1512,7 +1509,7 @@ sub __list_formatters {
 
 {
 
-    my @always = qw{ align_left append missing title };
+    my @always = qw{ align_left missing title };
 
     sub _apply_defaults {
 	my ( $self, $action, $arg, $dflt ) = @_;
@@ -2463,14 +2460,6 @@ The following arguments are accepted by all formatters:
 This argument specifies that the given value be left-aligned in its
 field. This defaults to true for text items, and false for numeric
 items.
-
-=item append
-
-This argument specifies text to be appended to the output of a formatter
-method, provided the value formatted is defined. This should not be used
-when trying to format tabular data, as the formatter method will not
-account for this in the field width. But it may be useful for free-form
-data.
 
 =item missing
 
