@@ -33,7 +33,8 @@ BEGIN:VCALENDAR
 BEGIN:VEVENT
 DTSTART:[% item.date( units = 'z' ) %]
 DALARM:[% item.date( delta = -360, units = 'z' ) %]
-SUMMARY:[% item.name( width = '' ) %] [% item.time %] Az [% item.azimuth(
+SUMMARY:[% item.name( units = 'title_case', width = '' ) %]
+    [%= item.time %] Az [% item.azimuth(
     width = '', places = 0, bearing = 2 ) %] Ele [% item.elevation(
     width = '', places = 0 ) %] Mag [% item.magnitude %]
     [%- IF 'day' == item.type( width = '' ) %]
