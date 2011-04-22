@@ -71,32 +71,21 @@ EOD
 [% END -%]
 EOD
 
-    flare => <<'EOD',
+    flare	=> <<'EOD',
 [% DEFAULT data = sp.flare( arg ) -%]
 [% IF title %]
-    [%- title.time( '' ) %]
-        [%= title.name( '', width = 12 ) %]
-        [%= title.local_coord( '' ) %]
-        [%= title.magnitude( '' ) %]
-        [%= title.angle( 'Degrees' ) %]
+    [%- WHILE title.more_title_lines %]
+        [%- title.time %]
+            [%= title.name( width = 12 ) %]
+            [%= title.local_coord %]
+            [%= title.magnitude %]
+            [%= title.angle( 'Degrees From Sun' ) %]
+            [%= title.azimuth( 'Center Azimuth', bearing = 2 ) %]
+            [%= title.range( 'Center Range', width = 6 ) %]
 
-    [%- title.time( '' ) %]
-        [%= title.name( '', width = 12 ) %]
-        [%= title.local_coord( '' ) %]
-        [%= title.magnitude( '' ) %]
-        [%= title.angle( 'From' ) %]
-        [%= title.azimuth( 'Center', bearing = 2 ) %]
-        [%= title.range( 'Center', width = 6 ) %]
-
-    [%- title.time %]
-        [%= title.name( width = 12 ) %]
-        [%= title.local_coord %]
-        [%= title.magnitude %]
-        [%= title.angle( 'Sun' ) %]
-        [%= title.azimuth( bearing = 2 ) %]
-        [%= title.range( width = 6 ) %]
-[% END -%]
-[% prior_date = '' -%]
+    [%- END %]
+[%- END %]
+[%- prior_date = '' -%]
 [% FOR item IN data %]
     [%- center = item.center %]
     [%- current_date = item.date %]
@@ -122,12 +111,15 @@ EOD
     list => <<'EOD',
 [% DEFAULT data = sp.list( arg ) -%]
 [% IF title %]
-    [%- title.oid( align_left = 0 ) %]
-        [%= title.name %]
-        [%= title.epoch %]
-        [%= title.period( align_left = 1 ) %]
-[% END -%]
-[% FOR item IN data %]
+    [%- WHILE title.more_title_lines %]
+        [%- title.oid( align_left = 0 ) %]
+            [%= title.name %]
+            [%= title.epoch %]
+            [%= title.period( align_left = 1 ) %]
+
+    [%- END %]
+[%- END %]
+[%- FOR item IN data %]
     [%- IF item.body.get( 'inertial' ) %]
         [%- item.oid %] [% item.name %] [% item.epoch %]
             [%= item.period( align_left = 1 ) %]
@@ -152,15 +144,18 @@ EOD
     pass	=> <<'EOD',
 [% DEFAULT data = sp.pass( arg ) -%]
 [% IF title %]
-    [%- title.time( align_left = 0 ) %]
-        [%= title.local_coord %]
-        [%= title.latitude %]
-        [%= title.longitude %]
-        [%= title.altitude %]
-        [%= title.illumination %]
-        [%= title.event( width = '' ) %]
-[% END -%]
-[% FOR pass IN data %]
+    [%- WHILE title.more_title_lines %]
+        [%- title.time( align_left = 0 ) %]
+            [%= title.local_coord %]
+            [%= title.latitude %]
+            [%= title.longitude %]
+            [%= title.altitude %]
+            [%= title.illumination %]
+            [%= title.event( width = '' ) %]
+
+    [%- END %]
+[%- END %]
+[%- FOR pass IN data %]
     [%- events = pass.events %]
     [%- evt = events.first %]
 
@@ -186,33 +181,41 @@ EOD
 [%- END -%]
 EOD
 
-    pass_events => <<'EOD',
+    pass_events	=> <<'EOD',
 [% DEFAULT data = sp.pass( arg ) -%]
 [% IF title %]
-    [%- title.date %] [% title.time %]
-        [%= title.oid %] [% title.event %]
-        [%= title.illumination %] [% title.local_coord %]
-[% END -%]
-[% FOREACH evt IN data.events %]
+    [%- WHILE title.more_title_lines %]
+        [%- title.date %] [% title.time %]
+            [%= title.oid %] [% title.event %]
+            [%= title.illumination %] [% title.local_coord %]
+
+    [%- END %]
+[%- END %]
+[%- FOREACH evt IN data.events %]
     [%- evt.date %] [% evt.time %]
         [%= evt.oid %] [% evt.event %]
         [%= evt.illumination %] [% evt.local_coord %]
 [% END -%]
 EOD
 
-    phase => <<'EOD',
+    phase	=> <<'EOD',
 [% DEFAULT data = sp.phase( arg ) -%]
 [% IF title %]
-    [%- title.date( align_left = 0 ) %]
-        [%= title.time( align_left = 0 ) %]
-        [%= title.name( width = 8, align_left = 0 ) %]
-        [%= title.phase( places = 0, width = 4 ) %]
-        [%= title.phase( width = 16, units = 'phase',
-            align_left = 1 ) %]
-        [%= title.fraction_lit( title = 'Lit', places = 0, width = 4,
-            units = 'percent', align_left = 0 ) %]
-[% END -%]
-[% FOR item IN data %]
+    [%- more = 1 %]
+    [%- WHILE more %]
+        [%- title.date( align_left = 0 ) %]
+            [%= title.time( align_left = 0 ) %]
+            [%= title.name( width = 8, align_left = 0 ) %]
+            [%= title.phase( places = 0, width = 4 ) %]
+            [%= title.phase( width = 16, units = 'phase',
+                align_left = 1 ) %]
+            [%= title.fraction_lit( title = 'Lit', places = 0, width = 4,
+                units = 'percent', align_left = 0 ) %]
+
+        [%- more = title.more_title_lines %]
+    [%- END %]
+[%- END %]
+[%- FOR item IN data %]
     [%- item.date %] [% item.time %]
         [%= item.name( width = 8, align_left = 0 ) %]
         [%= item.phase( places = 0, width = 4 ) %]
@@ -223,16 +226,21 @@ EOD
 [% END -%]
 EOD
 
-    position => <<'EOD',
+    position	=> <<'EOD',
 [% DEFAULT data = sp.position( arg ) -%]
 [%- data.date %] [% data.time %]
 [% IF title %]
-    [%- title.name( align_left = 0, width = 16 ) %]
-        [%= title.local_coord %]
-        [%= title.epoch( align_left = 0 ) %]
-        [%= title.illumination %]
-[% END -%]
-[% FOR item IN data.bodies() %]
+    [%- more = 1 %]
+    [%- WHILE more %]
+        [%- title.name( align_left = 0, width = 16 ) %]
+            [%= title.local_coord %]
+            [%= title.epoch( align_left = 0 ) %]
+            [%= title.illumination %]
+
+        [%- more = title.more_title_lines %]
+    [%- END %]
+[%- END %]
+[%- FOR item IN data.bodies() %]
     [%- item.name( width = 16, missing = 'oid', align_left = 0 ) %]
         [%= item.local_coord %]
         [%= item.epoch( align_left = 0 ) %]
@@ -253,14 +261,14 @@ EOD
 [% END -%]
 EOD
 
-    tle	=> <<'EOD',
+    tle		=> <<'EOD',
 [% DEFAULT data = sp.tle( arg ) -%]
 [% FOR item IN data %]
     [%- item.tle -%]
 [% END -%]
 EOD
 
-    tle_verbose => <<'EOD',
+    tle_verbose	=> <<'EOD',
 [% DEFAULT data = sp.tle( arg ) -%]
 [% FOR item IN data -%]
 NORAD ID: [% item.oid( width = '' ) %]

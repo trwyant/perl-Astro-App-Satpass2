@@ -45,6 +45,7 @@ sub requires {
 	'Scalar::Util'		=> 0,
 ##	'Task::Weaken'		=> 0,
 	'Template'		=> 2.21,
+	'Text::Wrap'		=> 0,
 	'Time::Local'		=> 0,
 	@extra,
     };

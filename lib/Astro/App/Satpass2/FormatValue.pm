@@ -13,6 +13,7 @@ use Clone ();
 use List::Util qw{ max min };
 use POSIX qw{ floor };
 use Scalar::Util qw{ reftype };
+use Text::Wrap ();
 
 use constant NONE => undef;
 
@@ -1505,6 +1506,27 @@ sub __list_formatters {
     return \%formatter_data;
 }
 
+#	Title control
+
+sub more_title_lines {
+    my ( $self ) = @_;
+    exists $self->{internal}{_title_inx}
+	or return 1;
+    if ( $self->{internal}{_title_more} ) {
+	$self->{internal}{_title_inx}++;
+    } else {
+	delete $self->{internal}{_title_inx};
+    }
+    return delete $self->{internal}{_title_more};
+}
+
+sub reset_title_lines {
+    my ( $self ) = @_;
+    delete $self->{internal}{_title_inx};
+    delete $self->{internal}{_title_more};
+    return;
+}
+
 #	Private methods and subroutines of all sorts.
 
 {
@@ -1536,19 +1558,24 @@ sub __list_formatters {
 
 	}
 
+	defined $arg->{width}
+	    or $arg->{width} = '';
+	$arg->{width} =~ m/ \D /sxm
+	    and $arg->{width} = '';
+
 	return;
     }
 
 }
 
 sub _apply_dimension {
-    my ( $self, $action, $value, $arg, $dim ) = @_;
+    my ( $self, $name, $value, $arg, $dim ) = @_;
 
     defined( my $dimension = $dim->{dimension} )
 	or confess 'Programming error - no dimension specified';
 
     defined( my $units = _dor( $arg->{units}, $dim->{units},
-	$self->_get( default => $action, 'units' ),
+	$self->_get( default => $name, 'units' ),
 	$dimensions{$dimension}{default} ) )
 	or confess "Programming error - Dimensiton $dimension undefined";
 
@@ -1565,6 +1592,9 @@ sub _apply_dimension {
     defined $arg->{align_left}
 	or $arg->{align_left} = _dor( $hash->{align_left},
 	    $dimensions{$dimension}{align_left} );
+
+    $self->{title}
+	and return $self->_do_title( $name, $arg );
 
     defined $value
 	or return $self->_format_undef( undef, $arg );
@@ -1627,6 +1657,35 @@ sub _attrib_hash {
     } else {
 	return $self->{$name};
     }
+}
+
+sub _do_title {
+    my ( $self, $name, $arg ) = @_;
+    # TODO this looks like a good place to insert localized title code.
+    defined $arg->{title}
+	or $arg->{title} = '';
+    my $title = $arg->{title};
+    my $wrapped = $self->{internal}{$name}{_title}{$title}{$arg->{width}}
+	||= $self->_do_title_wrap( $name, $arg );
+    my $inx = $self->{internal}{_title_inx} ||= 0;
+    $self->{internal}{_title_more} ||= defined $wrapped->[$inx + 1];
+    return defined $wrapped->[$inx] ?
+	$wrapped->[$inx] :
+	$self->_format_string( '', $arg );
+}
+
+sub _do_title_wrap {
+    my ( $self, $name, $arg ) = @_;
+    my $title = $arg->{title};
+    $arg->{width} eq ''
+	and return [ $title ];
+    $arg->{width}
+	or return [ '' ];
+    local $Text::Wrap::columns = $arg->{width} + 1;
+    local $Text::Wrap::huge = 'overflow';
+    my $wrap = Text::Wrap::wrap( '', '', $title );
+    my @lines = split qr{ \n }sxm, $wrap;
+    return [ map { $self->_format_string( $_, $arg ) } @lines ];
 }
 
 sub _dor {
@@ -1778,9 +1837,8 @@ sub _format_duration {
 	$buffer = sprintf '%02d:%02d:%02d', $hrs, $mins, $secs;
     }
 
-    $arg->{width}
-	and $arg->{width} =~ m/ \A \d+ \z /sxm
-	or return $buffer;
+    '' eq $arg->{width}
+	and return $buffer;
 
     length $buffer <= $arg->{width}
 	or $self->{overflow}
@@ -1832,6 +1890,7 @@ sub _format_integer {
     my ( $self, $value, $arg ) = @_;
     defined $value
 	or goto &_format_undef;
+
     $arg->{width}
 	and $arg->{width} =~ m/ \A \d+ \z /sxm
 	or return sprintf '%d', $value;
@@ -3920,6 +3979,42 @@ value if you do not wish to enforce a specific width. The default is
 C<3>.
 
 =back
+
+=head2 Title Control
+
+Titles can consist of multiple lines, wrapped with
+L<Text::Wrap|Text::Wrap>. The display is 'top-heavy', meaning that the
+column titles are justified to the top.
+
+Nothing special needs to be done to get the first line, other than to
+initialize the object C<< title => 1 >>. To get all the lines, you need
+to use a C<while> loop, calling C<more_title_lines()> in the test. When
+this returns false you B<must> exit the loop, otherwise you loop
+infinitely.
+
+=head3 more_title_lines
+
+ my $fmt = Astro::App::Satpass2::Format->new( title => 1 );
+ while ( $fmt->more_title_lines() ) {
+     print join( ' ',
+         $fmt->azimuth( title => 'Azimuth of object',
+             bearing => 2 ),
+         $fmt->elevation( title => 'Elevation of object' ),
+     ), "\n";
+ }
+
+This method returns true until there are no more lines of title to
+display. It also increments the internal line counter causing the next
+line of title to be displayed.
+
+=head3 reset_title_lines
+
+ my $fmt->reset_title_lines();
+
+This method resets the title line logic to its original state. You will
+not normally need to call this unless you want to display titles more
+than once B<and> you have previously exited a C<more_title_lines()> loop
+prematurely.
 
 =head1 UNITS
 
