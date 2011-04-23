@@ -17,7 +17,7 @@ BEGIN {
     }
 }
 
-plan tests => 16;
+plan tests => 17;
 
 use Astro::App::Satpass2::Format::Template;
 use Astro::Coord::ECI;
@@ -193,6 +193,50 @@ is $ft->pass( [
 10:07:14  20.1 156.2 SE      537.9  34.8367  -74.8798   204.0 lit   rise
 10:08:00  30.7 112.1 E       385.9  37.7599  -73.6545   205.2 lit   max
 10:08:56  19.8  56.6 NE      552.7  41.2902  -72.0053   207.0 lit   set
+EOD
+
+is $ft->pass_events( [
+	    {
+		body	=> $sat,
+		events	=> [
+		    {
+			azimuth => 2.72679983099103,
+			body => $sat,
+			elevation => 0.350867451859261,
+			event => PASS_EVENT_RISE,
+			illumination => PASS_EVENT_LIT,
+			range => 537.930341183133,
+			station => $sta,
+			time	=> timegm( 14, 7, 10, 13, 9, 80 ),
+		    },
+		    {
+			azimuth => 1.95627424522813,
+			body => $sat,
+			elevation => 0.535869703007124,
+			event => PASS_EVENT_MAX,
+			illumination => PASS_EVENT_LIT,
+			range => 385.864099675914,
+			station => $sta,
+			time => timegm( 0, 8, 10, 13, 9, 80 ),
+		    },
+		    {
+			azimuth => 0.988652345285029,
+			body => $sat,
+			elevation => 0.344817448574959,
+			event => PASS_EVENT_SET,
+			illumination => PASS_EVENT_LIT,
+			range => 552.731309464471,
+			station => $sta,
+			time => timegm( 56, 8, 10, 13, 9, 80 ),
+		    },
+		],
+		time => timegm( 0, 8, 10, 13, 9, 80 ),
+	    },
+	] ), <<'EOD', 'Pass';
+Date       Time     OID    Event Illum Eleva  Azimuth      Range
+1980-10-13 10:07:14  88888 rise  lit    20.1 156.2 SE      537.9
+1980-10-13 10:08:00  88888 max   lit    30.7 112.1 E       385.9
+1980-10-13 10:08:56  88888 set   lit    19.8  56.6 NE      552.7
 EOD
 
 $moon->universal( timegm( 0, 0, 4, 1, 3, 111 ) );
