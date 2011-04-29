@@ -2070,8 +2070,10 @@ sub _format_title_case {
     defined $value
 	or goto &_format_undef;
 
-    $value = join '', map { ucfirst lc $_ }
-	split qr{ (?<= [^[:alpha:]] ) (?= [[:alpha:]] ) }sxm, $value;
+##  $value = join '', map { ucfirst lc $_ }
+##	split qr{ (?<= [^[:alpha:]] ) (?= [[:alpha:]] ) }sxm, $value;
+    $value =~ s{ (?: \A | (?<= \s ) ) ( [[:alpha:]] \S* ) }
+	{ ucfirst lc $1 }sxmge;
     return $self->_format_string( $value, $arg );
 }
 

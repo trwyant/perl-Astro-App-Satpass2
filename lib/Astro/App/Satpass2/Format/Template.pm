@@ -64,26 +64,24 @@ EOD
 EOD
 
     almanac	=> <<'EOD',
-[% DEFAULT data = sp.almanac( arg ) -%]
-[% FOREACH item IN data %]
+[% DEFAULT data = sp.almanac( arg ) %]
+[%- FOREACH item IN data %]
     [%- item.date %] [% item.time %]
         [%= item.almanac( units = 'description' ) %]
 [% END -%]
 EOD
 
     flare	=> <<'EOD',
-[% DEFAULT data = sp.flare( arg ) -%]
-[% IF title %]
-    [%- WHILE title.more_title_lines %]
-        [%- title.time %]
-            [%= title.name( width = 12 ) %]
-            [%= title.local_coord %]
-            [%= title.magnitude %]
-            [%= title.angle( 'Degrees From Sun' ) %]
-            [%= title.azimuth( 'Center Azimuth', bearing = 2 ) %]
-            [%= title.range( 'Center Range', width = 6 ) %]
+[% DEFAULT data = sp.flare( arg ) %]
+[%- WHILE title.more_title_lines %]
+    [%- title.time %]
+        [%= title.name( width = 12 ) %]
+        [%= title.local_coord %]
+        [%= title.magnitude %]
+        [%= title.angle( 'Degrees From Sun' ) %]
+        [%= title.azimuth( 'Center Azimuth', bearing = 2 ) %]
+        [%= title.range( 'Center Range', width = 6 ) %]
 
-    [%- END %]
 [%- END %]
 [%- prior_date = '' -%]
 [% FOR item IN data %]
@@ -109,15 +107,13 @@ EOD
 EOD
 
     list => <<'EOD',
-[% DEFAULT data = sp.list( arg ) -%]
-[% IF title %]
-    [%- WHILE title.more_title_lines %]
-        [%- title.oid( align_left = 0 ) %]
-            [%= title.name %]
-            [%= title.epoch %]
-            [%= title.period( align_left = 1 ) %]
+[% DEFAULT data = sp.list( arg ) %]
+[%- WHILE title.more_title_lines %]
+    [%- title.oid( align_left = 0 ) %]
+        [%= title.name %]
+        [%= title.epoch %]
+        [%= title.period( align_left = 1 ) %]
 
-    [%- END %]
 [%- END %]
 [%- FOR item IN data %]
     [%- IF item.body.get( 'inertial' ) %]
@@ -142,18 +138,16 @@ Location: [% data.name( width = '' ) %]
 EOD
 
     pass	=> <<'EOD',
-[% DEFAULT data = sp.pass( arg ) -%]
-[% IF title %]
-    [%- WHILE title.more_title_lines %]
-        [%- title.time( align_left = 0 ) %]
-            [%= title.local_coord %]
-            [%= title.latitude %]
-            [%= title.longitude %]
-            [%= title.altitude %]
-            [%= title.illumination %]
-            [%= title.event( width = '' ) %]
+[% DEFAULT data = sp.pass( arg ) %]
+[%- WHILE title.more_title_lines %]
+    [%- title.time( align_left = 0 ) %]
+        [%= title.local_coord %]
+        [%= title.latitude %]
+        [%= title.longitude %]
+        [%= title.altitude %]
+        [%= title.illumination %]
+        [%= title.event( width = '' ) %]
 
-    [%- END %]
 [%- END %]
 [%- FOR pass IN data %]
     [%- events = pass.events %]
@@ -182,14 +176,12 @@ EOD
 EOD
 
     pass_events	=> <<'EOD',
-[% DEFAULT data = sp.pass( arg ) -%]
-[% IF title %]
-    [%- WHILE title.more_title_lines %]
-        [%- title.date %] [% title.time %]
-            [%= title.oid %] [% title.event %]
-            [%= title.illumination %] [% title.local_coord %]
+[% DEFAULT data = sp.pass( arg ) %]
+[%- WHILE title.more_title_lines %]
+    [%- title.date %] [% title.time %]
+        [%= title.oid %] [% title.event %]
+        [%= title.illumination %] [% title.local_coord %]
 
-    [%- END %]
 [%- END %]
 [%- FOREACH evt IN data.events %]
     [%- evt.date %] [% evt.time %]
@@ -200,20 +192,16 @@ EOD
 
     phase	=> <<'EOD',
 [% DEFAULT data = sp.phase( arg ) -%]
-[% IF title %]
-    [%- more = 1 %]
-    [%- WHILE more %]
-        [%- title.date( align_left = 0 ) %]
-            [%= title.time( align_left = 0 ) %]
-            [%= title.name( width = 8, align_left = 0 ) %]
-            [%= title.phase( places = 0, width = 4 ) %]
-            [%= title.phase( width = 16, units = 'phase',
-                align_left = 1 ) %]
-            [%= title.fraction_lit( title = 'Lit', places = 0, width = 4,
-                units = 'percent', align_left = 0 ) %]
+[%- WHILE title.more_title_lines %]
+    [%- title.date( align_left = 0 ) %]
+        [%= title.time( align_left = 0 ) %]
+        [%= title.name( width = 8, align_left = 0 ) %]
+        [%= title.phase( places = 0, width = 4 ) %]
+        [%= title.phase( width = 16, units = 'phase',
+            align_left = 1 ) %]
+        [%= title.fraction_lit( title = 'Lit', places = 0, width = 4,
+            units = 'percent', align_left = 0 ) %]
 
-        [%- more = title.more_title_lines %]
-    [%- END %]
 [%- END %]
 [%- FOR item IN data %]
     [%- item.date %] [% item.time %]
@@ -227,18 +215,14 @@ EOD
 EOD
 
     position	=> <<'EOD',
-[% DEFAULT data = sp.position( arg ) -%]
+[% DEFAULT data = sp.position( arg ) %]
 [%- data.date %] [% data.time %]
-[% IF title %]
-    [%- more = 1 %]
-    [%- WHILE more %]
-        [%- title.name( align_left = 0, width = 16 ) %]
-            [%= title.local_coord %]
-            [%= title.epoch( align_left = 0 ) %]
-            [%= title.illumination %]
+[% WHILE title.more_title_lines %]
+    [%- title.name( align_left = 0, width = 16 ) %]
+        [%= title.local_coord %]
+        [%= title.epoch( align_left = 0 ) %]
+        [%= title.illumination %]
 
-        [%- more = title.more_title_lines %]
-    [%- END %]
 [%- END %]
 [%- FOR item IN data.bodies() %]
     [%- item.name( width = 16, missing = 'oid', align_left = 0 ) %]
@@ -471,9 +455,7 @@ sub report {
 	$data{time} = $self->_wrap( { time => time } );
     }
 
-    $data{title} = $self->header() ?
-	$self->_wrap( undef, $data{default} ) :
-	undef;
+    $data{title} = $self->_wrap( undef, $data{default} );
 
     if ( 'ARRAY' eq ref $data{arg} ) {
 	my @arg = @{ $data{arg} };
@@ -601,8 +583,7 @@ sub _wrap {
 			data	=> $data,
 			arg	=>
 			    Astro::App::Satpass2::Wrap::Array->new( \@arg ),
-			title	=> ( $self->header() ?
-			    $self->_wrap( undef, $default ) : undef ),
+			title	=> $self->_wrap( undef, $default ),
 		    }, \$output );
 		return $output;
 	    },
@@ -779,12 +760,9 @@ object.
 
 =item title
 
-If defined at all, this is an
+This is an
 L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
-configured to produce field titles rather than data. If the
-L<heading|/heading> attribute of this object is false, though, C<title>
-will be undefined (and therefore also false). The moral is that any
-template that makes use of this should check it first.
+configured to produce field titles rather than data.
 
 =back
 

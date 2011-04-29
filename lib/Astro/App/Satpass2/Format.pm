@@ -21,7 +21,6 @@ use constant DEFAULT_LOCAL_COORD => 'azel_rng';
 my %static = (
     desired_equinox_dynamical => 0,
     gmt		=> 0,
-    header	=> 1,
     local_coord	=> DEFAULT_LOCAL_COORD,
     provider	=> 'Astro::App::Satpass2',
 );
@@ -63,7 +62,7 @@ sub attribute_names {
     my ( $self ) = @_;
     return ( $self->SUPER::attribute_names(),
 	qw{ date_format desired_equinox_dynamical gmt
-	    header local_coord provider time_format time_formatter tz
+	    local_coord provider time_format time_formatter tz
 	} );
 }
 
@@ -330,26 +329,6 @@ Boolean under the usual Perl rules.
 If passed an argument, that argument becomes the new value of
 C<gmt>, and the object itself is returned so that calls may be
 chained.
-
-=head3 header
-
- print 'Headers are ', $fmt->header(), "on\n" : "off\n";
- $fmt->header( 0 );
-
-The C<header> attribute is maintained on behalf of subclasses of this
-class, which B<may> (but need not) use it to decide whether to display
-header information before the actual data. This method B<may> be
-overridden by subclasses, but the override B<must> call
-C<SUPER::header>, and return values consistent with the following
-description.
-
-This method acts as both accessor and mutator for the C<header>
-attribute. Without arguments it is an accessor, returning the current
-value of the C<header> attribute. This value is to be interpreted as a
-Boolean under the usual Perl rules.
-
-If passed an argument, that argument becomes the new value of C<header>,
-and the object itself is returned so that calls may be chained.
 
 =head3 local_coord
 
