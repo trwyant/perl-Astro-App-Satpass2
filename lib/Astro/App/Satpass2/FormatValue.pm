@@ -100,7 +100,7 @@ use constant NONE => undef;
 	    title	=> 'Inclination',
 	},
 	international	=> {
-	    title	=> 'International',
+	    title	=> 'International Launch Designator',
 	},
 	latitude	=> {
 	    title	=> 'Latitude',
@@ -160,10 +160,10 @@ use constant NONE => undef;
 	    title	=> 'Second Derivative',
 	},
 	semimajor	=> {
-	    title	=> 'Semimajor',
+	    title	=> 'Semimajor Axis',
 	},
 	semiminor	=> {
-	    title	=> 'Semiminor',
+	    title	=> 'Semiminor Axis',
 	},
 	status	=> {
 	    title	=> 'Status',

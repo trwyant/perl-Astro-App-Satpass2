@@ -255,37 +255,50 @@ EOD
     tle_verbose	=> <<'EOD',
 [% DEFAULT data = sp.tle( arg ) -%]
 [% FOR item IN data -%]
-NORAD ID: [% item.oid( width = '' ) %]
-    Name: [% item.name( width = '' ) %]
-    International launch designator: [% item.international( width = '' ) %]
-    Epoch of data: [% item.epoch( units = 'zulu', width = '' ) %] GMT
-    Effective date of data: [% item.effective_date( units = 'zulu',
+[% title.oid( width = '' ) %]: [% item.oid( width = '' ) %]
+    [% title.name( width = '' ) %]: [% item.name( width = '' ) %]
+    [% title.international( width = '' ) %]: [%
+        item.international( width = '' ) %]
+    [% title.epoch( width = '' ) %]: [%
+        item.epoch( units = 'zulu', width = '' ) %] GMT
+    [% title.effective_date( width = '' ) %]: [%
+        item.effective_date( units = 'zulu',
         width = '', missing = '<none>' ) %] GMT
-    Classification status: [% item.classification %]
-    Mean motion: [% item.mean_motion( places = 8, width = '' )
+    [% title.classification( width = '' ) %]: [% item.classification %]
+    [% title.mean_motion( width = '' ) %]: [%
+        item.mean_motion( places = 8, width = '' )
         %] degrees/minute
-    First derivative of motion: [% item.first_derivative( width = '',
+    [% title.first_derivative( width = '' ) %]: [%
+        item.first_derivative( width = '',
         places = 8 ) %] degrees/minute squared
-    Second derivative of motion: [% item.second_derivative( width = '',
+    [% title.second_derivative( width = '' ) %]: [%
+        item.second_derivative( width = '',
         places = 5 ) %] degrees/minute cubed
-    B Star drag term: [% item.b_star_drag( places = 5, width = '' ) %]
-    Ephemeris type: [% item.ephemeris_type %]
-    Inclination of orbit: [% item.inclination( places = 4, width = '' )
+    [% title.b_star_drag( width = '' ) %]: [%
+        item.b_star_drag( places = 5, width = '' ) %]
+    [% title.ephemeris_type( width = '' ) %]: [% item.ephemeris_type %]
+    [% title.inclination( width = '' ) %]: [%
+        item.inclination( places = 4, width = '' )
         %] degrees
-    Right ascension of ascending node: [% item.ascending_node(
-        places = 0, width = '' ) %]
-    Eccentricity: [% item.eccentricity( places = 7, width = '' ) %]
-    Argument of perigee: [% item.argument_of_perigee( places = 4,
+    [% title.ascending_node( width = '' ) %]: [% item.ascending_node(
+        places = 0, width = '' ) %] in right ascension
+    [% title.eccentricity( width = '' ) %]: [%
+        item.eccentricity( places = 7, width = '' ) %]
+    [% title.argument_of_perigee( width = '' ) %]: [%
+        item.argument_of_perigee( places = 4,
         width = '' ) %] degrees from ascending node
-    Mean anomaly: [% item.mean_anomaly( places = 4, width = '' ) %] degrees
-    Element set number: [% item.element_number( width = '' ) %]
-    Revolutions at epoch: [% item.revolutions_at_epoch( width = '' ) %]
-    Period (derived): [% item.period( width = '' ) %]
-    Semimajor axis (derived): [% item.semimajor( places = 1,
+    [% title.mean_anomaly( width = '' ) %]: [%
+        item.mean_anomaly( places = 4, width = '' ) %] degrees
+    [% title.element_number( width = '' ) %]: [%
+	item.element_number( width = '' ) %]
+    [% title.revolutions_at_epoch( width = '' ) %]: [%
+	item.revolutions_at_epoch( width = '' ) %]
+    [% title.period( width = '' ) %]: [% item.period( width = '' ) %]
+    [% title.semimajor( width = '' ) %]: [% item.semimajor( places = 1,
         width = '' ) %] kilometers
-    Perigee altitude (derived): [% item.perigee( places = 1, width = '' )
+    [% title.perigee( width = '' ) %]: [% item.perigee( places = 1, width = '' )
         %] kilometers
-    Apogee altitude (derived): [% item.apogee( places = 1, width = '' )
+    [% title.apogee( width = '' ) %]: [% item.apogee( places = 1, width = '' )
         %] kilometers
 [% END -%]
 EOD

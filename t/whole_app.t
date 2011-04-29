@@ -448,28 +448,28 @@ execute 'tle', <<'EOD', 'List the TLEs for object 11801';
 EOD
 
 execute 'tle -verbose', <<'EOD', 'Verbose TLE for object 11801';
-NORAD ID: 11801
+OID: 11801
     Name:
-    International launch designator:
-    Epoch of data: 1980/08/17 07:06:40 GMT
-    Effective date of data: <none> GMT
-    Classification status: U
-    Mean motion: 0.57134462 degrees/minute
-    First derivative of motion: 2.48455382e-06 degrees/minute squared
-    Second derivative of motion: 0.00000e+00 degrees/minute cubed
-    B Star drag term: 1.43110e-02
-    Ephemeris type:
-    Inclination of orbit: 46.7916 degrees
-    Right ascension of ascending node: 15:21:44
+    International Launch Designator:
+    Epoch: 1980/08/17 07:06:40 GMT
+    Effective Date: <none> GMT
+    Classification: U
+    Mean Motion: 0.57134462 degrees/minute
+    First Derivative: 2.48455382e-06 degrees/minute squared
+    Second Derivative: 0.00000e+00 degrees/minute cubed
+    B Star Drag: 1.43110e-02
+    Ephemeris Type:
+    Inclination: 46.7916 degrees
+    Ascending Node: 15:21:44 in right ascension
     Eccentricity: 0.7318036
-    Argument of perigee: 47.4722 degrees from ascending node
-    Mean anomaly: 10.4117 degrees
-    Element set number:
-    Revolutions at epoch:
-    Period (derived): 10:30:08
-    Semimajor axis (derived): 24347.3 kilometers
-    Perigee altitude (derived): 151.7 kilometers
-    Apogee altitude (derived): 35786.6 kilometers
+    Argument Of Perigee: 47.4722 degrees from ascending node
+    Mean Anomaly: 10.4117 degrees
+    Element Number:
+    Revolutions At Epoch:
+    Period: 10:30:08
+    Semimajor Axis: 24347.3 kilometers
+    Perigee: 151.7 kilometers
+    Apogee: 35786.6 kilometers
 EOD
 
 execute 'macro brief', undef, 'Brief macro listing, without macros';

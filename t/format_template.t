@@ -339,28 +339,28 @@ None
 EOD
 
 is $ft->tle_verbose( [ $sat ] ), <<'EOD', 'Tle verbose';
-NORAD ID: 88888
+OID: 88888
     Name: None
-    International launch designator:
-    Epoch of data: 1980-10-01 23:41:24 GMT
-    Effective date of data: <none> GMT
-    Classification status: U
-    Mean motion: 4.01456130 degrees/minute
-    First derivative of motion: 1.26899306e-07 degrees/minute squared
-    Second derivative of motion: 1.66908e-11 degrees/minute cubed
-    B Star drag term: 6.68160e-05
-    Ephemeris type: 0
-    Inclination of orbit: 72.8435 degrees
-    Right ascension of ascending node: 07:43:53
+    International Launch Designator:
+    Epoch: 1980-10-01 23:41:24 GMT
+    Effective Date: <none> GMT
+    Classification: U
+    Mean Motion: 4.01456130 degrees/minute
+    First Derivative: 1.26899306e-07 degrees/minute squared
+    Second Derivative: 1.66908e-11 degrees/minute cubed
+    B Star Drag: 6.68160e-05
+    Ephemeris Type: 0
+    Inclination: 72.8435 degrees
+    Ascending Node: 07:43:53 in right ascension
     Eccentricity: 0.0086731
-    Argument of perigee: 52.6988 degrees from ascending node
-    Mean anomaly: 110.5714 degrees
-    Element set number: 8
-    Revolutions at epoch: 105
-    Period (derived): 01:29:37
-    Semimajor axis (derived): 6634.0 kilometers
-    Perigee altitude (derived): 198.3 kilometers
-    Apogee altitude (derived): 313.4 kilometers
+    Argument Of Perigee: 52.6988 degrees from ascending node
+    Mean Anomaly: 110.5714 degrees
+    Element Number: 8
+    Revolutions At Epoch: 105
+    Period: 01:29:37
+    Semimajor Axis: 6634.0 kilometers
+    Perigee: 198.3 kilometers
+    Apogee: 313.4 kilometers
 EOD
 
 1;
