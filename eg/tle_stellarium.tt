@@ -1,3 +1,10 @@
+[%# Astro::App::Satpass2 template to render TLE data in a format
+    appropriate for loading into Stellarium planetarium software. To
+    use, load the TLE data, then do
+
+    satpass2> formatter report eg/tle_stellarium.tt
+
+    -%]
 [% DEFAULT data = sp.tle( arg ) -%]
 {
 	"creator": "[% provider %]",

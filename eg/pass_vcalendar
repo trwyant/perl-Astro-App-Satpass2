@@ -1,3 +1,6 @@
+# Astro::App::Satpass2 source file. Invoke as (e.g.)
+# satpass2> source eg/pass_vcalendar
+#
 # Do satellite pass calculations, displaying the results in vCalendar
 # format. The output may be redirected to a .vcal file. The start and
 # end dates for the pass calculation can be passed as arguments to the

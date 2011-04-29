@@ -1,3 +1,6 @@
+# Astro::App::Satpass2 source file. Invoke as (e.g.)
+# satpass2> source eg/flare_vcalendar
+#
 # Do iridium flare calculations, displaying the results in vCalendar
 # format. The output may be redirected to a .vcal file. Any arguments
 # passed to the source statement will in turn be passed to the flare
