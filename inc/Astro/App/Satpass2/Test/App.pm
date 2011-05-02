@@ -10,7 +10,7 @@ use base qw{ Exporter };
 use Carp;
 
 use Scalar::Util qw{ blessed };
-use Test::More 0.40;
+use Test::More 0.52;
 
 use Astro::App::Satpass2;
 
@@ -19,9 +19,29 @@ our @EXPORT = qw{
     class
     execute
     method
+    FALSE
+    INSTANTIATE
+    TRUE
 };
 
 my $app = 'Astro::App::Satpass2';
+
+use constant FALSE => sub {
+    shift;
+    $_[0] = !$_[0];
+    goto &ok;
+};
+
+use constant INSTANTIATE => sub {
+    shift;
+    $app = $_[0];
+    goto &ok;
+};
+
+use constant TRUE => sub {
+    shift;
+    goto &ok;
+};
 
 sub check_access ($) {
     my ( $url ) = @_;
@@ -57,20 +77,26 @@ sub method (@) {	## no critic (RequireArgUnpacking)
     my ( $want, $title ) = splice @args, -2;
     my $got;
     if ( eval { $got = $app->$method( @args ); 1 } ) {
-	'new' eq $method and $app = $got;
-	blessed( $got ) and $got = undef;
+	if ( 'CODE' eq ref $want ) {
+	    @_ = ( $want, $got, $title );
+	    goto &$want;
+	}
+
+=begin comment
+
+	use Carp;
+	'new' eq $method
+	    and confess 'new() not marked as instantiator';
+	blessed( $got )
+	    and not defined $want
+	    and confess "$method() not tested with TRUE";
+
+=end comment
+
+=cut
+
 	foreach ( $want, $got ) {
 	    defined and not ref and chomp;
-	}
-	if ( defined $want ) {
-	    if ( 'true' eq $want ) {
-		@_ = ( $got, $title );
-		goto &ok;
-	    }
-	    if ( 'false' eq $want ) {
-		@_ = ( !$got, $title );
-		goto &ok;
-	    }
 	}
 	@_ = ( $got, $want, $title );
 	ref $want eq 'Regexp' ? goto &like :

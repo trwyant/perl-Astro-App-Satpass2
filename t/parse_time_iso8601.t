@@ -62,12 +62,13 @@ require_ok 'Astro::App::Satpass2::ParseTime';
 
 class 'Astro::App::Satpass2::ParseTime';
 
-method new => 'Astro::App::Satpass2::ParseTime::ISO8601', undef, 'Instantiate';
+method new => 'Astro::App::Satpass2::ParseTime::ISO8601', INSTANTIATE,
+    'Instantiate';
 
-method isa => 'Astro::App::Satpass2::ParseTime::ISO8601', 'true',
+method isa => 'Astro::App::Satpass2::ParseTime::ISO8601', TRUE,
     'Object isa Astro::App::Satpass2::ParseTime::ISO8601';
 
-method isa => 'Astro::App::Satpass2::ParseTime', 'true',
+method isa => 'Astro::App::Satpass2::ParseTime', TRUE,
     'Object isa Astro::App::Satpass2::ParseTime';
 
 method 'delegate',
@@ -75,13 +76,13 @@ method 'delegate',
     'Delegate is Astro::App::Satpass2::ParseTime::ISO8601';
 
 
-method 'use_perltime', 'false', 'Does not use perltime';
+method 'use_perltime', FALSE, 'Does not use perltime';
 
 my $base = timegm( 0, 0, 0, 1, 3, 109 );	# April 1, 2009 GMT;
 use constant ONE_DAY => 86400;			# One day, in seconds.
 use constant HALF_DAY => 43200;			# 12 hours, in seconds.
 
-method base => $base, undef, 'Set base time to 01-Apr-2009 GMT';
+method base => $base, TRUE, 'Set base time to 01-Apr-2009 GMT';
 
 method parse => '+0', $base, 'Parse of +0 returns base time';
 
@@ -91,21 +92,21 @@ method parse => '+1', $base + ONE_DAY,
 method parse => '+0', $base + ONE_DAY,
     'Parse of +0 now returns one day later than base time';
 
-method 'reset', undef, 'Reset to base time';
+method 'reset', TRUE, 'Reset to base time';
 
 method parse => '+0', $base, 'Parse of +0 returns base time again';
 
 method parse => '+0 12', $base + HALF_DAY,
     q{Parse of '+0 12' returns base time plus 12 hours};
 
-method 'reset', undef, 'Reset to base time again';
+method 'reset', TRUE, 'Reset to base time again';
 
 method parse => '-0', $base, 'Parse of -0 returns base time';
 
 method parse => '-0 12', $base - HALF_DAY,
     'Parse of \'-0 12\' returns 12 hours before base time';
 
-method perltime => 1, undef, 'Set perltime true';
+method perltime => 1, TRUE, 'Set perltime true';
 
 method parse => '20090101T000000',
     timelocal( 0, 0, 0, 1, 0, 109 ),
@@ -115,7 +116,7 @@ method parse => '20090701T000000',
     timelocal( 0, 0, 0, 1, 6, 109 ),
     'Parse ISO-8601 20090701T000000';
 
-method perltime => 0, undef, 'Set perltime false';
+method perltime => 0, TRUE, 'Set perltime false';
 
 method parse => '20090101T000000',
     timelocal( 0, 0, 0, 1, 0, 109 ),

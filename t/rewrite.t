@@ -34,7 +34,7 @@ use Astro::App::Satpass2;
 
 class   'Astro::App::Satpass2';
 
-method  new => undef, 'Instantiate';
+method  new => INSTANTIATE, 'Instantiate';
 
 my @commands;
 

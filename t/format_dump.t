@@ -75,7 +75,7 @@ SKIP: {
 	1;
     } or skip 'Data::Dumper not available', $tests ;
 
-    method 'new', undef, 'Instantiate';
+    method 'new', INSTANTIATE, 'Instantiate';
 
 }
 

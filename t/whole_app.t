@@ -40,12 +40,12 @@ plan tests => 205;
 
 class   'Astro::App::Satpass2';
 
-method  new => undef, 'Instantiate app';
+method  new => INSTANTIATE, 'Instantiate app';
 
 method  set => autoheight => undef, stdout => undef, undef,
     q{Clear autoheight and stdout};
 
-method  formatter => gmt => 0, undef, q{Set formatter gmt false};
+method  formatter => gmt => 0, TRUE, q{Set formatter gmt false};
 
 # NOTICE
 #

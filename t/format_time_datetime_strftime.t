@@ -73,9 +73,9 @@ can_ok 'Astro::App::Satpass2::FormatTime::DateTime::Strftime' => 'tz';
 
 class 'Astro::App::Satpass2::FormatTime::DateTime::Strftime';
 
-method 'new', undef, 'Instantiate';
+method 'new', INSTANTIATE, 'Instantiate';
 
-method gmt => 1, undef, 'Turn on gmt';
+method gmt => 1, TRUE, 'Turn on gmt';
 
 method 'gmt', 1, 'Confirm gmt is on';
 
@@ -87,7 +87,7 @@ method format_datetime => '%Y/%m/%d %H:%M:%S', $time,
 method format_datetime_width => '%Y/%m/%d %H:%M:%S', 19,
     'Compute width required for format';
 
-method gmt => 0, undef, 'Turn off gmt';
+method gmt => 0, TRUE, 'Turn off gmt';
 
 method format_datetime => '%Y/%m/%d %H:%M:%S', $time, 1,
     '2011/04/01 00:00:00', 'Explicit GMT time';

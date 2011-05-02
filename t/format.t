@@ -50,9 +50,9 @@ can_ok 'Astro::App::Satpass2::Format' => 'tz';
 
 class 'Astro::App::Satpass2::Format';
 
-method 'new', undef, 'Instantiate';
+method 'new', INSTANTIATE, 'Instantiate';
 
-method gmt => 1, undef, 'Set gmt to 1';
+method gmt => 1, TRUE, 'Set gmt to 1';
 
 method 'gmt', 1, 'Confirm gmt set to 1';
 
@@ -64,7 +64,7 @@ method desired_equinox_dynamical => 0,
 method local_coord => 'azel_rng',
     q{Default local_coord is 'azel_rng'};
 
-method provider => 'Test provider', undef, 'Set provider';
+method provider => 'Test provider', TRUE, 'Set provider';
 
 method 'provider', 'Test provider', 'Confirm provider set';
 
@@ -72,7 +72,7 @@ method time_format => '%H:%M:%S', q{Default time_format is '%H:%M:%S'};
 
 method tz => undef, 'Default time zone is undefined';
 
-method tz => 'est5edt', undef, 'Set time zone';
+method tz => 'est5edt', TRUE, 'Set time zone';
 
 method tz => 'est5edt', 'Got back same time zone';
 

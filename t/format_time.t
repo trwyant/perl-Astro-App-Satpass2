@@ -46,9 +46,9 @@ can_ok 'Astro::App::Satpass2::FormatTime' => 'tz';
 
 class 'Astro::App::Satpass2::FormatTime';
 
-method 'new', undef, 'Instantiate Astro::App::Satpass2::FormatTime';
+method 'new', INSTANTIATE, 'Instantiate Astro::App::Satpass2::FormatTime';
 
-method gmt => 1, undef, 'Turn on gmt';
+method gmt => 1, TRUE, 'Turn on gmt';
 
 method 'gmt', 1, 'Confirm gmt is on';
 
