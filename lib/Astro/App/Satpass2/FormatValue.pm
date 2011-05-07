@@ -199,6 +199,10 @@ use constant NONE => undef;
 	$self->{desired_equinox_dynamical} =
 	    $args{desired_equinox_dynamical} || 0;
 
+	$self->{fixed_width} = exists $args{fixed_width} ?
+	    $args{fixed_width} :
+	    1;
+
 	$self->{locale} = $args{locale} || \%locale;
 
 	$self->{overflow} = $args{overflow} || 0;
@@ -258,12 +262,24 @@ sub clone {
     return $self->new( %arg );
 }
 
-#	Accessors. There are no mutators.
+#	Accessors.
 
 sub body {	# Required for template 'list', which needs to figure
 		# out whether the body is inertial or not.
     my ( $self ) = @_;
     return $self->_get_eci( 'body' );
+}
+
+#	Mutators. These should be kept to a minimum.
+
+sub fixed_width {
+    my ( $self, @args ) = @_;
+    if ( @args ) {
+	$self->{fixed_width} = $args[0];
+	return $self;
+    } else {
+	return $self->{fixed_width};
+    }
 }
 
 #	Transformations
@@ -1538,6 +1554,10 @@ sub reset_title_lines {
 
 	defined $dflt or $dflt = {};
 
+	defined $arg->{width}
+	    or $self->{fixed_width}
+	    or $arg->{width} = '';
+
 	if ( defined $arg->{format} && ! defined $arg->{width} ) {
 	    $arg->{width} = $self->{time_formatter}->
 		format_datetime_width( $arg->{format} );
@@ -2296,6 +2316,13 @@ This optional argument is the desired equinox in dynamical time. If
 specified as a non-zero Perl time, inertial coordinates will be
 precessed to this equinox. The default is C<0>.
 
+=item fixed_width
+
+This optional argument specifies whether or not fixed-width fields are
+to be produced. If true (the default) numeric default widths are applied
+where needed. If false the default width is C<''>, which is the
+convention for variable-width fields.
+
 =item local_coordinates
 
 This optional argument provides the implementation of the
@@ -2350,6 +2377,9 @@ provided, a new C<Warner> object will be instantiated.
 
 =head2 Accessors
 
+These are kept to a minimum, since the main purpose of the object is to
+provide formatting.
+
 =head3 body
 
  $fmt->body();
@@ -2358,6 +2388,33 @@ This accessor returns the contents of the C<{body}> key of the original
 hash passed to the C<data> argument when the object was instantiated.
 It returns a false value if the C<{body}> key exists but is not an
 C<Astro::Coord::ECI|Astro::Coord::ECI>, or if the key does not exist.
+
+This accessor exists because the
+L<Astro::App::Satpass2::Format::Template|Astro::App::Satpass2::Format::Template>
+L<list()|Astro::App::Satpass2::Format::Template/list> method needs to
+look at the body to decide what to display.
+
+=head2 Mutators
+
+These also are kept to a minimum.
+
+=head3 fixed_width
+
+ $fmt->fixed_width( 0 );
+ say 'Fixed-width formatting is ',
+    $fmt->fixed_width() ? 'on' : 'off';
+
+If false, this boolean attribute causes all widths not explicitly
+specified to default to C<''>, which is the convention for
+non-fixed-width fields. It can also be set via the C<fixed_width>
+argument to C<new()>. The default is C<1> (i.e. C<true>).
+
+If called without an argument, this method acts as an accessor,
+returning the current value.
+
+This boolean attribute has a mutator because C<Template-Toolkit> needs
+to modify it, and C<Template-Toolkit>-style named arguments can't be
+used for C<clone()> because of the way the interface is designed.
 
 =head2 Transformations
 

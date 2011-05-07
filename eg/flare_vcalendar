@@ -32,22 +32,23 @@ formatter time_format %I:%M:%S
 
 formatter template flare <<'EOD'
 BEGIN:VCALENDAR
-[% FOREACH item IN data -%]
+[%- FOREACH item IN data %]
+[%- CALL item.fixed_width( 0 ) %]
 BEGIN:VEVENT
 DTSTART:[% item.date( units = 'z' ) %]
 DALARM:[% item.date( delta = -360, units = 'z' ) %]
 SUMMARY:[% item.name( units = 'title_case', width = '' ) %]
     [%= item.time %] Az [% item.azimuth(
-    width = '', places = 0, bearing = 2 ) %] Ele [% item.elevation(
-    width = '', places = 0 ) %] Mag [% item.magnitude %]
-    [%- IF 'day' == item.type( width = '' ) %]
-	[%= item.appulse.angle( width = '' ) %] deg from Sun
+    places = 0, bearing = 2 ) %] Ele [% item.elevation(
+    places = 0 ) %] Mag [% item.magnitude %]
+    [%- IF 'day' == item.type %]
+	[%= item.appulse.angle %] deg from Sun
     [%- ELSE =%]
 	night
     [%- END %]
 DTEND:[% item.date( delta = 60, units = 'z' ) %]
 END:VEVENT
-[% END -%]
+[%- END %]
 END:VCALENDAR
 EOD
 

@@ -11,7 +11,7 @@
 	"hintColor": [0.4, 0.4, 0.4],
 	"satellites":
 	{
-[%- prefix = '' %][% FOREACH item IN data %][% prefix %]
+[% FOREACH item IN data %][% prefix %]
 		[%- tle = item.tle.split( "\n" ) %]
 		"[% item.name( missing = 'oid', width = '' ) %]":
 		{

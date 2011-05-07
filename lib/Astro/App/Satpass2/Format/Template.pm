@@ -254,52 +254,40 @@ EOD
 
     tle_verbose	=> <<'EOD',
 [% DEFAULT data = sp.tle( arg ) -%]
+[% CALL title.fixed_width( 0 ) -%]
 [% FOR item IN data -%]
-[% title.oid( width = '' ) %]: [% item.oid( width = '' ) %]
-    [% title.name( width = '' ) %]: [% item.name( width = '' ) %]
-    [% title.international( width = '' ) %]: [%
-        item.international( width = '' ) %]
-    [% title.epoch( width = '' ) %]: [%
-        item.epoch( units = 'zulu', width = '' ) %] GMT
-    [% title.effective_date( width = '' ) %]: [%
+[% CALL item.fixed_width( 0 ) -%]
+[% title.oid %]: [% item.oid %]
+    [% title.name %]: [% item.name %]
+    [% title.international %]: [% item.international %]
+    [% title.epoch %]: [% item.epoch( units = 'zulu' ) %] GMT
+    [% title.effective_date %]: [%
         item.effective_date( units = 'zulu',
-        width = '', missing = '<none>' ) %] GMT
-    [% title.classification( width = '' ) %]: [% item.classification %]
-    [% title.mean_motion( width = '' ) %]: [%
-        item.mean_motion( places = 8, width = '' )
+        missing = '<none>' ) %] GMT
+    [% title.classification %]: [% item.classification %]
+    [% title.mean_motion %]: [% item.mean_motion( places = 8 )
         %] degrees/minute
-    [% title.first_derivative( width = '' ) %]: [%
-        item.first_derivative( width = '',
-        places = 8 ) %] degrees/minute squared
-    [% title.second_derivative( width = '' ) %]: [%
-        item.second_derivative( width = '',
-        places = 5 ) %] degrees/minute cubed
-    [% title.b_star_drag( width = '' ) %]: [%
-        item.b_star_drag( places = 5, width = '' ) %]
-    [% title.ephemeris_type( width = '' ) %]: [% item.ephemeris_type %]
-    [% title.inclination( width = '' ) %]: [%
-        item.inclination( places = 4, width = '' )
-        %] degrees
-    [% title.ascending_node( width = '' ) %]: [% item.ascending_node(
-        places = 0, width = '' ) %] in right ascension
-    [% title.eccentricity( width = '' ) %]: [%
-        item.eccentricity( places = 7, width = '' ) %]
-    [% title.argument_of_perigee( width = '' ) %]: [%
-        item.argument_of_perigee( places = 4,
-        width = '' ) %] degrees from ascending node
-    [% title.mean_anomaly( width = '' ) %]: [%
-        item.mean_anomaly( places = 4, width = '' ) %] degrees
-    [% title.element_number( width = '' ) %]: [%
-	item.element_number( width = '' ) %]
-    [% title.revolutions_at_epoch( width = '' ) %]: [%
-	item.revolutions_at_epoch( width = '' ) %]
-    [% title.period( width = '' ) %]: [% item.period( width = '' ) %]
-    [% title.semimajor( width = '' ) %]: [% item.semimajor( places = 1,
-        width = '' ) %] kilometers
-    [% title.perigee( width = '' ) %]: [% item.perigee( places = 1, width = '' )
-        %] kilometers
-    [% title.apogee( width = '' ) %]: [% item.apogee( places = 1, width = '' )
-        %] kilometers
+    [% title.first_derivative %]: [%
+        item.first_derivative( places = 8 ) %] degrees/minute squared
+    [% title.second_derivative %]: [%
+        item.second_derivative( places = 5 ) %] degrees/minute cubed
+    [% title.b_star_drag %]: [% item.b_star_drag( places = 5 ) %]
+    [% title.ephemeris_type %]: [% item.ephemeris_type %]
+    [% title.inclination %]: [% item.inclination( places = 4 ) %] degrees
+    [% title.ascending_node %]: [% item.ascending_node(
+        places = 0 ) %] in right ascension
+    [% title.eccentricity %]: [% item.eccentricity( places = 7 ) %]
+    [% title.argument_of_perigee %]: [%
+        item.argument_of_perigee( places = 4 )
+        %] degrees from ascending node
+    [% title.mean_anomaly %]: [%
+        item.mean_anomaly( places = 4 ) %] degrees
+    [% title.element_number %]: [% item.element_number %]
+    [% title.revolutions_at_epoch %]: [% item.revolutions_at_epoch %]
+    [% title.period %]: [% item.period %]
+    [% title.semimajor %]: [% item.semimajor( places = 1 ) %] kilometers
+    [% title.perigee %]: [% item.perigee( places = 1 ) %] kilometers
+    [% title.apogee %]: [% item.apogee( places = 1 ) %] kilometers
 [% END -%]
 EOD
 
@@ -480,6 +468,16 @@ sub report {
     local $Template::Stash::LIST_OPS->{events} = sub {
 	my @args = @_;
 	return $self->_all_events( @args );
+    };
+
+    local $Template::Stash::LIST_OPS->{fixed_width} = sub {
+	my ( $list, $value ) = @_;
+	foreach my $item ( @{ $list } ) {
+	    my $code = $item->can( 'fixed_width' )
+		or next;
+	    $code->( $item, $value );
+	}
+	return;
     };
 
     $self->{tt}->process( $template, \%data, \$output )
@@ -1077,39 +1075,40 @@ L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE> object, or something
 equivalent. It uses template C<tle_verbose>, which defaults to
 
  [% DEFAULT data = sp.tle( arg ) -%]
+ [% CALL title.fixed_width( 0 ) -%]
  [% FOR item IN data -%]
- NORAD ID: [% item.oid( width = '' ) %]
-     Name: [% item.name( width = '' ) %]
-     International launch designator: [% item.international( width = '' ) %]
-     Epoch of data: [% item.epoch( units = 'zulu', width = '' ) %] GMT
-     Effective date of data: [% item.effective_date( units = 'zulu',
-         width = '', missing = '<none>' ) %] GMT
-     Classification status: [% item.classification %]
-     Mean motion: [% item.mean_motion( places = 8, width = '' )
+ [% CALL item.fixed_width( 0 ) -%]
+ [% title.oid %]: [% item.oid %]
+     [% title.name %]: [% item.name %]
+     [% title.international %]: [% item.international %]
+     [% title.epoch %]: [% item.epoch( units = 'zulu' ) %] GMT
+     [% title.effective_date %]: [%
+         item.effective_date( units = 'zulu',
+         missing = '<none>' ) %] GMT
+     [% title.classification %]: [% item.classification %]
+     [% title.mean_motion %]: [% item.mean_motion( places = 8 )
          %] degrees/minute
-     First derivative of motion: [% item.first_derivative( width = '',
-         places = 8 ) %] degrees/minute squared
-     Second derivative of motion: [% item.second_derivative( width = '',
-         places = 5 ) %] degrees/minute cubed
-     B Star drag term: [% item.b_star_drag( places = 5, width = '' ) %]
-     Ephemeris type: [% item.ephemeris_type %]
-     Inclination of orbit: [% item.inclination( places = 4, width = '' )
-         %] degrees
-     Right ascension of ascending node: [% item.ascending_node(
-         places = 0, width = '' ) %]
-     Eccentricity: [% item.eccentricity( places = 7, width = '' ) %]
-     Argument of perigee: [% item.argument_of_perigee( places = 4,
-         width = '' ) %] degrees from ascending node
-     Mean anomaly: [% item.mean_anomaly( places = 4, width = '' ) %] degrees
-     Element set number: [% item.element_number( width = '' ) %]
-     Revolutions at epoch: [% item.revolutions_at_epoch( width = '' ) %]
-     Period (derived): [% item.period( width = '' ) %]
-     Semimajor axis (derived): [% item.semimajor( places = 1,
-         width = '' ) %] kilometers
-     Perigee altitude (derived): [% item.perigee( places = 1, width = '' )
-         %] kilometers
-     Apogee altitude (derived): [% item.apogee( places = 1, width = '' )
-         %] kilometers
+     [% title.first_derivative %]: [%
+         item.first_derivative( places = 8 ) %] degrees/minute squared
+     [% title.second_derivative %]: [%
+         item.second_derivative( places = 5 ) %] degrees/minute cubed
+     [% title.b_star_drag %]: [% item.b_star_drag( places = 5 ) %]
+     [% title.ephemeris_type %]: [% item.ephemeris_type %]
+     [% title.inclination %]: [% item.inclination( places = 4 ) %] degrees
+     [% title.ascending_node %]: [% item.ascending_node(
+         places = 0 ) %] in right ascension
+     [% title.eccentricity %]: [% item.eccentricity( places = 7 ) %]
+     [% title.argument_of_perigee %]: [%
+         item.argument_of_perigee( places = 4 )
+         %] degrees from ascending node
+     [% title.mean_anomaly %]: [%
+         item.mean_anomaly( places = 4 ) %] degrees
+     [% title.element_number %]: [% item.element_number %]
+     [% title.revolutions_at_epoch %]: [% item.revolutions_at_epoch %]
+     [% title.period %]: [% item.period %]
+     [% title.semimajor %]: [% item.semimajor( places = 1 ) %] kilometers
+     [% title.perigee %]: [% item.perigee( places = 1 ) %] kilometers
+     [% title.apogee %]: [% item.apogee( places = 1 ) %] kilometers
  [% END -%]
 
 =head2 Other Methods
@@ -1145,6 +1144,9 @@ the decoding itself, or delegate to C<SUPER::decode>.
 
  $fmt->report( template => $template, ... );
 
+This method represents the interface to L<Template-Toolkit|Template>,
+and all the L</Formatter> methods come through here eventually.
+
 The arguments to this method are name/value pairs. The C<template>
 argument is required, and is either the name of a template file, or a
 reference to a string containing the template. All other arguments are
@@ -1154,6 +1156,28 @@ an
 L<Astro::App::Satpass2::Wrap::Array|Astro::App::Satpass2::Wrap::Array>
 object, since by convention this is the argument passed back to
 L<Astro::App::Satpass2|Astro::App::Satpass2> methods.
+
+In addition to any variables passed in, the following array methods are
+defined for C<Template-Toolkit> before it is invoked:
+
+=over
+
+=item events
+
+If called on an array of passes, returns all events in all passes, in
+chronological order.
+
+=item fixed_width
+
+If called on an array of
+L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
+objects, calls
+L<fixed_width()|Astro::App::Satpass2::FormatValue/fixed_width> on them.
+You may specify an argument to C<fixed_width()>.
+
+Nothing is returned.
+
+=back
 
 The canned templates can also be run as reports, and in fact will be
 taken in preference to files of the same name. If you do this, you will

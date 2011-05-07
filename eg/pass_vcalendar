@@ -31,29 +31,29 @@ formatter time_format %I:%M:%S
 
 formatter template pass <<'EOD'
 BEGIN:VCALENDAR
-[%- space = ' ' %]
 [%- FOR pass IN data %]
 [%- events = pass.events %]
+[%- CALL events.fixed_width( 0 ) %]
+[%- first = events.first %]
 [%- punct = ' -' %]
 BEGIN:VEVENT
-DTSTART:[% events.first.date( units = 'z' ) %]
-DALARM:[% events.first.date( delta = -360, units = 'z' ) %]
-SUMMARY:[% events.first.name( width = '' ) %]
+DTSTART:[% first.date( units = 'zulu' ) %]
+DALARM:[% first.date( delta = -360, units = 'zulu' ) %]
+SUMMARY:[% first.name %]
     [%- FOREACH evt IN events %][% punct %]
 
-	[%- space %]
-	[%- evt_name = evt.event( width = '' ) %]
-	[%- end_date = evt.date( delta = 30, units = 'z' ) %]
-	[%= evt.event( width = '' ) %]
+	[%- evt_name = evt.event %]
+	[%= end_date = evt.date( delta = 30, units = 'z' ) %]
+	[%= evt_name %]
 	[%- IF 'apls' == evt_name %]
             [%- appulse = evt.appulse %]
-            [%= appulse.angle( width = '' ) %]
-	    [%= appulse.name( width = '' ) %]
+            [%= appulse.angle %]
+	    [%= appulse.name %]
 	[%- END %]
 	[%= evt.time %] Az
-	[%= evt.azimuth( width = '', places = 0, bearing = 2 ) %]
+	[%= evt.azimuth( places = 0, bearing = 2 ) %]
 	[%- IF 'rise' != evt_name and 'set' != evt_name %] Ele
-	    [%= evt.elevation( width = '', places = 0 ) %]
+	    [%= evt.elevation( places = 0 ) %]
 	[%- END %]
         [%- punct = '\\;' %]
     [%- END %]
