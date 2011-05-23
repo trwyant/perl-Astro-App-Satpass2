@@ -338,9 +338,10 @@ sub config {
     foreach my $name ( sort
 	$self->{template}->__satpass2_defined_templates() ) {
 	my $template = $self->{template}->__satpass2_template( $name );
-	next $args{changes} &&
-	    defined $template &&
-	    $template eq $template_definitions{$name};
+	$args{changes}
+	    and defined $template
+	    and $template eq $template_definitions{$name}
+	    and next;
 	push @data, [ template => $name, $template ];
     }
 
