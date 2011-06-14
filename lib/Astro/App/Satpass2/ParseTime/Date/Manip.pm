@@ -5,7 +5,7 @@ use warnings;
 
 use Carp;
 
-our $VERSION = '0.000_21';
+our $VERSION = '0.000_22';
 
 my $delegate;
 

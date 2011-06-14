@@ -11,7 +11,7 @@ use Carp;
 
 use Template::Constants ();
 
-our $VERSION = '0.000_21';
+our $VERSION = '0.000_22';
 
 sub __satpass2_defined_templates {
     my ( $self ) = @_;
