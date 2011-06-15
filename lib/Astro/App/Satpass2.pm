@@ -451,7 +451,7 @@ sub drop : Verb() {
 sub dump : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
     my ( $self, @args ) = @_;
     ( my $opt, my $arg ) = $self->_getopt( @args );
-    if ( 'twilight' eq $arg ) {
+    if ( defined $arg && 'twilight' eq $arg ) {
 	return <<"EOD";
 twilight => @{[ $self->{twilight} ]}
 _twilight => @{[ $self->{_twilight} ]}
