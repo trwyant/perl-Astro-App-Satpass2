@@ -452,7 +452,7 @@ sub report {
 
     if ( $data{time} ) {
 	ref $data{time}
-	    or $data{time} = $self->_wrap( { time => time } );
+	    or $data{time} = $self->_wrap( { time => $data{time} } );
     } else {
 	$data{time} = $self->_wrap( { time => time } );
     }
