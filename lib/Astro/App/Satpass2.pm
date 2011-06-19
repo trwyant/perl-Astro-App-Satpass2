@@ -1141,7 +1141,7 @@ sub pass : Verb( choose=s@ appulse! chronological! dump!
     my @bodies = @{$opt->{choose} ? scalar _choose($opt->{choose},
 	    $self->{bodies}) : $self->{bodies}}
 	or $self->_wail("No bodies selected");
-    my $pass_step = shift || 60;
+    my $pass_step = shift @args || 60;
 
 #	Decide which model to use.
 
@@ -1166,7 +1166,7 @@ sub pass : Verb( choose=s@ appulse! chronological! dump!
 		debug => $self->{debug},
 		geometric => $self->{geometric},
 		horizon => $horizon,
-		interval => $opt->{verbose} ? $pass_step : 0,
+		interval => ( $self->{verbose} ? $pass_step : 0 ),
 		limb => $self->{lit},
 		model => $mdl,
 		twilight => $self->{_twilight},
@@ -1217,7 +1217,8 @@ sub pass : Verb( choose=s@ appulse! chronological! dump!
 	my ( $self, $opt, @passes ) = @_;
 	my @rslt;
 	foreach my $pass ( @passes ) {
-	    @{ $pass->{events} } = grep {
+	    @{ $pass->{events} } = grep { $_->{event} == PASS_EVENT_NONE
+	    ||
 		$opt->{ $selector[ $_->{event} ] } } @{ $pass->{events} }
 		and push @rslt, $pass;
 	}
