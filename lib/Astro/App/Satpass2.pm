@@ -426,18 +426,19 @@ sub dispatch {
     my ($self, $verb, @args) = @_;
 
     defined $verb or return;
+
+    $self->{macro}{$verb}
+	and return $self->_macro( $verb, @args );
+
     my $code;
-    if ($self->{macro}{$verb}) {
-	$code = $self->can( '_macro' );
-	splice @args, 0, 0, $verb;
-    } else {
-	$verb =~ s/ \A core [.] //smx;
-	$code = $self->can($verb)
-	    and _get_attr($code, 'Verb')
-	    or $self->_wail("Unknown interactive method '$verb'");
-    }
+    $verb =~ s/ \A core [.] //smx;
+    $code = $self->can($verb)
+	and _get_attr($code, 'Verb')
+	or $self->_wail("Unknown interactive method '$verb'");
+
 ##    $self->{_interactive} = \$verb;	# Any local variable will do.
 ##    weaken ($self->{_interactive});	# Goes away when $verb does.
+
     return $code->($self, @args);
 }
 
