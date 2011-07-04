@@ -2685,15 +2685,19 @@ sub _get_warner_attribute {
 ####    my @default_config = qw{default};
 
     sub _getopt {
-	local @ARGV = @_;
-	my $self = shift @ARGV;
+	my ( $self, @args ) = @_;
+
+	@args = map {
+	    has_method( $_, 'dereference' ) ?  $_->dereference() : $_
+	} @args;
+
+	'HASH' eq ref $args[0]
+	    and return @args;
+
 	my @data = caller(1);
 	my $code = \&{$data[3]};
-	@ARGV = map {	## no critic (RequireLocalizedPunctuationVars)
-	    has_method( $_, 'dereference' ) ?  $_->dereference() : $_
-	} @ARGV;
-	return @ARGV
-	    if 'HASH' eq ref $ARGV[0];
+
+	local @ARGV = @args;
 	my $lgl = _get_attr($code, 'Verb') || [];
 	my %opt;
 	my $err;
