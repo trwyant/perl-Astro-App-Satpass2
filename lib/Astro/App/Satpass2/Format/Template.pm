@@ -383,8 +383,7 @@ sub gmt {
 sub list {
     my ( $self, $array ) = @_;
 
-    return $self->_tt( list =>
-	$self->_wrap( [ map { { body => $_ } } @{ $array } ] ) );
+    return $self->_tt( list => $self->_wrap( $array ) );
 }
 
 sub local_coord {
@@ -410,8 +409,7 @@ sub local_coord {
 sub location {
     my ( $self, $station ) = @_;
 
-    return $self->_tt( location =>
-	$self->_wrap( { body => $station } ) );
+    return $self->_tt( location => $self->_wrap( $station ) );
 }
 
 sub pass {
@@ -506,15 +504,13 @@ sub template {
 sub tle {
     my ( $self, $array ) = @_;
 
-    return $self->_tt( tle =>
-	$self->_wrap( [ map { { body => $_ } } @{ $array } ] ) );
+    return $self->_tt( tle => $self->_wrap( $array ) );
 }
 
 sub tle_verbose {
     my ( $self, $array ) = @_;
 
-    return $self->_tt( tle_verbose =>
-	$self->_wrap( [ map { { body => $_ } } @{ $array } ] ) );
+    return $self->_tt( tle_verbose => $self->_wrap( $array ) );
 }
 
 sub tz {
@@ -604,6 +600,8 @@ sub _wrap {
 	);
     } elsif ( 'ARRAY' eq ref $data ) {
 	$data = [ map { $self->_wrap( $_ ) } @{ $data } ];
+    } elsif ( embodies( $data, 'Astro::Coord::ECI' ) ) {
+	$data = $self->_wrap( { body => $data } );
     }
 
     return $data;
