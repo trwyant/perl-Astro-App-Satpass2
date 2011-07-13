@@ -28,7 +28,7 @@ BEGIN {
     };
 }
 
-plan tests => 18;
+plan tests => 9;
 
 require_ok 'Astro::App::Satpass2::Format::Dump';
 
@@ -44,25 +44,7 @@ can_ok 'Astro::App::Satpass2::Format::Dump' => 'provider';
 
 can_ok 'Astro::App::Satpass2::Format::Dump' => 'time_format';
 
-can_ok 'Astro::App::Satpass2::Format::Dump' => 'almanac';
-
-can_ok 'Astro::App::Satpass2::Format::Dump' => 'flare';
-
-can_ok 'Astro::App::Satpass2::Format::Dump' => 'list';
-
-can_ok 'Astro::App::Satpass2::Format::Dump' => 'location';
-
-can_ok 'Astro::App::Satpass2::Format::Dump' => 'pass';
-
-can_ok 'Astro::App::Satpass2::Format::Dump' => 'pass_events';
-
-can_ok 'Astro::App::Satpass2::Format::Dump' => 'phase';
-
-can_ok 'Astro::App::Satpass2::Format::Dump' => 'position';
-
-can_ok 'Astro::App::Satpass2::Format::Dump' => 'tle';
-
-can_ok 'Astro::App::Satpass2::Format::Dump' => 'tle_verbose';
+can_ok 'Astro::App::Satpass2::Format::Dump' => 'format';
 
 class 'Astro::App::Satpass2::Format::Dump';
 

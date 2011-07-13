@@ -90,12 +90,9 @@ sub _dump {
     }
 }
 
-foreach my $method ( qw{
-    alias almanac flare list location pass pass_events phase position
-    tle tle_verbose }
-) {
-    no strict qw{ refs };
-    *$method = \&_dump;
+sub format {	## no critic (ProhibitBuiltInHomonyms)
+    splice @_, 1, 1;
+    goto &_dump;
 }
 
 1;

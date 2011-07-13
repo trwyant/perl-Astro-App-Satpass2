@@ -56,13 +56,13 @@ my $ft = Astro::App::Satpass2::Format::Template->new()->gmt( 1 );
 
 ok $ft, 'Instantiate Astro::App::Satpass2::Format::Template';
 
-is $ft->alias( { foo => 'bar', baz => 'burfle' } ), <<'EOD',
+is $ft->format( alias => { foo => 'bar', baz => 'burfle' } ), <<'EOD',
 baz => burfle
 foo => bar
 EOD
     'Alias';
 
-is $ft->almanac( [ {
+is $ft->format( almanac => [ {
 		almanac	=> {
 		    description	=> 'Moon rise',
 		    detail		=> 1,
@@ -98,7 +98,7 @@ is $ft->almanac( [ {
 2011-04-01 22:02:40 Moon set
 EOD
 
-is $ft->flare( [
+is $ft->format( flare => [
 	    {
 		angle => 0.262059013150469,
 		appulse => {
@@ -139,17 +139,17 @@ Time     Name         Eleva  Azimuth      Range Magn Degre   Center Center
 10:07:45 None          28.3 131.1 SE      410.9  3.9 night 300.8 NW  412.5
 EOD
 
-is $ft->list( [ $sat ] ), <<'EOD', 'List';
+is $ft->format( list => [ $sat ] ), <<'EOD', 'List';
    OID Name                     Epoch               Period
  88888 None                     1980-10-01 23:41:24 01:29:37
 EOD
 
-is $ft->location( $sta ), <<'EOD', 'Location';
+is $ft->format( location => $sta ), <<'EOD', 'Location';
 Location: 1600 Pennsylvania Ave NW Washington DC 20502
           Latitude 38.8987, longitude -77.0377, height 17 m
 EOD
 
-is $ft->pass( [
+is $ft->format( pass => [
 	    {
 		body	=> $sat,
 		events	=> [
@@ -195,7 +195,7 @@ is $ft->pass( [
 10:08:56  19.8  56.6 NE      552.7  41.2902  -72.0053   207.0 lit   set
 EOD
 
-is $ft->pass_events( [
+is $ft->format( pass_events => [
 	    {
 		body	=> $sat,
 		events	=> [
@@ -240,12 +240,13 @@ Date       Time     OID    Event Illum Eleva  Azimuth      Range
 EOD
 
 $moon->universal( timegm( 0, 0, 4, 1, 3, 111 ) );
-is $ft->phase( [ $moon ] ), <<'EOD', 'Phase';
+is $ft->format( phase => [ { body => $moon, time => $moon->universal() } ] ),
+    <<'EOD', 'Phase';
       Date     Time     Name Phas Phase             Lit
 2011-04-01 04:00:00     Moon  333 waning crescent     5%
 EOD
 
-is $ft->position( {
+is $ft->format( position => {
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
 	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
@@ -260,7 +261,7 @@ is $ft->position( {
 EOD
 
 $ft->local_coord( 'azel' );
-is $ft->position( {
+is $ft->format( position => {
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
 	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
@@ -275,7 +276,7 @@ is $ft->position( {
 EOD
 
 $ft->local_coord( 'az_rng' );
-is $ft->position( {
+is $ft->format( position => {
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
 	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
@@ -290,7 +291,7 @@ is $ft->position( {
 EOD
 
 $ft->local_coord( 'equatorial' );
-is $ft->position( {
+is $ft->format( position => {
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
 	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
@@ -306,7 +307,7 @@ is $ft->position( {
 EOD
 
 $ft->local_coord( 'equatorial_rng' );
-is $ft->position( {
+is $ft->format( position => {
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
 	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
@@ -332,13 +333,13 @@ EOD
 # not use them for subsequent tests, but if we do will probably need to
 # reset them.
 
-is $ft->tle( [ $sat ] ), <<'EOD', 'Tle';
+is $ft->format( tle => [ $sat ] ), <<'EOD', 'Tle';
 None
 1 88888U          80275.98708465  .00073094  13844-3  66816-4 0    8
 2 88888  72.8435 115.9689 0086731  52.6988 110.5714 16.05824518  105
 EOD
 
-is $ft->tle_verbose( [ $sat ] ), <<'EOD', 'Tle verbose';
+is $ft->format( tle_verbose => [ $sat ] ), <<'EOD', 'Tle verbose';
 OID: 88888
     Name: None
     International Launch Designator:

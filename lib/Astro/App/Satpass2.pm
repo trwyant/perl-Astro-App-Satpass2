@@ -1239,7 +1239,7 @@ sub phase : Verb() {
 	or $self->_wail( 'No bodies selected' );
     return $self->_format_data(
 	phase => [
-	    map { $_->universal( $time ) }
+	    map { { body => $_->universal( $time ), time => $time } }
 	    grep { $_->can( 'phase' ) }
 	    @sky
 	], $opt );
@@ -2351,7 +2351,7 @@ sub _choose {
 
 sub _format_data {
     my ( $self, $action, $data, $opt ) = @_;
-    return $self->_get_formatter_object( $opt )->$action( $data );
+    return $self->_get_formatter_object( $opt )->format( $action, $data );
 }
 
 #	$frames = $satpass2->_frame_push($type, \@args);

@@ -319,16 +319,6 @@ sub new {
     return $self;
 }
 
-sub alias {
-    my ( $self, $hash ) = @_;
-    return $self->_tt( alias => $hash );
-}
-
-sub almanac {
-    my ( $self, $array ) = @_;
-    return $self->_tt( almanac => $self->_wrap( $array ) );
-}
-
 sub config {
     my ( $self, %args ) = @_;
     my @data = $self->SUPER::config( %args );
@@ -364,10 +354,28 @@ sub __default {
     return $value;
 }
 
-sub flare {
-    my ( $self, $array ) = @_;
+{
+    my %wrapper = (
+	alias	=> sub { return $_[1] },
+	almanac		=> \&_wrap,
+	flare		=> \&_wrap,
+	list		=> \&_wrap,
+	location	=> \&_wrap,
+	pass		=> \&_wrap,
+	pass_events	=> \&_wrap,
+	phase		=> \&_wrap,
+	position	=> \&_wrap,
+	tle		=> \&_wrap,
+	tle_verbose	=> \&_wrap,
+    );
 
-    return $self->_tt( flare => $self->_wrap( $array ) );
+    sub format {	## no critic (ProhibitBuiltInHomonyms)
+	my ( $self, $template, $data ) = @_;
+	my $wrap_code = $wrapper{$template}
+	    or $self->warner()->wail(
+		"Do not know how to format $template" );
+	return $self->_tt( $template => $wrap_code->( $self, $data ) );
+    }
 }
 
 sub gmt {
@@ -378,12 +386,6 @@ sub gmt {
     } else {
 	return $self->SUPER::gmt();
     }
-}
-
-sub list {
-    my ( $self, $array ) = @_;
-
-    return $self->_tt( list => $self->_wrap( $array ) );
 }
 
 sub local_coord {
@@ -404,38 +406,6 @@ sub local_coord {
     } else {
 	return $self->SUPER::local_coord();
     }
-}
-
-sub location {
-    my ( $self, $station ) = @_;
-
-    return $self->_tt( location => $self->_wrap( $station ) );
-}
-
-sub pass {
-    my ( $self, $array ) = @_;
-
-    return $self->_tt( pass => $self->_wrap( $array ) );
-}
-
-sub pass_events {
-    my ( $self, $array ) = @_;
-
-    return $self->_tt( pass_events => $self->_wrap( $array ) );
-}
-
-sub phase {
-    my ( $self, $array ) = @_;
-
-    return $self->_tt( phase => $self->_wrap( [
-		map { { body => $_, time => $_->universal() } }
-		@{ $array } ] ) );
-}
-
-sub position {
-    my ( $self, $hash ) = @_;
-
-    return $self->_tt( position => $self->_wrap( $hash ) );
 }
 
 sub report {
@@ -499,18 +469,6 @@ sub template {
     } else {
         return scalar $self->{template}->__satpass2_template( $name );
     }
-}
-
-sub tle {
-    my ( $self, $array ) = @_;
-
-    return $self->_tt( tle => $self->_wrap( $array ) );
-}
-
-sub tle_verbose {
-    my ( $self, $array ) = @_;
-
-    return $self->_tt( tle_verbose => $self->_wrap( $array ) );
 }
 
 sub tz {
