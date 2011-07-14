@@ -9,6 +9,7 @@ use Carp;
 
 use Astro::App::Satpass2::Format::Template::Provider;
 use Astro::App::Satpass2::FormatValue;
+use Astro::App::Satpass2::Utils qw{ instance };
 use Astro::App::Satpass2::Wrap::Array;
 use Astro::Coord::ECI::TLE qw{ :constants };
 use Astro::Coord::ECI::Utils qw{
@@ -55,13 +56,6 @@ EOD
 EOD
 
     # Main templates
-
-    alias	=> <<'EOD',
-[% DEFAULT data = sp.alias( arg ) -%]
-[% FOREACH key IN data.keys.sort %]
-    [%- key %] => [% data.$key %]
-[% END -%]
-EOD
 
     almanac	=> <<'EOD',
 [% DEFAULT data = sp.almanac( arg ) %]
@@ -354,28 +348,9 @@ sub __default {
     return $value;
 }
 
-{
-    my %wrapper = (
-	alias	=> sub { return $_[1] },
-	almanac		=> \&_wrap,
-	flare		=> \&_wrap,
-	list		=> \&_wrap,
-	location	=> \&_wrap,
-	pass		=> \&_wrap,
-	pass_events	=> \&_wrap,
-	phase		=> \&_wrap,
-	position	=> \&_wrap,
-	tle		=> \&_wrap,
-	tle_verbose	=> \&_wrap,
-    );
-
-    sub format {	## no critic (ProhibitBuiltInHomonyms)
-	my ( $self, $template, $data ) = @_;
-	my $wrap_code = $wrapper{$template}
-	    or $self->warner()->wail(
-		"Do not know how to format $template" );
-	return $self->_tt( $template => $wrap_code->( $self, $data ) );
-    }
+sub format {	## no critic (ProhibitBuiltInHomonyms)
+    my ( $self, $template, $data ) = @_;
+    return $self->_tt( $template => $self->_wrap( $data ) );
 }
 
 sub gmt {
@@ -532,7 +507,9 @@ sub _wrap {
     $data ||= {};
     $default ||= $self->__default();
 
-    if ( ! defined $data || 'HASH' eq ref $data ) {
+    if ( instance( $data, 'Astro::App::Satpass2::FormatValue' ) ) {
+	# Do nothing
+    } elsif ( ! defined $data || 'HASH' eq ref $data ) {
 	$data = Astro::App::Satpass2::FormatValue->new(
 	    data	=> $data,
 	    default	=> $default,
@@ -737,20 +714,6 @@ configured to produce field titles rather than data.
 The canned templates (except for those used to define C<local_coord>)
 can all be used in the L<report()|/report> method, either as is or in a
 file. See the L<report()|/report> method for that.
-
-=head3 alias
-
- print $fmt->alias( \%alias_hash );
-
-This method overrides the
-L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
-L<alias()|Astro::App::Satpass2::Format/alias> method, and performs
-the same function. It uses template C<alias>, which is defined as
-
- [% DEFAULT data = sp.alias( arg ) -%]
- [% FOREACH key IN data.keys.sort %]
-     [%- key %] => [% data.$key %]
- [% END -%]
 
 =head3 almanac
 

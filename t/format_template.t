@@ -17,7 +17,7 @@ BEGIN {
     }
 }
 
-plan tests => 17;
+plan tests => 16;
 
 use Astro::App::Satpass2::Format::Template;
 use Astro::Coord::ECI;
@@ -55,12 +55,6 @@ $sat->rebless( 'iridium' );
 my $ft = Astro::App::Satpass2::Format::Template->new()->gmt( 1 );
 
 ok $ft, 'Instantiate Astro::App::Satpass2::Format::Template';
-
-is $ft->format( alias => { foo => 'bar', baz => 'burfle' } ), <<'EOD',
-baz => burfle
-foo => bar
-EOD
-    'Alias';
 
 is $ft->format( almanac => [ {
 		almanac	=> {

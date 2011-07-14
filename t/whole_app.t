@@ -192,29 +192,29 @@ execute 'foo', 'Unknown interactive method \'foo\'',
     'Unknown interactive method';
 
 execute 'alias', <<'EOD', 'Default aliases';
-iridium => Astro::Coord::ECI::TLE::Iridium
-moon => Astro::Coord::ECI::Moon
-sun => Astro::Coord::ECI::Sun
-tle => Astro::Coord::ECI::TLE
+alias iridium Astro::Coord::ECI::TLE::Iridium
+alias moon Astro::Coord::ECI::Moon
+alias sun Astro::Coord::ECI::Sun
+alias tle Astro::Coord::ECI::TLE
 EOD
 
 execute 'alias fubar iridium', undef, 'Add an alias';
 
 execute 'alias', <<'EOD', 'Confirm addition of alias';
-fubar => Astro::Coord::ECI::TLE::Iridium
-iridium => Astro::Coord::ECI::TLE::Iridium
-moon => Astro::Coord::ECI::Moon
-sun => Astro::Coord::ECI::Sun
-tle => Astro::Coord::ECI::TLE
+alias fubar Astro::Coord::ECI::TLE::Iridium
+alias iridium Astro::Coord::ECI::TLE::Iridium
+alias moon Astro::Coord::ECI::Moon
+alias sun Astro::Coord::ECI::Sun
+alias tle Astro::Coord::ECI::TLE
 EOD
 
 execute 'alias fubar \'\'', undef, 'Remove new alias';
 
 execute 'alias', <<'EOD', 'Confirm alias removal';
-iridium => Astro::Coord::ECI::TLE::Iridium
-moon => Astro::Coord::ECI::Moon
-sun => Astro::Coord::ECI::Sun
-tle => Astro::Coord::ECI::TLE
+alias iridium Astro::Coord::ECI::TLE::Iridium
+alias moon Astro::Coord::ECI::Moon
+alias sun Astro::Coord::ECI::Sun
+alias tle Astro::Coord::ECI::TLE
 EOD
 
 execute 'set warn_on_empty 0', undef, 'No warning for empty lists';

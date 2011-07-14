@@ -310,15 +310,19 @@ sub new {
     return $self;
 }
 
-sub alias : Verb( dump! ) {
+sub alias : Verb() {
     my ( $self, @args ) = @_;
     ( my $opt, @args ) = $self->_getopt( @args );
     if ( @args ) {
 	Astro::Coord::ECI::TLE->alias( @args );
 	return;
     } else {
-	return $self->_format_data(
-	    alias => { Astro::Coord::ECI::TLE->alias() }, $opt );
+	my $output;
+	my %alias = Astro::Coord::ECI::TLE->alias();
+	foreach my $key ( sort keys %alias ) {
+	    $output .= join( ' ', 'alias', $key, $alias{$key} ) . "\n";
+	}
+	return $output;
     }
 }
 
