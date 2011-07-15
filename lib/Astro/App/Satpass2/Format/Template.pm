@@ -350,7 +350,21 @@ sub __default {
 
 sub format {	## no critic (ProhibitBuiltInHomonyms)
     my ( $self, $template, $data ) = @_;
-    return $self->_tt( $template => $self->_wrap( $data ) );
+
+    defined $template
+	or $self->warner()->wail( '$template argument required' );
+
+    defined $data
+	or $self->warner()->wail( '$data argument required' );
+
+    $data = $self->_wrap( $data );
+
+    _is_report() and return $data;
+
+    return $self->report(
+	template	=> $template,
+	data		=> $data,
+    );
 }
 
 sub gmt {
@@ -484,20 +498,6 @@ sub _is_report {
 	$level++;
     }
     return;
-}
-
-sub _tt {
-    my ( $self, $action, $data, $default ) = @_;
-
-    $data or $self->warner()->wail( 'Argument is required' );
-
-    _is_report() and return $data;
-
-    return $self->report(
-	template	=> $action,
-	data	=> $data,
-	default	=> $default,
-    );
 }
 
 sub _wrap {
