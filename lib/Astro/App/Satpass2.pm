@@ -2355,7 +2355,10 @@ sub _choose {
 
 sub _format_data {
     my ( $self, $action, $data, $opt ) = @_;
-    return $self->_get_formatter_object( $opt )->format( $action, $data );
+    return $self->_get_formatter_object( $opt )->format(
+	template => $action,
+	data => $data
+    );
 }
 
 #	$frames = $satpass2->_frame_push($type, \@args);
@@ -2734,7 +2737,7 @@ sub _helper_get_object {
 		}
 		return @args;
 	    },
-	    report	=> sub {
+	    format	=> sub {
 		my ( $self, $opt, $template, @args ) = @_;
 		$opt->{raw} = 1;
 		return (
@@ -4610,10 +4613,10 @@ the three options is the same as specifying C<-am -day -pm>.
 
 This interactive method takes as its arguments the name of a method, and
 any arguments to be passed to that method. This method is called on the
-object which is stored in the L<formatter attribute|/formatter
-attribute>, and any results returned. Normally it will be used to
-configure the formatter object. See the documentation on the formatter
-class in use for further details.
+object which is stored in the
+L<formatter attribute|/formatter attribute>, and any results returned.
+Normally it will be used to configure the formatter object. See the
+documentation on the formatter class in use for further details.
 
 When calling formatter methods via this method (as opposed to retrieving
 the formatter method with C<get( 'formatter' )> and then calling the
@@ -4626,26 +4629,26 @@ which the input is transformed:
 
 The argument, if any, is parsed using the time parser.
 
-=item report
+=item format
 
 The following arguments are passed to
 L<Astro::App::Satpass2::Format::Template|Astro::App::Satpass2::Format::Template>
-L<report()|Astro::App::Satpass2::Format::Template/report>:
+L<format()|Astro::App::Satpass2::Format::Template/format>:
 
  sp       => the invocant of this method;
  template => the first argument to this method;
  arg      => [ all arguments after the first ].
 
-An example may help.
+An example may help:
 
- my $output = $self->formatter( report => qw{ foo bar baz } )
+ my $output = $self->formatter( format => qw{ foo bar baz } )
 
 is equivalent to
 
  my $fmtr = $self->get( 'formatter' );
- my $output = $fmtr->report(
+ my $output = $fmtr->format(
      template => 'foo',
-     arg      => [ 'bar', 'baz' ],
+     arg      => [ qw{ bar baz } ],
      sp       => $self,
  );
 

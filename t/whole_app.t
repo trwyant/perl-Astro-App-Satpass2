@@ -870,7 +870,7 @@ EOD
 
 execute  'status drop 88888', undef, 'OID 88888 no longer Iridium';
 
-execute  'formatter report position 19801013T054326Z', <<'EOD',
+execute  'formatter format position 19801013T054326Z', <<'EOD',
 1980/10/13 05:43:26
             Name Eleva  Azimuth      Range               Epoch Illum
            88888  29.9  48.2 NE      412.1 1980/10/01 23:41:24 lit

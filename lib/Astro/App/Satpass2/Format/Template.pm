@@ -348,57 +348,13 @@ sub __default {
     return $value;
 }
 
-sub format {	## no critic (ProhibitBuiltInHomonyms)
-    my ( $self, $template, $data ) = @_;
-
-    defined $template
-	or $self->warner()->wail( '$template argument required' );
-
-    defined $data
-	or $self->warner()->wail( '$data argument required' );
-
-    $data = $self->_wrap( $data );
-
-    _is_report() and return $data;
-
-    return $self->report(
-	template	=> $template,
-	data		=> $data,
-    );
-}
-
-sub gmt {
-    my ( $self, @args ) = @_;
-    if ( @args ) {
-	$self->time_formatter()->gmt( @args );
-	return $self->SUPER::gmt( @args );
-    } else {
-	return $self->SUPER::gmt();
-    }
-}
-
-sub local_coord {
-    my ( $self, @args ) = @_;
-    if ( @args ) {
-	my $val = $args[0];
-	defined $val or $val = $self->DEFAULT_LOCAL_COORD;
-	# Chicken-and-egg problem: we have to get an object from
-	# SUPER::new before we can add the template provider, but
-	# SUPER::new sets the local coordinates. So if there is no
-	# provider we check the hash it is initialized from.
-	$self->{template} ?
-	    $self->{template}->__satpass2_template( $val ) :
-	    $template_definitions{$val}
-	    or $self->warner()->wail(
-		"Unknown local coordinate specification '$val'" );
-	return $self->SUPER::local_coord( @args );
-    } else {
-	return $self->SUPER::local_coord();
-    }
-}
-
-sub report {
+sub format : method {	## no critic (ProhibitBuiltInHomonyms)
     my ( $self, %data ) = @_;
+
+    exists $data{data}
+	and $data{data} = $self->_wrap( $data{data} );
+
+    _is_format() and return $data{data};
 
     my $template = delete $data{template}
 	or $self->warner()->wail( 'template argument is required' );
@@ -447,6 +403,36 @@ sub report {
     return $output;
 }
 
+sub gmt {
+    my ( $self, @args ) = @_;
+    if ( @args ) {
+	$self->time_formatter()->gmt( @args );
+	return $self->SUPER::gmt( @args );
+    } else {
+	return $self->SUPER::gmt();
+    }
+}
+
+sub local_coord {
+    my ( $self, @args ) = @_;
+    if ( @args ) {
+	my $val = $args[0];
+	defined $val or $val = $self->DEFAULT_LOCAL_COORD;
+	# Chicken-and-egg problem: we have to get an object from
+	# SUPER::new before we can add the template provider, but
+	# SUPER::new sets the local coordinates. So if there is no
+	# provider we check the hash it is initialized from.
+	$self->{template} ?
+	    $self->{template}->__satpass2_template( $val ) :
+	    $template_definitions{$val}
+	    or $self->warner()->wail(
+		"Unknown local coordinate specification '$val'" );
+	return $self->SUPER::local_coord( @args );
+    } else {
+	return $self->SUPER::local_coord();
+    }
+}
+
 sub template {
     my ( $self, $name, @value ) = @_;
     defined $name
@@ -484,14 +470,14 @@ sub _all_events {
     return [ map { $self->_wrap( $_ ) } @events ];
 }
 
-#	_is_report()
+#	_is_format()
 #
-#	Returns true if the report() method is above us on the call
+#	Returns true if the format() method is above us on the call
 #	stack, otherwise returns false.
 
-use constant REPORT_CALLER => __PACKAGE__ . '::report';
-sub _is_report {
-    my $level = 0;
+use constant REPORT_CALLER => __PACKAGE__ . '::format';
+sub _is_format {
+    my $level = 2;	# Start with caller's caller.
     while ( my @info = caller( $level ) ) {
 	REPORT_CALLER eq $info[3]
 	    and return $level;
@@ -678,20 +664,36 @@ the L<template()|/template> method.
 
 =head2 Formatters
 
-All the following formatters interact with L<Template-Toolkit|Template>
-in precisely the same way. They pass it a canned template, and the
-following variables:
+As stated in the
+L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
+documentation, there is actually only one formatter method:
+
+=head3 format
+
+  print $fmtr->format( template => 'location', data => $sta );
+
+This formatter implements the C<format()> method using
+L<Template-Toolkit|Template>. It provides canned templates for the
+required values of C<template>. The C<template> argument is required.
+The C<data> argument is required unless your templates are capable of
+calling L<Astro::App::Satpass2|Astro::App::Satpass2> methods on their
+own account.
+
+This method can also execute an arbitrary template if you pass an
+L<Astro::App::Satpass2|Astro::App::Satpass2> object in the C<sp>
+argument. These templates can call methods on the C<sp> object to
+generate their data. If a method which calls the C<format()> method on
+its own behalf (like C<almanac()>) is called on the C<sp> object, the
+recursive call is detected, and the data are passed back to the calling
+template. If arguments for L<Astro::App::Satpass2|Astro::App::Satpass2>
+methods are passed in, it is strongly recommended that they be passed in
+the C<arg> argument.
+
+Except for the C<template> argument, all named arguments to C<format()>
+are provided to the template. In addition, the following arguments will
+be provided:
 
 =over
-
-=item data
-
-This is all the data produced by the relevant
-L<Astro::App::Satpass2|Astro::App::Satpass2> method. Usually it is an
-array reference with the individual elements wrapped in
-L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
-objects. Occasionally it is a hash so wrapped. The documentation of the
-individual method says what is expected.
 
 =item provider
 
@@ -711,18 +713,15 @@ configured to produce field titles rather than data.
 
 =back
 
-The canned templates (except for those used to define C<local_coord>)
-can all be used in the L<report()|/report> method, either as is or in a
-file. See the L<report()|/report> method for that.
+The required values of the C<template> argument are supported by
+same-named L<Template-Toolkit|Template> templates, as follows. Note that
+if the C<data> value is not provided, each of these will call an
+appropriate L<Astro::App::Satpass2|Astro::App::Satpass2> method on the
+C<sp> value, passing it the C<arg> value as arguments.
 
 =head3 almanac
 
- print $fmt->almanac( [ \%almanac_hash ... ] );
-
-This method overrides the
-L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
-L<almanac()|Astro::App::Satpass2::Format/almanac> method, and performs
-the same function. It uses template C<almanac>, which defaults to
+This template defaults to
 
  [% DEFAULT data = sp.almanac( arg ) -%]
  [% FOREACH item IN data %]
@@ -732,12 +731,7 @@ the same function. It uses template C<almanac>, which defaults to
 
 =head3 flare
 
- print $fmt->flare( [ \%flare_hash ... ] );
-
-This method overrides the
-L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
-L<flare()|Astro::App::Satpass2::Format/flare> method, and performs the
-same function. It uses template C<flare>, which defaults to
+This template defaults to
 
  [% DEFAULT data = sp.flare( arg ) -%]
  [% IF title %]
@@ -787,12 +781,7 @@ same function. It uses template C<flare>, which defaults to
 
 =head3 list
 
- print $fmt->list( [ $body ... ] );
-
-This method overrides the
-L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
-L<list()|Astro::App::Satpass2::Format/list> method, and performs the
-same function. It uses template C<list>, which defaults to
+This template defaults to
 
  [% DEFAULT data = sp.list( arg ) -%]
  [% IF title %]
@@ -813,12 +802,7 @@ same function. It uses template C<list>, which defaults to
 
 =head3 location
 
- print $fmt->location( $eci );
-
-This method overrides the
-L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
-L<location()|Astro::App::Satpass2::Format/location> method, and performs
-the same function. It uses template C<location>, which defaults to
+This template defaults to
 
  [% DEFAULT data = sp.location( arg ) -%]
  Location: [% data.name( width = '' ) %]
@@ -831,14 +815,7 @@ the same function. It uses template C<location>, which defaults to
 
 =head3 pass
 
- print $fmt->pass( [ \%pass_hash ... ] );	# Pass data
-
-This method overrides the
-L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
-L<pass()|Astro::App::Satpass2::Format/pass> method, and performs the
-same function.
-
-It uses template C<pass>, which defaults to
+This template defaults to
 
  [% DEFAULT data = sp.pass( arg ) -%]
  [% IF title %]
@@ -877,14 +854,7 @@ It uses template C<pass>, which defaults to
 
 =head3 pass_events
 
- print $fmt->pass_events( [ \%pass_hash ... ] );	# Pass data
-
-This method overrides the
-L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
-L<pass_events()|Astro::App::Satpass2::Format/pass_events> method, and
-performs the same function.
-
-It uses template C<pass_events>, which defaults to
+This template defaults to
 
  [% DEFAULT data = sp.pass( arg ) -%]
  [% IF title %]
@@ -900,12 +870,7 @@ It uses template C<pass_events>, which defaults to
 
 =head3 phase
 
- print $fmt->phase( $body );
-
-This method overrides the
-L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
-L<phase()|Astro::App::Satpass2::Format/phase> method, and performs the
-same function. It uses template C<phase>, which defaults to
+This template defaults to
 
  [% DEFAULT data = sp.phase( arg ) -%]
  [% IF title %]
@@ -930,12 +895,7 @@ same function. It uses template C<phase>, which defaults to
 
 =head3 position
 
- print $fmt->position( $position_hash );
-
-This method overrides the
-L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
-L<position()|Astro::App::Satpass2::Format/position> method, and performs
-the same function. It uses template C<position>, which defaults to
+This template defaults to
 
  [% DEFAULT data = sp.position( arg ) -%]
  [%- data.date %] [% data.time %]
@@ -967,13 +927,7 @@ the same function. It uses template C<position>, which defaults to
 
 =head3 tle
 
- print $fmt->tle( $body );
-
-This method overrides the L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
-L<tle()|Astro::App::Satpass2::Format/tle> method, and performs the same
-function. Its argument is presumed to be an
-L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE> object, or something
-equivalent. It uses template C<tle>, which defaults to
+This template defaults to
 
  [% DEFAULT data = sp.tle( arg ) -%]
  [% FOR item IN data %]
@@ -985,14 +939,7 @@ the tle data itself.
 
 =head3 tle_verbose
 
- print $fmt->tle_verbose( $body );
-
-This method overrides the
-L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>
-L<tle_verbose()|Astro::App::Satpass2::Format/tle_verbose> method, and
-performs the same function. Its argument is presumed to be an
-L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE> object, or something
-equivalent. It uses template C<tle_verbose>, which defaults to
+This template defaults to
 
  [% DEFAULT data = sp.tle( arg ) -%]
  [% CALL title.fixed_width( 0 ) -%]

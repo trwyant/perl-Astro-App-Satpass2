@@ -461,19 +461,25 @@ provide it, because this class does not.
 
 =head3 format
 
- print $fmt->format( $name => $data );
+ print $fmt->format( template => $name, data => $data );
 
-This method formats the named data, and returns the string representing
-the formatted data. The name is generally the name of the
-L<Astro::App::Satpass2|Astro::App::Satpass2> that produced the data,
-though there are a few extras. The data depends on the name as follows:
+This method takes named arguments.
+
+The only required argument is C<template>, which specifies what kind of
+data are expected, and how it is to be formatted. These are described
+below.
+
+The C<data> argument is normally required, and must be the data expected
+by the specified C<template>. However, B<if> the formatter supports it,
+the C<sp> argument can be specified in lieu of C<data>. The C<sp>
+argument should be an L<Astro::App::Satpass2|Astro::App::Satpass2>
+object, and it only does anything if the specific formatter is capable
+of handling it.
+
+The supported template names, and the data required by each, are as
+follows:
 
 =over
-
-=item alias
-
-The C<$data> argument is expected to be the hash returned by the
-L<Astro::Coord::ECI::TLE alias()|Astro::Coord::ECI::TLE/alias> method.
 
 =item almanac
 
@@ -515,13 +521,11 @@ The C<$data> argument is expected to be a reference to an array of hash
 references, which are presumed to be output from the
 L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE> C<pass()> method.
 
-This format is expected to format a description of individual events
+This template is expected to format a description of individual events
 of satellite passes for the L<pass|Astro::App::Satpass2/pass> command
 with the C<-events> option.
 
 =item phase
-
- print $fmt->phase( [ $body ... ] );
 
 The C<$data> argument is expected to be a reference to an array of
 C<Astro::Coord::ECI|Astro::Coord::ECI> objects which support the
@@ -530,9 +534,9 @@ desired time.
 
 =item position
 
-This format is intended to format the position (and possibly other data)
-of a set of bodies for the L<position|Astro::App::Satpass2/position>
-command.
+This template is intended to format the position (and possibly other
+data) of a set of bodies for the
+L<position|Astro::App::Satpass2/position> command.
 
 The C<$data> argument is expected to be a hash containing relevant data.
 The following hash keys are required:
@@ -548,7 +552,8 @@ bodies must already have had their times set to the desired time.
 
 In addition, the following keys are recommended:
 
- {questionable} - do flare calculations for questionable sources;
+ {questionable} - true to do flare calculations for questionable
+         sources;
  {twilight} - twilight, in radians (negative).
 
 If the C<{twilight}> key is omitted, it will be set to civil twilight
@@ -558,8 +563,6 @@ Yes, this is more complex than the others, but the function is more
 ad-hoc.
 
 =item tle
-
- print $fmt->tle( [ $body ... ] );
 
 The C<$data> argument is expected to be a reference to an array of
 L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE> objects. The output
@@ -574,18 +577,6 @@ should be an expanded output of the data in a TLE (say, one line per
 datum, labeled and with units).
 
 =back
-
-=head2 Formatters
-
-These methods are intended to take raw data produced by various methods
-of L<Astro::Coord::ECI|Astro::Coord::ECI> and its subclasses, and turn
-them into text. Subclasses B<should> override these. The overrides
-B<must not> call the superclass' method, because in general there isn't
-one.
-
-The formatters are named after the L<Astro::App::Satpass2|Astro::App::Satpass2>
-methods they are intended to serve. In general, they take a single
-argument, format it as a string, and return the string.
 
 =head2 Other Methods
 
