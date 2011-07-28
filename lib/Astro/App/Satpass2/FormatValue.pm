@@ -111,6 +111,9 @@ use constant NONE => undef;
 	magnitude	=> {
 	    title	=> 'Magnitude',
 	},
+	maidenhead	=> {
+	    title	=> 'Maidenhead Grid Square',
+	},
 	mean_anomaly	=> {
 	    title	=> 'Mean Anomaly',
 	},
@@ -1200,6 +1203,22 @@ my %formatter_data = (	# For generating formatters
 	fetch	=> sub {
 	    my ( $self, $name, $arg ) = @_;
 	    return $self->_get( data => 'magnitude' );
+	},
+    },
+
+    maidenhead		=> {
+	default => {
+	    width	=> 6,
+	},
+	dimension	=> {
+	    dimension	=> 'string_pseudo_units',
+	},
+	fetch	=> sub {
+	    my ( $self, $name, $arg ) = @_;
+	    my $body = $self->_get_eci( 'body' )
+		or return NONE;
+	    my $places = floor( $arg->{width} / 2 );
+	    return ( $body->maidenhead( $places ) )[0];
 	},
     },
 

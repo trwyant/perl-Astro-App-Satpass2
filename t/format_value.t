@@ -73,7 +73,7 @@ sub create (@);
 sub method (@);
 sub method_good (@);
 
-plan( tests => 250 );
+plan( tests => 254 );
 
 my %default;
 my $time_formatter = Astro::App::Satpass2::FormatTime->new()->gmt( 1 );
@@ -443,6 +443,17 @@ method appulse => [], magnitude => [], '    ',
     'Magnitude of appulsed body (unavailable)';
 method station => [], magnitude => [], '    ',
     'Magnitude of observing station (unavailable)';
+
+# Reference implementation for Maidenhead grid:
+# http://www.amsat.org/cgi-bin/gridconv
+
+method maidenhead =>  [], 'FM24vb', 'Maidenhead grid of satellite';
+method center => [], maidenhead => [], '      ',
+    'Maidenhead grid of center (unavailable)';
+method appulse => [], maidenhead => [ width => 4 ], 'GH43',
+    'Maidenhead grid of appulsed body ( width => 4 )';
+method station => [], maidenhead => [], 'FM18lv',
+    'Maidenhead grid of observing station';
 
 method mean_anomaly => [], ' 279.8765', 'Mean anomaly';
 method center => [], mean_anomaly => [], '         ',
