@@ -110,7 +110,7 @@ EOD
 
 [%- END %]
 [%- FOR item IN data %]
-    [%- IF item.body.get( 'inertial' ) %]
+    [%- IF item.inertial %]
         [%- item.oid %] [% item.name %] [% item.epoch %]
             [%= item.period( align_left = 1 ) %]
     [%- ELSE %]

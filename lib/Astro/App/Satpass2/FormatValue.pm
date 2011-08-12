@@ -1145,6 +1145,22 @@ my %formatter_data = (	# For generating formatters
 	},
     },
 
+    inertial	=> {
+	default	=> {
+	    width	=> 1,
+	},
+	dimension	=> {
+	    dimension	=> 'integer_pseudo_units',
+	},
+	fetch		=> sub {
+	    my ( $self, $name, $arg ) = @_;
+	    my $body = $self->_get_eci( 'body' )
+		or return NONE;
+	    my $rslt = $body->get( 'inertial' );
+	    return $body->get( 'inertial' ) ? 1 : 0;
+	},
+    },
+
     international	=> {
 	default	=> {
 	    align_left	=> 1,
@@ -3339,6 +3355,25 @@ result in an exception. The default is C<degrees>.
 This argument specifies the width of the field. Specify a non-numeric
 value if you do not wish to enforce a specific width. The default is
 C<8>.
+
+=back
+
+=head3 inertial
+
+ print $fmt->inertial()
+
+This method formats the C<inertial> attribute of the C<{body}> object,
+as C<0> if the attribute is false, or C<1> if it is true.
+
+In addition to the standard arguments, it takes the following:
+
+=over
+
+=item width
+
+This argument specifies the width of the field. Specify a non-numeric
+value if you do not wish to enforce a specific width. The default is
+C<1>.
 
 =back
 

@@ -73,7 +73,7 @@ sub create (@);
 sub method (@);
 sub method_good (@);
 
-plan( tests => 254 );
+plan( tests => 258 );
 
 my %default;
 my $time_formatter = Astro::App::Satpass2::FormatTime->new()->gmt( 1 );
@@ -410,6 +410,14 @@ method appulse => [], inclination => [], '        ',
     'Inclination of appulsed body (unavailable)';
 method station => [], inclination => [], '        ',
     'Inclination of observing station (unavailable)';
+
+method inertial => [], '0', 'Inertial indicator';
+method center => [], inertial => [], ' ',
+    'Inertial indicator of flare center (unavailable)';
+method appulse => [], inertial => [], '1',
+    'Inertial indicator of appulsed body';
+method station => [], inertial => [], '0',
+    'Inertial indicator of observing station';
 
 method international => [], '98067A  ',
     'International launch designator';
