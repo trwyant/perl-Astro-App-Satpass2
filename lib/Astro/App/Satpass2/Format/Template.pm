@@ -673,11 +673,12 @@ documentation, there is actually only one formatter method:
   print $fmtr->format( template => 'location', data => $sta );
 
 This formatter implements the C<format()> method using
-L<Template-Toolkit|Template>. It provides canned templates for the
-required values of C<template>. The C<template> argument is required.
-The C<data> argument is required unless your templates are capable of
-calling L<Astro::App::Satpass2|Astro::App::Satpass2> methods on their
-own account.
+L<Template-Toolkit|Template>.  The C<template> argument is required, and
+selects one of the canned templates provided.  The C<data> argument is
+required unless your templates are capable of calling
+L<Astro::App::Satpass2|Astro::App::Satpass2> methods on their own
+account, and must (if provided) be whatever is expected by the template.
+See L<Templates|/Templates> below for the details.
 
 This method can also execute an arbitrary template if you pass an
 L<Astro::App::Satpass2|Astro::App::Satpass2> object in the C<sp>
@@ -713,11 +714,16 @@ configured to produce field titles rather than data.
 
 =back
 
+=head2 Templates
+
 The required values of the C<template> argument are supported by
-same-named L<Template-Toolkit|Template> templates, as follows. Note that
-if the C<data> value is not provided, each of these will call an
-appropriate L<Astro::App::Satpass2|Astro::App::Satpass2> method on the
-C<sp> value, passing it the C<arg> value as arguments.
+same-named L<Template-Toolkit|Template> templates, as follows. The
+C<data> provided should be as described in the documentation for the
+L<Astro::App::Satpass2|Astro::App::Satpass2>
+L<format()|Astro::App::Satpass2/format> method.  if the C<data> value is
+not provided, each of the default templates will call an appropriate
+L<Astro::App::Satpass2|Astro::App::Satpass2> method on the C<sp> value,
+passing it the C<arg> value as arguments.
 
 =head3 almanac
 
@@ -868,6 +874,11 @@ This template defaults to
          [%= evt.illumination %] [% evt.local_coord %]
  [% END -%]
 
+The difference between this template and the L<pass|/pass> template is
+that this template orders the events chronologically, without respect to
+their source, whereas the L<pass|/pass> template orders passes
+chronologically by satellite.
+
 =head3 phase
 
 This template defaults to
@@ -892,6 +903,8 @@ This template defaults to
          [%= item.fraction_lit( places = 0, width = 4,
              units = 'percent' ) %]%
  [% END -%]
+
+C<pass()> method.
 
 =head3 position
 

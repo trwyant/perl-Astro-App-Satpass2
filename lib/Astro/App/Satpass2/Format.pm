@@ -467,7 +467,9 @@ This method takes named arguments.
 
 The only required argument is C<template>, which specifies what kind of
 data are expected, and how it is to be formatted. These are described
-below.
+below. The name of the C<template> argument assumes an implementation in
+terms of some sort of templating system, but a subclass can implement
+formatting in any way it pleases.
 
 The C<data> argument is normally required, and must be the data expected
 by the specified C<template>. However, B<if> the formatter supports it,
