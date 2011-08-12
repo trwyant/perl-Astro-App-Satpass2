@@ -73,7 +73,7 @@ sub create (@);
 sub method (@);
 sub method_good (@);
 
-plan( tests => 258 );
+plan( tests => 260 );
 
 my %default;
 my $time_formatter = Astro::App::Satpass2::FormatTime->new()->gmt( 1 );
@@ -462,6 +462,10 @@ method appulse => [], maidenhead => [ width => 4 ], 'GH43',
     'Maidenhead grid of appulsed body ( width => 4 )';
 method station => [], maidenhead => [], 'FM18lv',
     'Maidenhead grid of observing station';
+method station => [], maidenhead => [ places => 2 ], 'FM18  ',
+    'Maidenhead grid of observing station ( places => 2 )';
+method station => [], maidenhead => [ width => '' ], 'FM18lv',
+    'Maidenhead grid of observing station (no width specified)';
 
 method mean_anomaly => [], ' 279.8765', 'Mean anomaly';
 method center => [], mean_anomaly => [], '         ',

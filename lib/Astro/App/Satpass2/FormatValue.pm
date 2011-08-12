@@ -1225,6 +1225,7 @@ my %formatter_data = (	# For generating formatters
     maidenhead		=> {
 	default => {
 	    width	=> 6,
+	    places	=> undef,
 	},
 	dimension	=> {
 	    dimension	=> 'string_pseudo_units',
@@ -1233,7 +1234,11 @@ my %formatter_data = (	# For generating formatters
 	    my ( $self, $name, $arg ) = @_;
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
-	    my $places = floor( $arg->{width} / 2 );
+	    my $places = defined $arg->{places} ?
+		$arg->{places} :
+		$arg->{width} ?
+		    floor( $arg->{width} / 2 ) :
+		    3;
 	    return ( $body->maidenhead( $places ) )[0];
 	},
     },
@@ -3504,6 +3509,32 @@ number of decimal places. The default is C<1>.
 This argument specifies the width of the field. Specify a non-numeric
 value if you do not wish to enforce a specific width. The default is
 C<4>.
+
+=back
+
+
+=head3 maidenhead
+
+ print $fmt->maidenhead();
+
+This method formats the Maidenhead Grid Locator position of the
+C<{body}> object.
+
+In addition to the standard arguments, it takes the following:
+
+=over
+
+=item places
+
+This argument specifies the precision of the position, as the number of
+grid levels to provide. The default is half the width, truncated to an
+integer. If no specific width is provided, the default is C<3>.
+
+=item width
+
+This argument specifies the width of the field. Specify a non-numeric
+value if you do not wish to enforce a specific width. The default is
+C<6>.
 
 =back
 
