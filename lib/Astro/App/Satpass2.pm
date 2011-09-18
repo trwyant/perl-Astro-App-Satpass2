@@ -141,6 +141,7 @@ my %mutator = (
     desired_equinox_dynamical => \&_set_formatter_attribute,
     debug => \&_set_unmodified,
     echo => \&_set_unmodified,
+    edge_of_earths_shadow => \&_set_unmodified,
     ellipsoid => \&_set_ellipsoid,
     error_out => \&_set_unmodified,
     exact_event => \&_set_unmodified,
@@ -156,7 +157,11 @@ my %mutator = (
     height => \&_set_distance_meters,
     horizon => \&_set_angle,
     latitude => \&_set_angle,
-    lit => \&_set_unmodified,
+    lit => sub {
+	my ( $self, $name, $val ) = @_;
+	$self->{$name} = $val ? 1 : 0;
+	return $val;
+    },
     local_coord => \&_set_formatter_attribute,
     location => \&_set_unmodified,
     longitude => \&_set_angle,
@@ -191,6 +196,9 @@ my %accessor = (
     date_format => \&_get_formatter_attribute,
     desired_equinox_dynamical => \&_get_formatter_attribute,
     gmt => \&_get_formatter_attribute,
+    lit => sub {
+	return $_[0]->get( 'edge_of_earths_shadow' ) ? 1 : 0;
+    },
     local_coord => \&_get_formatter_attribute,
     perltime => \&_get_time_parser_attribute,
     time_format => \&_get_formatter_attribute,
@@ -237,6 +245,7 @@ my %static = (
     date_format => '%a %d-%b-%Y',
     debug => 0,
     echo => 0,
+    edge_of_earths_shadow => 1,
     ellipsoid => Astro::Coord::ECI->get ('ellipsoid'),
     error_out => 0,
     exact_event => 1,
@@ -252,7 +261,6 @@ my %static = (
 #   initfile => undef,		# Set by init()
     horizon => 20,		# degrees
     latitude => undef,		# degrees
-    lit => 1,
     longitude => undef,		# degrees
     max_mirror_angle => rad2deg(
 	Astro::Coord::ECI::TLE::Iridium->DEFAULT_MAX_MIRROR_ANGLE ),
@@ -666,6 +674,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm!
 	$tle->set (
 	    algorithm	=> $opt->{algorithm} || 'fixed',
 	    backdate	=> $self->{backdate},
+	    edge_of_earths_shadow => $self->{edge_of_earths_shadow},
 	    horizon	=> $horizon,
 	    twilight	=> $twilight,
 	    model	=> $model,
@@ -1169,10 +1178,10 @@ sub pass : Verb( choose=s@ appulse! chronological! dump!
 		appulse => $appulse,
 		backdate => $self->{backdate},
 		debug => $self->{debug},
+		edge_of_earths_shadow => $self->{edge_of_earths_shadow},
 		geometric => $self->{geometric},
 		horizon => $horizon,
 		interval => ( $self->{verbose} ? $pass_step : 0 ),
-		limb => $self->{lit},
 		model => $mdl,
 		twilight => $self->{_twilight},
 		visible => $self->{visible},
@@ -1273,14 +1282,21 @@ sub position : Verb( choose=s@ questionable|spare! quiet! ) {
     $opt->{choose}
 	and @list = _choose($opt->{choose}, \@list);
 
-    foreach my $body (@list) {
-	$body->represents( 'Astro::Coord::ECI::TLE' ) or next;
-	$body->get('inertial')
-	    and $body->set( model => $self->{model} );
-    }
-
     my @good;
+    my $horizon = deg2rad ($self->{horizon});
     foreach my $body (@list) {
+	if ( $body->represents( 'Astro::Coord::ECI::TLE' ) ) {
+	    $body->set (
+		backdate => $self->{backdate},
+		debug => $self->{debug},
+		edge_of_earths_shadow => $self->{edge_of_earths_shadow},
+		geometric => $self->{geometric},
+		horizon => $horizon,
+		twilight => $self->{_twilight},
+	    );
+	    $body->get('inertial')
+		and $body->set( model => $self->{model} );
+	}
 	eval {
 	    $body->universal ($time);
 	    push @good, $body;
@@ -2319,6 +2335,7 @@ sub _choose {
 	    desired_equinox_dynamical	=> 0,
 	    explicit_macro_delete	=> 0,
 	    gmt		=> 0,
+	    lit		=> 0,
 	    local_coord	=> 0,
 	    perltime	=> 0,
 	    time_format	=> 0,
@@ -5684,6 +5701,19 @@ parameter substitution has occurred.
 
 The default is 0.
 
+=head2 edge_of_earths_shadow
+
+This numeric attribute specifies the offset in elevation of the edge of
+the Earth's shadow from the center of the illuminating body (typically
+the Sun) as seen from a body in space. The offset is in units of the
+apparent radius of the illuminating body, so that setting it to C<1>
+specifies the edge of the umbra, <-1> specifies the edge of the
+penumbra, and C<0> specifies the middle of the penumbra. This parameter
+corresponds to the same-named L<Astro::Coord::ECI|Astro::Coord::ECI>
+parameter.
+
+The default is 1 (i.e. edge of umbra).
+
 =head2 ellipsoid
 
 This string attribute specifies the name of the reference ellipsoid to
@@ -5847,6 +5877,13 @@ is returned in decimal degrees.
 There is no default; you must specify a value.
 
 =head2 lit
+
+This boolean attribute is deprecated. It is provided for backward
+compatibility with the F<satpass> script. The
+L<edge_of_earths_shadow|/edge_of_earths_shadow> attribute is preferred,
+and C<lit> is implemented in terms of that attribute. Note that any
+non-zero value of L<edge_of_earths_shadow|/edge_of_earths_shadow> will
+cause C<< $app->get( 'lit' ) >> to return true.
 
 This boolean attribute specifies how to determine if a body is lit by
 the Sun.  If true (i.e. 1) it is considered to be lit if the upper limb
