@@ -2067,7 +2067,7 @@ sub st : Verb() {	## no critic (RequireArgUnpacking)
 	my $verb = lc (shift (@args) || 'show');
 
 	if ( $verb eq 'iridium' ) {
-	    $self->_deprecation_notice( status => 'iridium' );
+	    $self->_deprecation_notice( status => 'iridium', 'show' );
 	    $verb = 'show';
 	}
 
@@ -2345,18 +2345,21 @@ sub _choose {
 	    st	=> 0,
 	},
 	status	=> {
-	    iridium	=> 1,
+	    iridium	=> 2,
 	},
     );
 
     sub _deprecation_notice {
-	my ( $self, $type, $name ) = @_;
+	my ( $self, $type, $name, $repl ) = @_;
 	$deprecate{$type} or return;
 	$deprecate{$type}{$name} or return;
+	my $msg = "The $name $type is deprecated";
+	defined $repl
+	    and $msg .= "; use $repl instead";
 	$deprecate{$type}{$name} >= 3
-	    and $self->_wail( "The $name $type is deprecated" );
+	    and $self->_wail( $msg );
 	warnings::enabled( 'deprecated' )
-	    and $self->_whinge( "The $name $type is deprecated" );
+	    and $self->_whinge( $msg );
 	$deprecate{$type}{$name} == 1
 	    and $deprecate{$type}{$name} = 0;
 	return;
