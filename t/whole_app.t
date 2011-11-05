@@ -3,40 +3,16 @@ package main;
 use strict;
 use warnings;
 
+use lib qw{ inc };
+
+use Test::More 0.88;
+use Astro::App::Satpass2::Test::App;
+
 use Scalar::Util qw{ blessed };
-
-BEGIN {
-
-    eval {
-	require Test::More;
-	Test::More->VERSION( 0.52 );
-	Test::More->import();
-	1;
-    } or do {
-	print "1..0 # skip Test::More version 0.52 or above not available.\n";
-	exit;
-    };
-
-}
-
-BEGIN {
-
-    eval {
-	require lib;
-	lib->import( 'inc' );
-	require Astro::App::Satpass2::Test::App;
-	Astro::App::Satpass2::Test::App->import();
-	1;
-    } or do {
-	plan skip_all => 'Can not load Astro::App::Satpass2::Test::App';
-    };
-}
 
 $| = 1;	## no critic (RequireLocalizedPunctuationVars)
 
 use Astro::App::Satpass2;
-
-plan tests => 205;
 
 class   'Astro::App::Satpass2';
 
@@ -952,6 +928,8 @@ EOD
 }
 
 method __TEST__frame_stack_depth => 1, 'Object frame stack is clean';
+
+done_testing;
 
 1;
 

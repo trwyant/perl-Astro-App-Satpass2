@@ -5,22 +5,12 @@ use 5.006002;
 use strict;
 use warnings;
 
+use Test::More 0.88;
+
 use Astro::Coord::ECI;
 use Astro::Coord::ECI::Moon;
 use Astro::Coord::ECI::TLE;
 use Astro::Coord::ECI::Utils qw{ deg2rad PI };
-
-BEGIN {
-    eval {
-	require Test::More;
-	Test::More->VERSION( 0.40 );
-	Test::More->import();
-	1;
-    } or do {
-	print "1..0 # skip Test::More 0.40 required\\n";
-	exit;
-    }
-}
 
 use Astro::App::Satpass2::FormatTime;
 use Astro::App::Satpass2::FormatValue;
@@ -72,8 +62,6 @@ sub clone (@);
 sub create (@);
 sub method (@);
 sub method_good (@);
-
-plan( tests => 260 );
 
 my %default;
 my $time_formatter = Astro::App::Satpass2::FormatTime->new()->gmt( 1 );
@@ -715,6 +703,8 @@ method altitude => [], 'Altitud', 'Altitude title';
 method angle => [], 'Angle', 'Angle title';
 method local_coord => [], 'Eleva  Azimuth      Range',
     'Titles for local_coord azel';
+
+done_testing;
 
 my $obj;
 

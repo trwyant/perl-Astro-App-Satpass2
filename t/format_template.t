@@ -5,19 +5,7 @@ use 5.006002;
 use strict;
 use warnings;
 
-BEGIN {
-    eval {
-	require Test::More;
-	Test::More->VERSION( 0.52 );
-	Test::More->import();
-	1;
-    } or do {
-	print "1..0 # skip Test::More 0.52 required\\n";
-	exit;
-    }
-}
-
-plan tests => 16;
+use Test::More 0.88;
 
 use Astro::App::Satpass2::Format::Template;
 use Astro::Coord::ECI;
@@ -389,6 +377,8 @@ OID: 88888
     Perigee: 198.3 kilometers
     Apogee: 313.4 kilometers
 EOD
+
+done_testing;
 
 1;
 

@@ -5,22 +5,10 @@ use 5.006002;
 use strict;
 use warnings;
 
-BEGIN {
-    eval {
-	require Test::More;
-	Test::More->VERSION( 0.52 );
-	Test::More->import();
-	1;
-    } or do {
-	print "1..0 # skip Test::More 0.52 required\\n";
-	exit;
-    }
-}
+use Test::More 0.88;
 
 use Astro::App::Satpass2::Format::Template::Provider;
 use Template::Constants qw{ STATUS_OK STATUS_DECLINED };
-
-plan tests => 22;
 
 my $tp = Astro::App::Satpass2::Format::Template::Provider->new();
 
@@ -86,6 +74,8 @@ is( ( $tp->_template_content( 'foo' ) )[0], 'bazzle',
 
 is( ( $tp->_template_content( 'foo' ) )[1], STATUS_OK,
     'Status of foo via list _template_content' );
+
+done_testing;
 
 1;
 

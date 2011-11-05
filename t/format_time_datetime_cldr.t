@@ -3,30 +3,10 @@ package main;
 use strict;
 use warnings;
 
-BEGIN {
-    eval {
-	require Test::More;
-	Test::More->VERSION( 0.52 );
-	Test::More->import();
-	1;
-    } or do {
-	print "1..0 # skip Test::More 0.52 required\\n";
-	exit;
-    }
-}
+use lib qw{ inc };
 
-BEGIN {
-    eval {
-	require lib;
-	lib->import( 'inc' );
-	require Astro::App::Satpass2::Test::App;
-	Astro::App::Satpass2::Test::App->import();
-	1;
-    } or do {
-	plan skip_all => 'Astro::App::Satpass2::Test::App not available';
-	exit;
-    };
-}
+use Test::More 0.88;
+use Astro::App::Satpass2::Test::App;
 
 BEGIN {
     eval {
@@ -37,9 +17,7 @@ BEGIN {
 	plan skip_all => 'DateTime or DateTime::TimeZone not available';
 	exit;
     };
-}
 
-BEGIN {
     eval {
 	require Time::Local;
 	Time::Local->import();
@@ -49,8 +27,6 @@ BEGIN {
 	exit;
     };
 }
-
-plan tests => 15;
 
 require_ok 'Astro::App::Satpass2::FormatTime::DateTime::Cldr';
 
@@ -89,6 +65,8 @@ method gmt => 0, TRUE, 'Turn off gmt';
 
 method format_datetime => 'yyyy/MM/dd HH:mm:SS', $time, 1,
     '2011/04/01 00:00:00', 'Explicit GMT time';
+
+done_testing;
 
 1;
 

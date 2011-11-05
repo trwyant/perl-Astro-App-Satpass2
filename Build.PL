@@ -22,9 +22,7 @@ my %attr = (
     requires => $meta->requires(
         'perl'	=> $meta->requires_perl(),
     ),
-    build_requires => {
-        'Test::More'	=> 0.52,
-    },
+    build_requires => $meta->build_requires(),
     script_files => [ qw{bin/satpass2} ],
     add_to_cleanup => [ qw{ xt/author/optionals } ],
     dynamic_config => 1,

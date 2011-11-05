@@ -3,19 +3,9 @@ package main;
 use strict;
 use warnings;
 
-use Cwd qw{ cwd };
+use Test::More 0.88;
 
-BEGIN {
-    eval {
-	require Test::More;
-	Test::More->VERSION( 0.52 );
-	Test::More->import();
-	1;
-    } or do {
-	print "1..0 # skip Test::More 0.52 required\n";
-	exit;
-    }
-}
+use Cwd qw{ cwd };
 
 sub dump_tokens;
 sub new;
@@ -24,8 +14,6 @@ sub tokenize (@);
 sub tokenize_fail (@);
 
 use Astro::App::Satpass2;
-
-plan 'no_plan';
 
 new;
 
@@ -378,6 +366,8 @@ tokenize '$_', [ [ $^X ], {} ]
 
 tokenize '$$', [ [ $$ ], {} ]
     or dump_tokens;
+
+done_testing;
 
 {
 

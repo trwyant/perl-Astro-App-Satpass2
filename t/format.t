@@ -3,32 +3,10 @@ package main;
 use strict;
 use warnings;
 
-BEGIN {
-    eval {
-	require Test::More;
-	Test::More->VERSION( 0.52 );
-	Test::More->import();
-	1;
-    } or do {
-	print "1..0 # skip Test::More 0.52 required\\n";
-	exit;
-    }
-}
+use lib qw{ inc };
 
-BEGIN {
-    eval {
-	require lib;
-	lib->import( 'inc' );
-	require Astro::App::Satpass2::Test::App;
-	Astro::App::Satpass2::Test::App->import();
-	1;
-    } or do {
-	plan skip_all => 'Astro::App::Satpass2::Test::App not available';
-	exit;
-    };
-}
-
-plan tests => 23;
+use Test::More 0.88;
+use Astro::App::Satpass2::Test::App;
 
 require_ok 'Astro::App::Satpass2::Format';
 
@@ -103,6 +81,8 @@ method config => decode => 1, changes => 1,
 	[ tz				=> 'est5edt' ],
     ],
     'Dump configuration changes';
+
+done_testing;
 
 1;
 

@@ -5,16 +5,9 @@ use warnings;
 
 use File::Spec;
 
+use Test::More 0.88;
+
 BEGIN {
-    eval {
-	require Test::More;
-	Test::More->VERSION(0.52);
-	Test::More->import();
-	1;
-    } or do {
-	print "1..0 # skip Test::More required to criticize code.\n";
-	exit;
-    };
     eval {
 	require PPI;
 	PPI->VERSION( 1.215 );

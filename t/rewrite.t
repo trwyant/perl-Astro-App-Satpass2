@@ -5,30 +5,10 @@ use 5.006002;
 use strict;
 use warnings;
 
-BEGIN {
-    eval {
-	require Test::More;
-	Test::More->VERSION( 0.52 );
-	Test::More->import();
-	1;
-    } or do {
-	print "1..0 # skip Test::More 0.52 required\n";
-	exit;
-    };
+use lib qw{ inc };
 
-    eval {
-	require lib;
-	lib->import( 'inc' );
-	require Astro::App::Satpass2::Test::App;
-	Astro::App::Satpass2::Test::App->import();
-	1;
-    } or do {
-	print "1..0 # Astro::App::Satpass2::Test::App required\n";
-	exit;
-    };
-}
-
-plan 'no_plan';
+use Test::More 0.88;
+use Astro::App::Satpass2::Test::App;
 
 use Astro::App::Satpass2;
 
@@ -122,6 +102,8 @@ EOD
 execute 'macro list st', <<'EOD', 'Rewrite st use';
 macro define st 'spacetrack $@'
 EOD
+
+done_testing;
 
 1;
 

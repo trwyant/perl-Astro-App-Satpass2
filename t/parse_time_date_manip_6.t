@@ -3,30 +3,10 @@ package main;
 use strict;
 use warnings;
 
-BEGIN {
-    eval {
-	require Test::More;
-	Test::More->VERSION( 0.52 );
-	Test::More->import();
-	1;
-    } or do {
-	print "1..0 # skip Test::More 0.52 required\\n";
-	exit;
-    }
-}
+use lib qw{ inc };
 
-BEGIN {
-    eval {
-	require lib;
-	lib->import( 'inc' );
-	require Astro::App::Satpass2::Test::App;
-	Astro::App::Satpass2::Test::App->import();
-	1;
-    } or do {
-	plan skip_all => 'Astro::App::Satpass2::Test::App not available';
-	exit;
-    };
-}
+use Test::More 0.88;
+use Astro::App::Satpass2::Test::App;
 
 BEGIN {
 
@@ -61,8 +41,6 @@ BEGIN {
     };
 
 }
-
-plan tests => 25;
 
 require_ok 'Astro::App::Satpass2::ParseTime';
 
@@ -142,6 +120,8 @@ method parse => '20090101T000000Z',
 method parse => '20090701T000000Z',
     timegm( 0, 0, 0, 1, 6, 109 ),
     'Parse ISO-8601 20090701T000000Z';
+
+done_testing;
 
 1;
 

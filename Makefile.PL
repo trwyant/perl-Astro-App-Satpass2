@@ -33,9 +33,6 @@ if ( $mmv >= 6.4501 ) {
 	},
     };
     $attr{META_MERGE} = {
-	build_requires => {
-	    'Test::More'	=> 0.52,
-	},
 	dynamic_config => 1,
 	resources => {
 	    bugtracker => 'https://rt.cpan.org/Public/Dist/Display.html?Name=Astro-App-Satpass2',
@@ -47,6 +44,11 @@ if ( $mmv >= 6.4501 ) {
 }
 
 $mmv >= 6.4701 and $attr{MIN_PERL_VERSION} = $meta->requires_perl();
+
+$mmv >= 6.5501
+    and $attr{BUILD_REQUIRES} = $meta->build_requires()
+    or $mmv >= 6.4501
+    and $attr{META_MERGE}{build_requires} = $meta->build_requires();
 
 Astro::App::Satpass2::Recommend->recommend();
 
