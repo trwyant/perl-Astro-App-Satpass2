@@ -39,25 +39,18 @@ my ( $got_time_hires, $got_astro_spacetrack );
 
 BEGIN {
 
-    $got_time_hires = eval {
-	require Time::HiRes;
-	1;
-    };
-
-    $got_astro_spacetrack = eval {
-	require Astro::SpaceTrack;
+    $got_time_hires = load_package( 'Time::HiRes' );
+    $got_astro_spacetrack = load_package( 'Astro::SpaceTrack' ) && eval {
 	Astro::SpaceTrack->VERSION( ASTRO_SPACETRACK_VERSION );
 	1;
     };
 
-    eval {
-	require Time::y2038;
-	Time::y2038->import();
-	1;
-    } or do {
-	require Time::Local;
-	Time::Local->import();
-    };
+    load_package( 'Time::y2038' )
+	and Time::y2038->import()
+	or do {
+	    require Time::Local;
+	    Time::Local->import();
+	};
 }
 
 our $VERSION = '0.000_22';
@@ -890,7 +883,7 @@ sub _height_us {
 	    my $os_specific = "_help_$^O";
 	    if (__PACKAGE__->can ($os_specific)) {
 		return __PACKAGE__->$os_specific ();
-	    } elsif (eval {require Pod::Usage}) {
+	    } elsif ( load_package( 'Pod::Usage' ) ) {
 		my $stdout = $self->{frame}[-1]{localout};
 		if (openhandle $stdout && !-t $stdout) {
 		    push @ha, -output => $stdout;
@@ -2594,7 +2587,8 @@ sub _get_interactive {
 	    my $buffer = '';
 	    if ($self->_get_interactive()) {
 		eval {
-		    require Term::ReadLine;
+		    load_package( 'Term::ReadLine' )
+			or return;
 		    $rl ||= Term::ReadLine->new("satpass2");
 		    sub {
 			defined $buffer or return $buffer;
@@ -2883,7 +2877,7 @@ sub _is_interactive {
 	@module or confess "Programming error - No module specified";
 	my @probs;
 	foreach my $module (@module) {
-	    load_module ($module) or do {
+	    load_package ($module) or do {
 		push @probs, "$module needed";
 		next;
 	    };

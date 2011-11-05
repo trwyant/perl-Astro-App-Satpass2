@@ -43,9 +43,13 @@ sub instance {
 	push @prefix, '';
 	foreach my $pfx ( @prefix ) {
 	    my $package = join '::', grep { $_ ne '' } $pfx, $module;
-	    '' ne $package or next;
-	    eval "require $package; 1"
-		or next;
+	    '' eq $package
+		and next;
+	    ( my $fn = $package ) =~ s{ :: }{/}smxg;
+	    eval {
+		require "$fn.pm";	## no critic (RequireBarewordIncludes)
+		1;
+	    } or next;
 	    return ( $loaded{$key} = $package );
 	}
 

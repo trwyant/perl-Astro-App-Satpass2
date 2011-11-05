@@ -5,12 +5,13 @@ use warnings;
 
 use Carp;
 
+use Astro::App::Satpass2::Utils qw{ load_package };
+
 our $VERSION = '0.000_22';
 
 my $delegate;
 
-eval {	## no critic (RequireCheckingReturnValueOfEval)
-    require Date::Manip;
+if ( load_package( 'Date::Manip' ) ) {
     my $ver = Date::Manip->VERSION();
     $ver =~ s/ _ //smxg;
     if ( $ver < 6 ) {

@@ -9,19 +9,26 @@ use Time::Local;
 
 use base qw{ Astro::App::Satpass2::ParseTime };
 
+use Astro::App::Satpass2::Utils qw{ load_package };
+
 our $VERSION = '0.000_22';
 
 my $invalid;
 
 BEGIN {
     eval {
-	require Date::Manip;
-	require Date::Manip::Date;
+	load_package( 'Date::Manip' )
+	    or return;
+	load_package( 'Date::Manip::Date' )
+	    or return;
 	my $ver = Date::Manip->VERSION();
 	$ver =~ s/ _ //smxg;
 	$ver >= 6
+	    and do {
+		Date::Manip->import();
+		1;
+	    }
 	    or $invalid = 'This package assumes a Date::Manip version >= 6';
-	Date::Manip->import();
 	1;
     } or $invalid = ( $@ || 'Unable to load Date::Manip' );
 }

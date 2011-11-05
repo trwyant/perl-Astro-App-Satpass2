@@ -6,34 +6,17 @@ use warnings;
 use base qw{ Astro::App::Satpass2::Format };
 
 use Carp;
+use Astro::App::Satpass2::Utils qw{ load_package };
 
 our $VERSION = '0.000_22';
 
 my %dumper_hash = (
-    YAML => sub {
-	require YAML;
-	return YAML->can( 'Dump' );
-    },
-    'YAML::Syck' => sub {
-	require YAML::Syck;
-	return YAML::Syck->can( 'Dump' );
-    },
-    'YAML::XS' => sub {
-	require YAML::XS;
-	return YAML::XS->can( 'Dump' );
-    },
-    'YAML::Tiny' => sub {
-	require YAML::Tiny;
-	return YAML::Tiny->can( 'Dump' );
-    },
-    'Data::Dumper' => sub {
-	require Data::Dumper;
-	return Data::Dumper->can( 'Dumper' );
-    },
-    'JSON' => sub {
-	require JSON;
-	return JSON->can( 'to_json' );
-    },
+    YAML => 'Dump',
+    'YAML::Syck' => 'Dump',
+    'YAML::XS' => 'Dump',
+    'YAML::Tiny' => 'Dump',
+    'Data::Dumper' => 'Dumper',
+    'JSON' => 'to_json',
 );
 
 {
@@ -66,7 +49,8 @@ sub dumper {
     if ( ! $ref ) {
 	foreach my $possible ( split qr{ , }smx, $val ) {
 	    my $code = $dumper_hash{$possible} or next;
-	    $code = eval { $code->(); } or next;
+	    load_package( $possible ) or next;
+	    $code = $possible->can( $code ) or next;
 	    $val = $code;
 	    last;
 	}
