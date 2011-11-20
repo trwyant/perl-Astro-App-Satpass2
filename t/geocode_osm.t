@@ -36,7 +36,7 @@ my @resp = $geocoder->geocode( $loc );
 
 is_deeply \@resp, [
     {
-	description => '10 Downing Street, 10, Downing Street, Whitehall, City of Westminster, Greater London, England, SW1A 2AA, United Kingdom',
+	description => '10 Downing Street, Whitehall, City of Westminster, Greater London, England, SW1A 2AA, United Kingdom',
 	latitude => '51.5034075',
 	longitude => '-0.1274814',
     }

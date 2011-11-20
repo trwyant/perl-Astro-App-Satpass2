@@ -27,7 +27,7 @@ sub geocode {
 	    map {
 		{
 ##		    country		=> uc $_->{address}{country_code},
-		    description	=> $_->{display_name},
+		    description	=> _description( $_ ),
 		    latitude	=> $_->{lat},
 		    longitude	=> $_->{lon},
 		}
@@ -42,6 +42,14 @@ sub geocode {
 		# this.
     }
 
+}
+
+sub _description {
+    my ( $info ) = @_;
+    my $desc = $info->{display_name};
+    $desc =~ s/ [^,]+ , \s* //smx;
+    $desc =~ s/ \A ( \d+ ) , /$1/smx;	# Oh, for 5.10 and \K
+    return $desc;
 }
 
 1;
