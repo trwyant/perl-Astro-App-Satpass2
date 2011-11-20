@@ -1,11 +1,13 @@
 package Astro::App::Satpass2::FormatValue;
 
-use strict; use warnings;
+use strict;
+use warnings;
 
 use Carp;
 
 use Astro::App::Satpass2::FormatTime;
 use Astro::App::Satpass2::Utils qw{ has_method instance };
+use Astro::App::Satpass2::Warner;
 use Astro::Coord::ECI::Sun;
 use Astro::Coord::ECI::TLE qw{ :constants };
 use Astro::Coord::ECI::Utils qw{ deg2rad embodies julianday PI rad2deg TWOPI };
@@ -190,6 +192,10 @@ use constant NONE => undef;
 
         $self->{warner} = $args{warner} ||
 	    Astro::App::Satpass2::Warner->new();
+	instance( $self->{warner}, 'Astro::App::Satpass2::Warner' )
+	    or Astro::App::Satpass2::Warner->new()->wail(
+	    q{Argument 'warner' must be an Astro::App::Satpass2::Warner}
+	    );
 
 	foreach my $name ( qw{ data default } ) {
 	    $self->{$name} = $args{$name} || {};
