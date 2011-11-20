@@ -17,7 +17,7 @@ eval {	## no critic (RequireCheckingReturnValueOfEval)
 };
 
 
-plan tests => 49;
+plan tests => 56;
 
 require_ok 'Astro::App::Satpass2::Copier'
     or BAIL_OUT;
@@ -180,6 +180,48 @@ instantiate 'Astro::App::Satpass2::ParseTime',
 	'Astro::App::Satpass2::ParseTime::Date::Manip',
 	'Astro::App::Satpass2::ParseTime::ISO8601';
 
+}
+
+require_ok 'Astro::App::Satpass2::Geocode'
+    or BAIL_OUT;
+
+SKIP: {
+    my $tests = 2;
+
+    eval {
+	require Geo::Coder::Geocoder::US;
+	1;
+    } or skip 'Unable to load Geo::Coder::Geocoder::US', $tests;
+
+    require_ok 'Astro::App::Satpass2::Geocode::Geocoder::US';
+
+    instantiate 'Astro::App::Satpass2::Geocode::Geocoder::US';
+}
+
+SKIP: {
+    my $tests = 2;
+
+    eval {
+	require Geo::Coder::OSM;
+	1;
+    } or skip 'Unable to load Geo::Coder::OSM', $tests;
+
+    require_ok 'Astro::App::Satpass2::Geocode::OSM';
+
+    instantiate 'Astro::App::Satpass2::Geocode::OSM';
+}
+
+SKIP: {
+    my $tests = 2;
+
+    eval {
+	require Geo::Coder::TomTom;
+	1;
+    } or skip 'Unable to load Geo::Coder::TomTom', $tests;
+
+    require_ok 'Astro::App::Satpass2::Geocode::TomTom';
+
+    instantiate 'Astro::App::Satpass2::Geocode::TomTom';
 }
 
 require_ok 'Astro::App::Satpass2'

@@ -123,6 +123,11 @@ my %twilight_abbr = abbrev (keys %twilight_def);
     }
 }
 
+my $default_geocoder =
+    load_package( 'Astro::App::Satpass2::Geocode::Geocoder::US' ) ||
+    load_package( 'Astro::App::Satpass2::Geocode::OSM' ) ||
+    load_package( 'Astro::App::Satpass2::Geocode::TomTom' );
+
 my %mutator = (
     appulse => \&_set_angle,
     autoheight => \&_set_unmodified,
@@ -145,6 +150,7 @@ my %mutator = (
     flare_mag_day => \&_set_unmodified,
     flare_mag_night => \&_set_unmodified,
     formatter => \&_set_formatter,
+    geocoder => \&_set_geocoder,
     geometric => \&_set_unmodified,
     gmt => \&_set_formatter_attribute,
     height => \&_set_distance_meters,
@@ -205,8 +211,9 @@ foreach ( keys %mutator, qw{ initfile } ) {
 
 my %shower = (
     date_format => \&_show_formatter_attribute,
-    formatter => \&_show_copyable,
     desired_equinox_dynamical => \&_show_formatter_attribute,
+    formatter	=> \&_show_copyable,
+    geocoder	=> \&_show_copyable,
     gmt => \&_show_formatter_attribute,
     local_coord => \&_show_formatter_attribute,
     time_parser => \&_show_copyable,
@@ -249,6 +256,7 @@ my %static = (
     flare_mag_day => -6,
     flare_mag_night => 0,
     formatter => 'Astro::App::Satpass2::Format::Template',	# Formatter class.
+    geocoder => $default_geocoder,	# Geocoder class
     geometric => 1,
     height => undef,		# meters
 #   initfile => undef,		# Set by init()
@@ -301,9 +309,11 @@ sub new {
 	warning => delete $args{warning}
     );
 
-    foreach my $name ( qw{ formatter time_parser } ) {
+    foreach my $name ( qw{ formatter geocoder time_parser } ) {
 	$self->set( $name => delete $args{$name} );
-	$self->get( $name )->warner( $warner );
+	my $obj;
+	$obj = $self->get( $name )
+	    and $obj->warner( $warner );
     }
 
     $self->set( %args );
@@ -707,100 +717,39 @@ sub formatter : Verb() {
     goto &_helper_handler;
 }
 
-{
+sub geocode : Verb( debug! ) {
+    my ($self, @args) = @_;
+    my ( $opt, $loc ) = $self->_getopt( @args );
 
-    sub geocode : Verb( debug! ) {
-	my ($self, @args) = @_;
-	return _geocode_us($self, $self->_getopt(@args));
+    my $set_loc;
+    if ( defined $loc ) {
+	$set_loc = 1;
+    } else {
+	$loc = $self->get( 'location' );
     }
 
-    sub _geocode_us {
-	my ($self, $opt, $loc) = @_;
-	$self->_load_module ('SOAP::Lite');
-	my ($output, $set_loc);
+    my $geocoder = $self->{geocoder}
+	or $self->_wail( 'No geocoder loaded' );
 
-	if (defined $loc) {
-	    $set_loc = 1;
-	} else {
-	    $loc = $self->get('location');
+    my @rslt = $geocoder->geocode( $loc );
+
+    my $output;
+    if ( @rslt == 1 ) {
+	$set_loc
+	    and $self->set( location => $rslt[0]{description} );
+	$self->set( map { $_ => $rslt[0]{$_} } qw{ latitude
+	    longitude } );
+	$output .= $self->show(
+	    ( $set_loc ? 'location' : () ), qw{latitude longitude} );
+	$self->get( 'autoheight' )
+	    and $output .= $self->_height_us($opt);
+    } else {
+	foreach my $poi ( @rslt ) {
+	    $output .= join ' ', map { $poi->{$_} } qw{ latitude
+	    longitude description };
 	}
-
-#	Manufacture a SOAP::Lite object appropriate to the version of
-#	SOAP::Lite we have installed.
-
-	my $soap = _soapdish ('http://rpc.geocoder.us/Geo/Coder/US',
-	    'http://geocoder.us/service/soap', '#');
-	$opt->{debug} and SOAP::Trace->import ('all');
-
-#	Query rpc.geocoder.us, and strain out various errors we might
-#	get back.
-
-	my $rslt = eval {$soap->geocode ($loc)->result};
-	my $err = $@;
-	$opt->{debug} and SOAP::Trace->import ('-all');
-	$rslt or $self->_wail("Failed to access geocode.us: $err");
-
-	$opt->{debug} and $self->_whinge($self->_get_dumper()->($rslt));
-
-	@$rslt or $self->_wail("Failed to parse address '$loc'");
-	$rslt->[0]{lat} or $self->_wail("Failed to find address '$loc'");
-
-#	If we got exactly one result back, set our latitude and
-#	longitude, and query for height if desired. Otherwise display
-#	all matching addresses, or a message if none are found.
-
-	if (@$rslt == 1) {
-	    $set_loc
-		and $self->{location} = _geocode_us_fmt($rslt->[0]);
-	    @$self{qw{latitude longitude}} = @{$rslt->[0]}{qw{lat long}};
-	    $output .= "\n";
-	    $output .= $self->show(
-		($set_loc ? 'location' : ()), qw{latitude longitude});
-	    $self->get('autoheight')
-		and $output .= $self->_height_us($opt);
-	} elsif (@$rslt) {
-	    foreach my $hash (@$rslt) {
-		$output .= _geocode_us_fmt($hash);
-	    }
-	} else {
-	    $output .= "Address not found.\n";
-	}
-	return $output;
     }
-
-    my $fmt_ = sub {
-	my $h = shift;
-	join (' ', map {(defined $h->{$_} && $h->{$_} ne '') ?
-		$h->{$_} : ()} @_);
-    };
-    my $fmt_addr = sub {$fmt_->($_[0],
-	    qw{number prefix street type suffix})
-    };
-    my $fmt_city = sub {$fmt_->($_[0],
-	    qw{city state zip});
-    };
-    my $fmt_intr = sub {
-	join (' ',
-	    $fmt_->($_[0], qw{prefix1 street1 type1 suffix1}),
-	    'and',
-	    $fmt_->($_[0], qw{prefix2 street2 type2 suffix2}))
-    };
-    my %fmtr = (
-	GeocoderResult => [$fmt_city],
-	GeocoderAddressResult => [$fmt_addr, $fmt_city],
-	GeocoderIntersectionResult => [$fmt_intr, $fmt_city],
-    );
-
-    sub _geocode_us_fmt {
-	my ($geo, $join) = @_;
-	defined $join or $join = ' ';
-	my $cls = ref $geo;
-	my $lst = $fmtr{$cls}
-	    or confess "Programming error - unexpected class $cls from ",
-	"geo.coder.us";
-	return join ($join, map {$_->($geo)} @$lst);
-    }
-
+    return $output;
 }
 
 sub geodetic : Verb() {
@@ -1513,6 +1462,12 @@ sub _set_code_ref {
 #    {name} is the required name of the attribute to set;
 #    {value} is the required value of the attribute to set;
 #    {class} is the optional class that the object must be;
+#    {default} is the optional default value if the required value is
+#        undef or '';
+#    {undefined} is an optional value which, if true, permits the
+#        attribute to be set to undef;
+#    {nocopy} is an optional value which, if true, causes the old
+#        object's attributes not to be copied to the new object;
 #    {message} is an optional message to emit if the object can not be
 #	instantiated;
 
@@ -1529,6 +1484,13 @@ sub _set_copyable {
 	    defined $arg{value}
 		and '' ne $arg{value}
 		or $arg{value} = $arg{default};
+	}
+	if ( ! defined $arg{value} || $arg{value} eq '' ) {
+	    $arg{undefined}
+		or $self->_wail(
+		"$arg{name} must be defined and not empty",
+	    );
+	    return ( $self->{$arg{name}} = $arg{value} = undef );
 	}
 	my @args;
 	my $base = 0;
@@ -1549,7 +1511,10 @@ sub _set_copyable {
     defined $arg{class}
 	and not $obj->isa( $arg{class} )
 	and $self->_wail( "$arg{name} must be of class $arg{class}" );
-    blessed( $old ) and $old->can( 'copy' ) and $old->copy( $obj );
+    blessed( $old )
+	and not $arg{nocopy}
+	and $old->can( 'copy' )
+	and $old->copy( $obj );
     $self->{$arg{name}} = $obj;
     return $arg{value};
 }
@@ -1580,6 +1545,20 @@ sub _set_formatter_attribute {
     my ( $self, $name, $val ) = @_;
     $self->get( 'formatter' )->$name( $val );
     return $val;
+}
+
+sub _set_geocoder {
+    my ( $self, $name, $val ) = @_;
+    return $self->_set_copyable(
+	name	=> $name,
+	value	=> $val,
+	class	=> 'Astro::App::Satpass2::Geocode',
+	message	=> 'Unknown formatter',
+	default	=> $default_geocoder,
+	undefined => 1,
+	nocopy	=> 1,
+	prefix	=> [ 'Astro::App::Satpass2::Geocode' ]
+    );
 }
 
 #sub _set_lowercase {
@@ -4696,17 +4675,19 @@ The default is C<-noraw> if called interactively, and C<-raw> otherwise.
  $output = $satpass2->geocode('1600 Pennsylvania Ave, Washington DC');
  satpass2> geocode '1600 Pennsylvania Ave, Washington DC'
 
-This interactive method looks up its argument at L<http://geocoder.us/>.
+This interactive method looks up its argument using the currently-set
+L<geocoder|/geocoder>. It will fail if no geocoder is set.
+
 If exactly one match is found, the location, latitude, and longitude
-attributes are set accordingly. If exactly one match is found and the
-L</autoheight> attribute is true, the L<height()|/height> method will be
-called on the resultant position.
+attributes are set accordingly.
+
+If exactly one match is found and the L<autoheight|/autoheight>
+attribute is true, the L<height()|/height> method will be called on the
+resultant position. This operation may fail if the location is outside
+the USA.
 
 The argument can be defaulted, in which case the current location
 attribute is looked up.
-
-This method will fail if the L<SOAP::Lite|SOAP::Lite> module can not be
-loaded.
 
 The results of the lookup are returned.
 
@@ -5804,6 +5785,23 @@ L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>, it C<must> conform
 that class' interface.
 
 The default is C<'Astro::App::Satpass2::Format::Classic'>.
+
+=head2 geocoder
+
+This attribute specifies which geocoding service can be used. It takes
+as its value any subclass of
+L<Astro::App::Satpass2::Geocode|Astro::App::Satpass2::Geocode> -- either
+an actual instantiated object or a class name. If the class name is
+omitted, the leading C<Astro::App::Satpass2::Geocode::> can be omitted.
+
+The default is the first of
+L<Astro::App::Satpass2::Geocode::Geocoder::US|Astro::App::Satpass2::Geocode::Geocoder::US>,
+L<Astro::App::Satpass2::Geocode::OSM|Astro::App::Satpass2::Geocode::OSM>,
+or
+L<Astro::App::Satpass2::Geocode::TomTom|Astro::App::Satpass2::Geocode::TomTom>
+that can be loaded. See the documentation for details of these, but
+basically each C<Astro::App::Satpass2::Geocode::*> class wraps a
+correspondingly-named C<Geo::Coder::*> class, which must be installed.
 
 =head2 geometric
 

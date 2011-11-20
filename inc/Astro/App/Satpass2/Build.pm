@@ -9,9 +9,13 @@ use Carp;
 use File::Spec;
 
 my @optionals_dir = qw{ xt author optionals };
-my @hide = qw{ Astro::SIMBAD::Client Astro::SpaceTrack Date::Manip
-    DateTime DateTime::TimeZone Geo::WebService::Elevation::USGS
-    SOAP::Lite Time::HiRes Time::y2038 };
+my @hide = qw{
+    Astro::SIMBAD::Client Astro::SpaceTrack
+    Date::Manip DateTime DateTime::TimeZone
+    Geo::Coder::Geocoder::US Geo::Coder::OSM Geo::Coder::TomTom
+    Geo::WebService::Elevation::USGS
+    Time::HiRes Time::y2038
+};
 
 {
     my $done;

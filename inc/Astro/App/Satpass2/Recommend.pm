@@ -10,8 +10,7 @@ sub recommend {
     my @recommend;
     my $pkg_hash = __PACKAGE__ . '::';
     no strict qw{ refs };
-    foreach my $subroutine (
-	sort keys %$pkg_hash ) {
+    foreach my $subroutine ( sort keys %$pkg_hash ) {
 	$subroutine =~ m/ \A _recommend_ \w+ \z /smx or next;
 	my $code = __PACKAGE__->can( $subroutine ) or next;
 	defined( my $recommendation = $code->() ) or next;
@@ -92,26 +91,40 @@ sub _recommend_datetime {
 EOD
 }
 
+sub _recommend_geo_coder {
+    local $@ = undef;
+    eval { require Geo::Coder::Geocoder::US; 1 }
+	or eval { require Geo::Coder::OSM; 1 }
+	or eval { require Geo::Coder::TomTom; 1 }
+	or return <<'EOD';
+    * None of Geo::Coder::Geocoder::US, Geo::Coder::OSM, or
+      Geo::Coder::TomTom is installed.
+      One of these modules is required by the Astro::App::Satpass2
+      geocode() method, but they are otherwise unused by this package.
+      If you do not intend to use this functionality, these modules are
+      not needed. Basically:
+
+      Geo::Coder::Geocoder::US uses http://geocoder.us/, covers only the
+          USA, and can only be queried once every 15 seconds;
+
+      Geo::Coder::OSM uses Open Street Map, whose coverage is better in
+          Europe than the USA;
+
+      Geo::Coder::TomTom has the best coverage, but uses an undocumented
+          and unsupported interface.
+EOD
+    return;
+}
+
 sub _recommend_geo_webservice_elevation_usgs {
     local $@ = undef;
     eval { require Geo::WebService::Elevation::USGS; 1 } and return;
     return <<'EOD';
     * Geo::WebService::Elevation::USGS is not installed.
-      This module is required for the Astro::App::Satpass2 height() method, but
-      is otherwise unused by this package. If you do not intend to use
-      this functionality, Geo::WebService::Elevation::USGS is not
-      needed.
-EOD
-}
-
-sub _recommend_soap_lite {
-    local $@ = undef;
-    eval { require SOAP::Lite; 1 } and return;
-    return <<'EOD';
-    * SOAP::Lite is not installed.
-      This module is required for the Astro::App::Satpass2 geocode() method,
-      but is otherwise unused by this package. If you do not intend to
-      use this functionality, SOAP::Lite is not needed.
+      This module is required for the Astro::App::Satpass2 height()
+      method, but is otherwise unused by this package. If you do not
+      intend to use this functionality, Geo::WebService::Elevation::USGS
+      is not needed.
 EOD
 }
 
@@ -136,7 +149,7 @@ EOD
 
     sub _recommend_time_y2038 {
 	eval { require Time::y2038; 1 } and return;
-	5.012 <= $] and return;
+	5.012 <= $] and return;	# Perl 5.12 is Y2038-compliant.
 	my $recommendation = <<'EOD';
     * Time::y2038 is not installed.
       This module is not required, but if installed allows you to do

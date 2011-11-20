@@ -74,6 +74,7 @@ Gasparovic
 gb
 geocode
 geocoder
+geocodes
 geocoding
 geoid
 GMT
@@ -156,6 +157,7 @@ tle
 tokenization
 tokenized
 tokenizing
+TomTom
 trampoline
 tt
 tz

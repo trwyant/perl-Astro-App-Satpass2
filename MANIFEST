@@ -35,6 +35,10 @@ lib/Astro/App/Satpass2/FormatTime/DateTime/Strftime.pm
 lib/Astro/App/Satpass2/FormatTime/POSIX/Strftime.pm
 lib/Astro/App/Satpass2/FormatTime/Strftime.pm
 lib/Astro/App/Satpass2/FormatValue.pm
+lib/Astro/App/Satpass2/Geocode.pm
+lib/Astro/App/Satpass2/Geocode/Geocoder/US.pm
+lib/Astro/App/Satpass2/Geocode/OSM.pm
+lib/Astro/App/Satpass2/Geocode/TomTom.pm
 lib/Astro/App/Satpass2/TUTORIAL.pod
 lib/Astro/App/Satpass2/Utils.pm
 lib/Astro/App/Satpass2/Warner.pm
@@ -52,6 +56,9 @@ t/format_time_datetime_strftime.t
 t/format_time_datetime_cldr.t
 t/format_time_posix_strftime.t
 t/format_value.t
+t/geocode_geocoder_us.t
+t/geocode_osm.t
+t/geocode_tomtom.t
 t/parse_time_iso8601.t
 t/parse_time_date_manip_5.t
 t/parse_time_date_manip_6.t

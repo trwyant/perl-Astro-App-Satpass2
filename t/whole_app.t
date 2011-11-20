@@ -898,18 +898,16 @@ SKIP: {
 SKIP: {
     my $tests = 4;
 
+    my $app = application;
+    my $geocoder = application->get( 'geocoder' )
+	or skip 'No geocoder loaded', $tests;
+
     my $rslt;
 ##  defined( $rslt = check_access( 'http://rpc.geocoder.us/Geo/Coder/US' ) )
-    defined( $rslt = check_access( 'http://rpc.geocoder.us/' ) )
+    defined( $rslt = check_access( $geocoder->GEOCODER_SITE() ) )
 	and skip $rslt, $tests;
 
-    eval {
-	require SOAP::Lite;
-	1;
-    } or skip 'Can not load SOAP::Lite', $tests;
-
     execute 'geocode "1600 Pennsylvania Ave, Washington DC"', <<'EOD',
-
 set location '1600 Pennsylvania Ave NW Washington DC 20502'
 set latitude 38.898748
 set longitude -77.037684

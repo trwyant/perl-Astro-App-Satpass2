@@ -15,6 +15,7 @@ use Test::More 0.52;
 use Astro::App::Satpass2;
 
 our @EXPORT = qw{
+    application
     check_access
     class
     execute
@@ -42,6 +43,10 @@ use constant TRUE => sub {
     shift;
     goto &ok;
 };
+
+sub application () {
+    return $app;
+}
 
 sub check_access ($) {
     my ( $url ) = @_;
@@ -169,6 +174,10 @@ perform tests on this object.
 =head1 SUBROUTINES
 
 This module exports the following subroutines:
+
+=head2 application
+
+This subroutine returns the current application object.
 
 =head2 check_access
 
