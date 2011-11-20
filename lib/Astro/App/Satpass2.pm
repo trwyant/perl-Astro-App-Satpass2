@@ -718,7 +718,7 @@ sub formatter : Verb() {
 }
 
 sub geocode : Verb( debug! ) {
-    my ($self, @args) = @_;
+    my ( $self, @args ) = @_;
     my ( $opt, $loc ) = $self->_getopt( @args );
 
     my $set_loc;
@@ -741,8 +741,10 @@ sub geocode : Verb( debug! ) {
 	    longitude } );
 	$output .= $self->show(
 	    ( $set_loc ? 'location' : () ), qw{latitude longitude} );
-	$self->get( 'autoheight' )
-	    and $output .= $self->_height_us($opt);
+	if ( $self->get( 'autoheight' ) ) {
+	    $opt->{geocoding} = 1;
+	    $output .= $self->_height_us($opt);
+	}
     } else {
 	foreach my $poi ( @rslt ) {
 	    $output .= join ' ', map { $poi->{$_} } qw{ latitude
@@ -788,14 +790,20 @@ sub _height_us {
 	places => 2,	# Service returns unreasonable precision
 	source => undef,	# 'best' data set
 	units => 'METERS',	# default for service is 'FEET'
+	croak	=> 0,		# Handle our own errors
     );
     @args or push @args, $self->get('latitude'), $self->get('longitude');
     my $output;
-    my ($rslt) = $eq->elevation(@args);
-    $eq->is_valid($rslt)
-	or $self->_wail("No valid result found");
-    $self->set(height => $rslt->{Elevation});
-    $output .= $self->show('height');
+    my ( $rslt ) = $eq->elevation(@args);
+    if ( $eq->is_valid( $rslt ) ) {
+	$self->set( height => $rslt->{Elevation} );
+    } else {
+	$opt->{geocoding}
+	    or $self->_wail( $eq->error() || 'No valid result found' );
+	$self->set( height => 0 );
+	$output .= "# Unable to obtain height. Setting to 0\n";
+    }
+    $output .= $self->show( 'height' );
     return $output;
 }
 
