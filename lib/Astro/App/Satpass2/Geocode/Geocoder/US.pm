@@ -46,8 +46,15 @@ sub geocode {
 
 sub _description {
     my ( $info ) = @_;
-    return join ' ', grep { defined $_ && $_ ne '' } map {
-    $info->{$_} } qw{ number prefix street type suffix city state zip };
+    return join ', ',
+	_join( $info, qw{ number prefix street type suffix } ),
+	_join( $info, qw{ city state zip } );
+}
+
+sub _join {
+    my ( $info, @keys ) = @_;
+    return join ' ', grep { defined $_ && '' ne $_ } map { $info->{$_} }
+	@keys;
 }
 
 1;

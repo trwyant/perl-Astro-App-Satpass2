@@ -908,14 +908,14 @@ SKIP: {
 	and skip $rslt, $tests;
 
     execute 'geocode "1600 Pennsylvania Ave, Washington DC"', <<'EOD',
-set location '1600 Pennsylvania Ave NW Washington DC 20502'
+set location '1600 Pennsylvania Ave NW, Washington DC 20502'
 set latitude 38.898748
 set longitude -77.037684
 EOD
 	'Geocode of White House returned expected data';
 
     method get => 'location',
-	'1600 Pennsylvania Ave NW Washington DC 20502',
+	'1600 Pennsylvania Ave NW, Washington DC 20502',
 	'Geocode of White House returned expected address';
 
     method get => 'latitude', 38.898748,

@@ -36,7 +36,7 @@ my @resp = $geocoder->geocode( $loc );
 
 is_deeply \@resp, [
     {
-	description	=> '1600 Pennsylvania Ave NW Washington DC 20502',
+	description	=> '1600 Pennsylvania Ave NW, Washington DC 20502',
 	latitude	=> '38.898748',
 	longitude	=> '-77.037684',
     }
