@@ -9,6 +9,7 @@
 ^cover_db/
 CVS/
 ^date_manip_v5/
+^Debian_CPANTS\.txt$
 ^foo
 ^html/
 ^iridium\.dat$

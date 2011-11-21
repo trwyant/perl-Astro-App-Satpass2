@@ -126,7 +126,7 @@ Each of these methods performs a single test.
 This convenience method sets the template named in the first argument of
 the previous L<format_setup()|/format_setup> call to the value of the
 first argument, then delegates the rest of its functionality to
-L<< $tst->method_fail()|Astro::App::Satpass2::Test/method_fail>, passing it the
+L<< $tst->method_fail()|Astro::App::Satpass2::Test/method_fail >>, passing it the
 method name and arguments specified in the previous call to
 L<format_setup()|/format_setup>, and the expected error and test name
 passed in this method's second and third arguments.
@@ -138,7 +138,7 @@ passed in this method's second and third arguments.
 This convenience method sets the template named in the first argument of
 the previous L<format_setup()|/format_setup> call to the value of the
 first argument, then delegates the rest of its functionality to L<<
-$tst->method_is()|Astro::App::Satpass2::Test/method_is>, passing it the method
+$tst->method_is()|Astro::App::Satpass2::Test/method_is >>, passing it the method
 name and arguments specified in the previous call to
 L<format_setup()|/format_setup>, and the expected result and test name
 passed in this method's second and third arguments.

@@ -10,11 +10,15 @@ diag 'Things needed for authortest';
 require_ok 'Astro::SIMBAD::Client';
 require_ok 'Astro::SpaceTrack';
 require_ok 'Date::Manip';
+ok eval {
+    Date::Manip->VERSION( 6 );
+    1;
+}, 'Installed Date::Manip is v6 or above';
 require_ok 'DateTime';
-ok eval { Date::Manip->VERSION( 6 ) }, 'Installed Date::Manip is v6';
 require_ok 'DateTime::TimeZone';
 require_ok 'Geo::Coder::TomTom';
 require_ok 'Geo::WebService::Elevation::USGS';
+require_ok 'Test::Kwalitee';
 require_ok 'Test::MockTime';
 require_ok 'Test::Perl::Critic';
 require_ok 'Test::Without::Module';

@@ -71,6 +71,7 @@ t/whole_app.t
 xt/author/basic.t
 xt/author/critic.t
 xt/author/executable.t
+xt/author/kwalitee.t
 xt/author/manifest.t
 xt/author/perlcriticrc
 xt/author/pod.t
