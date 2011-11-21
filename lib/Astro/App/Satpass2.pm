@@ -2322,7 +2322,7 @@ sub _choose {
 	    tz		=> 0,
 	},
 	method => {
-	    st	=> 0,
+	    st		=> 0,
 	},
 	status	=> {
 	    iridium	=> 2,
@@ -4498,8 +4498,8 @@ It is an error to have an end without a corresponding L<begin()|/begin>.
 =head2 execute
 
  $output = $satpass2->execute( <<'EOD' );
- st set direct 1
- st celestrak stations
+ spacetrack set direct 1
+ spacetrack celestrak stations
  choose iss
  pass 'today 12:00:00' +7
  EOD
@@ -4749,14 +4749,14 @@ arguments, it displays the documentation for this class (hint: you are
 reading this now). You can get documentation for related Perl modules by
 specifying the appropriate arguments, as follows:
 
- eci ------ Astro::Coord::ECI
- iridium -- Astro::Coord::ECI::TLE::Iridium
- moon ----- Astro::Coord::ECI::Moon
- sun ------ Astro::Coord::ECI::Sun
- st ------- Astro::SpaceTrack
- star ----- Astro::Coord::ECI::Star
- tle ------ Astro::Coord::ECI::TLE
- utils ---- Astro::Coord::ECI::Utils
+ eci -------- Astro::Coord::ECI
+ iridium ---- Astro::Coord::ECI::TLE::Iridium
+ moon ------- Astro::Coord::ECI::Moon
+ sun -------- Astro::Coord::ECI::Sun
+ spacetrack - Astro::SpaceTrack
+ star ------- Astro::Coord::ECI::Star
+ tle -------- Astro::Coord::ECI::TLE
+ utils ------ Astro::Coord::ECI::Utils
 
 The viewer is whatever is the default for your system.
 
