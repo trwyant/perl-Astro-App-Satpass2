@@ -75,6 +75,16 @@ simply issue the command
 
  satpass2> save -changes
 
+The name and location of the saved file depend on your operating system,
+but will be reported when you issue this command. Once the file is
+saved, you can display its location using
+
+ satpass2> initfile
+
+The configuration file's location is actually determined using
+C<< File::HomeDir->my_dist_config( 'Astro-App-Satpass2' ) >>. See the
+L<File::HomeDir|File::HomeDir> documentation for details.
+
 Subsequent runs of the F<satpass2> script will initialize from the new
 file. This form of the C<save> command just saves changes from the
 default configuration. If you wish to save all configuration, omit the
@@ -101,13 +111,13 @@ Latitude and longitude can be specified in either decimal degrees (e.g.
 40.5) or degrees, minutes and seconds (e.g. 40d30m0s). B<South> latitude
 and B<West> longitude are negative.
 
-Height is assumed to be in meters, but you can be specified in feet by
+Height is assumed to be in meters, but you can be specify it in feet by
 appending 'ft'. For example, '10' specifies 10 meters, as does '10m',
 but '10ft' specifies 10 feet.
 
-Because it would be painful to specify this every time you use it,
-C<Astro::App::Satpass2> allows a configuration file. The example that
-follows will end by creating a configuration file and storing the
+Because it would be painful to specify your position every time you use
+it, C<Astro::App::Satpass2> allows a configuration file. The example
+that follows will end by creating a configuration file and storing the
 configuration in it.
 
 And here, finally, is the example. We make the egregious assumption that
@@ -159,11 +169,20 @@ in the United States, C<Astro::App::Satpass2> can geocode your address,
 and then query the U. S. Geological Survey for your height above sea
 level.
 
-This requires two more optional modules: L<SOAP::Lite|SOAP::Lite> and
+This requires two more optional modules:
+L<Geo::Coder::Geocoder::US|Geo::Coder::Geocoder::US> and
 L<Geo::WebService::Elevation::USGS|Geo::WebService::Elevation::USGS>.
 With these installed, the address entry in the previous example becomes
 
  satpass2> geocode '1600 Pennsylvania Ave, Washington DC'
+
+When you issue this command, the geocoded location is displayed,
+formatted as C<set> commands:
+
+ set location '1600 Pennsylvania Ave NW, Washington DC 20502'
+ set latitude 38.898748
+ set longitude -77.037684
+ set height 17.38
 
 =head1 PREDICTING PASSES
 
@@ -194,9 +213,8 @@ point.
  satpass2> # Tell the Astro::SpaceTrack object to fetch us
  satpass2> # all the predicted orbital elements from NASA's
  satpass2> # Human Space Flight web site. We include the
- satpass2> # effective date, since there may be Space Shuttle
- satpass2> # data also, and that information is not usable
- satpass2> # until the actual launch.
+ satpass2> # effective date, since the data may include
+ satpass2> # planned changes in orbit.
  satpass2> spacetrack spaceflight -all -effective
  satpass2>
  satpass2> # Make the default pass prediction, which is for
@@ -257,13 +275,13 @@ over the normal horizon. If you can see 2 degrees over the horizon,
 
  satpass2> set horizon -2
 
+=head3 Twilight
+
 C<Astro::App::Satpass2> does not predict visible passes that occur
 during the day, and it defines day as any time after the start of
 morning twilight and before the end of evening twilight. These in turn
 are defined as the point when the upper limb of the Sun passes above or
 below a given distance below the horizon.
-
-=head3 Twilight
 
 By default, C<Astro::App::Satpass2> uses civil twilight to decide
 whether it is day or night. This is defined as the point at which the
@@ -413,9 +431,9 @@ output of any other command. For a nice list of passes and flares for
 your refrigerator door, you can do something like this:
 
  satpass2> location >this_week.txt
- satpass2> tell spacetrack spaceflight -all -effective
+ satpass2> spacetrack spaceflight -all -effective
  satpass2> pass >>this_week.txt
- satpass2> tell spacetrack celestrak iridium
+ satpass2> spacetrack celestrak iridium
  satpass2> flare -pm >>this_week.txt
  satpass2> exit
 
@@ -431,10 +449,10 @@ is a separate subsystem all to itself. So:
 
  satpass2>
  satpass2> # Display the date as weekday day-month-year
- satpass2> tell formatter date_format '%a %d-%b-%Y
+ satpass2> formatter date_format '%a %d-%b-%Y'
  satpass2>
  satpass2> # Display the time as 1-12 AM or PM
- satpass2> tell formatter time_format '%I:%M:%S %p'
+ satpass2> formatter time_format '%I:%M:%S %p'
  satpass2>
  satpass2> # Save the configuration, overwriting any previous one
  satpass2> save -changes -confirm
@@ -461,10 +479,10 @@ The default ISO-8601-ish time parser does not have a corresponding
 setting, but does allow you to append a C<'Z'> to the time to specify
 GMT.
 
-The formatter object also has a C<tz> setting, but this is unsupported
-because it relies on the C<TZ> environment variable, and the author has
-no control over whether your OS' POSIX code supports this. You can try
-it with something like
+The default formatter object also has a C<tz> setting, but this is
+unsupported because it relies on the C<TZ> environment variable, and the
+author has no control over whether your OS' POSIX code supports this.
+You can try it with something like
 
  satpass2> formatter tz MST7MDT
 
@@ -492,11 +510,11 @@ Wednesday, and point 'B' Thursday and Friday you can easily switch
 between them.
 
 This section relies on the fact that C<Astro::App::Satpass2> can define
-a thing called a C<macro>, which is a named set of commands. The macro
-is executed by giving its name, so in essence macros are a way to create
-new commands. You can pass arguments to macros, but that is a more
-advanced topic. Here, we are just going to set up macros representing a
-number of locations.
+a thing called a C<macro>, which is a named set of commands, somewhat
+like a C<bash> shell function. The macro is executed by giving its name,
+so in essence macros are a way to create new commands. You can pass
+arguments to macros, but that is a more advanced topic. Here, we are
+just going to set up macros representing a number of locations.
 
 The definition of a macro is simply the list of commands it issues. Each
 command is a single argument, and therefore probably needs to be quoted.
@@ -593,14 +611,15 @@ L<Astro::SpaceTrack|Astro::SpaceTrack> object,
  satpass2> localize spacetrack
 
 inside the appropriate scope. Yes, you can localize outside a macro (or
-any other localization scope), but it does no good to do so, because the
-old value is not restored until you exit, and what good is that?
+any other localization scope, such as inside a C<source> file or a
+C<begin>-C<end> block), but it does no good to do so, because the old
+value is not restored until you exit, and what good is that?
 
 =head2 Reporting Position
 
-By default, anything that reports a position does it in elevation,
-azimuth and range. You may want some other units, such as right
-ascension and declination.
+By default, anything that reports a satellite position does it in
+elevation, azimuth and range. You may want some other units, such as
+right ascension and declination.
 
 Deciding what to display is the job of the C<formatter> helper object.
 Normally this is an
@@ -622,7 +641,7 @@ ascension, declination and range, just
 
  satpass2> tell formatter local_coord equatorial_rng
 
-=head2 User-defined Positions
+=head2 User-defined Position Coordinates
 
 L<Astro::App::Satpass2::Format::Template|Astro::App::Satpass2::Format::Template>
 defines these local coordinates in terms of L<Template-Toolkit|Template>
@@ -632,15 +651,15 @@ templates, using that formatter's
 L<template()|Astro::App::Satpass2::Format::Template/template> method.
 For example, to make C<azel> report azimuth first,
 
- satpass2> tell formatter template azel <<'EOD'
+ satpass2> formatter template azel <<'EOD'
  > [% data.azimuth( bearing = 2 ) %]
  >     [%= data.elevation %]
  > EOD
 
 See the
 L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
-documentation for what format effectors are available. The C<data>
-object will contain the data you want to format.
+documentation for what format effectors are available. Inside the
+template, the C<data> object will contain the data you want to format.
 
 =head1 AUTHOR
 
