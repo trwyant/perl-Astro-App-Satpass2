@@ -73,6 +73,7 @@ FreeDesktop
 Gasparovic
 gb
 geocode
+geocoded
 geocoder
 geocodes
 geocoding
