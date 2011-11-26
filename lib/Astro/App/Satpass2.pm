@@ -3379,35 +3379,6 @@ sub _simbad4 {
     return wantarray ? @rslt : join ' ', @rslt;
 }
 
-#	$soap_object = _soapdish ($uri, $proxy, $action)
-
-#	Manufacture a SOAP::Lite object for the given uri and proxy.
-#	We need this because SOAP::Lite has changed significantly since
-#	the 2002 version that is to this day (2006) bundled with
-#	ActivePerl.
-
-#	The action argument is the separater for building the
-#	SOAPAction header. It defaults to '' (suitable for .NET's
-#	delicate digestion). If you want to restore SOAP::Lite's
-#	original behavior, specify '#'. Any other values are
-#	_NOT_ supported, and may result in a visit from unsympathetic
-#	men in snap-brim hats, dark glasses, and bad suits.
-
-sub _soapdish {
-    my ($uri, $proxy, $conn) = @_;
-    $conn ||= '';
-    return SOAP::Lite->can ('default_ns') ?
-	SOAP::Lite
-	    ->default_ns ($uri)
-	    ->on_action (sub {join $conn, @_})
-	    ->proxy ($proxy, timeout => 30) :
-	SOAP::Lite
-	    ->envprefix ('soap')
-	    ->on_action (sub {join $conn, @_})
-	    ->uri ($uri)
-	    ->proxy ($proxy, timeout => 30);
-}
-
 #	$result = $self->_tilde_expand($token);
 #
 #	This does a tilde expansion on the token. If the token does not
