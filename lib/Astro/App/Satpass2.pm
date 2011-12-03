@@ -3823,30 +3823,29 @@ sub _user_home_dir {
 			$name, $args, $relquote);
 		}
 
-		# If the value is not logically defined (i.e. it is
-		# undef or an empty array) we do nothing.
+		# For simplicity in what follows, make the value into an
+		# array reference.
+		ref $value
+		    or $value = defined $value ? [ $value ] : [];
 
-		if (ref $value ? !@$value : !defined $value) {
+		# Do word splitting on the value, unless we are inside
+		# quotes.
+		$relquote
+		    or $value = [ map { split qr{ \s+ }smx } @{ $value } ];
 
-		# If the value is an array reference, we append each
-		# element to the current token, and then create a new
-		# token for the next element. The last element's empty
-		# token gets discarded, since we may need to append
-		# more data to the last element (e.g. "$@ foo").
-
-		} elsif (ref $value) {
-		    foreach (@$value) {
+		# If we have a value, append each element to the current
+		# token, and then create a new token for the next
+		# element. The last element's empty token gets
+		# discarded, since we may need to append more data to
+		# the last element (e.g.  "$@ foo").
+		if ( @{ $value } ) {
+		    foreach ( @$value ) {
 			$rslt[-1]{token} .= $_;
 			push @rslt, {};
 		    }
 		    pop @rslt;
-
-		# A scalar is the only remaining possibility. We append
-		# its value to the current token.
-
-		} else {
-		    $rslt[-1]{token} .= $value;
 		}
+
 
 		# Here ends the variable expansion code.
 
@@ -6300,9 +6299,13 @@ environment variable, or any of the following special characters:
  # - The number of positional arguments;
  * - All arguments, but joined by white space inside double
      quotes;
- @ - All arguments as individual tokens;
+ @ - All arguments as individual tokens, even inside double
+     quotes;
  $ - The process ID;
  _ - The name of the Perl executable ($^X).
+
+The interpolated value will be split on white space into multiple tokens
+unless the interpolation takes place inside double quotes.
 
 The name of the thing to be interpolated can be enclosed in curly
 brackets if needed to delimit it from following text. This also allows
@@ -6426,7 +6429,7 @@ deprecation cycle and removed.
 
 People using the 'st' command interactively can define 'st' as a macro:
 
- satpass2> macro define st 'spacetrack $@'
+ satpass2> macro define st 'spacetrack "$@"'
 
 Note that the elimination of this command/method leaves you no way to
 localize individual attributes of the L<spacetrack|/spacetrack>
@@ -6450,8 +6453,9 @@ F<satpass> script off from L<Astro::Coord::ECI|Astro::Coord::ECI>, but
 CPAN does not detect changes in scripts.
 
 It was dropped because the F<satpass2> script is trivial. Added
-functionality will (almost always) go in C<Astro::App::Satpass2>, and changes
-there will be detected by CPAN or CPANPLUS.
+functionality will (almost always) go in C<Astro::App::Satpass2>, and
+changes there will be detected by the C<cpan>, C<cpanp>, or C<cpanm>
+scripts.
 
 =item store, retrieve
 
@@ -6482,20 +6486,21 @@ really smart enough to know when the user would want this output.
 
 Until support for the F<satpass> script is dropped, though, output from
 this command will still include the location if the command is issued
-from a F<satpass> initialization file (as opposed to an C<Astro::App::Satpass2>
-initialization file), or from a macro defined in a F<satpass>
-initialization file.
+from a F<satpass> initialization file (as opposed to an
+C<Astro::App::Satpass2> initialization file), or from a macro defined in
+a F<satpass> initialization file.
 
 =item flare
 
 The sense of the C<-am>, C<-day>, and C<-pm> options is reversed from
 the sense in F<satpass>. That is, in F<satpass>, C<-am> meant not to
-display morning flares, whereas in C<Astro::App::Satpass2>, C<-noam> means not
-to display morning flares.
+display morning flares, whereas in C<Astro::App::Satpass2>, C<-am> means
+not to display morning flares, and C<-noam> means not to. I personally
+found the F<satpass> functionality confusing.
 
-In order to ease the transition to C<Astro::App::Satpass2>, these options will
-be taken in their F<satpass> sense (and inverted to their new sense
-before use) if the C<flare> command is used in a F<satpass>
+In order to ease the transition to C<Astro::App::Satpass2>, these
+options will be taken in their F<satpass> sense (and inverted to their
+new sense before use) if the C<flare> command is used in a F<satpass>
 initialization file, or in a macro defined in a F<satpass>
 initialization file. There is no supported way to get the F<satpass>
 behavior when using the C<flare> command in any other environment, or
@@ -6504,10 +6509,20 @@ when support for F<satpass> is dropped.
 
 =item geocode
 
-This method no longer handles locations in Canada, because the
-underlying web service changed its access policy. This functionality
-became unsupported in satpass 0.021 (Astro-satpass 0.021 13-Feb-2009)
-for pretty much the same reason.
+Support for L<http://geocoder.ca/> has been dropped, because the web
+service changed its access policy. This functionality became unsupported
+in F<satpass> 0.021 (Astro-satpass 0.021 13-Feb-2009) for pretty much
+the same reason.
+
+Instead, geocoding is handled by external modules, typically those that
+B<do not> require the registration of an application key. Wrapper
+classes have been provided for three of these:
+L<Geo::Coder::Geocoder::US|Geo::Coder::Geocoder::US>,
+L<Geo::Coder::OSM|Geo::Coder::OSM>, and
+L<Geo::Coder::TomTom|Geo::Coder::TomTom>. The names of the wrapper
+classes are (so far) derived from the names of the wrapped classes by
+C<s/\AGeo::Coder::/Astro::App::Satpass2::Geocode::/>, and the constant
+prefix on the wrapper name may be omitted when setting the geocoder.
 
 =item pass
 

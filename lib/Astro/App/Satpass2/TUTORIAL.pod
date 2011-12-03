@@ -580,16 +580,18 @@ the macro exits. The example could be defined as a macro like this:
  satpass2> macro define iridium_flare \
  > 'localize twilight flare_mag_night' \
  > 'set twilight -1.8 flare_mag_night -1' \
- > 'flare $@'
+ > 'flare "$@"'
  satpass2>
 
-Note the use of single quotes rather than double quotes here. In double
+Note the use of single quotes rather than double quotes to enclose the
+C<flare> command. In double
 quotes, or outside quotes altogether, the C<$> is magical, and
 introduces something to be interpolated into the command. Exactly what
 is interpolated depends on what follows the C<$>. The C<$@> is replaced
 by the arguments of the macro (or whatever), but we do not want this to
-happen until the macro is expanded. Another way to defer expansion would
-be to escape the dollar sign with a back slash, i.e. C<"flare \$@">.
+happen until the macro is expanded. Enclosing the C<$@> in double quotes
+ensures that macro arguments containing spaces remain single arguments;
+without the double quotes they would become multiple arguments.
 
 So if you say
 

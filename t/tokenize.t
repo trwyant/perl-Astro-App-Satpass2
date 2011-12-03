@@ -281,6 +281,20 @@ tokenize q<"$@">, [ [ qw{ one two three } ], {} ]
 tokenize q<"xx$@yy">, [ [ qw{ xxone two threeyy } ], {} ]
     or dump_tokens;
 
+set_positional 'o ne', 'two';
+
+tokenize q<xx$@yy>, [ [ qw{ xxo ne twoyy } ], {} ]
+    or dump_tokens;
+
+tokenize q<"xx$@yy">, [ [ 'xxo ne', 'twoyy' ], {} ]
+    or dump_tokens;
+
+tokenize q<xx$*yy>, [ [ qw{ xxo ne twoyy } ], {} ]
+    or dump_tokens;
+
+tokenize q<"xx$*yy">, [ [ 'xxo ne twoyy' ], {} ]
+    or dump_tokens;
+
 tokenize q<${foo:-flurfle}>, [ [ 'bar' ], {} ]
     or dump_tokens;
 
@@ -304,7 +318,7 @@ tokenize_fail q<${yehudi:?not foolish}>, qr{\Qnot foolish}smx;
 tokenize q<${foo:+foolish}>, [ [ 'foolish' ], {} ]
     or dump_tokens;
 
-tokenize q<${yehudi:+foolish}>, [ [ '' ], {} ]
+tokenize q<${yehudi:+foolish}>, [ [], {} ]
     or dump_tokens;
 
 tokenize q<${foo:1}>, [ [ 'ar' ], {} ]
