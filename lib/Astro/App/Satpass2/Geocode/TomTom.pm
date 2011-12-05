@@ -11,7 +11,7 @@ use Astro::App::Satpass2::Utils qw{ instance };
 use Carp;
 use Geo::Coder::TomTom;
 
-our $VERSION = '0.000_01';
+our $VERSION = '0.000_30';
 
 use constant GEOCODER_CLASS => 'Geo::Coder::TomTom';
 
