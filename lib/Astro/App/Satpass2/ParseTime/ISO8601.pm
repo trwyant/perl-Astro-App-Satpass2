@@ -113,10 +113,13 @@ sub tz {
     my ( $self, @args ) = @_;
     if ( @args ) {
 	if ( defined $args[0] && $args[0] ne '' ) {
-	    $args[0] =~ m/ \A $zone_re \z /smxo
-		or $self->warner()->wail(
-		    "Invalid zone '$args[0]'" );
-	    $self->{+__PACKAGE__}{tz} = [ $1, $2, $3, $4 ];
+	    if ( $args[0] =~ m/ \A $zone_re \z /smxo ) {
+		$self->{+__PACKAGE__}{tz} = [ $1, $2, $3, $4 ];
+	    } else {
+		$self->warner()->whinge(
+		    "Ignoring invalid zone '$args[0]'" );
+		delete $self->{+__PACKAGE__}{tz};
+	    }
 	} else {
 	    delete $self->{+__PACKAGE__}{tz};
 	}
@@ -143,7 +146,8 @@ dates C<'yesterday'>, C<'today'>, and C<'tomorrow'>.
 This class understands ISO-8601 time zone specifications of the form
 'Z', 'UT', 'GMT' and C<[+-]\d{1,2}:?\d{,2}>, but it knows nothing about
 shifts for summer time. So C<2009/7/1 12:00:00 -5> is 5:00 PM GMT, not
-4:00 PM.
+4:00 PM. An attempt to set any other time zone will result in a warning,
+and the system default zone being used.
 
 =head1 METHODS
 
