@@ -28,7 +28,10 @@ can_ok 'Astro::App::Satpass2::Format' => 'tz';
 
 class 'Astro::App::Satpass2::Format';
 
-method 'new', INSTANTIATE, 'Instantiate';
+{
+    local $ENV{TZ} = undef;	# Tests explicitly assume no TZ.
+    method 'new', INSTANTIATE, 'Instantiate';
+}
 
 method gmt => 1, TRUE, 'Set gmt to 1';
 
