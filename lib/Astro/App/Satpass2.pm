@@ -53,7 +53,7 @@ BEGIN {
 	};
 }
 
-our $VERSION = '0.000_30';
+our $VERSION = '0.000_31';
 
 my $interrupted = 'Interrupted by user.';
 

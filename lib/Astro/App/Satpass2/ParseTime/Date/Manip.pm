@@ -7,7 +7,7 @@ use Carp;
 
 use Astro::App::Satpass2::Utils qw{ load_package };
 
-our $VERSION = '0.000_30';
+our $VERSION = '0.000_31';
 
 my $delegate;
 

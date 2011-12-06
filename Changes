@@ -1,2 +1,16 @@
+0.000_31	06-Dec-2011	T. R. Wyant
+  Have Astro::App::Satpass2::ParseTime::ISO8601->tz() regard an invalid
+    time zone as a warning rather than an error, and equivalent to the
+    system's local time zone (i.e. $ENV{TZ} = undef).
+  Correct t/tokenize.t to use File::HomeDir->my_home() rather than
+    getpwuid in the tilde expansion tests.
+  Have Astro::App::Satpass2::Warner ignore the Astro::App::Satpass2
+    modules when carping or croaking.
+  Override the system's $ENV{TZ} in t/format.t, since the tests
+    explicitly require this to be undefined.
+  Have t/basic.t display $ENV{TZ} for future reference.
+  Correct Astro::App::Satpass2 optional module documentation to reflect
+    the current state of the code.
+
 0.000_30	05-Dec-2011	T. R. Wyant
   Initial release to CPAN.
