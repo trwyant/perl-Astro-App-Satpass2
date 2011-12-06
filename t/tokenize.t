@@ -6,6 +6,7 @@ use warnings;
 use Test::More 0.88;
 
 use Cwd qw{ cwd };
+use File::HomeDir;
 
 sub dump_tokens;
 sub new;
@@ -133,9 +134,9 @@ SKIP:{
 
     my $home;
     eval {
-	$home = ( getpwuid( $< ) )[7];
+	$home = File::HomeDir->my_home();
 	1;
-    } or skip 'getpwuid failed', $tests;
+    } or skip "File::HomeDir->my_home() failed: $@", $tests;
 
     tokenize q{~}, [ [ $home ], {} ]
 	or dump_tokens;
