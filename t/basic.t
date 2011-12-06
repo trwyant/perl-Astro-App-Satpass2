@@ -19,6 +19,9 @@ eval {	## no critic (RequireCheckingReturnValueOfEval)
 
 plan tests => 56;
 
+defined $ENV{TZ}
+    and diag "\$ENV{TZ} is '$ENV{TZ}'";
+
 require_ok 'Astro::App::Satpass2::Copier'
     or BAIL_OUT;
 
