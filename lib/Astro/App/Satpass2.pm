@@ -4232,16 +4232,29 @@ L<DateTime::TimeZone|DateTime::TimeZone> installed,
 C<Astro::App::Satpass2> will let you use C<Cldr> time formats if you
 like, instead of C<strftime> formats.
 
+=item L<Geo::Coder::Geocoder::US|Geo::Coder::Geocoder::US>
+
+This module is used by the default geocoder for the
+L<geocode()|/geocode> method.  If you are not interested in using the
+L<geocode()|/geocode> method you do not need this method.
+
+=item L<Geo::Coder::OSM|Geo::Coder::OSM>
+
+This module is used by the Open Street Map geocoder for the
+L<geocode()|/geocode> method.  If you are not interested in using the
+L<geocode()|/geocode> method you do not need this method.
+
+=item L<Geo::Coder::TomTom|Geo::Coder::TomTom>
+
+This module is used by the Tom Tom geocoder for the
+C<geocode()|/geocode> method.  If you are not interested in using the
+L<geocode()|/geocode> method you do not need this method.
+
 =item L<Geo::WebService::Elevation::USGS|Geo::WebService::Elevation::USGS>
 
 This module is only used by the L<height()|/height> method, or
 indirectly by the L<geocode()|/geocode> method. If you are not
 interested in these you do not need this module.
-
-=item L<SOAP::Lite|SOAP::Lite>
-
-This module is used by the L<geocode()|/geocode> and L<height()|/height>
-methods. If you are not interested in these you do not need this module.
 
 =item L<Time::HiRes|Time::HiRes>
 
