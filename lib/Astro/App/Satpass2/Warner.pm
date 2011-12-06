@@ -7,6 +7,22 @@ use warnings;
 
 use Carp;
 
+our @CARP_NOT = ( qw{
+    Astro::App::Satpass2
+    Astro::App::Satpass2::Format
+    Astro::App::Satpass2::Format::Dump
+    Astro::App::Satpass2::Format::Template
+    Astro::App::Satpass2::FormatTime::DateTime
+    Astro::App::Satpass2::FormatValue
+    Astro::App::Satpass2::Geocode
+    Astro::App::Satpass2::Geocode::Geocoder::US
+    Astro::App::Satpass2::Geocode::OSM
+    Astro::App::Satpass2::Geocode::TomTom
+    Astro::App::Satpass2::ParseTime::Date::Manip::v5
+    Astro::App::Satpass2::ParseTime::Date::Manip::v6
+    Astro::App::Satpass2::ParseTime::ISO8601
+} );
+
 our $VERSION = '0.000_30';
 
 sub new {
