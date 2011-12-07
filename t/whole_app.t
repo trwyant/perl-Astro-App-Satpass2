@@ -8,6 +8,7 @@ use lib qw{ inc };
 use Test::More 0.88;
 use Astro::App::Satpass2::Test::App;
 
+use File::HomeDir;
 use Scalar::Util qw{ blessed };
 
 $| = 1;	## no critic (RequireLocalizedPunctuationVars)
@@ -886,9 +887,9 @@ SKIP: {
 
     my $home;
     eval {
-	$home = (getpwuid($<))[7];
+	$home = File::HomeDir->my_home();
 	1;
-    } or skip "Can not execute getpwuid", $tests;
+    } or skip "File::HomeDir->my_home() failed: $@", $tests;
 
     execute 'cd', undef, 'Change to directory, no argument';
 
