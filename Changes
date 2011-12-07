@@ -1,3 +1,7 @@
+0.000_32	07-Dec-2011	T. R. Wyant
+  Correct t/whole_app.t to use File::HomeDir->my_home() rather than
+    getpwuid in the tilde expansion tests.
+
 0.000_31	06-Dec-2011	T. R. Wyant
   Have Astro::App::Satpass2::ParseTime::ISO8601->tz() regard an invalid
     time zone as a warning rather than an error, and equivalent to the

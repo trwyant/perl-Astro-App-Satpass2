@@ -10,7 +10,7 @@ use Carp;
 use Astro::App::Satpass2::Utils qw{ load_package };
 use Astro::Coord::ECI::Utils qw{ looks_like_number };
 
-our $VERSION = '0.000_31';
+our $VERSION = '0.000_32';
 
 my %static = (
     perltime	=> 0,
