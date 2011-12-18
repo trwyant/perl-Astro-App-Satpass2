@@ -1964,7 +1964,8 @@ sub source : Verb( optional! ) {
     $handler{show} = $handler{config};
 
     sub spacetrack : Verb( all! changes! descending! effective!
-    end_epoch=s last5! raw! rcs!  sort=s start_epoch=s tle! verbose! ) {
+    end_epoch=s exclude=s last5! raw! rcs! status=s sort=s
+    start_epoch=s tle! verbose! ) {
 
 	my ( $self, @args ) = @_;
 	( my $opt, my $method, @args ) = $self->_getopt( @args );
