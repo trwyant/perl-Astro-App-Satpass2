@@ -1,3 +1,7 @@
+0.000_33	23-Dec-2011	T. R. Wyant
+  Add options -exclude and -status to Astro::App::Satpass2 spacetrack()
+    method, so they get passed through to the Astro::SpaceTrack object.
+
 0.000_32	07-Dec-2011	T. R. Wyant
   Correct t/whole_app.t to use File::HomeDir->my_home() rather than
     getpwuid in the tilde expansion tests.
