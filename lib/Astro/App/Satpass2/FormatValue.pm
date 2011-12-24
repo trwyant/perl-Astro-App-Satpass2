@@ -17,6 +17,8 @@ use POSIX qw{ floor };
 use Scalar::Util qw{ reftype };
 use Text::Wrap ();
 
+our $VERSION = '0.000_33';
+
 use constant NONE => undef;
 
 #	Instantiator
