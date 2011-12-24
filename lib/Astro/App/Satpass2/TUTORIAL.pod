@@ -487,8 +487,8 @@ You can try it with something like
  satpass2> formatter tz MST7MDT
 
 (for Mountain time). If it works, fine. If not, you can make it work by
-installing C<DateTime|DateTime> and
-C<DateTime::TimeZone|DateTime::TimeZone>. Doing this also gives you the
+installing L<DateTime|DateTime> and
+L<DateTime::TimeZone|DateTime::TimeZone>. Doing this also gives you the
 Olson database zone names (e.g. C<America/New_York>) if you prefer
 these.
 
