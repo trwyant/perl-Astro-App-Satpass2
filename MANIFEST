@@ -63,6 +63,7 @@ t/parse_time_iso8601.t
 t/parse_time_date_manip_5.t
 t/parse_time_date_manip_6.t
 t/printenv.pl
+t/read_file.t
 t/rewrite.t
 t/rewrite_macros
 t/source.dat

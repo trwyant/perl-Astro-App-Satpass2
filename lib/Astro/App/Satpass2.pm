@@ -877,34 +877,25 @@ sub init {
 
     $self->{initfile} = undef;
 
-    if (defined $init_file && $init_file ne '') {
+    foreach (
+	sub { return ( $init_file, $opt->{level1} ) },
+	sub { return $ENV{SATPASS2INI} },
+	sub { $self->initfile( { quiet => 1 } ) },
+	sub { return ( $ENV{SATPASSINI}, 1 ) },
+	\&_init_file_01,
+    ) {
 
-	-f $init_file
-	    or $self->_wail("Initialization file $init_file not found");
+	my ( $fn, $level1 ) = $_->($self);
+	my $reader = $self->_file_reader( $fn, { optional => 1 } )
+	    or next;
+	$self->{initfile} = $fn;
+	return $self->source( { level1 => $level1 }, $reader );
 
-	$self->{initfile} = $init_file;
-	return $self->source( { level1 => $opt->{level1} }, $init_file );
-
-    } else {
-
-	foreach (
-	    sub { return $ENV{SATPASS2INI} },
-	    sub { $self->initfile( { quiet => 1 } ) },
-	    sub { return ( $ENV{SATPASSINI}, 1 ) },
-	    \&_init_file_01
-	) {
-
-	    my ( $fn, $level1 ) = $_->($self);
-	    defined $fn and $fn ne '' or next;
-	    chomp $fn;
-	    -f $fn or next;
-	    $self->{initfile} = $fn;
-	    return $self->source( { level1 => $level1 }, $fn);
-
-	}
     }
 
-    return;
+    $self->_wail("Initialization file $init_file not found");
+
+    return;	# We can't get here, but Perl::Critic does not know this
 }
 
 
@@ -963,20 +954,41 @@ sub list : Verb( choose=s@ ) {
     return;
 }
 
+sub _glob_files {
+    my @arg = @_;
+    my @rslt;
+    foreach ( @arg ) {
+	if ( openhandle( $_ ) || ref $_ ) {
+	    push @rslt, $_;
+	} else {
+	    push @rslt, bsd_glob( $_, GLOB_NOSORT | GLOB_BRACE |
+		GLOB_QUOTE | GLOB_NOCHECK );
+	}
+    }
+    return @rslt;
+}
+
 sub load : Verb( verbose! ) {
     my ( $self, @names ) = @_;
     ( my $opt, @names ) = $self->_getopt( @names );
     @names or $self->_wail( 'No file names specified' );
+
+=begin comment
+
     @names = map {
 	bsd_glob( $_, GLOB_NOSORT | GLOB_BRACE | GLOB_QUOTE )
     } @names;
+    @names = _glob_files( @names );
+
+=end comment
+
+=cut
+
     @names or $self->_wail( 'No files found' );
     foreach my $fn ( @names ) {
 	$opt->{verbose} and warn "Loading $fn\n";
-	my $fh = IO::File->new( $fn, '<' )
-	    or $self->_wail("Unable to open $fn: $!");
-	push @{$self->{bodies}}, Astro::Coord::ECI::TLE->parse(<$fh>);
-	close $fh;
+	my $data = $self->_file_reader( $fn, { glob => 1 } );
+	push @{$self->{bodies}}, Astro::Coord::ECI::TLE->parse( $data );
     }
     return;
 }
@@ -1845,38 +1857,11 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 
 }
 
-sub _source_reader {
-    my ( $self, $source, $opt ) = @_;
-
-    defined $source
-	or $self->_wail( "Source name, handle or reference required" );
-
-    openhandle( $source )
-	and return sub { return scalar <$source> };
-
-    if ( ! ref $source ) {
-	my $fh = IO::File->new( $source, '<' )
-	    or do {
-	    $opt->{optional} and return;
-	    $self->_wail( "Failed to open $source: $!" );
-	};
-	return sub { return scalar <$fh> };
-    }
-
-    if ( 'ARRAY' eq ref $source ) {
-	my $inx = 0;
-	return sub { return $source->[$inx++] };
-    }
-
-    $self->_wail( 'Can not source a reference to ', ref $source );
-    return;	# Can't get here, but Perl::Critic does not know that.
-}
-
 sub source : Verb( optional! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     my $output;
-    my $reader = $self->_source_reader( shift @args, $opt )
+    my $reader = $self->_file_reader( shift @args, $opt )
 	or return;
 
     my @level1_cache;
@@ -2352,6 +2337,128 @@ sub _choose {
 	return defined $deprecate{$type}{$name};
     }
 
+}
+
+#	$code = $self->_file_reader( $file, \%opt );
+#
+#	This method returns a code snippet that returns the contents of
+#	the file one line at a time. The $file can be any of:
+#
+#	* An open handle
+#	* A URL (if LWP::UserAgent can be loaded)
+#	* A file name
+#	* A scalar reference
+#	* An array reference
+#	* A code reference, which is returned unmodified
+#
+#	The code snippet will return undef at end-of-file.
+#
+#	The following keys in %opt are recognized:
+#	{optional} causes the code to simply return on an error, rather
+#	    than failing.
+
+sub _file_reader {
+    my ( $self, $file, $opt ) = @_;
+
+    if ( openhandle( $file ) ) {
+	$opt->{glob}
+	    or return sub { return scalar <$file> };
+	local $/ = undef;
+	return scalar <$file>;
+    }
+
+    my $ref = ref $file;
+    my $code = $self->can( '_file_reader_' . ref $file )
+	or $self->_wail(
+	sprintf 'Opening a %s ref is unsupported', ref $file
+    );
+
+    goto &$code;
+}
+
+sub _file_reader_ {
+    my ( $self, $file, $opt ) = @_;
+
+    defined $file
+	and chomp $file;
+
+    if ( ! defined $file || ! ref $file &&  '' eq $file ) {
+	$opt->{optional} and return;
+	$self->_wail( 'Defined file required' );
+    }
+
+    # TODO using a regex for recognizing URL schemes is ad-hocery. The
+    # rationale of the regex is to require at least two characters,
+    # because that is the shortest registered scheme and to avoid DOS
+    # file names. Forbidding a left square bracket after the colon is to
+    # avoid VMS file names. The right way to do this is to find a module
+    # that knows what the legal schemes are. A less-right way is to
+    # imbed the list of registered scheme names in the code (there are
+    # 90 or so listed with IANA).
+
+    if ( $file =~ m/ \A [-.\w]{2,} : (?! \[ ) /smx	# ]
+	&& load_package( 'LWP::UserAgent' ) ) {
+	my $ua = LWP::UserAgent->new();
+	my $resp = $ua->get( $file );
+	$resp->is_success()
+	    or do {
+	    $opt->{optional} and return;
+	    $self->_wail( "Failed to retrieve $file: ",
+		$resp->status_line() );
+	};
+	return $self->_file_reader( \( scalar $resp->content() ), $opt );
+    } else {
+	my $fh = IO::File->new( $file, '<' )
+	    or do {
+	    $opt->{optional} and return;
+	    $self->_wail( "Failed to open $file: $!" );
+	};
+	$opt->{glob}
+	    or return sub { return scalar <$fh> };
+	local $/ = undef;
+	return scalar <$fh>;
+    }
+}
+
+sub _file_reader_ARRAY {
+    my ( $self, $file, $opt ) = @_;
+
+    my $inx = 0;
+    $opt->{glob}
+	or return sub { return $file->[$inx++] };
+    my $buffer;
+    foreach ( @{ $file } ) {
+	$buffer .= $_;
+	$buffer =~ m/ \n \z /smx
+	    or $buffer .= "\n";
+    }
+    return $buffer;
+}
+
+sub _file_reader_CODE {
+    my ( $self, $file, $opt ) = @_;
+    $opt->{glob}
+	or return $file;
+    my $buffer;
+    local $_;
+    while ( defined( $_ = $file->() ) ) {
+	$buffer .= $_;
+	$buffer =~ m/ \n \z /smx
+	    or $buffer .= "\n";
+    }
+    return $buffer;
+}
+
+sub _file_reader_SCALAR {
+    my ( $self, $file, $opt ) = @_;
+
+    $opt->{glob}
+	and return ${ $file };
+
+    my $fh = IO::File->new( $file, '<' )
+	or $self->_wail( 'Opening a SCALAR ref is unsupported' );
+
+    return sub { return scalar <$fh> };
 }
 
 sub _format_data {
@@ -4257,6 +4364,12 @@ This module is only used by the L<height()|/height> method, or
 indirectly by the L<geocode()|/geocode> method. If you are not
 interested in these you do not need this module.
 
+=item L<LWP::UserAgent|LWP::UserAgent>
+
+This module is only used directly if you are specifying URLs as input
+(see L</SPECIFYING INPUT DATA>). It is implied, though, by a number of
+the other optional modules.
+
 =item L<Time::HiRes|Time::HiRes>
 
 This module is only used by the L<time()|/time> method. If you are not
@@ -4787,6 +4900,9 @@ As a side effect, the name of the file actually used is stored in the
 L</initfile attribute>. This is cleared if the initialization file was
 not found.
 
+This method uses a generic input mechanism, and can initialize from a
+number of sources. See L</SPECIFYING INPUT DATA> for the details.
+
 =head2 initfile
 
  $output = $satpass2->initfile();
@@ -4857,6 +4973,9 @@ The C<-verbose> option causes each file name to be listed to C<STDERR>
 before the file is processed.
 
 Nothing is returned.
+
+This method uses a generic input mechanism, and can load data from a
+number of sources. See L</SPECIFYING INPUT DATA> for the details.
 
 =head2 localize
 
@@ -5238,6 +5357,9 @@ Normally an exception is thrown if the file can not be opened. If the
 C<-optional> option is specified, open failures cause the method to
 return C<undef>.
 
+This method uses a generic input mechanism, and can load files from a
+number of sources. See L</SPECIFYING INPUT DATA> for the details.
+
 =head2 spacetrack
 
  $satpass2->spacetrack( set => username => 'yehudi' );
@@ -5316,7 +5438,7 @@ L<spacetrack()|/spacetrack> method. If you don't like all the
 typing that implies in interactive mode, you can define 'st' as a
 macro:
 
- satpass2> macro define st 'spacetrack $@'
+ satpass2> macro define st 'spacetrack "$@"'
 
 This interactive method calls L<Astro::SpaceTrack|Astro::SpaceTrack>
 (which must be installed) to load satellite data. The arguments are the
@@ -6277,6 +6399,32 @@ does an almanac for 5 days from that time. If the next method call is
 
 this produces almanac output for three days, starting 5 days after
 'today midnight'.
+
+=head1 SPECIFYING INPUT DATA
+
+Some of the methods of this class (currently L<init()|/init>,
+L<load()|/load> and L<source()|/source>) read data and do something with
+it. These data can be specified in a number of ways:
+
+=over
+
+=item * As a file name;
+
+=item * As a URL if L<LWP::UserAgent|LWP::UserAgent> is installed;
+
+=item * As a scalar reference;
+
+=item * As an array reference;
+
+=item * As a code reference.
+
+The code reference is expected to return a line each time it is called,
+and C<undef> when the data are exhausted.
+
+Obviously, the specifications that involve references are not available
+to a user of the F<satpass2> script.
+
+=back
 
 =head1 TOKENIZING
 

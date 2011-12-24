@@ -362,7 +362,7 @@ execute 'echo Able \\',
 
 execute 'list', undef, 'The list command, with an empty list';
 
-execute 'load t/missing.dat', 'No files found',
+execute 'load t/missing.dat', 'Failed to open',
     'Attempt to load non-existing file';
 
 execute 'load t/data.tle', undef, 'Load a TLE file';
