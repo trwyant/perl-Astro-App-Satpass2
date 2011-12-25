@@ -1,6 +1,6 @@
 package Astro::App::Satpass2::Meta;
 
-use 5.006002;
+use 5.008;
 
 use strict;
 use warnings;
@@ -58,7 +58,7 @@ sub requires {
 }
 
 sub requires_perl {
-    return 5.006002;
+    return 5.008;
 }
 
 

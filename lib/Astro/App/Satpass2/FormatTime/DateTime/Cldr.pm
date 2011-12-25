@@ -1,6 +1,6 @@
 package Astro::App::Satpass2::FormatTime::DateTime::Cldr;
 
-use 5.006002;
+use 5.008;
 
 use strict;
 use warnings;
