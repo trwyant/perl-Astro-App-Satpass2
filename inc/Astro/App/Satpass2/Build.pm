@@ -14,7 +14,9 @@ my @hide = qw{
     Date::Manip DateTime DateTime::TimeZone
     Geo::Coder::Geocoder::US Geo::Coder::OSM Geo::Coder::TomTom
     Geo::WebService::Elevation::USGS
+    LWP::UserAgent
     Time::HiRes Time::y2038
+    URI::URL
 };
 
 {

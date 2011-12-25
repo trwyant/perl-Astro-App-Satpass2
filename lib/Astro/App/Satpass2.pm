@@ -2395,9 +2395,20 @@ sub _file_reader_ {
     # that knows what the legal schemes are. A less-right way is to
     # imbed the list of registered scheme names in the code (there are
     # 90 or so listed with IANA).
+    #
+    # The regex below was adapted from Michael G. Schwern's URI::Find.
+    #
+    # On the other hand, URI::URL will throw an exception on an unknown
+    # path if URI::URL::strict(1) is in effect. This may need more
+    # research, since the implementation of URI::URL::strict() seems to
+    # use some magic involving package URI::_foreign. Unfortunately most
+    # of the ways to take advantage of this seem to violate
+    # encapsulation. The closest to not violating encapsulation is to
+    # run it through $url = URL->new() and then check $url->isa(
+    # 'URL::_foreign' ).
 
-    if ( $file =~ m/ \A [-.\w]{2,} : (?! \[ ) /smx	# ]
-	&& load_package( 'LWP::UserAgent' ) ) {
+    if ( $file =~ m/ \A [[:alpha:]] [[:alnum:].-]+ : (?! \[ ) /smx	# ]
+	&& $self->_file_reader__validate_url( $file ) ) {
 	my $ua = LWP::UserAgent->new();
 	my $resp = $ua->get( $file );
 	$resp->is_success()
@@ -2418,6 +2429,28 @@ sub _file_reader_ {
 	local $/ = undef;
 	return scalar <$fh>;
     }
+}
+
+sub _file_reader__validate_url {
+    my ( $self, $url ) = @_;
+
+    load_package( 'LWP::UserAgent' )
+	or return;
+
+    load_package( 'URI::URL' )
+	or return;
+
+    my $old_strict = URI::URL::strict( 1 );
+    eval {
+	URI::URL->new( $url );
+	URI::URL::strict( $old_strict );
+	1;
+    } or do {
+	URI::URL::strict( $old_strict );
+	return;
+    };
+
+    return 1;
 }
 
 sub _file_reader_ARRAY {
@@ -4386,6 +4419,12 @@ also find that a wider range of times is available in 64-bit Perls.
 
 At least some versions of L<Time::y2038|Time::y2038> have had trouble on
 Windows-derived systems, including Cygwin. I<Caveat user.>
+
+=item L<URI::URL|URI::URL>
+
+This module is only used directly if you are specifying URLs as input
+(see L</SPECIFYING INPUT DATA>). It is implied, though, by a number of
+the other optional modules, including L<LWP::UserAgent|LWP::UserAgent>.
 
 =back
 

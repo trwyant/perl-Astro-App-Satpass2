@@ -6,6 +6,16 @@ use warnings;
 use Carp;
 use Config;
 
+my ( $is_5_010, $is_5_012 );
+
+eval {
+    require 5.012;
+    $is_5_012 = $is_5_010 = 1;
+} or eval {
+    require 5.010;
+    $is_5_010 = 1;
+};
+
 sub recommend {
     my @recommend;
     my $pkg_hash = __PACKAGE__ . '::';
@@ -65,7 +75,8 @@ sub _recommend_date_manip {
       is to specify times in ISO 8601 format.  See 'SPECIFYING TIMES' in
       the 'Astro::App::Satpass2' documentation for the details.
 EOD
-    $] < 5.010 and $recommendation .= <<'EOD';
+    $is_5_010 or $recommendation .= <<'EOD';
+
       Unfortunately, the current Date::Manip requires Perl 5.10. Since
       you are running an earlier Perl, you can try installing Date-Manip
       5.54, which is the most recent version that does _not_ require
@@ -128,13 +139,32 @@ sub _recommend_geo_webservice_elevation_usgs {
 EOD
 }
 
+sub _recommend_lwp_useragent {
+    local $@ = undef;
+    eval {
+	require LWP::UserAgent;
+	require URI::URL;
+	1;
+    } and return;
+    return <<'EOD';
+    * LWP::UserAgent and/or URI::URL are not installed.
+      These modules are required if you want to use URLs in the init(),
+      load(), or source() methods. If you do not intend to use URLs
+      there, you do not need these packages. Both packages are
+      requirements for most of the other Internet-access functionality,
+      so you may get them implicitly if you install some of the other
+      modules.
+EOD
+}
+
 sub _recommend_time_hires {
+    local $@ = undef;
     eval { require Time::HiRes; 1 } and return;
     return <<'EOD';
     * Time::HiRes is not installed.
-      This module is required for the Astro::App::Satpass2 time() method, but
-      is otherwise unused by this package. If you do not intend to use
-      this functionality, Time::HiRes is not needed.
+      This module is required for the Astro::App::Satpass2 time()
+      method, but is otherwise unused by this package. If you do not
+      intend to use this functionality, Time::HiRes is not needed.
 EOD
 }
 
@@ -149,7 +179,7 @@ EOD
 
     sub _recommend_time_y2038 {
 	eval { require Time::y2038; 1 } and return;
-	5.012 <= $] and return;	# Perl 5.12 is Y2038-compliant.
+	$is_5_012 and return;	# Perl 5.12 is Y2038-compliant.
 	my $recommendation = <<'EOD';
     * Time::y2038 is not installed.
       This module is not required, but if installed allows you to do

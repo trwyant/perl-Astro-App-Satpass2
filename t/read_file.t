@@ -12,10 +12,6 @@ use Cwd qw{ abs_path };
 
 my $sp = Astro::App::Satpass2->new();
 
-my $url = abs_path( 't/source.dat' );
-$url =~ s/ : /|/smx;
-$url = 'file:' . $url;
-
 my $scalar = <<'EOD';
 There was a young lady named Bright
 Who could travel much faster than light.
@@ -68,21 +64,33 @@ EOD
 
 SKIP: {
 
-    my $tests = 2;
+    my $tests = 3;
 
     eval {
 	require LWP::UserAgent;
+	require URI::URL;
 	1;
-    } or skip 'LWP::UserAgent not available', $tests;
+    } or skip 'LWP::UserAgent or URI::URL not available', $tests;
 
-    is $sp->_file_reader( $url )->(), "# This is a comment\n",
-	"Reader for $url";
+    my $url = abs_path( 't/source.dat' );
+    $url =~ s/ : /|/smx;
 
-    is $sp->_file_reader( $url, { glob => 1 } ), <<'EOD',
+    is $sp->_file_reader( "file://$url" )->(), "# This is a comment\n",
+	"Reader for file://$url";
+
+    is $sp->_file_reader( "file://$url", { glob => 1 } ), <<'EOD',
 # This is a comment
 echo $@
 EOD
-	"Glob of $url";
+	"Glob of file://$url";
+
+    eval {
+	$sp->_file_reader( "fubar://$url" )->();
+	1;
+    }
+	and fail "Reader for fubar://$url should have thrown an exception"
+	or like $@, qr{ \A \QFailed to open fubar:\E }smx,
+	    "Reader for fubar://$url generated expected exception";
 
 }
 
