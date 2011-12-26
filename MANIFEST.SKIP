@@ -25,5 +25,6 @@ CVS/
 (^|/).svn/
 ^t/appulse\.tle$
 ^TODO$
+^tplt/
 ^usual\.dat$
 ^xt/author/optionals/
