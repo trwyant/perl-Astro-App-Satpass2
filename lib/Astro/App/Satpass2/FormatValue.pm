@@ -1574,20 +1574,20 @@ sub __list_formatters {
 
 sub more_title_lines {
     my ( $self ) = @_;
-    exists $self->{internal}{_title_inx}
+    exists $self->{internal}{_title_info}
 	or return 1;
-    if ( $self->{internal}{_title_more} ) {
-	$self->{internal}{_title_inx}++;
+    my $more;
+    if ( $more = delete $self->{internal}{_title_info}{more} ) {
+	$self->{internal}{_title_info}{inx}++
     } else {
-	delete $self->{internal}{_title_inx};
+	$self->reset_title_lines();
     }
-    return delete $self->{internal}{_title_more};
+    return $more;
 }
 
 sub reset_title_lines {
     my ( $self ) = @_;
-    delete $self->{internal}{_title_inx};
-    delete $self->{internal}{_title_more};
+    delete $self->{internal}{_title_info};
     return;
 }
 
@@ -1735,8 +1735,8 @@ sub _do_title {
     my $title = $arg->{title};
     my $wrapped = $self->{internal}{$name}{_title}{$title}{$arg->{width}}
 	||= $self->_do_title_wrap( $name, $arg );
-    my $inx = $self->{internal}{_title_inx} ||= 0;
-    $self->{internal}{_title_more} ||= defined $wrapped->[$inx + 1];
+    my $inx = $self->{internal}{_title_info}{inx} ||= 0;
+    $self->{internal}{_title_info}{more} ||= defined $wrapped->[$inx + 1];
     return defined $wrapped->[$inx] ?
 	$wrapped->[$inx] :
 	$self->_format_string( '', $arg );
