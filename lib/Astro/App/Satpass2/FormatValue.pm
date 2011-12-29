@@ -20,6 +20,8 @@ use Text::Wrap ();
 our $VERSION = '0.000_33';
 
 use constant NONE => undef;
+use constant TITLE_GRAVITY_BOTTOM	=> 'bottom';
+use constant TITLE_GRAVITY_TOP		=> 'top';
 
 #	Instantiator
 
@@ -233,6 +235,9 @@ use constant NONE => undef;
 
 	$self->{title} = $args{title};
 
+	$self->title_gravity( _dor( $args{title_gravity},
+		TITLE_GRAVITY_TOP ) );
+
 	$self->{time_formatter} = $args{time_formatter} ||
 	    'Astro::App::Satpass2::FormatTime';
 	ref $self->{time_formatter}
@@ -264,7 +269,13 @@ use constant NONE => undef;
 #	Overrides
 
 sub clone {
-    my ( $self, %arg ) = @_;
+    my ( $self, @args ) = @_;
+    my %arg;
+    if ( @args == 1 && ref $args[0] eq 'HASH' ) {
+	%arg = %{ $args[0] };
+    } else {
+	%arg = @args;
+    }
     while ( my ( $name, $value ) = each %{ $self } ) {
 	defined $arg{$name}
 	    or $arg{$name} = $value;
@@ -290,6 +301,20 @@ sub fixed_width {
 	return $self;
     } else {
 	return $self->{fixed_width};
+    }
+}
+
+sub title_gravity {
+    my ( $self, @args ) = @_;
+    if ( @args ) {
+	is_valid_title_gravity( $args[0] )
+	    or $self->{warner}->wail(
+		"Attribute title_gravity value '$args[0]' invalid"
+	    );
+	$self->{title_gravity} = $args[0];
+	return $self;
+    } else {
+	return $self->{title_gravity};
     }
 }
 
@@ -1548,7 +1573,7 @@ while ( my ( $name, $info ) = each %formatter_data ) {
 
 	$self->_apply_defaults( $name => \%arg, $info->{default} );
 
-	my $value = $self->{title} ?
+	my $value = ( $self->{title} || defined $arg{literal} ) ?
 	    NONE :
 	    $self->_fetch( $info, $name, \%arg );
 
@@ -1557,8 +1582,10 @@ while ( my ( $name, $info ) = each %formatter_data ) {
 	    $info->{chain}->( $self, $name, $value, \%arg ) :
 	    \%arg ) {
 
-	    push @rslt, $self->_apply_dimension(
-		$name => $value, $parm, $info->{dimension} );
+	    push @rslt, defined $arg{literal} ?
+		$self->_format_string( $arg{literal}, \%arg ) :
+		$self->_apply_dimension(
+		    $name => $value, $parm, $info->{dimension} );
 
 	}
 
@@ -1571,6 +1598,10 @@ sub __list_formatters {
 }
 
 #	Title control
+
+# sub is_valid_title_gravity would normally be here, but in order to
+# reduce technical debt it shares a hash with _do_title(), and is placed
+# with it, below.
 
 sub more_title_lines {
     my ( $self ) = @_;
@@ -1727,19 +1758,64 @@ sub _attrib_hash {
     }
 }
 
-sub _do_title {
-    my ( $self, $name, $arg ) = @_;
-    # TODO this looks like a good place to insert localized title code.
-    defined $arg->{title}
-	or $arg->{title} = '';
-    my $title = $arg->{title};
-    my $wrapped = $self->{internal}{$name}{_title}{$title}{$arg->{width}}
-	||= $self->_do_title_wrap( $name, $arg );
-    my $inx = $self->{internal}{_title_info}{inx} ||= 0;
-    $self->{internal}{_title_info}{more} ||= defined $wrapped->[$inx + 1];
-    return defined $wrapped->[$inx] ?
-	$wrapped->[$inx] :
-	$self->_format_string( '', $arg );
+{
+
+    my %do_title = (
+	TITLE_GRAVITY_TOP() => sub {
+	    my ( $self, $wrapped, $arg ) = @_;
+	    defined $self->{internal}{_title_info}{inx}
+		or $self->{internal}{_title_info}{inx} = 0;
+	    my $inx = $self->{internal}{_title_info}{inx};
+	    $self->{internal}{_title_info}{more} ||=
+		defined $wrapped->[$inx + 1];
+
+	    return defined $wrapped->[$inx] ?
+		$wrapped->[$inx] :
+		$self->_format_string( '', $arg );
+	},
+	TITLE_GRAVITY_BOTTOM() => sub {
+	    my ( $self, $wrapped, $arg ) = @_;
+	    defined $self->{internal}{_title_info}{inx}
+		or do {
+		$self->{internal}{_title_info}{inx} = -1;
+		$self->{internal}{_title_info}{max} = 0;
+	    };
+	    my $size = @{ $wrapped };
+	    my $inx = $self->{internal}{_title_info}{inx};
+	    if ( $inx < 0 ) {
+		$self->{internal}{_title_info}{max} = max(
+		    $size,
+		    $self->{internal}{_title_info}{max},
+		);
+	    }
+	    my $max = $self->{internal}{_title_info}{max};
+	    $self->{internal}{_title_info}{more} ||= $inx + 1 < $max;
+	    $inx = $inx - $max + $size;
+	    return ( $inx >= 0 && defined $wrapped->[$inx] ) ?
+		$wrapped->[$inx] :
+		$self->_format_string( '', $arg );
+	},
+    );
+
+    sub _do_title {
+	my ( $self, $name, $arg ) = @_;
+	# TODO this looks like a good place to insert localized title code.
+	defined $arg->{title}
+	    or $arg->{title} = '';
+	my $title = $arg->{title};
+	my $wrapped = $self->{internal}{$name}{_title}{$title}{$arg->{width}}
+	    ||= $self->_do_title_wrap( $name, $arg );
+
+	return $do_title{$self->{title_gravity}}->( $self, $wrapped, $arg );
+    }
+
+    sub is_valid_title_gravity {
+	my ( @args ) = @_;
+	defined( my $value = pop @args )
+	    or return 0;
+	return $do_title{$value} ? 1 : 0;
+    }
+
 }
 
 sub _do_title_wrap {
@@ -2415,6 +2491,12 @@ If this argument is true, the formatter methods will produce titles
 rather than values. In this case the C<data> hash is unused. The default
 is false.
 
+=item title_gravity
+
+This argument specifies the value for the
+L<title_gravity|/title_gravity> attribute. See the
+L<title_gravity()|/title_gravity> documentation for full details.
+
 =item warner
 
 This optional argument must be an instance of
@@ -2446,6 +2528,12 @@ look at the body to decide what to display.
 
 These also are kept to a minimum.
 
+If called without an argument, all mutators act as accessors, and return
+the value of the attribute.
+
+If called with an argument, they change the attribute (or croak if the
+new value is invalid), and return their invocant.
+
 =head3 fixed_width
 
  $fmt->fixed_width( 0 );
@@ -2463,6 +2551,30 @@ returning the current value.
 This boolean attribute has a mutator because C<Template-Toolkit> needs
 to modify it, and C<Template-Toolkit>-style named arguments can't be
 used for C<clone()> because of the way the interface is designed.
+
+=head3 title_gravity
+
+ $fmt->title_gravity( 'bottom' );
+ say 'Title gravity is ', $fmt->title_gravity();
+
+This attribute specifies how multiline titles are aligned. The possible
+values are C<'top'> or C<'bottom'>. The manifest constants
+C<TITLE_GRAVITY_TOP> and C<TITLE_GRAVITY_BOTTOM> are defined to
+represent these, but they are not exported.
+
+If you specify C<'bottom'>, you get an extra empty line above the
+titles. This is an annoying behavior necessitated by the fact that the
+first line of the first title has to be inserted into the output before
+we know how many lines are needed to print all the titles. So we force
+an extra line with blanks to get the process rolling.
+
+This hack means that you do not want to use C<'bottom'> unless you
+intend to actually display all the lines of each title.
+
+The default is C<'top'>.
+
+This attribute has a mutator because C<Template-Toolkit> needs to modify
+it.
 
 =head2 Transformations
 
@@ -2626,6 +2738,11 @@ The following arguments are accepted by all formatters:
 This argument specifies that the given value be left-aligned in its
 field. This defaults to true for text items, and false for numeric
 items.
+
+=item literal
+
+This argument specifies text to be displayed in place of the underlying
+datum.
 
 =item missing
 
@@ -4143,6 +4260,12 @@ initialize the object C<< title => 1 >>. To get all the lines, you need
 to use a C<while> loop, calling C<more_title_lines()> in the test. When
 this returns false you B<must> exit the loop, otherwise you loop
 infinitely.
+
+=head3 is_valid_title_gravity
+
+Returns a true value if the argument is a valid title gravity setting,
+and a false value otherwise. Can be called as a static method, or even a
+subroutine, though it is not exported.
 
 =head3 more_title_lines
 

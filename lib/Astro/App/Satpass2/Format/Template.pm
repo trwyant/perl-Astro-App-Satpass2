@@ -67,6 +67,7 @@ EOD
 
     flare	=> <<'EOD',
 [% DEFAULT data = sp.flare( arg ) %]
+[%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
 [%- WHILE title.more_title_lines %]
     [%- title.time %]
         [%= title.name( width = 12 ) %]
@@ -93,7 +94,7 @@ EOD
         [%= IF 'day' == item.type( width = '' ) %]
             [%- item.appulse.angle %]
         [%- ELSE %]
-            [%- title.angle( title = 'night' ) %]
+            [%- item.appulse.angle( literal = 'night' ) %]
         [%- END %]
         [%= center.azimuth( bearing = 2 ) %]
         [%= center.range( width = 6 ) %]
@@ -102,6 +103,7 @@ EOD
 
     list => <<'EOD',
 [% DEFAULT data = sp.list( arg ) %]
+[%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
 [%- WHILE title.more_title_lines %]
     [%- title.oid( align_left = 0 ) %]
         [%= title.name %]
@@ -133,6 +135,7 @@ EOD
 
     pass	=> <<'EOD',
 [% DEFAULT data = sp.pass( arg ) %]
+[%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
 [%- WHILE title.more_title_lines %]
     [%- title.time( align_left = 0 ) %]
         [%= title.local_coord %]
@@ -171,6 +174,7 @@ EOD
 
     pass_events	=> <<'EOD',
 [% DEFAULT data = sp.pass( arg ) %]
+[%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
 [%- WHILE title.more_title_lines %]
     [%- title.date %] [% title.time %]
         [%= title.oid %] [% title.event %]
@@ -186,6 +190,7 @@ EOD
 
     phase	=> <<'EOD',
 [% DEFAULT data = sp.phase( arg ) -%]
+[%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
 [%- WHILE title.more_title_lines %]
     [%- title.date( align_left = 0 ) %]
         [%= title.time( align_left = 0 ) %]
@@ -210,8 +215,9 @@ EOD
 
     position	=> <<'EOD',
 [% DEFAULT data = sp.position( arg ) %]
+[%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
 [%- data.date %] [% data.time %]
-[% WHILE title.more_title_lines %]
+[%- WHILE title.more_title_lines %]
     [%- title.name( align_left = 0, width = 16 ) %]
         [%= title.local_coord %]
         [%= title.epoch( align_left = 0 ) %]
@@ -225,8 +231,8 @@ EOD
         [%= item.illumination %]
 
     [%- FOR refl IN item.reflections() %]
-        [%- title.name( '', width = 16 ) %]
-            [%= title.local_coord( '' ) %] MMA
+        [%- item.name( literal = '', width = 16 ) %]
+            [%= item.local_coord( literal = '' ) %] MMA
         [%- IF refl.status( width = '' ) %]
             [%= refl.mma( width = '' ) %] [% refl.status( width = '' ) %]
         [%- ELSE %]
@@ -371,6 +377,10 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
     }
 
     $data{title} = $self->_wrap( undef, $data{default} );
+    $data{TITLE_GRAVITY_BOTTOM} =
+	Astro::App::Satpass2::FormatValue->TITLE_GRAVITY_BOTTOM;
+    $data{TITLE_GRAVITY_TOP} =
+	Astro::App::Satpass2::FormatValue->TITLE_GRAVITY_TOP;
 
     if ( 'ARRAY' eq ref $data{arg} ) {
 	my @arg = @{ $data{arg} };
@@ -399,6 +409,8 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
 
     # TODO would love to use \h here, but that needs 5.10.
     $output =~ s/ [ \t]+ (?= \n ) //sxmg;
+    $data{title}->title_gravity() eq $data{TITLE_GRAVITY_BOTTOM}
+	and $output =~ s/ \A \n //smx;
 
     return $output;
 }
@@ -591,9 +603,7 @@ This class implements those methods in terms of a canned set of
 L<Template-Toolkit|Template> templates, with the data from the
 L<Astro::App::Satpass2|Astro::App::Satpass2> methods wrapped in
 L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
-objects to provide formatting at the field level. It is also possible to
-use the L<report()|/report> method to execute a
-L<Template-Toolkit|Template> file.
+objects to provide formatting at the field level.
 
 The names and contents of the templates used by each formatter are
 described with each formatter. The templates may be retrieved or
@@ -712,6 +722,51 @@ This is an
 L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
 configured to produce field titles rather than data.
 
+=item TITLE_GRAVITY_BOTTOM
+
+This manifest constant is defined in
+L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>.
+See the
+L<title_gravity()|Astro::App::Satpass2::FormatValue/title_gravity>
+documentation for the details.
+
+If the C<title> object has its C<title_gravity()> set to this value
+after template processing, and the output of the template has a leading
+newline, that newline is removed. See the
+L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
+L<title_gravity()|Astro::App::Satpass2::FormatValue/title_gravity>
+documentation for why this hack was imposed on the output.
+
+=item TITLE_GRAVITY_TOP
+
+This manifest constant is defined in
+L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>.
+See the
+L<title_gravity()|Astro::App::Satpass2::FormatValue/title_gravity>
+documentation for the details.
+
+=back
+
+In addition to any variables passed in, the following array methods are
+defined for C<Template-Toolkit> before it is invoked:
+
+=over
+
+=item events
+
+If called on an array of passes, returns all events in all passes, in
+chronological order.
+
+=item fixed_width
+
+If called on an array of
+L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
+objects, calls
+L<fixed_width()|Astro::App::Satpass2::FormatValue/fixed_width> on them.
+You may specify an argument to C<fixed_width()>.
+
+Nothing is returned.
+
 =back
 
 =head2 Templates
@@ -729,8 +784,8 @@ passing it the C<arg> value as arguments.
 
 This template defaults to
 
- [% DEFAULT data = sp.almanac( arg ) -%]
- [% FOREACH item IN data %]
+ [% DEFAULT data = sp.almanac( arg ) %]
+ [%- FOREACH item IN data %]
      [%- item.date %] [% item.time %]
          [%= item.almanac( units = 'description' ) %]
  [% END -%]
@@ -739,31 +794,19 @@ This template defaults to
 
 This template defaults to
 
- [% DEFAULT data = sp.flare( arg ) -%]
- [% IF title %]
-     [%- title.time( '' ) %]
-         [%= title.name( '', width = 12 ) %]
-         [%= title.local_coord( '' ) %]
-         [%= title.magnitude( '' ) %]
-         [%= title.angle( 'Degrees' ) %]
- 
-     [%- title.time( '' ) %]
-         [%= title.name( '', width = 12 ) %]
-         [%= title.local_coord( '' ) %]
-         [%= title.magnitude( '' ) %]
-         [%= title.angle( 'From' ) %]
-         [%= title.azimuth( 'Center', bearing = 2 ) %]
-         [%= title.range( 'Center', width = 6 ) %]
- 
+ [% DEFAULT data = sp.flare( arg ) %]
+ [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
+ [%- WHILE title.more_title_lines %]
      [%- title.time %]
          [%= title.name( width = 12 ) %]
          [%= title.local_coord %]
          [%= title.magnitude %]
-         [%= title.angle( 'Sun' ) %]
-         [%= title.azimuth( bearing = 2 ) %]
-         [%= title.range( width = 6 ) %]
- [% END -%]
- [% prior_date = '' -%]
+         [%= title.angle( 'Degrees From Sun' ) %]
+         [%= title.azimuth( 'Center Azimuth', bearing = 2 ) %]
+         [%= title.range( 'Center Range', width = 6 ) %]
+ 
+ [%- END %]
+ [%- prior_date = '' -%]
  [% FOR item IN data %]
      [%- center = item.center %]
      [%- current_date = item.date %]
@@ -779,7 +822,7 @@ This template defaults to
          [%= IF 'day' == item.type( width = '' ) %]
              [%- item.appulse.angle %]
          [%- ELSE %]
-             [%- title.angle( title = 'night' ) %]
+             [%- item.appulse.angle( literal = 'night' ) %]
          [%- END %]
          [%= center.azimuth( bearing = 2 ) %]
          [%= center.range( width = 6 ) %]
@@ -789,15 +832,17 @@ This template defaults to
 
 This template defaults to
 
- [% DEFAULT data = sp.list( arg ) -%]
- [% IF title %]
+ [% DEFAULT data = sp.list( arg ) %]
+ [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
+ [%- WHILE title.more_title_lines %]
      [%- title.oid( align_left = 0 ) %]
          [%= title.name %]
          [%= title.epoch %]
          [%= title.period( align_left = 1 ) %]
- [% END -%]
- [% FOR item IN data %]
-     [%- IF item.body.get( 'inertial' ) %]
+ 
+ [%- END %]
+ [%- FOR item IN data %]
+     [%- IF item.inertial %]
          [%- item.oid %] [% item.name %] [% item.epoch %]
              [%= item.period( align_left = 1 ) %]
      [%- ELSE %]
@@ -823,8 +868,9 @@ This template defaults to
 
 This template defaults to
 
- [% DEFAULT data = sp.pass( arg ) -%]
- [% IF title %]
+ [% DEFAULT data = sp.pass( arg ) %]
+ [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
+ [%- WHILE title.more_title_lines %]
      [%- title.time( align_left = 0 ) %]
          [%= title.local_coord %]
          [%= title.latitude %]
@@ -832,8 +878,9 @@ This template defaults to
          [%= title.altitude %]
          [%= title.illumination %]
          [%= title.event( width = '' ) %]
- [% END -%]
- [% FOR pass IN data %]
+ 
+ [%- END %]
+ [%- FOR pass IN data %]
      [%- events = pass.events %]
      [%- evt = events.first %]
  
@@ -862,13 +909,15 @@ This template defaults to
 
 This template defaults to
 
- [% DEFAULT data = sp.pass( arg ) -%]
- [% IF title %]
+ [% DEFAULT data = sp.pass( arg ) %]
+ [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
+ [%- WHILE title.more_title_lines %]
      [%- title.date %] [% title.time %]
          [%= title.oid %] [% title.event %]
          [%= title.illumination %] [% title.local_coord %]
- [% END -%]
- [% FOREACH evt IN data.events %]
+ 
+ [%- END %]
+ [%- FOREACH evt IN data.events %]
      [%- evt.date %] [% evt.time %]
          [%= evt.oid %] [% evt.event %]
          [%= evt.illumination %] [% evt.local_coord %]
@@ -884,7 +933,8 @@ chronologically by satellite.
 This template defaults to
 
  [% DEFAULT data = sp.phase( arg ) -%]
- [% IF title %]
+ [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
+ [%- WHILE title.more_title_lines %]
      [%- title.date( align_left = 0 ) %]
          [%= title.time( align_left = 0 ) %]
          [%= title.name( width = 8, align_left = 0 ) %]
@@ -893,8 +943,9 @@ This template defaults to
              align_left = 1 ) %]
          [%= title.fraction_lit( title = 'Lit', places = 0, width = 4,
              units = 'percent', align_left = 0 ) %]
- [% END -%]
- [% FOR item IN data %]
+ 
+ [%- END %]
+ [%- FOR item IN data %]
      [%- item.date %] [% item.time %]
          [%= item.name( width = 8, align_left = 0 ) %]
          [%= item.phase( places = 0, width = 4 ) %]
@@ -904,29 +955,29 @@ This template defaults to
              units = 'percent' ) %]%
  [% END -%]
 
-C<pass()> method.
-
 =head3 position
 
 This template defaults to
 
- [% DEFAULT data = sp.position( arg ) -%]
+ [% DEFAULT data = sp.position( arg ) %]
+ [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
  [%- data.date %] [% data.time %]
- [% IF title %]
+ [%- WHILE title.more_title_lines %]
      [%- title.name( align_left = 0, width = 16 ) %]
          [%= title.local_coord %]
          [%= title.epoch( align_left = 0 ) %]
          [%= title.illumination %]
- [% END -%]
- [% FOR item IN data.bodies() %]
+ 
+ [%- END %]
+ [%- FOR item IN data.bodies() %]
      [%- item.name( width = 16, missing = 'oid', align_left = 0 ) %]
          [%= item.local_coord %]
          [%= item.epoch( align_left = 0 ) %]
          [%= item.illumination %]
  
      [%- FOR refl IN item.reflections() %]
-         [%- title.name( '', width = 16 ) %]
-             [%= title.local_coord( '' ) %] MMA
+         [%- item.name( literal = '', width = 16 ) %]
+             [%= item.local_coord( literal = '' ) %] MMA
          [%- IF refl.status( width = '' ) %]
              [%= refl.mma( width = '' ) %] [% refl.status( width = '' ) %]
          [%- ELSE %]

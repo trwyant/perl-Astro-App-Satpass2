@@ -385,9 +385,9 @@ status add 88888 iridium + 'Iridium 88888' ''
 EOD
 
 execute q{flare '19801013T000000Z' '+1'}, <<'EOD', 'Predict flare';
-Time     Name         Eleva  Azimuth      Range Magn Degre   Center Center
-                                                      From  Azimuth  Range
-                                                       Sun
+                                                     Degre
+                                                      From   Center Center
+Time     Name         Eleva  Azimuth      Range Magn   Sun  Azimuth  Range
 1980/10/13
 05:43:26               29.9  48.1 NE      412.9 -0.4 night  76.2 E    49.9
 EOD
@@ -616,8 +616,8 @@ EOD
 execute 'set local_coord equatorial_rng', undef, 'Specify equatorial + range';
 
 execute 'pass 19801013T000000Z +1', <<'EOD',
-    Time    Right Decli      Range Latitude Longitude Altitud Illum Event
-         Ascensio
+            Right
+    Time Ascensio Decli      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13     88888 -
 05:39:02 05:30:58 -36.6     1687.8  37.2228   -6.0197   204.9 lit   rise
@@ -665,8 +665,8 @@ EOD
 execute 'set local_coord equatorial', undef, 'Specify equatorial only';
 
 execute 'pass 19801013T000000Z +1', <<'EOD',
-    Time    Right Decli Latitude Longitude Altitud Illum Event
-         Ascensio
+            Right
+    Time Ascensio Decli Latitude Longitude Altitud Illum Event
 
 1980/10/13     88888 -
 05:39:02 05:30:58 -36.6  37.2228   -6.0197   204.9 lit   rise
@@ -731,8 +731,8 @@ EOD
 
     execute "position '20090401T000000Z'", <<'EOD',
 2009/04/01 00:00:00
-            Name    Right Decli      Range               Epoch Illum
-                 Ascensio
+                    Right
+            Name Ascensio Decli      Range               Epoch Illum
              Sun 00:41:56   4.5  1.495e+08
             Moon 05:13:53  26.0   369373.2
 EOD

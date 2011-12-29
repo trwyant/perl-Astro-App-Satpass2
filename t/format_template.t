@@ -118,9 +118,9 @@ is $ft->format(
 		),
 	    },
 	] ), <<'EOD', 'Flare';
-Time     Name         Eleva  Azimuth      Range Magn Degre   Center Center
-                                                      From  Azimuth  Range
-                                                       Sun
+                                                     Degre
+                                                      From   Center Center
+Time     Name         Eleva  Azimuth      Range Magn   Sun  Azimuth  Range
 1980-10-13
 10:07:45 None          28.3 131.1 SE      410.9  3.9 night 300.8 NW  412.5
 EOD
@@ -301,10 +301,10 @@ is $ft->format(
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
 	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
-	} ), <<'EOD', 'Position, local_coord = azel';
+	} ), <<'EOD', 'Position, local_coord = equatorial';
 1980-10-13 10:07:45
-            Name    Right Decli               Epoch Illum
-                 Ascensio
+                    Right
+            Name Ascensio Decli               Epoch Illum
             None 09:17:51  -8.5 1980-10-01 23:41:24 lit
                                 MMA 0 mirror angle 15.0 magnitude 3.9
                                 MMA 1 Geometry does not allow reflection
@@ -319,10 +319,10 @@ is $ft->format(
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
 	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
-	} ), <<'EOD', 'Position, local_coord = azel';
+	} ), <<'EOD', 'Position, local_coord = equatorial_rng';
 1980-10-13 10:07:45
-            Name    Right Decli      Range               Epoch Illum
-                 Ascensio
+                    Right
+            Name Ascensio Decli      Range               Epoch Illum
             None 09:17:51  -8.5      409.9 1980-10-01 23:41:24 lit
                                            MMA 0 mirror angle 15.0 magnitude 3.9
                                            MMA 1 Geometry does not allow reflection
