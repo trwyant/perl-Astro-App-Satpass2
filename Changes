@@ -1,3 +1,22 @@
+0.000_34	28-Dec-2011	T. R. Wyant
+  Add title_gravity mutator to Astro::App::Satpass2::FormatValue. This
+    controls whether multiline titles are aligned to the top or bottom
+    of their space.
+  Add 'literal' formatter argument to Astro::App::Satpass2::FormatValue.
+    This gives a way to get a literal string inserted and made the same
+    width as the underlying datum would be. Previously, this was done
+    using the 'title' object, but that is no longer useful if the
+    title_gravity is set to 'bottom'.
+  Require Perl 5.8 or higher. The code would never actually run under
+    5.6, since it uses the 'open scalar reference' functionality
+    introduced in Perl 5.8.
+  Normalize Astro::App::Satpass2 file input. The init(), load(), and
+    source() methods now all take a file name, a URL (disambiguated from
+    a file name using URI::URL), a scalar reference, an array reference,
+    or a code reference (that returns one line each time it is called).
+    URLs do not work unless LWP::UserAgent and URI::URL are installed.
+  Add missing version number to Astro::App::Satpass2::FormatValue.
+
 0.000_33	23-Dec-2011	T. R. Wyant
   Add options -exclude and -status to Astro::App::Satpass2 spacetrack()
     method, so they get passed through to the Astro::SpaceTrack object.
