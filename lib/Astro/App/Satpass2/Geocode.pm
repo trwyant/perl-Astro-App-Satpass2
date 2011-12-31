@@ -11,7 +11,7 @@ use Astro::App::Satpass2::Utils qw{ instance };
 use Astro::App::Satpass2::Warner;
 use Carp;
 
-our $VERSION = '0.000_34';
+our $VERSION = '0.000_35';
 
 sub new {
     my ( $class, %args ) = @_;

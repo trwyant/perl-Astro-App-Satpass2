@@ -7,7 +7,7 @@ use warnings;
 
 use Carp;
 
-our $VERSION = '0.000_34';
+our $VERSION = '0.000_35';
 
 sub new {
     my ( $class, $array ) = @_;

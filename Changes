@@ -1,3 +1,7 @@
+0.000_35	30-Dec-2011	T. R. Wyant
+  Double quote arguments in eg/pass_vcalendar and eg/flare_vcalendar, to
+    go along with the tokenizer change in 0.000_31.
+
 0.000_34	28-Dec-2011	T. R. Wyant
   Add title_gravity mutator to Astro::App::Satpass2::FormatValue. This
     controls whether multiline titles are aligned to the top or bottom
@@ -29,6 +33,7 @@
   Have Astro::App::Satpass2::ParseTime::ISO8601->tz() regard an invalid
     time zone as a warning rather than an error, and equivalent to the
     system's local time zone (i.e. $ENV{TZ} = undef).
+  Make expansion of parameters re-tokenize more like Bash.
   Correct t/tokenize.t to use File::HomeDir->my_home() rather than
     getpwuid in the tilde expansion tests.
   Have Astro::App::Satpass2::Warner ignore the Astro::App::Satpass2
