@@ -2,7 +2,7 @@
     appropriate for loading into Celestia planetarium software. To use,
     load the TLE data, then do
 
-    satpass2> formatter report eg/tle_celestia.tt
+    satpass2> formatter format eg/tle_celestia.tt
 
     -%]
 [% DEFAULT data = sp.tle( arg ) -%]
