@@ -66,4 +66,4 @@ EOD
 # Do the pass calculation. I do not know that the vcal format requires
 # the data to be chronological, but ...
 
-pass -chronological ${1:-today noon} ${2:-+8}
+pass -chronological "${1:-today noon}" "${2:-+8}"
