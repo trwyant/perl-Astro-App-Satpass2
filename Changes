@@ -1,8 +1,8 @@
-0.000_35	30-Dec-2011	T. R. Wyant
+0.000_35	2011-12-30	T. R. Wyant
   Double quote arguments in eg/pass_vcalendar and eg/flare_vcalendar, to
     go along with the tokenizer change in 0.000_31.
 
-0.000_34	28-Dec-2011	T. R. Wyant
+0.000_34	2011-12-28	T. R. Wyant
   Add title_gravity mutator to Astro::App::Satpass2::FormatValue. This
     controls whether multiline titles are aligned to the top or bottom
     of their space.
@@ -21,15 +21,15 @@
     URLs do not work unless LWP::UserAgent and URI::URL are installed.
   Add missing version number to Astro::App::Satpass2::FormatValue.
 
-0.000_33	23-Dec-2011	T. R. Wyant
+0.000_33	2011-12-23	T. R. Wyant
   Add options -exclude and -status to Astro::App::Satpass2 spacetrack()
     method, so they get passed through to the Astro::SpaceTrack object.
 
-0.000_32	07-Dec-2011	T. R. Wyant
+0.000_32	2011-12-07	T. R. Wyant
   Correct t/whole_app.t to use File::HomeDir->my_home() rather than
     getpwuid in the tilde expansion tests.
 
-0.000_31	06-Dec-2011	T. R. Wyant
+0.000_31	2011-12-06	T. R. Wyant
   Have Astro::App::Satpass2::ParseTime::ISO8601->tz() regard an invalid
     time zone as a warning rather than an error, and equivalent to the
     system's local time zone (i.e. $ENV{TZ} = undef).
@@ -44,5 +44,5 @@
   Correct Astro::App::Satpass2 optional module documentation to reflect
     the current state of the code.
 
-0.000_30	05-Dec-2011	T. R. Wyant
+0.000_30	2011-12-05	T. R. Wyant
   Initial release to CPAN.
