@@ -20,6 +20,8 @@ BEGIN {
 
 changes_file_ok( Changes => { next_token => 'next_release' } );
 
+done_testing;
+
 1;
 
 # ex: set textwidth=72 :
