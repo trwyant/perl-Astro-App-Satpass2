@@ -35,16 +35,7 @@ use Text::ParseWords ();	# Used only for {level1} stuff.
 
 use constant ASTRO_SPACETRACK_VERSION => 0.050;
 
-my ( $got_time_hires, $got_astro_spacetrack );
-
 BEGIN {
-
-    $got_time_hires = load_package( 'Time::HiRes' );
-    $got_astro_spacetrack = load_package( 'Astro::SpaceTrack' ) && eval {
-	Astro::SpaceTrack->VERSION( ASTRO_SPACETRACK_VERSION );
-	1;
-    };
-
     load_package( 'Time::y2038' )
 	and Time::y2038->import()
 	or do {
@@ -52,6 +43,27 @@ BEGIN {
 	    Time::Local->import();
 	};
 }
+
+# The following 'cute' code is so that we do not determine whether we
+# actually have optional modules until we really need them, and yet do
+# not repeat the process once it is done.
+
+my $have_time_hires;
+$have_time_hires = sub {
+    my $value = load_package( 'Time::HiRes' );
+    $have_time_hires = sub { return $value };
+    return $value;
+};
+
+my $have_astro_spacetrack;
+$have_astro_spacetrack = sub {
+    my $value = load_package( 'Astro::SpaceTrack' ) && eval {
+	Astro::SpaceTrack->VERSION( ASTRO_SPACETRACK_VERSION );
+	1;
+    };
+    $have_astro_spacetrack = sub { $value };
+    return $value;
+};
 
 our $VERSION = '0.000_35';
 
@@ -302,7 +314,7 @@ sub new {
     }
 
     not exists $args{spacetrack}
-	and $got_astro_spacetrack
+	and $have_astro_spacetrack->()
 	and $args{spacetrack} = $self->_get_spacetrack_default();
 
     my $warner = $self->{_warner} = Astro::App::Satpass2::Warner->new(
@@ -2097,7 +2109,7 @@ sub system : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
 
 sub time : method Verb() {	## no critic (ProhibitBuiltInHomonyms,RequireArgUnpacking)
     my ($self, @args) = map { 'ARRAY' eq ref $_ ? @{ $_ } : $_ } @_;
-    $got_time_hires or $self->_wail( 'Time::HiRes not available' );
+    $have_time_hires->() or $self->_wail( 'Time::HiRes not available' );
     my $start = Time::HiRes::time();
     my $output = $self->dispatch(@args);
     defined $output and $output .= "\n";
