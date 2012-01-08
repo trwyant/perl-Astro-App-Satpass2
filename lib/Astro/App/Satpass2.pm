@@ -44,6 +44,8 @@ BEGIN {
 	};
 }
 
+our $VERSION = '0.000_35';
+
 # The following 'cute' code is so that we do not determine whether we
 # actually have optional modules until we really need them, and yet do
 # not repeat the process once it is done.
@@ -65,7 +67,15 @@ $have_astro_spacetrack = sub {
     return $value;
 };
 
-our $VERSION = '0.000_35';
+my $default_geocoder;
+$default_geocoder = sub {
+    my $value =
+	load_package( 'Astro::App::Satpass2::Geocode::Geocoder::US' ) ||
+	load_package( 'Astro::App::Satpass2::Geocode::OSM' ) ||
+	load_package( 'Astro::App::Satpass2::Geocode::TomTom' );
+    $default_geocoder = sub { return $value };
+    return $value;
+};
 
 my $interrupted = 'Interrupted by user.';
 
@@ -135,11 +145,6 @@ my %twilight_abbr = abbrev (keys %twilight_def);
     }
 }
 
-my $default_geocoder =
-    load_package( 'Astro::App::Satpass2::Geocode::Geocoder::US' ) ||
-    load_package( 'Astro::App::Satpass2::Geocode::OSM' ) ||
-    load_package( 'Astro::App::Satpass2::Geocode::TomTom' );
-
 my %mutator = (
     appulse => \&_set_angle,
     autoheight => \&_set_unmodified,
@@ -206,12 +211,14 @@ my %mutator = (
 my %accessor = (
     date_format => \&_get_formatter_attribute,
     desired_equinox_dynamical => \&_get_formatter_attribute,
+    geocoder => \&_get_geocoder,
     gmt => \&_get_formatter_attribute,
     lit => sub {
 	return $_[0]->get( 'edge_of_earths_shadow' ) ? 1 : 0;
     },
     local_coord => \&_get_formatter_attribute,
     perltime => \&_get_time_parser_attribute,
+    spacetrack => \&_get_spacetrack,
     time_format => \&_get_formatter_attribute,
     tz => \&_get_time_parser_attribute,
     warning => \&_get_warner_attribute,
@@ -268,7 +275,7 @@ my %static = (
     flare_mag_day => -6,
     flare_mag_night => 0,
     formatter => 'Astro::App::Satpass2::Format::Template',	# Formatter class.
-    geocoder => $default_geocoder,	# Geocoder class
+##  geocoder => $default_geocoder->(),	# Geocoder class set when accessed
     geometric => 1,
     height => undef,		# meters
 #   initfile => undef,		# Set by init()
@@ -283,7 +290,7 @@ my %static = (
     prompt => 'satpass2> ',
     simbad_url => 'simbad.u-strasbg.fr',
     singleton => 0,
-#   spacetrack => undef,	# Astro::SpaceTrack object set in new().
+#   spacetrack => undef,	# Astro::SpaceTrack object set when accessed
 #   stdout => undef,		# Set to stdout in new().
     time_parser => 'Astro::App::Satpass2::ParseTime',	# Time parser class.
     twilight => 'civil',
@@ -313,15 +320,11 @@ sub new {
 	exists $args{$name} or $args{$name} = $static{$name};
     }
 
-    not exists $args{spacetrack}
-	and $have_astro_spacetrack->()
-	and $args{spacetrack} = $self->_get_spacetrack_default();
-
     my $warner = $self->{_warner} = Astro::App::Satpass2::Warner->new(
 	warning => delete $args{warning}
     );
 
-    foreach my $name ( qw{ formatter geocoder time_parser } ) {
+    foreach my $name ( qw{ formatter time_parser } ) {
 	$self->set( $name => delete $args{$name} );
 	my $obj;
 	$obj = $self->get( $name )
@@ -740,8 +743,7 @@ sub geocode : Verb( debug! ) {
 	$loc = $self->get( 'location' );
     }
 
-    my $geocoder = $self->{geocoder}
-	or $self->_wail( 'No geocoder loaded' );
+    my $geocoder = $self->_helper_get_object( 'geocoder' );
 
     my @rslt = $geocoder->geocode( $loc );
 
@@ -1586,7 +1588,7 @@ sub _set_geocoder {
 	value	=> $val,
 	class	=> 'Astro::App::Satpass2::Geocode',
 	message	=> 'Unknown formatter',
-	default	=> $default_geocoder,
+	default	=> $default_geocoder->(),
 	undefined => 1,
 	nocopy	=> 1,
 	prefix	=> [ 'Astro::App::Satpass2::Geocode' ]
@@ -1684,8 +1686,9 @@ sub _set_warner_attribute {
 
 sub _set_webcmd {
     my ($self, $name, $val) = @_;
-    $self->{spacetrack}
-	and $self->{spacetrack}->set(webcmd => $val);
+    my $st;
+    $st = $self->get( 'spacetrack' )
+	and $st->set( webcmd => $val );
     return ($self->{$name} = $val);
 }
 
@@ -2019,7 +2022,7 @@ sub st : Verb() {	## no critic (RequireArgUnpacking)
     ( my $opt, my $func, @args ) = $self->_getopt( @args );
     $self->_deprecation_notice( method => 'st' );
     if ( 'localize' eq $func ) {
-	my $st = $self->_get_spacetrack();
+	my $st = $self->_helper_get_object( 'spacetrack' );
 	foreach my $key (@args) {
 	    exists $self->{frame}[-1]{spacetrack}{$key}
 		or $self->{frame}[-1]{spacetrack}{$key} =
@@ -2683,6 +2686,22 @@ sub _get_formatter_attribute {
     return $self->get( 'formatter' )->$name();
 }
 
+#	$st = $satpass2->_get_geocoder()
+
+#	Gets the geocoder object, instantiating it if
+#	necesary.
+
+sub _get_geocoder {
+    my ( $self ) = @_;
+    if ( ! exists $self->{geocoder} ) {
+	my ( $class, $obj );
+	$class = $default_geocoder->()
+	    and $obj = $class->new();
+	$self->{geocoder} = $obj;
+    }
+    return $self->{geocoder};
+}
+
 #	$boolean = $satpass2->_get_interactive();
 #
 #	This method returns true if the script is running interactively,
@@ -2764,10 +2783,10 @@ sub _get_time_parser_attribute {
 #	necesary.
 
 sub _get_spacetrack {
-    my $self = shift;
-    $self->{spacetrack} and return $self->{spacetrack};
-    $self->_load_module ('Astro::SpaceTrack');
-    return ($self->{spacetrack} ||= $self->_get_spacetrack_default());
+    my ( $self ) = @_;
+    exists $self->{spacetrack}
+	or $self->{spacetrack} = $self->_get_spacetrack_default();
+    return $self->{spacetrack};
 }
 
 #	$st = $satpass2->_get_spacetrack_default();
@@ -2777,7 +2796,9 @@ sub _get_spacetrack {
 #	iridium_status_format set to 'kelso'.
 
 sub _get_spacetrack_default {
-    my $self = shift;
+    my ( $self ) = @_;
+    $have_astro_spacetrack->()
+	or return;
     return Astro::SpaceTrack->new (
 	webcmd => $self->{webcmd},
 	filter => 1,
@@ -6136,11 +6157,11 @@ manipulate this is either directly on the formatter object, or via the
 L<formatter()|/formatter> method.
 
 This boolean attribute allows access to and manipulation of the time
-parser object's L<perltime|Astro::App::Satpass2::ParseTime/perltime> attribute.
-This is normally used (if at all) to specify that the Perl time
-built-ins be used to construct the parsed time. See the
-L<perltime|Astro::App::Satpass2::ParseTime/perltime> documentation for the
-default. See the documentation of the actual time parser class being
+parser object's L<perltime|Astro::App::Satpass2::ParseTime/perltime>
+attribute.  This is normally used (if at all) to specify that the Perl
+time built-ins be used to construct the parsed time. See the
+L<perltime|Astro::App::Satpass2::ParseTime/perltime> documentation for
+the default. See the documentation of the actual time parser class being
 used for what it does.
 
 This attribute was originally introduced because versions of
