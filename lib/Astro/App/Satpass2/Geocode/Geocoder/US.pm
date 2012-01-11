@@ -68,7 +68,7 @@ Astro::App::Satpass2::Geocode::Geocoder::US - Wrapper for Geo::Coder::Geocoder::
 =head1 SYNOPSIS
 
  use Astro::App::Satpass2::Geocode::Geocoder::US;
- use YAML;
+ use YAML::Any;
  
  my $gc = Astro::App::Satpass2::Geocode::Geocoder::US->new();
  print Dump( $gc->geocode( '10 Downing St, London England' );

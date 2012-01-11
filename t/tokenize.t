@@ -389,14 +389,8 @@ done_testing;
     my $dumper;
     BEGIN {
 	$dumper = eval {
-	    require YAML;
-	    YAML->can( 'Dump' );
-	} || eval {
-	    require YAML::Syck;
-	    YAML::Syck->can( 'Dump' );
-	} || eval {
-	    require YAML::Tiny;
-	    YAML::Tiny->can( 'Dump' );
+	    require YAML::Any;
+	    YAML::Any->can( 'Dump' );
 	} || eval {
 	    require Data::Dumper;
 	    Data::Dumper->can( 'Dumper' );

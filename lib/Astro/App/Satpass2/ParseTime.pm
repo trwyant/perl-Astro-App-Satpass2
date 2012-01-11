@@ -309,7 +309,7 @@ with, and return whatever C<SUPER::> returns.
 
 =head3 config
 
- use YAML;
+ use YAML::Any;
  print Dump ( $pt->config( changes => 1 );
 
 This method retrieves the configuration of the formatter as an array of

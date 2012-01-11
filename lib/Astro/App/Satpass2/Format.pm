@@ -586,8 +586,8 @@ The following other methods are provided.
 
 =head3 config
 
- use YAML;
- print Dump ( $pt->config( changes => 1 );
+ use YAML::Any;
+ print Dump ( $pt->config( changes => 1 ) );
 
 This method retrieves the configuration of the formatter as an array of
 array references. The first element of each array reference is a method

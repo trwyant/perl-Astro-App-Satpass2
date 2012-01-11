@@ -63,7 +63,7 @@ Astro::App::Satpass2::Geocode::OSM - Wrapper for Geo::Coder::OSM
 =head1 SYNOPSIS
 
  use Astro::App::Satpass2::Geocode::OSM;
- use YAML;
+ use YAML::Any;
  
  my $gc = Astro::App::Satpass2::Geocode::OSM->new();
  print Dump( $gc->geocode( '10 Downing St, London England' );

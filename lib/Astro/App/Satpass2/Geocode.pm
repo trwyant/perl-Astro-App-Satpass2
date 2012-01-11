@@ -85,7 +85,7 @@ Astro::App::Satpass2::Geocode - Abstract geocoding wrapper class.
  # subclass of this class,
  
  use Astro::App::Satpass2::Geocode::TomTom;
- use YAML;
+ use YAML::Any;
  
  my $geocoder = Astro::App::Satpass2::Geocode::TomTom->new();
  print Dump( $geocoder->geocode(
