@@ -428,7 +428,8 @@ sub cd : Verb() {
     if (defined($dir)) {
 	chdir $dir or $self->_wail("Can not cd to $dir: $!");
     } else {
-	chdir or $self->_wail("Can not cd to home: $!");
+	chdir File::HomeDir->my_home()
+	    or $self->_wail("Can not cd to home: $!");
     }
     return;
 }
