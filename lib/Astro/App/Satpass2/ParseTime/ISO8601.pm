@@ -26,7 +26,7 @@ sub delegate {
 	tomorrow => SECSPERDAY(),
     );
 
-    sub parse_time_absolute {	## no critic (ProhibitExcessComplexity)
+    sub parse_time_absolute {
 	my ( $self, $string ) = @_;
 
 	my @zone;

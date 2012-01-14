@@ -1461,7 +1461,7 @@ EOD
     return $output;
 }
 
-sub set : Verb() {	## no critic (ProhibitAmbiguousNames)
+sub set : Verb() {
     my ( $self, @args ) = @_;
     ( my $opt, @args ) = $self->_getopt( @args );
     $self->{time_parser} and $self->_parse_time_reset();
@@ -2022,7 +2022,7 @@ sub source : Verb( optional! ) {
 
 }
 
-sub st : Verb() {	## no critic (RequireArgUnpacking)
+sub st : Verb() {
     my ( $self, @args ) = @_;
     ( my $opt, my $func, @args ) = $self->_getopt( @args );
     $self->_deprecation_notice( method => 'st' );
@@ -2198,7 +2198,7 @@ EOD
 
 sub _aggregate {
     my ( $self, $bodies ) = @_;
-    local $Astro::Coord::ECI::TLE::Set::Singleton = $self->{singleton};	## no critic (ProhibitPackageVars)
+    local $Astro::Coord::ECI::TLE::Set::Singleton = $self->{singleton};
     return Astro::Coord::ECI::TLE::Set->aggregate ( @{ $bodies } );
 }
 

@@ -5,6 +5,11 @@ theme		= core
 
 allow_includes	= 1
 
+[Perl::Critic::Policy::CodeLayout::ProhibitHardTabs]
+
+# I don't intend to comply with this at this point.
+severity	= 2
+
 [Perl::Critic::Policy::Documentation::PodSpelling]
 
 spell_command = aspell list
@@ -24,7 +29,7 @@ severity	= stern
 # rather than disable them in the code I am simply assigning them
 # a severity slightly higher than I currently use.
 
-severity	= harsh
+severity	= cruel
 
 [Perl::Critic::Policy::InputOutput::RequireCheckedOpen]
 
@@ -32,6 +37,10 @@ severity	= harsh
 # kind of thing should be a 5. So:
 
 severity	= gentle
+
+[Perl::Critic::Policy::Miscellanea::ProhibitUselessNoCritic]
+
+severity	= stern
 
 [Perl::Critic::Policy::Subroutines::RequireArgUnpacking]
 
@@ -58,4 +67,4 @@ allow	= exiting once substr uninitialized
 # source, I'm just assigning them a severity slightly greater than
 # I customarily use.
 
-severity	= harsh
+severity	= cruel

@@ -74,7 +74,7 @@ sub tz {
 	    $ENV{TZ} = $args[0];	## no critic (RequireLocalizedPunctuationVars)
 	    $self->perltime() or Date_Init( "TZ=$args[0]" );
 	} else {
-	    delete $ENV{TZ};	## no critic (RequireLocalizedPunctuationVars)
+	    delete $ENV{TZ};
 	    $self->perltime() or Date_Init( $default_zone );
 	}
     }
