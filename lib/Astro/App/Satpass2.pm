@@ -27,7 +27,6 @@ use File::Temp;
 use Getopt::Long;
 use IO::File 1.14;
 use IO::Handle;
-use IPC::System::Simple qw{ capturex };
 use POSIX qw{ floor };
 use Scalar::Util qw{ blessed openhandle };
 use Text::Abbrev;
@@ -2091,7 +2090,9 @@ sub system : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
 	CORE::system {$verb} $verb, @args;
 	return;
     } else {
-	return capturex( $verb, @args );
+	load_package( 'IPC::System::Simple' )
+	    or $self->_wail( 'Can not load IPC::System::Simple' );
+	return IPC::System::Simple::capturex( $verb, @args );
     }
 }
 
