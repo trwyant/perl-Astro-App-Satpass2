@@ -352,8 +352,9 @@ sub alias : Verb() {
     }
 }
 
-sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! 
-    twilight! quarter! ) {
+# Attributes must all be on one line to process correctly under Perl
+# 5.8.8.
+sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter! ) {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
     _apply_boolean_default(
@@ -653,8 +654,9 @@ sub export : Verb() {
     return;
 }
 
-sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm!
-    questionable|spare! quiet! tz|zone=s )
+# Attributes must all be on one line to process correctly under Perl
+# 5.8.8.
+sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! quiet! tz|zone=s )
 {
     my ($self, @args) = @_;
     (my $opt, @args) = $self->_getopt(@args);
@@ -1111,9 +1113,8 @@ sub location : Verb( dump! ) {
 
 }
 
-sub pass : Verb( choose=s@ appulse! chronological! dump! 
-    events! horizon|rise|set! illumination! quiet! 
-    transit|maximum|culmination! )
+# Attributes must all be on one line to process correctly under 5.8.8.
+sub pass : Verb( choose=s@ appulse! chronological! dump! events! horizon|rise|set! illumination! quiet! transit|maximum|culmination! )
 {
     my ($self, @args) = @_;
 
@@ -1963,9 +1964,9 @@ sub source : Verb( optional! ) {
     $handler{getv} = $handler{get};
     $handler{show} = $handler{config};
 
-    sub spacetrack : Verb( all! changes! descending! effective!
-    end_epoch=s exclude=s last5! raw! rcs! status=s sort=s
-    start_epoch=s tle! verbose! ) {
+    # Attributes must all be on one line to process correctly under
+    # 5.8.8.
+    sub spacetrack : Verb( all! changes! descending! effective! end_epoch=s exclude=s last5! raw! rcs! status=s sort=s start_epoch=s tle! verbose! ) {
 
 	my ( $self, @args ) = @_;
 	( my $opt, my $method, @args ) = $self->_getopt( @args );
@@ -2383,10 +2384,8 @@ sub _file_reader {
     }
 
     my $ref = ref $file;
-    my $code = $self->can( '_file_reader_' . ref $file )
-	or $self->_wail(
-	sprintf 'Opening a %s ref is unsupported', ref $file
-    );
+    my $code = $self->can( "_file_reader_$ref" )
+	or $self->_wail( sprintf "Opening a $ref ref is unsupported" );
 
     goto &$code;
 }
@@ -2503,8 +2502,11 @@ sub _file_reader_SCALAR {
     $opt->{glob}
 	and return ${ $file };
 
-    my $fh = IO::File->new( $file, '<' )
-	or $self->_wail( 'Opening a SCALAR ref is unsupported' );
+    # Perl::Critic recommends IO::File here, but that does not work with
+    # a scalar reference under 5.8.8, at least not for me. But a bare
+    # open() does.
+    open my $fh, '<', $file	## no critic (RequireBriefOpen)
+	or $self->_wail( "Failed to open SCALAR ref: $!" );
 
     return sub { return scalar <$fh> };
 }
