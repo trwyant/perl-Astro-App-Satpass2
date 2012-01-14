@@ -206,10 +206,10 @@ execute 'set latitude 51d28m38s', undef, 'Set latitude';
 
 execute 'show latitude', 'set latitude 51.4772', 'Latitude value';
 
-execute 'set longitude 18:51:51', undef,
+execute 'set longitude 18:51:50', undef,
     'Longitude in right ascension notation, just to test parse';
 
-execute 'show longitude', 'set longitude 282.962',
+execute 'show longitude', 'set longitude 282.958',
     'Confirm results of right ascenscion parse';
 
 execute 'set longitude 0', undef, 'Set longitude';
@@ -537,6 +537,7 @@ execute 'macro define say \'echo ${!1}\'', undef,
 execute 'say horizon', '20', 'Check argument indirection';
 
 {
+    no warnings qw{ uninitialized };	# Needed by 5.8.8.
     local $ENV{fubar} = undef;
     execute 'say fubar', '', 'Check argument indirection with missing target';
 }
