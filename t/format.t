@@ -29,6 +29,7 @@ can_ok 'Astro::App::Satpass2::Format' => 'tz';
 class 'Astro::App::Satpass2::Format';
 
 {
+    no warnings qw{ uninitialized };	# Needed by 5.8.8.
     local $ENV{TZ} = undef;	# Tests explicitly assume no TZ.
     method 'new', INSTANTIATE, 'Instantiate';
 }
