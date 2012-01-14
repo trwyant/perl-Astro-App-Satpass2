@@ -11,7 +11,7 @@ use Astro::App::Satpass2::Utils qw{ instance };
 use Carp;
 use Geo::Coder::Geocoder::US;
 
-our $VERSION = '0.000_35';
+our $VERSION = '0.000_36';
 
 use constant GEOCODER_CLASS => 'Geo::Coder::Geocoder::US';
 

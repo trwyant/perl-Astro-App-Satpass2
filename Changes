@@ -1,3 +1,22 @@
+0.000_36	2012-01-14	T. R. Wyant
+  Reformat subroutine attributes for older Perls, which seem to get
+    confused if they are not all on one line.
+  Require IO::File 1.14, since it appears that 1.13 does not understand
+    opening a scalar reference.
+  Correct the code that loads either Time::y2038 or Time::Local, which
+    was loading both under some circumstances.
+  Implement the Astro::App::Satpass zero-argument cd() via
+    File::HomeDir->my_home(), for repeatability in testing.
+  Some older Perls complain about explicitly assigning undef to a
+    variable under 'use warnings', so apply 'no warnings qw{ undef }' as
+    needed.
+  In code that optionally uses YAML, just use YAML::Any instead of
+    feeling around for a usable version.
+  Astro::App::Satpass2 startup time optimizations, typically by
+    deferring the loading of modules until they are needed.
+  Make Changes file comply with Test::CPAN::Changes, and add author test
+    xt/author/changes.t to ensure it remains so.
+
 0.000_35	2011-12-30	T. R. Wyant
   Double quote arguments in eg/pass_vcalendar and eg/flare_vcalendar, to
     go along with the tokenizer change in 0.000_31.
