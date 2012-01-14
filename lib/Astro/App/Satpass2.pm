@@ -25,7 +25,7 @@ use File::Glob qw{ :glob };
 use File::HomeDir;
 use File::Temp;
 use Getopt::Long;
-use IO::File;
+use IO::File 1.14;
 use IO::Handle;
 use IPC::System::Simple qw{ capturex };
 use POSIX qw{ floor };
@@ -36,8 +36,11 @@ use Text::ParseWords ();	# Used only for {level1} stuff.
 use constant ASTRO_SPACETRACK_VERSION => 0.050;
 
 BEGIN {
-    load_package( 'Time::y2038' )
-	and Time::y2038->import()
+    eval {
+	load_package( 'Time::y2038' )
+	    and Time::y2038->import();
+	1;
+    }
 	or do {
 	    require Time::Local;
 	    Time::Local->import();
@@ -2502,10 +2505,7 @@ sub _file_reader_SCALAR {
     $opt->{glob}
 	and return ${ $file };
 
-    # Perl::Critic recommends IO::File here, but that does not work with
-    # a scalar reference under 5.8.8, at least not for me. But a bare
-    # open() does.
-    open my $fh, '<', $file	## no critic (RequireBriefOpen)
+    my $fh = IO::File->new( $file, '<' )	# Needs IO::File 1.14.
 	or $self->_wail( "Failed to open SCALAR ref: $!" );
 
     return sub { return scalar <$fh> };

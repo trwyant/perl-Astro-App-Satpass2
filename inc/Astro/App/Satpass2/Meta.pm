@@ -45,6 +45,7 @@ sub requires {
 	'File::Glob'		=> 0,
 	'File::HomeDir'		=> 0,
 	'File::Temp'		=> 0,
+	'IO::File'		=> 1.14,
 	'IPC::System::Simple'	=> 0,
 ##	'Params::Util'		=> 0.250,
 	'POSIX'			=> 0,
