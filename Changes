@@ -1,3 +1,9 @@
+0.000_37	2012-01-16	T. R. Wyant
+  Have the tests of the geocoder wrapper classes simply test for success
+    rather than actual location returned (which is the wrapped class'
+    job). This to eliminate test failures when the service changes its
+    database.
+
 0.000_36	2012-01-14	T. R. Wyant
   Reformat subroutine attributes for older Perls, which seem to get
     confused if they are not all on one line.
