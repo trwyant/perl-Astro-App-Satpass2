@@ -52,18 +52,11 @@ SKIP: {
     my $loc = '1600 Pennsylvania Ave, Washington DC';
 
     my @resp = $geocoder->geocode( $loc );
-
-    is_deeply \@resp, [
-	{
-	    description	=> '1600 Pennsylvania Ave NW, Washington DC 20502',
-	    latitude	=> '38.898748',
-	    longitude	=> '-77.037684',
-	}
-    ], "Geocode $loc"
-	or eval {
-	require Data::Dumper;
-	diag Data::Dumper::Dumper( \@resp );
-    };
+    # Having had test failures on OSM when the database changed, I have
+    # decided that it is not this class' problem to do anything but
+    # call the wrapped class successfully. Accordingly, I have replaced
+    # a detailed test of the return with a test for success.
+    ok scalar @resp, "Geocode of $loc succeeded";
 
 }
 

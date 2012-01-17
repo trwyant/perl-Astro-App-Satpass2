@@ -41,18 +41,11 @@ SKIP: {
     my $loc = '10 Downing St, London England';
 
     my @resp = $geocoder->geocode( $loc );
-
-    is_deeply \@resp, [
-	{
-	    description => '10 Downing Street, Whitehall, City of Westminster, Greater London, England, SW1A 2AA, United Kingdom',
-	    latitude => '51.5034075',
-	    longitude => '-0.1274814',
-	}
-    ], "Geocode $loc"
-	or eval {
-	require Data::Dumper;
-	diag Data::Dumper::Dumper( \@resp );
-    };
+    # Geo::Coder::OSM's tests do not check any specific location, and
+    # having gotten test failures when #10 Downing Street moved (at
+    # least in OSM's database) I'm going to do as Geo::Coder::OSM does,
+    # and just test for success.
+    ok scalar @resp, "Geocode of $loc succeeded";
 
 }
 
