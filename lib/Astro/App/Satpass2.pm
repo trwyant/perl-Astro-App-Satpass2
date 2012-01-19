@@ -185,6 +185,7 @@ my %mutator = (
     longitude => \&_set_angle,
     model => \&_set_model,
     max_mirror_angle => \&_set_angle,
+    pass_threshold => \&_set_angle_or_undef,
     perltime => \&_set_time_parser_attribute,
     prompt => \&_set_unmodified,
     simbad_url => \&_set_unmodified,
@@ -726,7 +727,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! q
 }
 
 sub formatter : Verb() {
-    splice @_, 1, 0, 'formatter';
+    splice @_, ( 'HASH' eq ref $_[1] ? 2 : 1 ), 0, 'formatter';
     goto &_helper_handler;
 }
 
@@ -1131,6 +1132,7 @@ sub pass : Verb( choose=s@ appulse! chronological! dump! events! horizon|rise|se
 
     my $horizon = deg2rad ($self->{horizon});
     my $appulse = deg2rad ($self->{appulse});
+    my $pass_threshold = deg2rad( $self->{pass_threshold} );
 
 #	Foreach body to be modelled
 
@@ -1149,6 +1151,7 @@ sub pass : Verb( choose=s@ appulse! chronological! dump! events! horizon|rise|se
 		horizon => $horizon,
 		interval => ( $self->{verbose} ? $pass_step : 0 ),
 		model => $mdl,
+		pass_threshold => $pass_threshold,
 		twilight => $self->{_twilight},
 		visible => $self->{visible},
 	    );
@@ -1470,6 +1473,11 @@ sub set : Verb() {
 
 sub _set_angle {
     return ($_[0]{$_[1]} = _parse_angle ($_[2]));
+}
+
+sub _set_angle_or_undef {
+    defined $_[2] and 'undef' ne $_[2] and goto &_set_angle;
+    return ( $_[0]{$_[1]} = $_[2] );
 }
 
 sub _set_code_ref {
@@ -2108,7 +2116,7 @@ sub time : method Verb() {	## no critic (ProhibitBuiltInHomonyms,RequireArgUnpac
 }
 
 sub time_parser : Verb() {
-    splice @_, 1, 0, 'time_parser';
+    splice @_, ( 'HASH' eq ref $_[1] ? 2 : 1 ), 0, 'formatter';
     goto &_helper_handler;
 }
 

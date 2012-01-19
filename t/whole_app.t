@@ -585,6 +585,28 @@ execute 'pass 19801012T000000Z', <<'EOD',
 EOD
     'Calculate passes over Greenwich';
 
+method  set => pass_threshold => 60, undef,
+    q{Set pass_threshold to 60 degrees};
+
+execute 'pass 19801012T000000Z', <<'EOD',
+    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+
+1980/10/14     88888 -
+05:32:49   0.0 204.8 SW     1691.2  37.6261   -7.7957   205.5 lit   rise
+05:36:32  85.6 111.4 E       215.0  51.4245    0.2141   214.4 lit   max
+05:40:27   0.0  27.3 NE     1782.5  64.5101   16.6694   226.8 lit   set
+
+1980/10/15     88888 -
+05:26:29   0.0 210.3 SW     1693.5  38.1313   -9.4884   206.3 shdw  rise
+05:27:33   4.7 212.0 SW     1220.0  42.1574   -7.5648   208.7 lit   lit
+05:30:12  63.7 297.6 NW      239.9  51.8981   -1.3250   215.8 lit   max
+05:34:08   0.0  25.1 NE     1789.5  64.9426   15.6750   228.8 lit   set
+EOD
+    'Calculate passes over Greenwich which are over 60 degrees';
+
+method  set => pass_threshold => undef, undef,
+    q{Set pass_threshold to undef};
+
 execute 'pass -noillumination 19801015T000000Z +1', <<'EOD',
     Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
