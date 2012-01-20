@@ -10,7 +10,7 @@ use Clone ();
 use Astro::App::Satpass2::FormatTime;
 use Astro::App::Satpass2::Utils qw{ load_package };
 
-our $VERSION = '0.000_37';
+our $VERSION = '0.000_38';
 
 use constant DEFAULT_LOCAL_COORD => 'azel_rng';
 

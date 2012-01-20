@@ -1,3 +1,12 @@
+0.000_38	2012-01-19	T. R. Wyant
+  Add attribute pass_threshold to Astro::App::Satpass2. The pass()
+    method passes this attribute through to the same-named attribute of
+    the relevant Astro::Coord::ECI::TLE objects.
+  Fixed bug with the manipulation of Astro::App::Satpass2 helper objects
+    which was introduced in version 0.000_36. The only known
+    manifestation of this bug was in failure of the Astro::App::Satpass2
+    save() method.
+
 0.000_37	2012-01-16	T. R. Wyant
   Have the tests of the geocoder wrapper classes simply test for success
     rather than actual location returned (which is the wrapped class'
