@@ -7,8 +7,6 @@ use warnings;
 
 use base qw{ Template::Provider };
 
-use Carp;
-
 use Template::Constants ();
 
 our $VERSION = '0.000_38';

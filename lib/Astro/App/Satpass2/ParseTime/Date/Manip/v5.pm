@@ -3,7 +3,6 @@ package Astro::App::Satpass2::ParseTime::Date::Manip::v5;
 use strict;
 use warnings;
 
-use Carp;
 use Astro::Coord::ECI::Utils qw{ looks_like_number };
 use Time::Local;
 

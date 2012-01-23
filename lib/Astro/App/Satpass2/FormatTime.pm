@@ -7,8 +7,6 @@ use warnings;
 
 use base qw{ Astro::App::Satpass2::Copier };
 
-use Carp;
-
 our $VERSION = '0.000_38';
 
 my $delegate = eval {

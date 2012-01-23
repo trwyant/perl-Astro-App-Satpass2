@@ -5,8 +5,6 @@ use 5.008;
 use strict;
 use warnings;
 
-use Carp;
-
 use Astro::App::Satpass2::ParseTime;
 use Astro::App::Satpass2::Utils qw{ has_method instance load_package quoter };
 
@@ -2629,7 +2627,7 @@ sub _frame_push {
 	my $frames = @args ? shift @args : @{$self->{frame}} - 1;
 	while (@{$self->{frame}} > $frames) {
 	    my $frame = pop @{$self->{frame}}
-		or confess "Programming error - no frame to pop.";
+		or $self->_weep( 'No frame to pop' );
 	    my $local = $frame->{local} || {};
 	    while (my ( $name, $value) = each %{ $local } ) {
 		if ( exists $self->{$name} && !$force_set{$name} ) {
@@ -2992,10 +2990,9 @@ sub _iridium_status {
 		$_->[4], $_->[1], $_->[5]);
 	}
     } else {
-	confess <<'EOD';
-Programming error - Portable status not passed, and unavailable from
-	Astro::SpaceTrack->iridium_status.
-EOD
+	$self->_weep(
+	    'Portable status not passed, and unavailable from Astro::SpaceTrack'
+	);
     }
 
     foreach my $tle (@{$self->{bodies}}) {
@@ -3039,7 +3036,7 @@ sub _is_interactive {
     sub _load_module {
 	my ($self, @module) = @_;
 	ref $module[0] eq 'ARRAY' and @module = @{$module[0]};
-	@module or confess "Programming error - No module specified";
+	@module or $self->_weep( 'No module specified' );
 	my @probs;
 	foreach my $module (@module) {
 	    load_package ($module) or do {
@@ -3220,7 +3217,7 @@ sub _parse_time_reset {
     my ( $self ) = @_;
     my $pt = $self->{time_parser};
     defined $pt
-	or confess 'Programming error - $self->{time_parser} not defined';
+	or $self->_weep( '$self->{time_parser} not defined' );
     $pt->reset();
     return $pt->base();
 }
@@ -3984,8 +3981,9 @@ sub _user_home_dir {
 		    # cautious programmer ...
 
 		    } else {
-			confess "Programming Error - \$flag = '$flag'. ",
-			"This should not happen";
+			$self->weep(
+			    "\$flag = '$flag'. This should not happen"
+			);
 		    }
 
 		# Without any cabbalistic signs, variable expansion is
@@ -4239,6 +4237,16 @@ sub _user_home_dir {
 sub _wail {
     my ($self, @args) = @_;
     $self->{_warner}->wail( @args );
+    return;	# We can't hit this, but Perl::Critic does not know that.
+}
+
+#	$self->_weep(...)
+#
+#	Die with a stack dump (Carp::confess).
+
+sub _weep {
+    my ($self, @args) = @_;
+    $self->{_warner}->weep( @args );
     return;	# We can't hit this, but Perl::Critic does not know that.
 }
 

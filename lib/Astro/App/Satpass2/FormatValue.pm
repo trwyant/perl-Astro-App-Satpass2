@@ -3,7 +3,7 @@ package Astro::App::Satpass2::FormatValue;
 use strict;
 use warnings;
 
-use Carp;
+use base qw{ Astro::App::Satpass2::Copier };
 
 use Astro::App::Satpass2::FormatTime;
 use Astro::App::Satpass2::Utils qw{ has_method instance };
@@ -194,12 +194,7 @@ use constant TITLE_GRAVITY_TOP		=> 'top';
 	my $self = {};
 	bless $self, $class;
 
-        $self->{warner} = $args{warner} ||
-	    Astro::App::Satpass2::Warner->new();
-	instance( $self->{warner}, 'Astro::App::Satpass2::Warner' )
-	    or Astro::App::Satpass2::Warner->new()->wail(
-	    q{Argument 'warner' must be an Astro::App::Satpass2::Warner}
-	    );
+	$self->warner( delete $args{warner} );
 
 	foreach my $name ( qw{ data default } ) {
 	    $self->{$name} = $args{$name} || {};
@@ -1671,12 +1666,12 @@ sub _apply_dimension {
     my ( $self, $name, $value, $arg, $dim ) = @_;
 
     defined( my $dimension = $dim->{dimension} )
-	or confess 'Programming error - no dimension specified';
+	or $self->warner()->weep( 'No dimension specified' );
 
     defined( my $units = _dor( $arg->{units}, $dim->{units},
 	$self->_get( default => $name, 'units' ),
 	$dimensions{$dimension}{default} ) )
-	or confess "Programming error - Dimensiton $dimension undefined";
+	or $self->warner()->weep( "Dimension $dimension undefined" );
 
     my $hash = $dimensions{$dimension}{define}{$units}
 	or $self->{warner}->wail(
@@ -1684,7 +1679,7 @@ sub _apply_dimension {
 
     if ( defined $hash->{alias} ) {
 	$hash = $dimensions{$dimension}{define}{$hash->{alias}}
-	    or confess "Programming error - undefined alias '$hash->{alias}'";
+	    or $self->warner()->weep( "Undefined alias '$hash->{alias}'" );
 	$units = $hash->{alias};
     }
 
@@ -1718,7 +1713,7 @@ sub _apply_dimension {
 	    $dim->{formatter},
 	    $dimensions{$dimension}{formatter},
 	) )
-	or confess "Programming error - no formatter for $dimension $units";
+	or $self->warner()->weep( "No formatter for $dimension $units" );
 
     return $self->$formatter( $value, $arg );
 }
@@ -1845,7 +1840,7 @@ sub _get {
     foreach my $key ( @arg ) {
 	ref $hash or return NONE;
 	defined $key
-	    or confess "Programming error - undefined key";
+	    or $self->warner()->weep( "Undefined key" );
 	my $ref = reftype( $hash );
 	if ( 'HASH' eq $ref ) {
 	    $hash = $hash->{$key};
@@ -2202,7 +2197,7 @@ sub _format_time {
     my $fmtr = $self->{time_formatter};
     my $fmt = $arg->{format};
     defined $fmt
-	or confess "Programming error - no time format";
+	or $self->warner()->weep( "No time format" );
 
     my $buffer = $fmtr->format_datetime(
 	$fmt, $value, $arg->{gmt} );
@@ -2285,8 +2280,8 @@ sub _julian_day {
     sub _set_time_format {
 	my ($self, $name, $data) = @_;
 	my $key = $fmt{$name}
-	    or confess "Programming error. '$name' invalid for ",
-	    "_set_time_format()";
+	    or $self->warner()->weep(
+		"'$name' invalid for _set_time_format()" );
 	my $fmtr = $self->{time_formatter};
 	$self->{$name} = $data;
 	foreach my $action ( $self->_uses_date_format() ) {

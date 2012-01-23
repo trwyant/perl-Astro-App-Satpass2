@@ -5,15 +5,15 @@ use 5.008;
 use strict;
 use warnings;
 
-use Carp;
-
 our $VERSION = '0.000_38';
 
 sub new {
     my ( $class, $array ) = @_;
     ref $class and $class = ref $class;
-    'ARRAY' eq ref $array
-	or croak 'Argument must be an array reference';
+    if ( 'ARRAY' ne ref $array ) {
+	require Carp;
+	Carp::croak( 'Argument must be an array reference' );
+    }
     return bless $array, $class;
 }
 

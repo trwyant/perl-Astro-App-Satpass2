@@ -7,7 +7,6 @@ use warnings;
 
 use base qw{ Astro::App::Satpass2::FormatTime };
 
-use Carp;
 use Astro::App::Satpass2::FormatTime::Strftime;
 use POSIX ();
 

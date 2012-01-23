@@ -5,8 +5,6 @@ use warnings;
 
 use base qw{ Astro::App::Satpass2::Format };
 
-use Carp;
-
 use Astro::App::Satpass2::Format::Template::Provider;
 use Astro::App::Satpass2::FormatValue;
 use Astro::App::Satpass2::Utils qw{ instance };
@@ -300,7 +298,7 @@ sub new {
 
     $self->{template} =
 	Astro::App::Satpass2::Format::Template::Provider->new()
-	or confess "Programming error - failed to instantiate provider";
+	or $self->warner()->weep( 'Failed to instantiate provider' );
 
     $self->{tt} = Template->new( {
 	    LOAD_TEMPLATES => [
@@ -308,7 +306,8 @@ sub new {
 		Template::Provider->new(),
 	    ],
 	}
-    ) or confess "Programming error - Failed to instantate tt: $Template::ERROR";
+    ) or $self->warner()->weep(
+	"Failed to instantate tt: $Template::ERROR" );
 
     while ( my ( $name, $def ) = each %template_definitions ) {
 	$self->template( $name => $def );

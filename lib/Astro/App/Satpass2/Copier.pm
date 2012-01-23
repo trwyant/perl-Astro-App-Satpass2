@@ -3,7 +3,6 @@ package Astro::App::Satpass2::Copier;
 use strict;
 use warnings;
 
-use Carp;
 use Clone ();
 
 use Astro::App::Satpass2::Warner;

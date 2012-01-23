@@ -7,8 +7,6 @@ use warnings;
 
 use base qw{ Exporter };
 
-use Carp;
-
 our $VERSION = '0.000_38';
 
 our @EXPORT_OK = qw{

@@ -5,7 +5,6 @@ use warnings;
 
 use base qw{ Astro::App::Satpass2::Copier };
 
-use Carp;
 use Clone ();
 use Astro::App::Satpass2::FormatTime;
 use Astro::App::Satpass2::Utils qw{ load_package };
@@ -132,10 +131,11 @@ sub attribute_names {
 	my $dcdr = $decoder{$method}
 	    or return $self->$method( @args );
 	my $type = ref $dcdr
-	    or confess "Programming error -- decoder for $method is scalar";
+	    or $self->warner()->weep( "Decoder for $method is scalar" );
 	'CODE' eq $type
-	    and return $dcdr->( $self, $method, @args );
-	confess "Programming error -- decoder for $method is $type";
+	    or $self->warner()->weep(
+		"Decoder for $method is $type reference" );
+	return $dcdr->( $self, $method, @args );
     }
 }
 

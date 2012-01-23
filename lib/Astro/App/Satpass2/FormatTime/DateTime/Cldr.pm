@@ -7,7 +7,6 @@ use warnings;
 
 use base qw{ Astro::App::Satpass2::FormatTime::DateTime };
 
-use Carp;
 use Astro::App::Satpass2::FormatTime::Cldr;
 use DateTime;
 use DateTime::TimeZone;

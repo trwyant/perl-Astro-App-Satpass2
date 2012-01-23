@@ -3,7 +3,6 @@ package Astro::App::Satpass2::ParseTime::ISO8601;
 use strict;
 use warnings;
 
-use Carp;
 use Astro::Coord::ECI::Utils qw{ looks_like_number SECSPERDAY };
 use Time::Local;
 

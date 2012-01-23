@@ -61,6 +61,14 @@ sub warning {
     }
 }
 
+sub weep {
+    my ( $self, @args ) = @_;
+    my $msg = join '', 'Programming Error - ', @args;
+    chomp $msg;
+    require Carp;
+    Carp::confess( $msg );
+}
+
 sub whinge {
     my ($self, @args) = @_;
     my $msg = join '', @args;
@@ -126,6 +134,11 @@ C<warning> attribute. If called with an argument, it sets the value of
 the C<warning> attribute.
 
 The initial value of the attribute is false.
+
+=head2 weep
+
+This method concatenates all its arguments, prefixes
+C<'Programming Error - '>, and passes them to C<Carp::confess()>.
 
 =head2 whinge
 

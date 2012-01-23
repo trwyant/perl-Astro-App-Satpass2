@@ -5,8 +5,6 @@ use warnings;
 
 use base qw{ Astro::App::Satpass2::ParseTime };
 
-use Carp;
-
 use Astro::App::Satpass2::Utils qw{ load_package };
 
 our $VERSION = '0.000_38';

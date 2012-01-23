@@ -9,7 +9,6 @@ use base qw{
     Astro::App::Satpass2::FormatTime::DateTime
 };
 
-use Carp;
 use Astro::App::Satpass2::FormatTime::Strftime;
 use DateTime;
 use DateTime::TimeZone;
