@@ -321,6 +321,10 @@ method parse => '09/1 Z',
     timegm( 0, 0, 0, 1, 0, 109 ),
     q{Parse ISO-8601 '09/1 Z'};
 
+method parse => '12/1/1 fubar',
+    undef,
+    q{Parse ISO-8601 '12/1/1 fubar' should fail};
+
 SKIP: {
 
     my $tests = 12;
