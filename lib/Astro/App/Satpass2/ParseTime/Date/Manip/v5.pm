@@ -26,7 +26,9 @@ BEGIN {
 		Date::Manip->import();
 		1;
 	    }
-	    or $invalid = 'This package assumes a Date::Manip version < 6';
+	    or $invalid = sprintf
+		'%s assumes a Date::Manip version < 6. You have %s',
+		__PACKAGE__, Date::Manip->VERSION();
 	1;
     } or $invalid = ( $@ || 'Unable to load Date::Manip' );
 }
