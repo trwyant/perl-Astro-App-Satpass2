@@ -8,8 +8,6 @@ use warnings;
 use base qw{ Astro::App::Satpass2::Geocode };
 
 use Astro::App::Satpass2::Utils qw{ instance };
-use Carp;
-use Geo::Coder::OSM;
 
 our $VERSION = '0.000_38';
 
@@ -33,13 +31,7 @@ sub geocode {
 		}
 	    } @rslt );
     } else {
-	my $resp = $geocoder->response()
-	    or $self->warner()->wail( 'No HTTP response found' );
-	$resp->is_success()
-	    and $self->warner()->wail( 'No match found for location' );
-	$self->warner()->wail( $resp->status_line() );
-	return;	# wail() does not return, but Perl::Critic does not know
-		# this.
+	return $self->__geocode_failure();
     }
 
 }

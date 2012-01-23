@@ -7,9 +7,8 @@ use warnings;
 
 use base qw{ Astro::App::Satpass2::Copier };
 
-use Astro::App::Satpass2::Utils qw{ instance };
+use Astro::App::Satpass2::Utils qw{ instance load_package };
 use Astro::App::Satpass2::Warner;
-use Carp;
 
 our $VERSION = '0.000_38';
 
@@ -21,14 +20,22 @@ sub new {
 
     bless $self, $class;
 
-    $self->warner( $args{warner} );
+    $self->warner( delete $args{warner} );
 
     __PACKAGE__ eq $class
 	and $self->warner()->wail(
 	"Class $class may not be instantiated directly",
     );
 
-    $self->geocoder( $args{geocoder} );
+    my $geocoder_class = $class->GEOCODER_CLASS();
+    load_package( $geocoder_class )
+	or $self->warner()->wail(
+	"Unable to load $geocoder_class",
+    );
+
+    $self->geocoder( delete $args{geocoder} );
+
+    $self->init( %args );
 
     return $self;
 }
@@ -67,6 +74,18 @@ sub geocoder {
     } else {
 	return $self->{geocoder};
     }
+}
+
+sub __geocode_failure {
+    my ( $self ) = @_;
+    my $geocoder = $self->geocoder();
+    my $resp = $geocoder->response()
+	or $self->warner()->wail( 'No HTTP response found' );
+    $resp->is_success()
+	and $self->warner()->wail( 'No match found for location' );
+    $self->warner()->wail( $resp->status_line() );
+    return;	# wail() does not return, but Perl::Critic does not know
+		# this.
 }
 
 __PACKAGE__->create_attribute_methods();

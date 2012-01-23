@@ -32,13 +32,12 @@ sub new {
     my $self = { %static };
     bless $self, $class;
 
+    $self->warner( delete $args{warner} );
+
     $class eq __PACKAGE__
 	and 'Astro::App::Satpass2::Test::App' ne caller
 	and $self->warner()->wail( __PACKAGE__,
 	    ' may not be instantiated. Use a subclass' );
-
-    $args{warner}
-	and $self->warner( delete $args{warner} );
 
     exists $args{tz} or $args{tz} = $ENV{TZ};
 
@@ -50,11 +49,8 @@ sub new {
     $args{time_format}
 	or $self->time_format( $self->time_formatter()->TIME_FORMAT() );
 
-    while ( my ( $name, $value ) = each %args ) {
-	$self->can( $name )
-	    or $self->warner()->wail( "Method '$name' does not exist" );
-	$self->$name( $value );
-    }
+    $self->init( %args );
+
     return $self;
 }
 

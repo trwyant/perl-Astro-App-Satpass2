@@ -923,7 +923,7 @@ SKIP: {
     my $tests = 4;
 
     my $app = application;
-    my $geocoder = application->get( 'geocoder' )
+    my $geocoder = $app->get( 'geocoder' )
 	or skip 'No geocoder loaded', $tests;
 
     my $rslt;

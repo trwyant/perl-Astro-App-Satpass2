@@ -72,12 +72,21 @@ $have_astro_spacetrack = sub {
 my $default_geocoder;
 $default_geocoder = sub {
     my $value =
-	load_package( 'Astro::App::Satpass2::Geocode::Geocoder::US' ) ||
-	load_package( 'Astro::App::Satpass2::Geocode::OSM' ) ||
-	load_package( 'Astro::App::Satpass2::Geocode::TomTom' );
+	_can_use_geocoder( 'Astro::App::Satpass2::Geocode::Geocoder::US' ) ||
+	_can_use_geocoder( 'Astro::App::Satpass2::Geocode::OSM' ) ||
+	_can_use_geocoder( 'Astro::App::Satpass2::Geocode::TomTom' );
     $default_geocoder = sub { return $value };
     return $value;
 };
+
+sub _can_use_geocoder {
+    my ( $geocoder ) = @_;
+    my $pkg = load_package( $geocoder )
+	or return;
+    load_package( $pkg->GEOCODER_CLASS() )
+	or return;
+    return $pkg;
+}
 
 my $interrupted = 'Interrupted by user.';
 
@@ -1508,6 +1517,8 @@ sub _set_copyable {
 	blessed( $arg{value} )
 	    or $self->_wail( "$arg{name} may not be unblessed reference" );
 	$obj = $arg{value};
+	$obj->can( 'warner' )
+	    and $obj->warner( $self->{_warner} );
     } else {
 	if ( defined $arg{default} ) {
 	    defined $arg{value}
@@ -1533,7 +1544,10 @@ sub _set_copyable {
 	my @prefix = @{ $arg{prefix} || [] };
 	my $cls = load_package( $pkg, @{ $arg{prefix} || [] } )
 	    or $self->_wail( "Unable to load $pkg" );
-	$obj = $cls->new( map { split qr{ = }smx, $_, 2 } @args )
+	$obj = $cls->new(
+	    warner	=> $self->{_warner},
+	    map { split qr{ = }smx, $_, 2 } @args
+	)
 	    or $self->_wail( $arg{message} ||
 	    "Can not instantiate object from '$arg{value}'" );
     }

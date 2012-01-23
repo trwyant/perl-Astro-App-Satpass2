@@ -5,8 +5,6 @@ use 5.008;
 use strict;
 use warnings;
 
-use Carp;
-
 our @CARP_NOT = ( qw{
     Astro::App::Satpass2
     Astro::App::Satpass2::Format
@@ -48,7 +46,8 @@ sub wail {
 	die $msg, "\n";
     } else {
 	$msg =~ s/[.?!]\z//msx;
-	croak $msg;
+	require Carp;
+	Carp::croak( $msg );
     }
 }
 
@@ -71,7 +70,8 @@ sub whinge {
 	warn $msg, "\n";
     } else {
 	$msg =~ s/ [.?!] \z //msx;
-	carp $msg;
+	require Carp;
+	Carp::carp( $msg );
     }
     return;
 }

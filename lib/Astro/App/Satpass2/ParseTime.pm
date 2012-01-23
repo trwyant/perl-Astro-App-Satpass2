@@ -17,30 +17,30 @@ my %static = (
 );
 
 sub new {
-    my ( $class, @args ) = @_;
+    my ( $class, %args ) = @_;
     ref $class and $class = ref $class;
 
     if ( __PACKAGE__ eq $class ) {
 
-	@args = grep { defined $_ } @args;
+	my @classes = split qr{ \s* , \s* }smx, defined $args{class} ?
+	$args{class} : 'Date::Manip,ISO8601';
 
-	@args or @args = qw{
-	    Astro::App::Satpass2::ParseTime::Date::Manip
-	    Astro::App::Satpass2::ParseTime::ISO8601
-	};
-
-	$class = _try (
-	    map { split qr{ \s+ }smx, $_ } @args )
+	$class = _try ( @classes )
 	    or return;
 
     } else {
 	$class = _try( $class )
 	    or return;
     }
+    delete $args{class};
+
+    defined $args{base}
+	or $args{base} = time;
 
     my $self = { %static };
     bless $self, $class;
-    $self->base( time );
+    $self->base( delete $args{base} );
+    $self->init( %args );
     return $self;
 }
 

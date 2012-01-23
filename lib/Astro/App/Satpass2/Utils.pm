@@ -7,7 +7,6 @@ use warnings;
 
 use base qw{ Exporter };
 
-use Carp;
 use Scalar::Util qw{ blessed looks_like_number };
 
 our $VERSION = '0.000_38';
@@ -35,6 +34,17 @@ sub instance {
     sub load_package {
 	my ( $module, @prefix ) = @_;
 	defined $module or $module = '';
+
+	foreach ( $module, @prefix ) {
+	    '' eq $_
+		and next;
+	    m/ \A [[:alpha:]]\w* (?: :: [[:alpha:]]\w* )* \z /smx
+		and next;
+	    require Carp;
+	    Carp::confess( 
+		"Programming error - Invalid module name $_"
+	    );
+	}
 
 	my $key = join ' ', $module, @prefix;
 	exists $loaded{$key}

@@ -154,12 +154,12 @@ SKIP: {
 	or skip "Unable to load Date::Manip", $tests;
 
     instantiate 'Astro::App::Satpass2::ParseTime',
-	'Astro::App::Satpass2::ParseTime::Date::Manip',
+	class => 'Astro::App::Satpass2::ParseTime::Date::Manip',
 	$date_manip_delegate;
 }
 
 instantiate 'Astro::App::Satpass2::ParseTime',
-    'Astro::App::Satpass2::ParseTime::ISO8601',
+    class => 'Astro::App::Satpass2::ParseTime::ISO8601',
     'Astro::App::Satpass2::ParseTime::ISO8601';
 
 {
@@ -170,17 +170,16 @@ instantiate 'Astro::App::Satpass2::ParseTime',
     instantiate 'Astro::App::Satpass2::ParseTime', $want_class;
 
     instantiate 'Astro::App::Satpass2::ParseTime',
-	'Astro::App::Satpass2::ParseTime::Date::Manip Astro::App::Satpass2::ParseTime::ISO8601',
+	class => 'Astro::App::Satpass2::ParseTime::Date::Manip,
+	    Astro::App::Satpass2::ParseTime::ISO8601',
 	$want_class;
 
     instantiate 'Astro::App::Satpass2::ParseTime',
-	'Astro::App::Satpass2::ParseTime::Date::Manip',
-	'Astro::App::Satpass2::ParseTime::ISO8601',
+	class => 'Date::Manip,ISO8601',
 	$want_class;
 
     instantiate 'Astro::App::Satpass2::ParseTime',
-	'Astro::App::Satpass2::ParseTime::ISO8601',
-	'Astro::App::Satpass2::ParseTime::Date::Manip',
+        class => 'ISO8601,Date::Manip',
 	'Astro::App::Satpass2::ParseTime::ISO8601';
 
 }

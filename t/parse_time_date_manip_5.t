@@ -65,7 +65,7 @@ require_ok 'Astro::App::Satpass2::ParseTime';
 
 class 'Astro::App::Satpass2::ParseTime';
 
-method new => 'Astro::App::Satpass2::ParseTime::Date::Manip',
+method new => class => 'Astro::App::Satpass2::ParseTime::Date::Manip',
     INSTANTIATE, 'Instantiate';
 
 method isa => 'Astro::App::Satpass2::ParseTime::Date::Manip::v5', TRUE,

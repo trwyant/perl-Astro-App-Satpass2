@@ -41,8 +41,8 @@ require_ok 'Astro::App::Satpass2::ParseTime';
 
 class 'Astro::App::Satpass2::ParseTime';
 
-method new => 'Astro::App::Satpass2::ParseTime::ISO8601', INSTANTIATE,
-    'Instantiate';
+method new => class => 'Astro::App::Satpass2::ParseTime::ISO8601',
+    INSTANTIATE, 'Instantiate';
 
 method isa => 'Astro::App::Satpass2::ParseTime::ISO8601', TRUE,
     'Object isa Astro::App::Satpass2::ParseTime::ISO8601';
