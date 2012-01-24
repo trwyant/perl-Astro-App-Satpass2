@@ -1,3 +1,19 @@
+0.000_39	2012-01-24	T. R. Wyant
+  Make Astro::App::Satpass2::ParseTime::ISO8601 less permissive in
+    allowing deviations from strict ISO-8601 format. Specifically, allow
+    a maximum of 1 non-digit character separating the date and the time.
+  Fix failure of Astro::App::Satpass2 to propagate its 'warning'
+    attribute to helper classes.
+  Allow the Astro::App::Satpass2 time_parser attribute to be set to
+    'Date::Manip'. This selects either 'Date::Manip::v5' or
+    'Date::Manip::v6' depending on what is installed.
+  In testing, treat a 500 error from a geocode server as a 'skip' rather
+    than a failure, since I have no control over whether the server is
+    up.
+  Add explicit test for DateTime in t/format_value.t. Some Perl 5.8.8s
+    were, for reasons not understood by me, running the time zone test
+    even when DateTime was not present.
+
 0.000_38	2012-01-19	T. R. Wyant
   Add attribute pass_threshold to Astro::App::Satpass2. The pass()
     method passes this attribute through to the same-named attribute of
