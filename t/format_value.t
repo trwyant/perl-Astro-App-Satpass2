@@ -630,6 +630,10 @@ $time_formatter->gmt( 0 );	# Turn off GMT
 SKIP: {
     my $tests = 1;
     eval {
+	require DateTime;
+	# Under circumstances I do not understand, some Perl 5.8.8s seem
+	# to throw an exception for the above, but not for the below.
+	# Both should fail, since ::Strftime uses DateTime.
 	require Astro::App::Satpass2::FormatTime::DateTime::Strftime;
 	1;
     } or skip 'DateTime not available', $tests;
