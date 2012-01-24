@@ -1,53 +1,19 @@
 package main;
 
-use 5.006002;
+use 5.008;
 
 use strict;
 use warnings;
 
-use Test::More 0.88;
+use lib qw{ inc };
 
-eval {
-    require Geo::Coder::TomTom;
-    1;
-} or do {
-    plan skip_all => 'Geo::Coder::TomTom not available';
-    exit;
-};
+use Test::More 0.88;	# Because of done_testing();
+use Astro::App::Satpass2::Test::Geocode;
 
-my $skip;
-require_ok 'Astro::App::Satpass2::Geocode::TomTom'
-    or $skip = 1;
+setup	'Astro::App::Satpass2::Geocode::TomTom';
 
 SKIP: {
-
-    my $tests = 1;	# Number of tests to skip.
-
-    $skip
-	and skip 'Unable to load Astro::App::Satpass2::Geocode::TomTom',
-	    $tests;
-
-    my $url = Astro::App::Satpass2::Geocode::TomTom->GEOCODER_SITE;
-    my $rslt;
-    eval {
-	require LWP::UserAgent;
-	my $ua = LWP::UserAgent->new();
-	$rslt = $ua->get( $url );
-	1;
-    } and $rslt->is_success()
-	or skip "Unable to access $url", $tests;
-
-    my $geocoder = Astro::App::Satpass2::Geocode::TomTom->new();
-
-    my $loc = '1600 Pennsylvania Ave, Washington DC';
-
-    my @resp = $geocoder->geocode( $loc );
-    # Having had test failures on OSM when the database changed, I have
-    # decided that it is not this class' problem to do anything but
-    # call the wrapped class successfully. Accordingly, I have replaced
-    # a detailed test of the return with a test for success.
-    ok scalar @resp, "Geocode of $loc succeeded";
-
+    geocode '1600 Pennsylvania Ave, Washington DC', 1;
 }
 
 done_testing;
