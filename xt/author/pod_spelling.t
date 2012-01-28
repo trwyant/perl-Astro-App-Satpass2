@@ -69,6 +69,7 @@ formatter
 formatter's
 formatters
 fr
+FreeBSD
 FreeDesktop
 Gasparovic
 gb

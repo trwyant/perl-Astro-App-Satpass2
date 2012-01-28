@@ -4599,6 +4599,17 @@ This interactive method changes to the users' home directory, or to the
 given directory if one is specified as an argument. Tilde expansion is
 done on the argument if appropriate. Nothing is returned.
 
+B<Caveat:> I get a test failure in the no-argument case under FreeBSD
+6.2. The failure is because C<< File::HomeDir->my_home() >> thinks the
+user's home directory is F</home/foo>, but when I do a C<chdir()> to
+that directory, C<< Cwd::cwd >> reports that I am in F</usr/home/foo>.
+All the other CPAN testers are running 9.0, and under this the test
+passes. So I am unsure of the extent to which this is a problem. If this
+turns out to be a problem for you, I am willing to fix it, but will
+probably need some guidance on what is actually going on. In the
+meantime I have had F<t/whole_app.t> make the test for this a C<TODO>
+under FreeBSD before 7.0.
+
 =head2 choose
 
  $satpass2->choose( 25544, 'hst' )

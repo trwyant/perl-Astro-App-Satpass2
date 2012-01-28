@@ -901,7 +901,7 @@ SKIP: {
 
 SKIP: {
 
-    my $tests = 2;
+    my $tests = 1;
 
     eval {
 	require Cwd;
@@ -916,7 +916,11 @@ SKIP: {
 
     execute 'cd', undef, 'Change to directory, no argument';
 
-    is Cwd::cwd(), $home, 'Change to home directory succeeded';
+    TODO: {
+	local $TODO = home_todo();
+	is Cwd::cwd(), $home, 'Change to home directory succeeded'
+	    or diag "\$ENV{HOME} = '$ENV{HOME}; getcwd = " . Cwd::getcwd();
+    }
 }
 
 SKIP: {
@@ -952,6 +956,32 @@ EOD
 method __TEST__frame_stack_depth => 1, 'Object frame stack is clean';
 
 done_testing;
+
+{
+    my %os;
+    BEGIN {
+	%os = (
+	    'FreeBSD'	=> sub {
+		my @uname;
+		eval {
+		    require POSIX;
+		    @uname = POSIX::uname;
+		    1;
+		} or return;
+		$uname[2] =~ m/ ( \d+ [.] \d+ ) /smx
+		    or return;
+		$1 < 7
+		    or return;
+		return "Under $^O $uname[2] cwd returns /usr/home/foo when I cd to /home/foo";
+	    },
+	);
+    }
+
+    sub home_todo {
+	$os{$^O} or return;
+	return $os{$^O}->();
+    }
+}
 
 1;
 
