@@ -27,10 +27,10 @@ sub setup ($) {
     my $geocoder_class = $wrapper_class->GEOCODER_CLASS();
 
     load_package( $geocoder_class )
-	or plan skip_all => "Unable to load $geocoder_class";
+	or plan skip_all => "$geocoder_class not available";
 
     load_package( 'LWP::UserAgent' )
-	or plan skip_all => 'Unable to load LWP::UserAgent';
+	or plan skip_all => 'LWP::UserAgent not available';
 
     my $url = $wrapper_class->GEOCODER_SITE();
     my $rslt = LWP::UserAgent->new()->get( $url )
