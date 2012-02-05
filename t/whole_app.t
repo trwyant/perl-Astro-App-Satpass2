@@ -7,7 +7,7 @@ use lib qw{ inc };
 
 use Test::More 0.88;
 use Astro::App::Satpass2::Test::App;
-
+use Cwd qw{ cwd };
 use File::HomeDir;
 use Scalar::Util qw{ blessed };
 
@@ -772,6 +772,8 @@ EOD
 	'Position of things in sky on 01-Apr-2009 midnight UT, in azel again';
 
 }
+
+execute 'pwd', cwd() . "\n", 'Print working directory';
 
 execute "quarters '20090301T000000Z'", <<'EOD',
 2009/03/04 07:45:18 First quarter Moon

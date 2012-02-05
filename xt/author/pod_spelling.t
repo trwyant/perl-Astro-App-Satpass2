@@ -122,6 +122,7 @@ pm
 POSIX
 precessed
 programmatically
+pwd
 quoter
 radian
 radians
