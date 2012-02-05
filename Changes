@@ -1,3 +1,8 @@
+0.001		2012-02-05	T. R. Wyant
+  Add interactive method pwd() to Astro::App::Satpass2.
+  Make the test skip messages for missing geocoder modules like all the
+    other skip messages for missing modules.
+
 0.000_39	2012-01-24	T. R. Wyant
   Make Astro::App::Satpass2::ParseTime::ISO8601 less permissive in
     allowing deviations from strict ISO-8601 format. Specifically, allow
