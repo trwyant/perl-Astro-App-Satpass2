@@ -336,9 +336,6 @@ sub new {
 
     foreach my $name ( qw{ formatter time_parser } ) {
 	$self->set( $name => delete $args{$name} );
-	my $obj;
-	$obj = $self->get( $name )
-	    and $obj->warner( $warner );
     }
 
     $self->set( %args );
