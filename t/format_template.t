@@ -8,6 +8,7 @@ use warnings;
 use Test::More 0.88;
 
 use Astro::App::Satpass2::Format::Template;
+
 use Astro::Coord::ECI;
 use Astro::Coord::ECI::Moon;
 use Astro::Coord::ECI::Sun;

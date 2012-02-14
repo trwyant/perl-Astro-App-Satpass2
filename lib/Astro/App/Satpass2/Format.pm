@@ -139,6 +139,13 @@ sub attribute_names {
     }
 }
 
+sub format : method {	## no critic (ProhibitBuiltInHomonyms,RequireFinalReturn)
+    my ( $self ) = @_;
+    # ->weep() throws an exception.
+    $self->warner()->weep(
+	'The format() method must be overridden' );
+}
+
 sub local_coord {
     my ( $self, @args ) = @_;
     if ( @args ) {

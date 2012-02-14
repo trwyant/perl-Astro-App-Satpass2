@@ -70,7 +70,7 @@ sub _dump {
     }
 }
 
-sub format {	## no critic (ProhibitBuiltInHomonyms)
+sub format : method {	## no critic (ProhibitBuiltInHomonyms)
     splice @_, 1, 1;
     goto &_dump;
 }

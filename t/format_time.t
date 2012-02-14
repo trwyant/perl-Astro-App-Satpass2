@@ -8,19 +8,7 @@ use lib qw{ inc };
 use Test::More 0.88;
 use Astro::App::Satpass2::Test::App;
 
-require_ok 'Astro::App::Satpass2::FormatTime';
-
-can_ok 'Astro::App::Satpass2::FormatTime' => 'new';
-
-can_ok 'Astro::App::Satpass2::FormatTime' => 'attribute_names';
-
-can_ok 'Astro::App::Satpass2::FormatTime' => 'copy';
-
-can_ok 'Astro::App::Satpass2::FormatTime' => 'gmt';
-
-can_ok 'Astro::App::Satpass2::FormatTime' => 'format_datetime_width';
-
-can_ok 'Astro::App::Satpass2::FormatTime' => 'tz';
+use Astro::App::Satpass2::FormatTime;
 
 class 'Astro::App::Satpass2::FormatTime';
 

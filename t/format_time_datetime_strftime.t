@@ -26,26 +26,9 @@ BEGIN {
 	plan skip_all => 'Time::Local not available';
 	exit;
     };
+
+    require Astro::App::Satpass2::FormatTime::DateTime::Strftime;
 }
-
-require_ok 'Astro::App::Satpass2::FormatTime::DateTime::Strftime';
-
-can_ok 'Astro::App::Satpass2::FormatTime::DateTime::Strftime' => 'new';
-
-can_ok 'Astro::App::Satpass2::FormatTime::DateTime::Strftime' =>
-	'attribute_names';
-
-can_ok 'Astro::App::Satpass2::FormatTime::DateTime::Strftime' => 'copy';
-
-can_ok 'Astro::App::Satpass2::FormatTime::DateTime::Strftime' => 'gmt';
-
-can_ok 'Astro::App::Satpass2::FormatTime::DateTime::Strftime' =>
-	'format_datetime';
-
-can_ok 'Astro::App::Satpass2::FormatTime::DateTime::Strftime' =>
-	'format_datetime_width';
-
-can_ok 'Astro::App::Satpass2::FormatTime::DateTime::Strftime' => 'tz';
 
 class 'Astro::App::Satpass2::FormatTime::DateTime::Strftime';
 

@@ -32,6 +32,13 @@ sub attribute_names {
     return ( qw{ gmt tz } );
 }
 
+sub format_datetime {	## no critic (RequireFinalReturn)
+    my ( $self ) = @_;
+    # ->weep() throws an exception.
+    $self->warner()->weep(
+	'Method format_datetime() must be overridden' );
+}
+
 {
 
     my %cache;

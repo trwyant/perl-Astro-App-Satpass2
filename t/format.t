@@ -8,23 +8,7 @@ use lib qw{ inc };
 use Test::More 0.88;
 use Astro::App::Satpass2::Test::App;
 
-require_ok 'Astro::App::Satpass2::Format';
-
-can_ok 'Astro::App::Satpass2::Format' => 'new';
-
-can_ok 'Astro::App::Satpass2::Format' => 'date_format';
-
-can_ok 'Astro::App::Satpass2::Format' => 'desired_equinox_dynamical';
-
-can_ok 'Astro::App::Satpass2::Format' => 'gmt';
-
-can_ok 'Astro::App::Satpass2::Format' => 'local_coord';
-
-can_ok 'Astro::App::Satpass2::Format' => 'provider';
-
-can_ok 'Astro::App::Satpass2::Format' => 'time_format';
-
-can_ok 'Astro::App::Satpass2::Format' => 'tz';
+use Astro::App::Satpass2::Format;
 
 class 'Astro::App::Satpass2::Format';
 
