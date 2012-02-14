@@ -376,7 +376,7 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter
 
 #	Build an object representing our ground location.
 
-    my $sta = $self->_get_station();
+    my $sta = $self->station();
 
 ##  my $id = looks_like_number($self->{twilight}) ?
 ##	"twilight ($self->{twilight} degrees)" :
@@ -667,7 +667,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! q
     my $pass_end = $self->_parse_time (shift @args || '+7');
     $pass_start >= $pass_end
 	and $self->_wail("End time must be after start time");
-    my $sta = $self->_get_station();
+    my $sta = $self->station();
 
     my $max_mirror_angle = deg2rad( $self->{max_mirror_angle} );
     my $horizon = deg2rad ($self->{horizon});
@@ -1044,7 +1044,7 @@ sub _localize {
 sub location : Verb( dump! ) {
     my ( $self, $opt ) = _arguments( @_ );
     return $self->_format_data(
-	location => $self->_get_station(), $opt );
+	location => $self->station(), $opt );
 }
 
 {
@@ -1122,7 +1122,7 @@ sub pass : Verb( choose=s@ appulse! chronological! dump! events! horizon|rise|se
     $pass_start >= $pass_end
 	and $self->_wail("End time must be after start time");
 
-    my $sta = $self->_get_station();
+    my $sta = $self->station();
     my @bodies = @{$opt->{choose} ? scalar _choose($opt->{choose},
 	    $self->{bodies}) : $self->{bodies}}
 	or $self->_wail("No bodies selected");
@@ -1245,7 +1245,7 @@ sub position : Verb( choose=s@ questionable|spare! quiet! ) {
 
 #	Define the observing station.
 
-    my $sta = $self->_get_station();
+    my $sta = $self->station();
     $sta->universal($time);
 
 
@@ -1282,7 +1282,7 @@ sub position : Verb( choose=s@ questionable|spare! quiet! ) {
 	position => {
 	    bodies		=> \@good,
 	    questionable	=> $opt->{questionable},
-	    station		=> $self->_get_station()->universal(
+	    station		=> $self->station()->universal(
 		$time ),
 	    time		=> $time,
 	    twilight		=> $self->{_twilight},
@@ -2040,6 +2040,23 @@ sub st : Verb() {
     return;
 }
 
+sub station {
+    my ( $self ) = @_;
+    defined $self->{height}
+	and defined $self->{latitude}
+	and defined $self->{longitude}
+	or $self->_wail( 'You must set height, latitude, and longitude' );
+    return Astro::Coord::ECI->new (
+	    refraction => 1,
+	    name => $self->{location} || '',
+	    id => 'station',
+	)->geodetic (
+	    deg2rad( $self->{latitude} ),
+	    deg2rad( $self->{longitude} ),
+	    $self->{height} / 1000
+	);
+}
+
 # TODO I must have thought -reload would be good for something, but it
 # appears I never implemented it.
 
@@ -2267,7 +2284,7 @@ sub _apply_boolean_default {
 	my $go = Getopt::Long::Parser->new(config => $config);
 	$go->getoptions(\%opt, @$lgl) or $self->_wail($err);
 
-	return $self, \%opt, @ARGV;
+	return ( $self, \%opt, @ARGV );
     }
 }
 
@@ -2850,28 +2867,6 @@ sub _get_spacetrack_default {
 	filter => 1,
 	iridium_status_format => 'kelso',
     );
-}
-
-#	$satpass2->_get_station();
-
-#	This subroutine manufactures and returns a station object
-#	appropriate to the current parameter settings. It throws an
-#	exception if the height, latitude, and longitude are not
-#	defined.
-
-sub _get_station {
-    my $self = shift;
-    (defined $self->{height} && defined $self->{latitude} &&
-	defined $self->{longitude})
-	or $self->_wail("You must set height, latitude, and longitude");
-    return Astro::Coord::ECI->new (
-	    refraction => 1,
-	    name => $self->{location} || '',
-	    id => 'station',
-	    )
-	->geodetic (
-	    deg2rad ($self->{latitude}), deg2rad ($self->{longitude}),
-	    $self->{height} / 1000);
 }
 
 sub _get_today_midnight {
@@ -5611,6 +5606,16 @@ This method is really just a front-end for the
 L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE>
 L<status()|Astro::Coord::ECI::TLE/status> method. See the documentation
 for that for more details.
+
+=head2 station
+
+ my $sta = $satpass2->station();
+
+This non-interactive method manufactures and returns an
+L<Astro::Coord::ECI|Astro::Coord::ECI> object representing the observer
+from the current values of the latitude, longitude and height
+attributes. It throws an exception if any of the relevant attributes are
+not defined.
 
 =head2 system
 
