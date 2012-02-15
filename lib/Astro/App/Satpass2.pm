@@ -447,7 +447,11 @@ sub choose : Verb( epoch=s ) {
 	$self->_aggregate( $self->{bodies} )
 	];
     }
-    @args and $self->{bodies} = _choose(\@args, $self->{bodies});
+    if ( @args ) {
+	my @bodies = @{ _choose( \@args, $self->{bodies} ) }
+	    or $self->_wail( 'No bodies chosen' );
+	@{ $self->{bodies} } = @bodies;
+    }
     return;
 }
 
@@ -480,7 +484,11 @@ sub dispatch {
 
 sub drop : Verb() {
     my ( $self, $opt, @args ) = _arguments( @_ );
-    $self->{bodies} = _choose({invert => 1}, \@args, $self->{bodies});
+    if ( @args ) {
+	my @bodies = @{ _choose( { invert => 1 }, \@args, $self->{bodies} ) }
+	    or $self->_wail( 'No bodies left' );
+	@{ $self->{bodies} } = @bodies;
+    }
     return;
 }
 
@@ -4623,6 +4631,9 @@ The following options may be specified:
 
 Nothing is returned.
 
+An exception is raised if the operation would leave the observing list
+empty.
+
 =head2 clear
 
  $satpass2->clear();
@@ -4649,7 +4660,12 @@ interactively.
 
 This interactive method inverts the sense of L<choose()|/choose>,
 removing from the observing list all bodies that match the selection
-criteria. Nothing is returned.
+criteria.
+
+Nothing is returned.
+
+An exception is raised if the operation would leave the observing list
+empty.
 
 =head2 dump
 
