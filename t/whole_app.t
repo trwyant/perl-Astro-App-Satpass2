@@ -813,7 +813,7 @@ execute 'sky add fubar',
     'Add unknown body (fails)';
 
 execute q{sky add 'Epsilon Leonis' 9:45:51 23.774 76.86 -0.0461 -0.00957 4.3},
-undef, 'Add Epsilon Leonis';
+    undef, 'Add Epsilon Leonis';
 
 execute 'sky list', <<'EOD',
 sky add 'Epsilon Leonis'  9:45:51  23.774 76.86 -0.0461 -0.00957 4.3
