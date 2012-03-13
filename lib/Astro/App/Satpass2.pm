@@ -8,13 +8,13 @@ use warnings;
 use Astro::App::Satpass2::ParseTime;
 use Astro::App::Satpass2::Utils qw{ has_method instance load_package quoter };
 
-use Astro::Coord::ECI 0.037;
-use Astro::Coord::ECI::Moon 0.037;
-use Astro::Coord::ECI::Star 0.037;
-use Astro::Coord::ECI::Sun 0.037;
-use Astro::Coord::ECI::TLE 0.037 qw{:constants};
-use Astro::Coord::ECI::TLE::Iridium 0.037;	# This really needs 0.037.
-use Astro::Coord::ECI::TLE::Set 0.037;
+use Astro::Coord::ECI 0.048;			# This really needs 0.048.
+use Astro::Coord::ECI::Moon 0.048;
+use Astro::Coord::ECI::Star 0.048;
+use Astro::Coord::ECI::Sun 0.048;
+use Astro::Coord::ECI::TLE 0.037 qw{:constants}; # This really needs 0.048.
+use Astro::Coord::ECI::TLE::Iridium 0.048;	# This really needs 0.048.
+use Astro::Coord::ECI::TLE::Set 0.048;
 use Astro::Coord::ECI::Utils 0.037 qw{:all};
 
 use Clone ();
@@ -400,10 +400,11 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter
 	    next;
 	};
 	$body->set (
-	    twilight => $self->{_twilight},
+	    station	=> $sta,
+	    twilight	=> $self->{_twilight},
 	);
 	push @almanac, $body->almanac_hash(
-	    $sta, $almanac_start, $almanac_end);
+	    $almanac_start, $almanac_end);
     }
 
 #	Sort the almanac data by date, and display the results.
@@ -712,6 +713,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! q
 	    day		=> $opt->{day},
 	    pm		=> $opt->{pm},
 	    extinction	=> $self->{extinction},
+	    station	=> $sta,
 	    zone	=> $zone,
 	);
 	push @active, $tle;
@@ -721,7 +723,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! q
     my @flares;
     foreach my $tle (@active) {
 	eval {
-	    push @flares, $tle->flare ($sta, $pass_start, $pass_end);
+	    push @flares, $tle->flare( $pass_start, $pass_end );
 	    1;
 	} or do {
 	    $@ =~ m/ \Q$interrupted\E /smxo and $self->_wail($@);
@@ -1140,6 +1142,12 @@ sub pass : Verb( choose=s@ appulse! chronological! dump! events! horizon|rise|se
 
     my $model = $self->{model};
 
+    # Set the station for the objects in the sky.
+
+    foreach my $body ( @{ $self->{sky} } ) {
+	$body->set( station => $sta );
+    }
+
 #	Pick up horizon and appulse distance.
 
     my $horizon = deg2rad ($self->{horizon});
@@ -1164,6 +1172,7 @@ sub pass : Verb( choose=s@ appulse! chronological! dump! events! horizon|rise|se
 		interval => ( $self->{verbose} ? $pass_step : 0 ),
 		model => $mdl,
 		pass_threshold => $pass_threshold,
+		station	=> $sta,
 		twilight => $self->{_twilight},
 		visible => $self->{visible},
 	    );
@@ -1171,7 +1180,7 @@ sub pass : Verb( choose=s@ appulse! chronological! dump! events! horizon|rise|se
 
 	eval {
 	    push @accumulate, $self->_pass_select_event( $opt, $tle->pass (
-		$sta, $pass_start, $pass_end, $self->{sky} ) );
+		$pass_start, $pass_end, $self->{sky} ) );
 	    1;
 	} or do {
 	    $@ =~ m/ \Q$interrupted\E /smxo and $self->_wail($@);
@@ -1254,7 +1263,7 @@ sub position : Verb( choose=s@ questionable|spare! quiet! ) {
 #	Define the observing station.
 
     my $sta = $self->station();
-    $sta->universal($time);
+    $sta->universal( $time );
 
 
     my @list = ( $self->_aggregate( $self->{bodies} ), @{$self->{sky}});
@@ -1271,6 +1280,7 @@ sub position : Verb( choose=s@ questionable|spare! quiet! ) {
 		edge_of_earths_shadow => $self->{edge_of_earths_shadow},
 		geometric => $self->{geometric},
 		horizon => $horizon,
+		station	=> $sta,
 		twilight => $self->{_twilight},
 	    );
 	    $body->get('inertial')
@@ -1773,11 +1783,15 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    my ( $self, @args ) = @_;
 	    my $output;
 	    foreach my $body (
-		map {$_->[1]}
-		sort {$a->[0] cmp $b->[0]}
-		map {[lc $_->get('name'), $_]}
-		@{$self->{sky}}) {
-		if ($body->isa ('Astro::Coord::ECI::Star')) {
+		map { $_->[1] }
+		sort { $a->[0] cmp $b->[0] }
+		map { [ lc( $_->get( 'name' ) || $_->get( 'id' ) ), $_ ] }
+		@{$self->{sky}}
+	    ) {
+		if ( embodies( $body, 'Astro::Coord::ECI::TLE' ) ) {
+		    $output .= sprintf "sky tle %s\n", quoter(
+			$body->get( 'tle' ) );
+		} elsif ($body->isa ('Astro::Coord::ECI::Star')) {
 		    my ($ra, $dec, $rng, $pmra, $pmdec, $vr) = $body->position ();
 		    $rng /= PARSEC;
 		    $pmra = rad2deg ($pmra / 24 * 360 * cos ($ra)) * SPY2DPS;
@@ -1847,6 +1861,21 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 		$_->get ('name') !~ m/ $match /smx } @{$self->{sky}};
 	    return;
 	},
+	load	=> sub {	# Undocumented. That means I can revoke
+				# at any time, without notice. If you
+				# need this functionality, please
+				# contact me.
+	    my ( $self, @args ) = @_;
+	    my $tle;
+	    foreach my $fn ( @args ) {
+		local $/ = undef;
+		open my $fh, '<', $fn
+		    or $self->_wail( "Failed to open $fn: $!" );
+		$tle .= <$fh>;
+		close $fh;
+	    }
+	    return $self->_sky_tle( $tle );
+	},
 	lookup	=> sub {
 	    my ( $self, @args ) = @_;
 	    my $output;
@@ -1870,7 +1899,10 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    push @{$self->{sky}}, $body;
 	    return $output;
 	},
-
+	tle	=> \&_sky_tle,	# Undocumented. That means I can revoke
+				# at any time, without notice. If you
+				# need this functionality, please
+				# contact me.
     );
 
     sub sky : Verb() {
@@ -1886,6 +1918,22 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	return;	# We can't get here, but Perl::Critic does not know this.
     }
 
+}
+
+sub _sky_tle {
+    my ( $self, $tle ) = @_;
+    my @bodies = Astro::Coord::ECI::TLE::Set->aggregate(
+	Astro::Coord::ECI::TLE->parse( $tle ) );
+    my %extant = map { $_->get( 'id' ) => 1 }
+	grep { embodies( $_, 'Astro::Coord::ECI::TLE' ) }
+	@{ $self->{sky} };
+    foreach my $body ( @bodies ) {
+	my $id = $body->get( 'id' );
+	$extant{$id}
+	    and $self->_wail( "Duplicate sky entry $id" );
+    }
+    push @{ $self->{sky} }, @bodies;
+    return sprintf "sky tle %s\n", quoter( $tle );
 }
 
 sub source : Verb( optional! ) {
