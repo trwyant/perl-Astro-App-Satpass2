@@ -1778,6 +1778,15 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 
 {
 
+    my %planet_class = (
+	( map { _fold_case( $_ ) => "Astro::Coord::ECI::$_" } qw{ Sun
+	    Moon } ),
+	# The shape of things to come -- maybe
+	( map { _fold_case( $_ ) =>
+	    "Astro::Coord::ECI::Heliocentric::$_" } qw{ Mercury Venus
+	    Mars Jupiter Saturn Uranus Neptune } ),
+    );
+
     my %handler = (
 	list	=> sub {
 	    my ( $self, @args ) = @_;
@@ -1815,36 +1824,43 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    my ( $self, @args ) = @_;
 	    my $name = shift @args
 		or $self->_wail("You did not specify what to add");
-	    my $lcn = lc $name;
-	    my $special = $lcn eq 'sun' || $lcn eq 'moon';
-	    my $class = 'Astro::Coord::ECI::' .
-		($special ? ucfirst ($lcn) : 'Star');
-	    foreach my $body (@{$self->{sky}}) {
-		return if $body->isa ($class) &&
-			($special || $lcn eq lc $body->get ('name'));
-	    }
-	    my $body = $class->new (debug => $self->{debug});
-	    unless ($special) {
-		$body->set (name => $name);
+	    my $fcn = _fold_case( $name );
+	    if ( my $class = $planet_class{$fcn} ) {
+		foreach my $body ( @{ $self->{sky} } ) {
+		    $body->isa( $class )
+			and return;
+		}
+		load_module( $class );
+		push @{ $self->{sky} }, $class->new(
+		    debug	=> $self->{debug},
+		);
+	    } else {
+		foreach my $body ( @{ $self->{sky} } ) {
+		    $body->isa( 'Astro::Coord::ECI::Star' )
+			and $fcn eq _fold_case( $body->get( 'name' ) )
+			and return;
+		}
 		@args >= 2 
 		    or $self->_wail(
-		    "You must give at least right ascension and declination");
-		my $ra = deg2rad (_parse_angle (shift @args));
-		my $dec = deg2rad (_parse_angle (shift @args));
+		    'You must give at least right ascension and declination' );
+		my $ra = deg2rad( _parse_angle( shift @args ) );
+		my $dec = deg2rad( _parse_angle( shift @args ) );
 		my $rng = @args ?
-		    $self->_parse_distance (shift @args, '1pc') :
+		    $self->_parse_distance( shift @args, '1pc' ) :
 		    10000 * PARSEC;
 		my $pmra = @args ? do {
 		    my $angle = shift @args;
 		    $angle =~ s/ s \z //smxi
-			or $angle *= 24 / 360 / cos ($ra);
-		    deg2rad ($angle / SPY2DPS);
+			or $angle *= 24 / 360 / cos( $ra );
+		    deg2rad( $angle / SPY2DPS );
 		} : 0;
-		my $pmdec = @args ? deg2rad (shift (@args) / SPY2DPS) : 0;
+		my $pmdec = @args ? deg2rad( shift( @args ) / SPY2DPS ) : 0;
 		my $pmrec = @args ? shift @args : 0;
-		$body->position ($ra, $dec, $rng, $pmra, $pmdec, $pmrec);
+		push @{ $self->{sky} }, Astro::Coord::ECI::Star->new(
+		    debug	=> $self->{debug},
+		    name	=> $name,
+		)->position( $ra, $dec, $rng, $pmra, $pmdec, $pmrec );
 	    }
-	    push @{$self->{sky}}, $body;
 	    return;
 	},
 	clear	=> sub {
@@ -2627,6 +2643,19 @@ sub _file_reader_SCALAR {
 	or $self->_wail( "Failed to open SCALAR ref: $!" );
 
     return sub { return scalar <$fh> };
+}
+
+BEGIN {
+
+    # sub _fold_case(). This needs to be inside a BEGIN block because it
+    # is called to initialize the planet-to-class map.
+
+    if ( my $code = CORE->can( 'fc' ) ) {
+	*_fold_case = sub { $code->( $_[0] ) };
+    } else {
+	*_fold_case = sub { lc $_[0] };
+    }
+
 }
 
 sub _format_data {
