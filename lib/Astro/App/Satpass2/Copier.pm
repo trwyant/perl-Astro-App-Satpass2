@@ -8,7 +8,7 @@ use Clone ();
 use Astro::App::Satpass2::Warner;
 use Scalar::Util qw{ blessed };
 
-our $VERSION = '0.001';
+our $VERSION = '0.002';
 
 sub attribute_names {
     return ( qw{ warner } );
