@@ -8,14 +8,14 @@ use warnings;
 use Astro::App::Satpass2::ParseTime;
 use Astro::App::Satpass2::Utils qw{ has_method instance load_package quoter };
 
-use Astro::Coord::ECI 0.048;			# This really needs 0.048.
-use Astro::Coord::ECI::Moon 0.048;
-use Astro::Coord::ECI::Star 0.048;
-use Astro::Coord::ECI::Sun 0.048;
-use Astro::Coord::ECI::TLE 0.037 qw{:constants}; # This really needs 0.048.
-use Astro::Coord::ECI::TLE::Iridium 0.048;	# This really needs 0.048.
-use Astro::Coord::ECI::TLE::Set 0.048;
-use Astro::Coord::ECI::Utils 0.037 qw{:all};
+use Astro::Coord::ECI 0.049;			# This really needs 0.049.
+use Astro::Coord::ECI::Moon 0.049;
+use Astro::Coord::ECI::Star 0.049;
+use Astro::Coord::ECI::Sun 0.049;
+use Astro::Coord::ECI::TLE 0.049 qw{:constants}; # This really needs 0.049.
+use Astro::Coord::ECI::TLE::Iridium 0.049;	# This really needs 0.049.
+use Astro::Coord::ECI::TLE::Set 0.049;
+use Astro::Coord::ECI::Utils 0.049 qw{:all};
 
 use Clone ();
 use Cwd ();
