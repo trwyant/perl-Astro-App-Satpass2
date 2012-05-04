@@ -2464,7 +2464,7 @@ sub _choose {
 	    st		=> 0,
 	},
 	status	=> {
-	    iridium	=> 2,
+	    iridium	=> 3,
 	},
     );
 
@@ -2472,7 +2472,8 @@ sub _choose {
 	my ( $self, $type, $name, $repl ) = @_;
 	$deprecate{$type} or return;
 	$deprecate{$type}{$name} or return;
-	my $msg = "The $name $type is deprecated";
+	my $msg = sprintf 'The %s %s is %s', $name, $type,
+	    $deprecate{$type}{$name} > 2 ? 'removed' : 'deprecated';
 	defined $repl
 	    and $msg .= "; use $repl instead";
 	$deprecate{$type}{$name} >= 3
@@ -5681,9 +5682,9 @@ that type would be cleared, but currently there is only one type.
 
 C<drop> - drops an entry from the status table. The argument is the OID.
 
-C<iridium> - deprecated synonym for C<show>, available for backward
-compatibility with F<satpass>. This will be dropped when support for
-compatibility with that script is dropped.
+C<iridium> - dropped in favor of C<show>, to remain compatible with
+F<satpass> version 0.050. An exception will be thrown if this subcommand
+is used.
 
 C<list> - a synonym for C<show>.
 
