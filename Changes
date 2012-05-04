@@ -1,3 +1,8 @@
+0.003		2012-05-04	T. R. Wyant
+  In Astro::App::Satpass2:
+  * Remove the status() method's 'iridium' subcommand, to remain
+    compatible with the 'satpass' script in Astro-satpass.
+
 0.002		2012-03-15	T. R. Wyant
   In Astro::App::Satpass2:
   * Add method station() to return an object representing the current
