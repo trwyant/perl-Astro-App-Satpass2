@@ -143,17 +143,18 @@ sub _recommend_lwp_useragent {
     local $@ = undef;
     eval {
 	require LWP::UserAgent;
-	require URI::URL;
+	require LWP::Protocol;
+	require URI;
 	1;
     } and return;
     return <<'EOD';
-    * LWP::UserAgent and/or URI::URL are not installed.
+    * LWP::UserAgent, LWP::Protocol and/or URI are not installed.
       These modules are required if you want to use URLs in the init(),
       load(), or source() methods. If you do not intend to use URLs
-      there, you do not need these packages. Both packages are
+      there, you do not need these packages. All three packages are
       requirements for most of the other Internet-access functionality,
       so you may get them implicitly if you install some of the other
-      modules.
+      optional modules.
 EOD
 }
 

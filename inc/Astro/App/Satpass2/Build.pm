@@ -15,8 +15,9 @@ my @hide = qw{
     Geo::Coder::Geocoder::US Geo::Coder::OSM Geo::Coder::TomTom
     Geo::WebService::Elevation::USGS
     LWP::UserAgent
+    LWP::Protocol
     Time::HiRes Time::y2038
-    URI::URL
+    URI
 };
 
 {

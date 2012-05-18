@@ -169,6 +169,7 @@ unexport
 unexported
 unlocalized
 unordered
+URI
 username
 USGS
 UT

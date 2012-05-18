@@ -68,9 +68,10 @@ SKIP: {
 
     eval {
 	require LWP::UserAgent;
-	require URI::URL;
+	require LWP::Protocol;
+	require URI;
 	1;
-    } or skip 'LWP::UserAgent or URI::URL not available', $tests;
+    } or skip 'LWP::UserAgent, LWP::Protocol, or URI not available', $tests;
 
     my $url = abs_path( 't/source.dat' );
     $url =~ s/ : /|/smx;
