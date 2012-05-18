@@ -455,7 +455,7 @@ is a separate subsystem all to itself. So:
  satpass2> formatter time_format '%I:%M:%S %p'
  satpass2>
  satpass2> # Save the configuration, overwriting any previous one
- satpass2> save -changes -confirm
+ satpass2> save -changes -overwrite
 
 =head1 INTERMEDIATE TOPICS
 
@@ -564,7 +564,7 @@ And to return home, just say
 Of course, these are really only useful if they are in your
 initialization file. And they can be, with the usual incantation:
 
- satpass2> save -changes -confirm
+ satpass2> save -changes -overwrite
 
 =head2 Temporary Settings
 
@@ -641,7 +641,7 @@ the L<local_coord()|Astro::App::Satpass2::Format/local_coord>
 method of the formatter object. For example, if you want right
 ascension, declination and range, just
 
- satpass2> tell formatter local_coord equatorial_rng
+ satpass2> formatter local_coord equatorial_rng
 
 =head2 User-defined Position Coordinates
 
@@ -665,7 +665,7 @@ template, the C<data> object will contain the data you want to format.
 
 =head1 AUTHOR
 
-Thomas R. Wyant, III F<wyant@cpan.org>
+Thomas R. Wyant, III F<wyant at cpan dot org>
 
 =head1 COPYRIGHT AND LICENSE
 

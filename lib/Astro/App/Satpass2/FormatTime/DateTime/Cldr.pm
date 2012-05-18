@@ -45,8 +45,8 @@ add, change, or retract functionality without notice.
 
 This subclass of
 L<Astro::App::Satpass2::FormatTime::DateTime|Astro::App::Satpass2::FormatTime::DateTime>
-formats times using C<DateTime->format_cldr()>. Time zones other than the
-default local zone are handled using
+formats times using C<< DateTime->format_cldr() >>. Time zones other
+than the default local zone are handled using
 L<DateTime::TimeZone|DateTime::TimeZone> objects.
 
 All this class really provides is the interface to

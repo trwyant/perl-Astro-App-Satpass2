@@ -4504,19 +4504,19 @@ like, instead of C<strftime> formats.
 
 This module is used by the default geocoder for the
 L<geocode()|/geocode> method.  If you are not interested in using the
-L<geocode()|/geocode> method you do not need this method.
+L<geocode()|/geocode> method you do not need this module.
 
 =item L<Geo::Coder::OSM|Geo::Coder::OSM>
 
 This module is used by the Open Street Map geocoder for the
 L<geocode()|/geocode> method.  If you are not interested in using the
-L<geocode()|/geocode> method you do not need this method.
+L<geocode()|/geocode> method you do not need this module.
 
 =item L<Geo::Coder::TomTom|Geo::Coder::TomTom>
 
 This module is used by the Tom Tom geocoder for the
 C<geocode()|/geocode> method.  If you are not interested in using the
-L<geocode()|/geocode> method you do not need this method.
+L<geocode()|/geocode> method you do not need this module.
 
 =item L<Geo::WebService::Elevation::USGS|Geo::WebService::Elevation::USGS>
 
@@ -5420,8 +5420,8 @@ arguments are executed first. How commands are read from C<STDIN>
 depends on a number of factors. If C<STDIN> is a terminal and
 Term::ReadLine can be loaded, a Term::ReadLine object is instantiated
 and used to read input.  If C<STDIN> is a terminal and Term::ReadLine
-can not be loaded, the prompt is printed to STDERR and C<STDIN> is read.
-If C<STDIN> is not a terminal, it is read.
+can not be loaded, the prompt is printed to C<STDERR> and C<STDIN> is
+read.  If C<STDIN> is not a terminal, it is read.
 
 The default command acquisition behavior can be changed by passing, as
 the first argument, a code reference. This should refer to a subroutine
@@ -5510,7 +5510,7 @@ The possible subcommands are:
 of the object. 'Sun' and 'Moon' (not case-sensitive) are special cases,
 and cause the Sun or Moon to be added. Anything else is assumed to be
 the name of a star, and its coordinates must be given, in the following
-order: right ascension (in either degrees or hours, minutes, or
+order: right ascension (in either degrees or hours, minutes, and
 seconds), declination (in degrees), range (optionally with units of
 meters ('m'), kilometers ('km'), astronomical units ('au'), light years
 ('ly'), or parsecs ('pc', the default) appended), proper motion in right
@@ -5672,7 +5672,7 @@ currently only covers Iridium satellites. The arguments are a subcommand
 (defaulting to 'show'), and possibly further arguments that depend on
 that subcommand.  Briefly, the valid subcommands are:
 
-add - adds a body to the status table, possibly replacing an existing
+C<add> - adds a body to the status table, possibly replacing an existing
 entry. The arguments are OID, type, status, name, and comment. The type
 would typically be 'iridium', and status typically '+' (operational),
 'S' (spare), or '-' (failed). Name and comment default to empty.
@@ -6002,7 +6002,7 @@ This numeric attribute specifies the offset in elevation of the edge of
 the Earth's shadow from the center of the illuminating body (typically
 the Sun) as seen from a body in space. The offset is in units of the
 apparent radius of the illuminating body, so that setting it to C<1>
-specifies the edge of the umbra, <-1> specifies the edge of the
+specifies the edge of the umbra, C<-1> specifies the edge of the
 penumbra, and C<0> specifies the middle of the penumbra. This parameter
 corresponds to the same-named L<Astro::Coord::ECI|Astro::Coord::ECI>
 parameter.
@@ -6098,10 +6098,11 @@ C<'Astro::App::Satpass2::Format::'> may be omitted.
 
 Minimal constraints on the formatter class are imposed, but while it
 need not be a subclass of
-L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>, it C<must> conform to
-that class' interface.
+L<Astro::App::Satpass2::Format|Astro::App::Satpass2::Format>, it B<must>
+conform to that class' interface.
 
-The default is C<'Astro::App::Satpass2::Format::Classic'>.
+The default is
+L<Astro::App::Satpass::Format::Template|Astro::App::Satpass::Format::Template>.
 
 =head2 geocoder
 
@@ -6109,7 +6110,8 @@ This attribute specifies which geocoding service can be used. It takes
 as its value any subclass of
 L<Astro::App::Satpass2::Geocode|Astro::App::Satpass2::Geocode> -- either
 an actual instantiated object or a class name. If the class name is
-omitted, the leading C<Astro::App::Satpass2::Geocode::> can be omitted.
+specified, the leading C<Astro::App::Satpass2::Geocode::> can be
+omitted.
 
 The default is the first of
 L<Astro::App::Satpass2::Geocode::Geocoder::US|Astro::App::Satpass2::Geocode::Geocoder::US>,
@@ -6336,12 +6338,13 @@ The default is 0 (i.e. false).
 =head2 spacetrack attribute
 
 This attribute is the L<Astro::SpaceTrack|Astro::SpaceTrack> object used
-by the L</st> method. You must set it to an Astro::SpaceTrack object, or
-to undef to clear the attribute. If no
-L<Astro::SpaceTrack|Astro::SpaceTrack> object has been explicitly set,
-the L</st> method will attempt to load
-L<Astro::SpaceTrack|Astro::SpaceTrack> and set this attribute itself. If
-it succeeds, this object will be available to the L</get> method.
+by the L<spacetrack()|/spacetrack> method. You must set it to an
+L<Astro::SpaceTrack|Astro::SpaceTrack> object, or to undef to clear the
+attribute. If no L<Astro::SpaceTrack|Astro::SpaceTrack> object has been
+explicitly set, the L<spacetrack()|/spacetrack> method will attempt to
+load L<Astro::SpaceTrack|Astro::SpaceTrack> and set this attribute
+itself. If it succeeds, this object will be available to the L</get>
+method.
 
 This attribute may only be manipulated programmatically; it may not be
 gotten or set via the L</dispatch> method, and therefore not by the
@@ -6916,12 +6919,6 @@ rewritten output mechanism is not capable of actually displaying output
 in realtime, and handling multiple times in a system that separates
 formatting from computation appeared to be too difficult to tackle
 without an incentive.
-
-=item status
-
-The C<iridium> subcommand is deprecated, and will be removed when it is
-removed from the C<satpass> script, or when support for compatibility
-with C<satpass> is dropped.
 
 =back
 
