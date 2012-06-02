@@ -10,7 +10,7 @@ use Astro::App::Satpass2::Utils qw{ load_package };
 our $VERSION = '0.003';
 
 my %dumper_hash = (
-    'YAML::Any' => 'Dump',
+    'YAML' => 'Dump',
     'Data::Dumper' => 'Dumper',
     'JSON' => 'to_json',
 );
@@ -27,7 +27,7 @@ my %dumper_hash = (
 		$self->dumper( $dumper_default );
 	    } else {
 		$self->dumper(
-		    'YAML::Any,Data::Dumper'
+		    'YAML,Data::Dumper'
 		);
 		$dumper_default = $self->dumper();
 	    }
@@ -130,10 +130,10 @@ than one class name can be specified, separated by commas.
 
 The default is that obtained by setting
 
- $fmt->dumper( 'YAML::Any,Data::Dumper' );
+ $fmt->dumper( 'YAML,Data::Dumper' );
 
 The known dumper classes are L<Data::Dumper|Data::Dumper>, L<JSON|JSON>,
-and L<YAML::Any|YAML::Any>.
+and L<YAML|YAML>.
 
 =head1 SUPPORT
 

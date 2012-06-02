@@ -589,7 +589,7 @@ The following other methods are provided.
 
 =head3 config
 
- use YAML::Any;
+ use YAML;
  print Dump ( $pt->config( changes => 1 ) );
 
 This method retrieves the configuration of the formatter as an array of

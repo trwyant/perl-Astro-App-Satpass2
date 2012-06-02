@@ -2768,7 +2768,7 @@ sub _frame_push {
 	my %dmpr;
 	my @mod;
 	return $dumper ||= do {
-	    foreach (qw{YAML::Any::Dump Data::Dumper::Dumper}) {
+	    foreach (qw{YAML::Dump Data::Dumper::Dumper}) {
 		my ($module, $routine) = m/ (.*) :: (.*) /smx;
 		push @mod, $module;
 		$dmpr{$module} = $routine;

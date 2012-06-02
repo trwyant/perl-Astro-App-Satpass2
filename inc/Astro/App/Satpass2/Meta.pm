@@ -76,7 +76,7 @@ Astro::App::Satpass2::Meta - Information needed to build Astro::App::Satpass2
  use lib qw{ inc };
  use Astro::App::Satpass2::Meta;
  my $meta = Astro::App::Satpass2::Meta->new();
- use YAML::Any;
+ use YAML;
  print "Required modules:\n", Dump(
      $meta->requires() );
 
