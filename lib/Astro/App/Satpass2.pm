@@ -2068,6 +2068,9 @@ sub source : Verb( optional! ) {
 	    $handler{$method}->( $self, $object, $method, $opt, @args ) :
 	    $object->$method( $opt, @args );
 
+	$rslt->is_success()
+	    or $self->_wail( $rslt->status_line() );
+
 	my $output;
 	my $content_type = $object->content_type || '';
 
