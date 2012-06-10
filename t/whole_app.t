@@ -918,10 +918,20 @@ SKIP: {
 
     execute 'cd', undef, 'Change to directory, no argument';
 
-    TODO: {
-	local $TODO = home_todo();
-	is Cwd::cwd(), $home, 'Change to home directory succeeded'
-	    or diag "\$ENV{HOME} = '$ENV{HOME}; getcwd = " . Cwd::getcwd();
+    my %check_inode = map { $_ => 1 } qw{ freebsd };
+
+    my $got_home = Cwd::cwd();
+
+    if ( $check_inode{$^O} ) {
+	note <<"EOD";
+$^O seems not to round-trip on home directory name, so we compare
+inode numbers to be sure we got the same file irrespective of what it is
+called.
+EOD
+	my ( $got, $want ) = map { ( stat $_ )[1] } $got_home, $home;
+	cmp_ok $got, '==', $want, 'Change to home directory succeeded';
+    } else {
+	is $got_home, $home, 'Change to home directory succeeded';
     }
 }
 
@@ -958,32 +968,6 @@ EOD
 method __TEST__frame_stack_depth => 1, 'Object frame stack is clean';
 
 done_testing;
-
-{
-    my %os;
-    BEGIN {
-	%os = (
-	    'FreeBSD'	=> sub {
-		my @uname;
-		eval {
-		    require POSIX;
-		    @uname = POSIX::uname;
-		    1;
-		} or return;
-		$uname[2] =~ m/ ( \d+ [.] \d+ ) /smx
-		    or return;
-		$1 < 7
-		    or return;
-		return "Under $^O $uname[2] cwd returns /usr/home/foo when I cd to /home/foo";
-	    },
-	);
-    }
-
-    sub home_todo {
-	$os{$^O} or return;
-	return $os{$^O}->();
-    }
-}
 
 1;
 
