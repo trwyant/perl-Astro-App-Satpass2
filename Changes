@@ -1,3 +1,8 @@
+0.004_01	2012-06-10	T. R. Wyant
+  The Astro::App::Satpass2 spacetrack() method was not reporting failure
+    if the request failed.
+  Try to address test failures in t/whole_app.t under freebsd.
+
 0.004		2012-06-02	T. R. Wyant
   Replace YAML::Any with just YAML. They come in the same distro, and
     just plain YAML does not suffer from deprecation warnings.
