@@ -901,11 +901,22 @@ sub init {
     $self->{initfile} = undef;
 
     foreach (
-	sub { return ( $init_file, $opt->{level1} ) },
-	sub { return $ENV{SATPASS2INI} },
-	sub { $self->initfile( { quiet => 1 } ) },
-	sub { return ( $ENV{SATPASSINI}, 1 ) },
-	\&_init_file_01,
+	defined $init_file ? (
+	    sub {
+		# A missing init file is only an error if it was
+		# specified explicitly.
+		-f $init_file
+		    or $self->_wail(
+			"Initialization file $init_file not found"
+		    );
+		return ( $init_file, $opt->{level1} )
+	    },
+	) : (
+	    sub { return $ENV{SATPASS2INI} },
+	    sub { $self->initfile( { quiet => 1 } ) },
+	    sub { return ( $ENV{SATPASSINI}, 1 ) },
+	    \&_init_file_01,
+	)
     ) {
 
 	my ( $fn, $level1 ) = $_->($self);
@@ -916,9 +927,7 @@ sub init {
 
     }
 
-    $self->_wail("Initialization file $init_file not found");
-
-    return;	# We can't get here, but Perl::Critic does not know this
+    return;
 }
 
 
@@ -5053,7 +5062,8 @@ output of the individual commands executed by the initialization file.
 If you pass a defined value as an argument, that value will be taken as
 a file name, and that file will be executed if possible.  That is, this
 method's functionality becomes the same as source(), but without the
-possibility of passing the '-optional' option.
+possibility of passing the '-optional' option. It is an error if a file
+name is specified and that file does not exist.
 
 If you do not pass a defined value as an argument, the following files
 are checked for, and the first one found is executed:
