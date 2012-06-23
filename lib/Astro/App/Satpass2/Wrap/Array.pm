@@ -5,7 +5,7 @@ use 5.008;
 use strict;
 use warnings;
 
-our $VERSION = '0.004_01';
+our $VERSION = '0.005';
 
 sub new {
     my ( $class, $array ) = @_;

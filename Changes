@@ -1,3 +1,7 @@
+0.005		2012-06-22	T. R. Wyant
+  Have the Astro::App::Satpass2 init() method only throw an exception if
+    the file name was explicitly specified.
+
 0.004_01	2012-06-10	T. R. Wyant
   The Astro::App::Satpass2 spacetrack() method was not reporting failure
     if the request failed.
