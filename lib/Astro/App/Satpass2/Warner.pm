@@ -32,7 +32,7 @@ sub new {
 	my ( $name, $value ) = splice @arg, 0, 2;
 	my $code = $self->can( $name )
 	    or $self->wail( "Warner has no such method as $name" );
-	$self->$name( $value );
+	$code->( $self, $value );
     }
     return $self;
 }

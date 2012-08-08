@@ -1184,7 +1184,6 @@ my %formatter_data = (	# For generating formatters
 	    my ( $self, $name, $arg ) = @_;
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
-	    my $rslt = $body->get( 'inertial' );
 	    return $body->get( 'inertial' ) ? 1 : 0;
 	},
     },
@@ -1983,7 +1982,7 @@ sub _format_duration {
 	or $self->{overflow}
 	or return '*' x $arg->{width};
 
-    my $diff = $arg->{width} - length $buffer
+    $arg->{width} - length $buffer
 	or return $buffer;
 
     return $self->_format_string( $buffer, $arg );
@@ -2279,7 +2278,7 @@ sub _julian_day {
 
     sub _set_time_format {
 	my ($self, $name, $data) = @_;
-	my $key = $fmt{$name}
+	$fmt{$name}
 	    or $self->warner()->weep(
 		"'$name' invalid for _set_time_format()" );
 	my $fmtr = $self->{time_formatter};

@@ -57,7 +57,7 @@ sub geocode ($;$) {
     $wrapper_object
 	or skip "$wrapper_class instantiation failed", 1;
 
-    my @codings = eval {
+    () = eval {	# Force eval() to be in list context.
 	$wrapper_object->geocode( $loc )
     } and do {
 	@_ = ( "Geocode '$loc'" );

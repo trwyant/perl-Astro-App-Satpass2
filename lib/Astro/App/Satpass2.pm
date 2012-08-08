@@ -330,7 +330,7 @@ sub new {
 	exists $args{$name} or $args{$name} = $static{$name};
     }
 
-    my $warner = $self->{_warner} = Astro::App::Satpass2::Warner->new(
+    $self->{_warner} = Astro::App::Satpass2::Warner->new(
 	warning => delete $args{warning}
     );
 
@@ -1266,7 +1266,6 @@ sub position : Verb( choose=s@ questionable|spare! quiet! ) {
     } else {
 	$time = time;
     }
-    my $twilight = $self->{_twilight};
 
 
 #	Define the observing station.
@@ -1567,7 +1566,6 @@ sub _set_copyable {
 	}
 	push @args, substr $arg{value}, $base;
 	my $pkg = shift @args;
-	my @prefix = @{ $arg{prefix} || [] };
 	my $cls = load_package( $pkg, @{ $arg{prefix} || [] } )
 	    or $self->_wail( "Unable to load $pkg" );
 	$obj = $cls->new(
