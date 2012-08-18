@@ -645,7 +645,7 @@ $time_formatter->gmt( 1 );	# Turn on GMT
 method time => [], '23:23:41', 'Time of day (round trip on zone)';
 
 method tle => [], <<'EOD', 'TLE';
-ISS --effective 2008/283/10:23:02.000
+ISS --effective 2008/283/10:23:02
 1 25544U 98067A   08283.45349537  .00007111 10240-12  82345-4 0  4565
 2 25544  51.6426 159.8765 0004029 198.7654 279.8765 15.72108062567893
 EOD
