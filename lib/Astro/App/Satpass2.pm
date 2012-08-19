@@ -155,6 +155,7 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 }
 
 my %mutator = (
+    almanac_horizon	=> \&_set_almanac_horizon,
     appulse => \&_set_angle,
     autoheight => \&_set_unmodified,
     backdate => \&_set_unmodified,
@@ -260,11 +261,9 @@ my %nointeractive = map {$_ => 1} qw{
 };
 
 #	Initial object contents
-#
-#	CAVEAT: only scalars here, since we do a shallow clone to create
-#	the object from this.
 
 my %static = (
+    almanac_horizon	=> 0,
     appulse => 0,
     autoheight => 1,
     background => 1,
@@ -1505,6 +1504,17 @@ sub set : Verb() {
     return;
 }
 
+sub _set_almanac_horizon {
+    my ( $self, $name, $value ) = @_;
+    my $eci = Astro::Coord::ECI->new();
+    my $parsed = _parse_angle( $value );
+    $eci->set( almanac_horizon => $parsed );	# To validate.
+    my $internal = looks_like_number( $parsed ) ? deg2rad( $parsed ) :
+    $parsed;
+    $self->{"_$name"} = $internal;
+    return( $self->{$name} = $parsed );
+}
+
 sub _set_angle {
     return ($_[0]{$_[1]} = _parse_angle ($_[2]));
 }
@@ -2124,14 +2134,18 @@ sub st : Verb() {
 
 sub station {
     my ( $self ) = @_;
+
     defined $self->{height}
 	and defined $self->{latitude}
 	and defined $self->{longitude}
 	or $self->_wail( 'You must set height, latitude, and longitude' );
+
     return Astro::Coord::ECI->new (
-	    refraction => 1,
-	    name => $self->{location} || '',
-	    id => 'station',
+	    almanac_horizon	=> $self->{_almanac_horizon},
+	    horizon	=> $self->get( 'horizon' ),
+	    id		=> 'station',
+	    name	=> $self->{location} || '',
+	    refraction	=> 1,
 	)->geodetic (
 	    deg2rad( $self->{latitude} ),
 	    deg2rad( $self->{longitude} ),
