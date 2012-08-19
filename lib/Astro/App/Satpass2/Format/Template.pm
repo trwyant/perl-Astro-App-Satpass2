@@ -366,6 +366,12 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
 
     $data{default} ||= $self->__default();
 
+    $data{instantiate} = sub {
+	my @args = @_;
+	my $class = Astro::App::Satpass2::Utils::load_package( @args );
+	return $class->new();
+    };
+
     $data{provider} ||= $self->provider();
 
     if ( $data{time} ) {
@@ -387,6 +393,11 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
     }
 
     my $output;
+
+    local $Template::Stash::LIST_OPS->{bodies} = sub {
+	my ( $list ) = @_;
+	return [ map { $_->body() } @{ $list } ];
+    };
 
     local $Template::Stash::LIST_OPS->{events} = sub {
 	my @args = @_;
@@ -705,6 +716,16 @@ be provided:
 
 =over
 
+=item instantiate
+
+You can pass one or more class names as arguments. The argument is a
+class name which is loaded by passed to the
+L<Astro::App::Satpass2::Utils|Astro::App::Satpass2::Utils>
+L<load_package()|Astro::App::Satpass2::Utils/load_package>. If the load
+succeeds, an object is instantiated by calling C<new()> on the loaded
+class name, and that object is returned. If no class can be loaded an
+exception is thrown.
+
 =item provider
 
 This is simply the value returned by L<provider()|/provider>.
@@ -750,6 +771,15 @@ In addition to any variables passed in, the following array methods are
 defined for C<Template-Toolkit> before it is invoked:
 
 =over
+
+=item bodies
+
+If called on an array of objects, returns a reference to the results of
+calling body() on each of the objects. This is good for (e.g.)
+recovering a bunch of L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE>
+objects from their containing
+L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
+objects.
 
 =item events
 

@@ -11,6 +11,7 @@ eg/almanac
 eg/flare_vcalendar
 eg/pass_vcalendar
 eg/tle_celestia.tt
+eg/tle_json.tt
 eg/tle_stellarium.tt
 inc/Astro/App/Satpass2/Build.pm
 inc/Astro/App/Satpass2/Meta.pm
