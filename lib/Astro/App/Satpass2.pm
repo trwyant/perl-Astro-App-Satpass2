@@ -2441,10 +2441,12 @@ sub _choose {
 	    $match = !$match;
 	} else {
 	    my $name = ref $tle eq 'ARRAY' ? $tle->[1] : $tle->get('name');
-	    foreach my $re (@regex) {
-		$name =~ m/ $re /smx or next;
-		$match = !$match;
-		last;
+	    if ( defined $name ) {
+		foreach my $re (@regex) {
+		    $name =~ m/ $re /smx or next;
+		    $match = !$match;
+		    last;
+		}
 	    }
 	}
 	$match and push @rslt, $tle;
