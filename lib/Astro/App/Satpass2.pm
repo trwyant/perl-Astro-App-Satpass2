@@ -2480,7 +2480,7 @@ sub _choose {
 	    desired_equinox_dynamical	=> 0,
 	    explicit_macro_delete	=> 0,
 	    gmt		=> 0,
-	    lit		=> 0,
+	    lit		=> 2,
 	    local_coord	=> 0,
 	    perltime	=> 0,
 	    time_format	=> 0,
@@ -6214,8 +6214,12 @@ and C<lit> is implemented in terms of that attribute. Note that any
 non-zero value of L<edge_of_earths_shadow|/edge_of_earths_shadow> will
 cause C<< $app->get( 'lit' ) >> to return true.
 
+Like the current C<satpass> script, every use of this attribute will
+result in a warning. In the first release on or after March 1 2013, this
+will become fatal.
+
 This boolean attribute specifies how to determine if a body is lit by
-the Sun.  If true (i.e. 1) it is considered to be lit if the upper limb
+the Sun. If true (i.e. 1) it is considered to be lit if the upper limb
 of the sun is above the horizon, as seen from the body. If false (i.e.
 0), the body is considered lit if the center of the sun is above the
 horizon.
