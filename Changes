@@ -1,3 +1,15 @@
+0.006		2012-09-05	T. R. Wyant
+  Warn on every use of the 'lit' attribute. This should have been
+    warning on first use before, but was not.
+  Fix uninitialized value error in Astro::App::Satpass2 when running
+    choose() on bodies that do not have a name.
+  Add support for displaying TLEs in JSON format. See eg/tle_json.tt for
+    an example.
+  Add Astro::App::Satpass2 attribute almanac_horizon, which corresponds
+    to the same-named Astro::Coord::ECI attribute.
+  Track effect of change in the way Astro::Coord::ECI::TLE formats the
+    effective date on the tests in t/format_value.t.
+
 0.005		2012-06-22	T. R. Wyant
   Have the Astro::App::Satpass2 init() method only throw an exception if
     the file name was explicitly specified.

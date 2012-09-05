@@ -10,7 +10,7 @@ use base qw{ Astro::App::Satpass2::ParseTime };
 
 use Astro::App::Satpass2::Utils qw{ load_package };
 
-our $VERSION = '0.005';
+our $VERSION = '0.006';
 
 my $invalid;
 
