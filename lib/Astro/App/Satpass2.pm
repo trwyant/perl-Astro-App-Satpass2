@@ -2060,6 +2060,8 @@ sub source : Verb( optional! ) {
     $handler{getv} = $handler{get};
     $handler{show} = $handler{config};
 
+    my %suppress_output = map { $_ => 1 } '', 'set';
+
     # Attributes must all be on one line to process correctly under
     # 5.8.8.
     sub spacetrack : Verb( all! changes! descending! effective! end_epoch=s exclude=s last5! raw! rcs! status=s sort=s start_epoch=s tle! verbose! ) {
@@ -2102,7 +2104,7 @@ sub source : Verb( optional! ) {
 	    $self->_iridium_status( @rest );
 	    $opt->{verbose} and $output .= $rslt->content;
 
-	} elsif ($content_type || $opt->{verbose}) {
+	} elsif ( ! $suppress_output{$content_type} || $opt->{verbose}) {
 
 	    $output .= $rslt->content;
 
