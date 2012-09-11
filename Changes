@@ -1,3 +1,7 @@
+0.007		2012-09-10	T. R. Wyant
+  Suppress 'OK' output in response to Astro::App::Satpass2 method
+    spacetrack( set => ... ).
+
 0.006		2012-09-05	T. R. Wyant
   Warn on every use of the 'lit' attribute. This should have been
     warning on first use before, but was not.
