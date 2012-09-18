@@ -44,7 +44,7 @@ BEGIN {
 	};
 }
 
-our $VERSION = '0.007';
+our $VERSION = '0.007_01';
 
 # The following 'cute' code is so that we do not determine whether we
 # actually have optional modules until we really need them, and yet do
