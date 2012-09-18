@@ -1,7 +1,7 @@
 use 5.006002;
 
-use strict;
-use warnings;
+# use strict;
+# use warnings;
 
 my @names = @ARGV;
 @names or @names = sort keys %ENV;
