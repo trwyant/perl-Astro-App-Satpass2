@@ -47,7 +47,7 @@ sub requires {
 	'File::Temp'		=> 0,
 	'Getopt::Long'		=> 0,
 	'IO::File'		=> 1.14,
-	'IO::Hanlde'		=> 0,
+	'IO::Handle'		=> 0,
 	'IPC::System::Simple'	=> 0,
 	'List::Util'		=> 0,
 ##	'Params::Util'		=> 0.250,
