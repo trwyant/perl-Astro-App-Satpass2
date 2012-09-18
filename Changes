@@ -1,4 +1,8 @@
-0.007_01	2012-09-18	T> R. Wyant
+0.007_02	2012-09-18	T. R. Wyant
+  Correct typo in core dependencies. Add author test to try to prevent
+    this from happening again.
+
+0.007_01	2012-09-18	T. R. Wyant
   Try to address CPAN testers failures (unable to load 'strict'), by
     including all core dependencies, and by removing pragmas from a
     helper script.
