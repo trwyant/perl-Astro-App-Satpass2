@@ -1,3 +1,6 @@
+0.007_03	2012-09-19	T. R. Wyant
+  Another fix to floating-point formatting normalization.
+
 0.007_02	2012-09-18	T. R. Wyant
   Correct typo in core dependencies. Add author test to try to prevent
     this from happening again.
