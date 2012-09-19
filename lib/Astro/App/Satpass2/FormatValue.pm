@@ -2102,7 +2102,10 @@ sub _format_number_scientific {
     $tplt .= 'e';
 
     my $buffer = sprintf $tplt, $value;
-    $buffer =~ s/ e ( [-+]? ) 0 (\d\d) \z /e$1$2/smx;	# Normalize
+    $buffer =~ s/ e ( [-+]? ) 0 (\d\d) \z /e$1$2/smx	# Normalize
+	and $width
+	and $width > length $buffer
+	and $buffer = ' ' . $buffer;	# Preserve width after normalize
 
     $width
 	or return $buffer;
