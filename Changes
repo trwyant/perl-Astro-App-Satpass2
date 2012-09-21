@@ -1,3 +1,10 @@
+0.007_04	2012-09-21	T. R. Wyant
+  Fix MSWin32 test failures due to equivocation on which slash is used
+    for a path delimiter.
+  Skip output redirection test under MSWin32. I think the failure is a
+    testing problem, but am not sure, so a note was added to the docs on
+    this.
+
 0.007_03	2012-09-19	T. R. Wyant
   Another fix to floating-point formatting normalization.
 
