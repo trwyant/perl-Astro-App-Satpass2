@@ -20,6 +20,7 @@ our @EXPORT = qw{
     class
     execute
     method
+    normalize_path
     FALSE
     INSTANTIATE
     TRUE
@@ -82,23 +83,11 @@ sub method (@) {	## no critic (RequireArgUnpacking)
     my ( $want, $title ) = splice @args, -2;
     my $got;
     if ( eval { $got = $app->$method( @args ); 1 } ) {
+
 	if ( 'CODE' eq ref $want ) {
 	    @_ = ( $want, $got, $title );
 	    goto &$want;
 	}
-
-=begin comment
-
-	use Carp;
-	'new' eq $method
-	    and confess 'new() not marked as instantiator';
-	blessed( $got )
-	    and not defined $want
-	    and confess "$method() not tested with TRUE";
-
-=end comment
-
-=cut
 
 	foreach ( $want, $got ) {
 	    defined and not ref and chomp;
@@ -114,6 +103,23 @@ sub method (@) {	## no critic (RequireArgUnpacking)
 	    or $want = qr<\Q$want>smx;
 	@_ = ( $got, $want, $title );
 	goto &like;
+    }
+}
+
+{
+    my %normalizer = (
+	MSWin32	=> sub {
+	    my ( $path ) = @_;
+	    $path =~ tr{\\}{/};
+	    return $path;
+	},
+    );
+
+    sub normalize_path {
+	my ( $path ) = @_;
+	my $code = $normalizer{$^O}
+	    or return $path;
+	return $code->( $path );
     }
 }
 
