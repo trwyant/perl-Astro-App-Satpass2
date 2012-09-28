@@ -9,7 +9,7 @@ use base qw{ Exporter };
 
 use Scalar::Util qw{ blessed looks_like_number };
 
-our $VERSION = '0.007_04';
+our $VERSION = '0.008';
 
 our @EXPORT_OK = qw{ has_method instance load_package quoter };
 

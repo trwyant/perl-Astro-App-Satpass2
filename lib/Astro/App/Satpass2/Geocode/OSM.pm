@@ -9,7 +9,7 @@ use base qw{ Astro::App::Satpass2::Geocode };
 
 use Astro::App::Satpass2::Utils qw{ instance };
 
-our $VERSION = '0.007_04';
+our $VERSION = '0.008';
 
 use constant GEOCODER_CLASS => 'Geo::Coder::OSM';
 

@@ -1,3 +1,6 @@
+0.008		2012-09-28	T. R. Wyant
+  No changes since 0.007_04.
+
 0.007_04	2012-09-21	T. R. Wyant
   Fix MSWin32 test failures due to equivocation on which slash is used
     for a path delimiter.
