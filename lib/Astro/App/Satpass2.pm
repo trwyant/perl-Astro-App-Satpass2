@@ -2054,11 +2054,12 @@ sub source : Verb( optional! ) {
 	},
 	set	=> sub {
 	    my ( $self, $obj, $method, $opt, @args ) = @_;
-	    return $obj->set( @args );
+	    return $obj->$method( @args );
 	},
     );
     $handler{getv} = $handler{get};
     $handler{show} = $handler{config};
+    $handler{spacetrack_query_v2} = $handler{set};
 
     my %suppress_output = map { $_ => 1 } '', 'set';
 
