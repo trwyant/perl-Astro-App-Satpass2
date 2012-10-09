@@ -1,3 +1,7 @@
+0.009		2012-10-09	T. R. Wyant
+  Have the Astro::App::Satpass2 spacetrack() method _not_ pass the
+    options hash to Astro::SpaceTrack method spacetrack_query_v2().
+
 0.008		2012-09-28	T. R. Wyant
   No changes since 0.007_04.
 
