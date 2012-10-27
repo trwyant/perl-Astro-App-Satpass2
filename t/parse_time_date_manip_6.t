@@ -10,6 +10,12 @@ use Astro::App::Satpass2::Test::App;
 
 BEGIN {
 
+    # Workaround for bug (well, _I_ think it's a bug) introduced into
+    # Date::Manip with 6.34, while fixing RT #78566. My bug report is RT
+    # #80435.
+    my $path = $ENV{PATH};
+    local $ENV{PATH} = $path;
+
     eval {
 	require Date::Manip;
 	1;
@@ -41,13 +47,28 @@ BEGIN {
     };
 
 }
+my $path = $ENV{PATH};
 
 require_ok 'Astro::App::Satpass2::ParseTime';
+
+note <<'EOD';
+The following test is to make sure we have worked around RT ticket
+#80435: [patch] Date::Manip clobbers $ENV{PATH} on *nix
+EOD
+
+is $ENV{PATH}, $path, 'Ensure that the PATH is prorected at load';
 
 class 'Astro::App::Satpass2::ParseTime';
 
 method new => class => 'Astro::App::Satpass2::ParseTime::Date::Manip',
     INSTANTIATE, 'Instantiate';
+
+note <<'EOD';
+The following test is to make sure we have worked around RT ticket
+#80435: [patch] Date::Manip clobbers $ENV{PATH} on *nix
+EOD
+
+is $ENV{PATH}, $path, 'Ensure that the PATH is prorected at instantiation';
 
 method isa => 'Astro::App::Satpass2::ParseTime::Date::Manip::v6', TRUE,
     'Object is an Astro::App::Satpass2::ParseTime::Date::Manip::v6';

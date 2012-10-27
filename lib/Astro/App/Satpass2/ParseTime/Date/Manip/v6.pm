@@ -82,6 +82,13 @@ sub _get_dm_field {
 }
 
 sub _make_dm_hash {
+
+    # Workaround for bug (well, _I_ think it's a bug) introduced into
+    # Date::Manip with 6.34, while fixing RT #78566. My bug report is RT
+    # #80435.
+    my $path = $ENV{PATH};
+    local $ENV{PATH} = $path;
+
     my $dm = Date::Manip::Date->new();
     return {
 	default_zone	=> scalar $dm->tz->zone(),
