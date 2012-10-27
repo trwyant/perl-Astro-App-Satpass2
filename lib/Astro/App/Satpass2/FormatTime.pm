@@ -7,7 +7,7 @@ use warnings;
 
 use base qw{ Astro::App::Satpass2::Copier };
 
-our $VERSION = '0.009';
+our $VERSION = '0.010';
 
 my $delegate = eval {
     require Astro::App::Satpass2::FormatTime::DateTime::Strftime;

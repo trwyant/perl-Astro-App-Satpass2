@@ -1,3 +1,7 @@
+0.010		2012-10-26	T. R. Wyant
+  Workaround for Date::Manip bug 80435: Date::Manip clobbers $ENV{PATH}
+    on *nix.
+
 0.009		2012-10-09	T. R. Wyant
   Have the Astro::App::Satpass2 spacetrack() method _not_ pass the
     options hash to Astro::SpaceTrack method spacetrack_query_v2().
