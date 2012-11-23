@@ -108,6 +108,11 @@ sub method (@) {	## no critic (RequireArgUnpacking)
 
 {
     my %normalizer = (
+	dragonfly	=> sub {
+	    my ( $path ) = @_;
+	    $path =~ s/ \\ \z //smx;
+	    return $path;
+	},
 	MSWin32	=> sub {
 	    my ( $path ) = @_;
 	    $path =~ tr{\\}{/};
