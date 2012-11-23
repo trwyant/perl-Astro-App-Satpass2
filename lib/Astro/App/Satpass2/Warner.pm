@@ -21,7 +21,7 @@ our @CARP_NOT = ( qw{
     Astro::App::Satpass2::ParseTime::ISO8601
 } );
 
-our $VERSION = '0.010';
+our $VERSION = '0.010_01';
 
 sub new {
     my ( $class, @arg ) = @_;

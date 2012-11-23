@@ -7,7 +7,7 @@ use base qw{ Astro::App::Satpass2::ParseTime };
 
 use Astro::App::Satpass2::Utils qw{ load_package };
 
-our $VERSION = '0.010';
+our $VERSION = '0.010_01';
 
 my $delegate;
 

@@ -1,3 +1,7 @@
+0.010_01	2012-11-23	T. R. Wyant
+  Try to fix test failure under DragonFly BSD 3.1.0. I believe the
+    failure is cosmetic, but ...
+
 0.010		2012-10-26	T. R. Wyant
   Workaround for Date::Manip bug 80435: Date::Manip clobbers $ENV{PATH}
     on *nix.
