@@ -1,3 +1,6 @@
+0.010_02	2012-11-29	T. R. Wyant
+  Another crack at the DragonFly test failure.
+
 0.010_01	2012-11-23	T. R. Wyant
   Try to fix test failure under DragonFly BSD 3.1.0. I believe the
     failure is cosmetic, but ...
