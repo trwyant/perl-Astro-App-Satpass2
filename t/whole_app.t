@@ -940,7 +940,7 @@ EOD
 	cmp_ok $got, '==', $want, 'Change to home directory succeeded';
     } else {
 	is normalize_path( $got_home ), normalize_path( $home ),
-	    'Change to home directory succeeded';
+	    "Change to home directory succeeded. \$^O = '$^O'";
     }
 }
 
