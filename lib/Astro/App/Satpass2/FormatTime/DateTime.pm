@@ -96,34 +96,37 @@ __END__
 
 =head1 NAME
 
-Astro::App::Satpass2::FormatTime::DateTime - Format time using DateTime->strftime()
+Astro::App::Satpass2::FormatTime::DateTime - Format time using DateTime
 
 =head1 SYNOPSIS
 
- use Astro::App::Satpass2::FormatTime::DateTime;
- my $tf = Astro::App::Satpass2::FormatTime::DateTime->new();
- print 'It is now ',
-     $tf->format_datetime( '%H:%M:%S', time, 1 ),
-     " GMT\n";
+None. All externally-available functionality is provided by either the
+superclass or one of the subclasses.
 
 =head1 NOTICE
 
 This class and its subclasses are private to the
-L<Astro::App::Satpass2|Astro::App::Satpass2> package. The author reserves the right to
-add, change, or retract functionality without notice.
+L<Astro::App::Satpass2|Astro::App::Satpass2> package. The author
+reserves the right to add, change, or retract functionality without
+notice.
 
 =head1 DETAILS
 
-This subclass of L<Astro::App::Satpass2::FormatTime|Astro::App::Satpass2::FormatTime>
-formats times using C<DateTime->strftime()>. Time zones other than the
-default local zone are handled using
-L<DateTime::TimeZone|DateTime::TimeZone> objects.
+This subclass of
+L<Astro::App::Satpass2::FormatTime|Astro::App::Satpass2::FormatTime> is
+an abstract class for formatting dates and times using
+L<DateTime|DateTime>. What you really want to use is one of its
+subclasses:
+L<Astro::App::Satpass2::FormaTime::DateTime::Cldr|Astro::App::Satpass2::FormaTime::DateTime::Cldr>
+or
+L<Astro::App::Satpass2::FormaTime::DateTime::Strftime|Astro::App::Satpass2::FormaTime::DateTime::Strftime>
+
 
 =head1 METHODS
 
 This class provides no public methods over and above those provided by
-L<Astro::App::Satpass2::FormatTime|Astro::App::Satpass2::FormatTime> and
-L<Astro::App::Satpass2::FormatTime::Strftime|Astro::App::Satpass2::FormatTime::Strftime>.
+L<Astro::App::Satpass2::FormatTime|Astro::App::Satpass2::FormatTime>.
+
 =head1 SUPPORT
 
 Support is by the author. Please file bug reports at
