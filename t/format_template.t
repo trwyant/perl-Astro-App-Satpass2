@@ -15,6 +15,8 @@ use Astro::Coord::ECI::Sun;
 use Astro::Coord::ECI::TLE qw{ :constants };
 use Astro::Coord::ECI::TLE::Iridium;
 use Astro::Coord::ECI::Utils qw{ deg2rad };
+
+use Cwd ();
 use Time::Local;
 
 my $sta = Astro::Coord::ECI->new()->geodetic(
@@ -133,6 +135,61 @@ is $ft->format(
    OID Name                     Epoch               Period
  88888 None                     1980-10-01 23:41:24 01:29:37
 EOD
+
+{
+    my $list_template = $ft->template( { raw => 1 }, 'list' );
+
+    $ft->template( list => <<'EOD' );
+[%- title.oid( align_left = 0 ) %] [% title.name %]
+[% FOR item IN data %]
+    [%- item.oid %] [% item.name %]
+[% END -%]
+EOD
+
+    is $ft->format(
+	template	=> 'list',
+	data		=> [ $sat ],
+    ), <<'EOD', 'List (custom format)';
+   OID Name
+ 88888 None
+EOD
+
+    is $ft->format(
+	template	=> 't/list.tt',
+	data		=> [ $sat ],
+    ), <<'EOD', 'List (format from relative path)';
+                    Name OID
+                    None  88888
+EOD
+
+    my $abs = Cwd::abs_path( 't/list.tt' );
+
+    my $rslt;
+    eval {
+	$ft->format(
+	    template	=> $abs,
+	    data	=> [ $sat ],
+	);
+	1;
+    } or do {
+	$rslt = $@;
+    };
+    like $rslt, qr{absolute paths are not allowed}sm,
+	    'List (format from absolute path) should fail by default'
+	or diag defined $rslt ? "Failed but with error $rslt" :
+    'Succeeded';
+
+    $ft->permissive( 1 );
+
+    is $ft->format(
+	template	=> $abs,
+	data		=> [ $sat ],
+    ), <<'EOD', 'List (format from absolute path, permissive)';
+                    Name OID
+                    None  88888
+EOD
+
+}
 
 is $ft->format(
     template	=> 'location',

@@ -61,6 +61,7 @@ t/format_value.t
 t/geocode_geocoder_us.t
 t/geocode_osm.t
 t/geocode_tomtom.t
+t/list.tt
 t/parse_time_iso8601.t
 t/parse_time_date_manip_5.t
 t/parse_time_date_manip_6.t

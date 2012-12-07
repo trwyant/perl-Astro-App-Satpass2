@@ -300,14 +300,7 @@ sub new {
 	Astro::App::Satpass2::Format::Template::Provider->new()
 	or $self->warner()->weep( 'Failed to instantiate provider' );
 
-    $self->{tt} = Template->new( {
-	    LOAD_TEMPLATES => [
-		$self->{template},
-		Template::Provider->new(),
-	    ],
-	}
-    ) or $self->warner()->weep(
-	"Failed to instantate tt: $Template::ERROR" );
+    $self->_new_tt( $self->permissive() );
 
     while ( my ( $name, $def ) = each %template_definitions ) {
 	$self->template( $name => $def );
@@ -316,6 +309,31 @@ sub new {
     $self->{default} = {};
 
     return $self;
+}
+
+sub _new_tt {
+    my ( $self, $permissive ) = @_;
+
+    $self->{tt} = Template->new( {
+	    LOAD_TEMPLATES => [
+		$self->{template},
+		Template::Provider->new(
+		    ABSOLUTE	=> $permissive,
+		    RELATIVE	=> $permissive,
+		),
+	    ],
+	}
+    ) or $self->warner()->weep(
+	"Failed to instantate tt: $Template::ERROR" );
+
+    return;
+}
+
+sub attribute_names {
+    my ( $self ) = @_;
+    return ( $self->SUPER::attribute_names(),
+	qw{ permissive },
+    );
 }
 
 sub config {
@@ -452,6 +470,19 @@ sub local_coord {
 	return $self->SUPER::local_coord( @args );
     } else {
 	return $self->SUPER::local_coord();
+    }
+}
+
+sub permissive {
+    my ( $self, @args ) = @_;
+    if ( @args ) {
+	if ( $self->{permissive} xor $args[0] ) {
+	    $self->_new_tt( $args[0] );
+	}
+	$self->{permissive} = $args[0];
+	return $self;
+    } else {
+	return $self->{permissive};
     }
 }
 
@@ -682,6 +713,30 @@ actually implemented as templates, as follows:
 These definitions can be changed, or new local coordinates added, using
 the L<template()|/template> method.
 
+=head3 permissive
+
+ print 'Formatter is ', $fmt->permissive() ? "permissive\n" : "not
+permissive\n";
+ $fmt->permissive( 1 );
+
+This method is accessor and mutator for the C<permissive> attribute.
+This attribute controls whether C<Template-Toolkit> is permissive in the
+matter of what files it will load. By default it will only load files
+specified by relative paths without the 'up-directory' specification
+(F<..> under *nix). If true, absolute paths, and path containing the
+'up-directory' specification are allowed.
+
+If called with no argument, this method is an accessor, and returns the
+current value of the attribute.
+
+If called with an argument, this method is a mutator, and sets a new
+value of the attribute. In this case, the invocant is returned.
+
+The default is false, because that is the C<Template-Toolkit> default.
+The reason for this is (in terms of this module)
+
+ $fmt->format( template => '/etc/passwd' );
+
 =head2 Formatters
 
 As stated in the
@@ -694,7 +749,7 @@ documentation, there is actually only one formatter method:
 
 This formatter implements the C<format()> method using
 L<Template-Toolkit|Template>.  The C<template> argument is required, and
-selects one of the canned templates provided.  The C<data> argument is
+selects one of the canned templates provided. The C<data> argument is
 required unless your templates are capable of calling
 L<Astro::App::Satpass2|Astro::App::Satpass2> methods on their own
 account, and must (if provided) be whatever is expected by the template.
@@ -719,12 +774,12 @@ be provided:
 =item instantiate
 
 You can pass one or more class names as arguments. The argument is a
-class name which is loaded by passed to the
+class name which is loaded by the
 L<Astro::App::Satpass2::Utils|Astro::App::Satpass2::Utils>
-L<load_package()|Astro::App::Satpass2::Utils/load_package>. If the load
-succeeds, an object is instantiated by calling C<new()> on the loaded
-class name, and that object is returned. If no class can be loaded an
-exception is thrown.
+L<load_package()|Astro::App::Satpass2::Utils/load_package> subroutine.
+If the load succeeds, an object is instantiated by calling C<new()> on
+the loaded class name, and that object is returned. If no class can be
+loaded an exception is thrown.
 
 =item provider
 
@@ -1100,9 +1155,9 @@ If called as a mutator, you still get back the object reference.
 If a subclass overrides this method, the override should either perform
 the decoding itself, or delegate to C<SUPER::decode>.
 
-=head3 report
+=head3 format
 
- $fmt->report( template => $template, ... );
+ $fmt->format( template => $template, ... );
 
 This method represents the interface to L<Template-Toolkit|Template>,
 and all the L</Formatter> methods come through here eventually.
