@@ -904,8 +904,7 @@ SKIP: {
 
     execute 'cd t', undef, 'Change to t directory';
 
-    is normalize_path( Cwd::cwd() ), normalize_path( $t ),
-	'Change to t directory succeeded';
+    same_path Cwd::cwd(), $t, 'Change to t directory succeeded';
 
 }
 
@@ -939,7 +938,7 @@ EOD
 	my ( $got, $want ) = map { ( stat $_ )[1] } $got_home, $home;
 	cmp_ok $got, '==', $want, 'Change to home directory succeeded';
     } else {
-	is normalize_path( $got_home ), normalize_path( $home ),
+	same_path $got_home, $home,
 	    "Change to home directory succeeded. \$^O = '$^O'";
     }
 }

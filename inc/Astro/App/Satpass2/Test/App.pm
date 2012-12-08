@@ -21,6 +21,7 @@ our @EXPORT = qw{
     execute
     method
     normalize_path
+    same_path
     FALSE
     INSTANTIATE
     TRUE
@@ -107,17 +108,21 @@ sub method (@) {	## no critic (RequireArgUnpacking)
 }
 
 {
+    my $win32 = sub {
+	my ( $path ) = @_;
+	$path =~ tr{\\}{/};
+	return $path;
+    };
+
     my %normalizer = (
+	dos		=> $win32,
 	dragonfly	=> sub {
 	    my ( $path ) = @_;
 	    $path =~ s{ / \z }{}smx;
 	    return $path;
 	},
-	MSWin32	=> sub {
-	    my ( $path ) = @_;
-	    $path =~ tr{\\}{/};
-	    return $path;
-	},
+	MSWin32		=> $win32,
+	os2		=> $win32,
     );
 
     sub normalize_path {
@@ -125,6 +130,25 @@ sub method (@) {	## no critic (RequireArgUnpacking)
 	my $code = $normalizer{$^O}
 	    or return $path;
 	return $code->( $path );
+    }
+}
+
+{
+
+    my %no_stat = map { $_ => 1 } qw{ dos MSWin32 os2 riscos VMS };
+
+    sub same_path ($$$) {
+	my ( $got, $want, $name ) = @_;
+	$got = normalize_path( $got );
+	$want = normalize_path( $want );
+	if ( $want eq $got || $no_stat{$^O} ) {
+	    @_ = ( $got, $want, $name );
+	    goto &is;
+	}
+	my $got_inode = ( stat $got )[1];
+	my $want_inode = ( stat $want )[1];
+	@_ = ( $got_inode, '==', $want_inode, $name );
+	goto &cmp_ok;
     }
 }
 
@@ -254,6 +278,25 @@ the actual result is logically inverted before the test.
 If the desired result is a C<Regexp>, the results are tested with
 C<like()>. If it is any other reference, the test is done with
 C<is_deeply()>. Otherwise, they are tested with C<is()>.
+
+=head2 normalize_path
+
+ my $normalized = normalize_path( $path );
+
+This subroutine performs OS-specific normalization on path names.
+Typically this consists of changing slash direction (MSWin32 and
+friends) and lopping off trailing slashes (DragonFly BSD).
+
+=head2 same_path
+
+ same_path $got, $want, 'Got the same path';
+
+This subroutine implements a test to see if the first two arguments
+represent the same file path. On systems that do not support reliable
+inode results from C<stat()> (that is, MSWin32 and friends, riscos, and
+VMS) the test is simply a comparison of normalized paths. On systems
+that support (or are suspected to support) reliable inodes, if the
+normalized paths are different the inode numbers are compared.
 
 =head1 METHODS
 
