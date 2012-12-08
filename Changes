@@ -1,3 +1,12 @@
+0.010_03	2012-12-08	T. R. Wyant
+  Another crack at properly testing if two files are in fact the same.
+  Tweak eg/pass_vcalendar to work with Mac OS 10.8 calendar.
+  Add attribute 'permissive' (and associated accessor/mutator
+    permissive()) to Astro::App::Satpass2::Format::Template. This
+    defaults to false, If set true, Template-Toolkit is configured to
+    accept absolute path names for templates.
+  Correct Astro::App::Satpass2::FormatTime::DateTime documentation.
+
 0.010_02	2012-11-29	T. R. Wyant
   Another crack at the DragonFly test failure.
 
