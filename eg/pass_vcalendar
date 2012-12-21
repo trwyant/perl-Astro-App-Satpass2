@@ -39,6 +39,7 @@ BEGIN:VCALENDAR
 BEGIN:VEVENT
 DTSTART:[% first.date( units = 'zulu' ) %]
 DALARM:[% first.date( delta = -360, units = 'zulu' ) %]
+DALARM:[% first.date( delta = -60, units = 'zulu' ) %]
 SUMMARY:[% first.name %]
     [%- FOREACH evt IN events %][% punct %]
 	[%- evt_name = evt.event %]
