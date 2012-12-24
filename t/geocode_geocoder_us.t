@@ -12,7 +12,9 @@ use Astro::App::Satpass2::Test::Geocode;
 
 setup	'Astro::App::Satpass2::Geocode::Geocoder::US';
 
+TODO:
 SKIP: {
+    local $TODO = 'geocoder.us temporarily (I hope!) out of action';
     geocode '1600 Pennsylvania Ave, Washington DC', 1;
 }
 

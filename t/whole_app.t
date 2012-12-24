@@ -943,8 +943,11 @@ EOD
     }
 }
 
+TODO:
 SKIP: {
     my $tests = 4;
+
+    local $TODO = 'geocoder.us temporarily (I hope!) out of action';
 
     my $app = application;
     my $geocoder = $app->get( 'geocoder' )
@@ -960,7 +963,8 @@ set location '1600 Pennsylvania Ave NW, Washington DC 20502'
 set latitude 38.898748
 set longitude -77.037684
 EOD
-	'Geocode of White House returned expected data';
+	'Geocode of White House returned expected data'
+	or skip 'Did not get data; no use to check its values', 3;
 
     method get => 'location',
 	'1600 Pennsylvania Ave NW, Washington DC 20502',
