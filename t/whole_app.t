@@ -943,38 +943,39 @@ EOD
     }
 }
 
-TODO:
-SKIP: {
-    my $tests = 4;
+TODO: {
+    SKIP: {
+	my $tests = 4;
 
-    local $TODO = 'geocoder.us temporarily (I hope!) out of action';
+	local $TODO = 'geocoder.us temporarily (I hope!) out of action';
 
-    my $app = application;
-    my $geocoder = $app->get( 'geocoder' )
-	or skip 'No geocoder loaded', $tests;
+	my $app = application;
+	my $geocoder = $app->get( 'geocoder' )
+	    or skip 'No geocoder loaded', $tests;
 
-    my $rslt;
-##  defined( $rslt = check_access( 'http://rpc.geocoder.us/Geo/Coder/US' ) )
-    defined( $rslt = check_access( $geocoder->GEOCODER_SITE() ) )
-	and skip $rslt, $tests;
+	my $rslt;
+    ##  defined( $rslt = check_access( 'http://rpc.geocoder.us/Geo/Coder/US' ) )
+	defined( $rslt = check_access( $geocoder->GEOCODER_SITE() ) )
+	    and skip $rslt, $tests;
 
-    execute 'geocode "1600 Pennsylvania Ave, Washington DC"', <<'EOD',
+	execute 'geocode "1600 Pennsylvania Ave, Washington DC"', <<'EOD',
 set location '1600 Pennsylvania Ave NW, Washington DC 20502'
 set latitude 38.898748
 set longitude -77.037684
 EOD
-	'Geocode of White House returned expected data'
-	or skip 'Did not get data; no use to check its values', 3;
+	    'Geocode of White House returned expected data'
+	    or skip 'Did not get data; no use to check its values', 3;
 
-    method get => 'location',
-	'1600 Pennsylvania Ave NW, Washington DC 20502',
-	'Geocode of White House returned expected address';
+	method get => 'location',
+	    '1600 Pennsylvania Ave NW, Washington DC 20502',
+	    'Geocode of White House returned expected address';
 
-    method get => 'latitude', 38.898748,
-	'Geocode of White House returned expected latitude';
+	method get => 'latitude', 38.898748,
+	    'Geocode of White House returned expected latitude';
 
-    method get => 'longitude', -77.037684,
-	'Geocode of White House returned expected longitude';
+	method get => 'longitude', -77.037684,
+	    'Geocode of White House returned expected longitude';
+    }
 }
 
 method __TEST__frame_stack_depth => 1, 'Object frame stack is clean';
