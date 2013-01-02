@@ -2535,6 +2535,8 @@ sub _choose {
 #	The code snippet will return undef at end-of-file.
 #
 #	The following keys in %opt are recognized:
+#	{glob} causes the contents of the file to be returned, rather
+#	    than a reader.
 #	{optional} causes the code to simply return on an error, rather
 #	    than failing.
 
@@ -2575,9 +2577,10 @@ sub _file_reader_ {
 	    $self->_wail( "Failed to retrieve $file: ",
 		$resp->status_line() );
 	};
+	$opt->{glob} and return $resp->content();
 	return $self->_file_reader( \( scalar $resp->content() ), $opt );
     } else {
-	my $fh = IO::File->new( $file, '<' )
+	my $fh = IO::File->new( $self->_tilde_expand( $file ), '<' )
 	    or do {
 	    $opt->{optional} and return;
 	    $self->_wail( "Failed to open $file: $!" );
@@ -4241,13 +4244,18 @@ sub _user_home_dir {
 	foreach (@rslt) {
 	    exists $_->{token} or next;
 	    if ($_->{redirect}) {
-		my $type = $_->{type};
-		$redir{$type} = {
-		    mode => $_->{mode},
-		    name => ($_->{expand} ?
-			$self->_tilde_expand($_->{token}) :
-			$_->{token}),
-		};
+		if ( $_->{mode} eq '<' ) {
+		    push @tokens, $self->_file_reader(
+			$_->{token}, { glob => 1 } );
+		} else {
+		    my $type = $_->{type};
+		    $redir{$type} = {
+			mode => $_->{mode},
+			name => ($_->{expand} ?
+			    $self->_tilde_expand($_->{token}) :
+			    $_->{token}),
+		    };
+		}
 	    } else {
 		push @tokens, $_->{tilde} ? $self->_tilde_expand($_->{token}) :
 		    $_->{token};
@@ -6731,11 +6739,13 @@ vertical bar character (C<|>) introduce a redirection specification
 (and, incidentally, a new token). Anything after the meta-characters in
 the same token is taken to be the file or program name.
 
-The only redirections that actually work at the moment are C<< > >>
-(output redirection), C<<< >> >>> (output redirection with append), and
-C<< << >> (here documents, which are not really a redirection). Unless
-the here document terminator is enclosed in single quotes, interpolation
-is done inside the here document.
+The only redirections that actually work are C<< > >> (output
+redirection) and C<<< >> >>> (output redirection with append).  The
+C<< < >> and C<<< << >>> look like input redirections but are not, at
+least not in the sense of making data appear on standard in. The first
+is replaced by the contents of the given file or URL. The second works
+like a Perl here document, and interpolates unless the here document
+terminator is enclosed in single quotes.
 
 B<Caveat:> redirection tests fail under MSWin32 -- or at least they did
 until I bypassed them under that operating system. I do not know if this

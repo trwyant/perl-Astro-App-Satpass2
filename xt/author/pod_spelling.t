@@ -43,6 +43,7 @@ CPAN
 cpanminus
 CPANPLUS
 customizations
+CUSTOMIZATIONS
 darwin
 DateTime
 DC
@@ -68,6 +69,7 @@ firstderivative
 formatter
 formatter's
 formatters
+Formatters
 fr
 FreeBSD
 FreeDesktop
@@ -78,6 +80,7 @@ geocoded
 geocoder
 geocodes
 geocoding
+Geocoding
 geoid
 GMT
 gmt
@@ -90,6 +93,7 @@ ini
 init
 initfile
 instantiator
+Instantiator
 invocant
 invocant's
 ish
@@ -99,6 +103,7 @@ jul
 julian
 kluged
 lookup
+Lookup
 lookups
 ly
 meananomaly
@@ -111,6 +116,7 @@ noquarter
 NORAD
 observability
 oid
+OID
 op
 org
 parsers
@@ -154,12 +160,15 @@ Strasbourg's
 subcommand
 subcommands
 subclasses
+Subclasses
 TIMEZONES
 TLE
 tle
 tokenization
+Tokenization
 tokenized
 tokenizing
+TOKENIZING
 TomTom
 trampoline
 tt
@@ -179,7 +188,7 @@ warner
 webcmd
 WGS
 whinge
-wyant
+Wyant
 YAML
 zoneinfo
 zulu
