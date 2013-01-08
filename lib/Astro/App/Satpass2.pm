@@ -6,7 +6,9 @@ use strict;
 use warnings;
 
 use Astro::App::Satpass2::ParseTime;
-use Astro::App::Satpass2::Utils qw{ has_method instance load_package quoter };
+use Astro::App::Satpass2::Utils qw{
+    has_method instance load_package my_dist_config quoter
+};
 
 use Astro::Coord::ECI 0.049;			# This really needs 0.049.
 use Astro::Coord::ECI::Moon 0.049;
@@ -933,8 +935,8 @@ sub init {
 sub initfile : Verb( create-directory! quiet! ) {
     my ( $self, $opt, @args ) = _arguments( @_ );
 
-    my $init_dir = File::HomeDir->my_dist_config(
-	'Astro-App-Satpass2', { create => $opt->{'create-directory'} } );
+    my $init_dir = my_dist_config(
+	{ create => $opt->{'create-directory'} } );
 
     defined $init_dir
 	or do {
@@ -3434,6 +3436,8 @@ sub _read_continuation {
 	defined $buffer
 	    or return $buffer;
 	$buffer =~ m/ \A \s* \z /sxm
+	    and return $buffer;
+	$buffer =~ s/ \A \s* [#] 2 [#] \s* //sxm
 	    and return $buffer;
 	$buffer =~ m/ \A \s* [#] /sxm
 	    and return $buffer;

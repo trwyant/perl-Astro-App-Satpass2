@@ -7,11 +7,14 @@ use warnings;
 
 use base qw{ Exporter };
 
+use File::HomeDir;
 use Scalar::Util qw{ blessed looks_like_number };
 
 our $VERSION = '0.012';
 
-our @EXPORT_OK = qw{ has_method instance load_package quoter };
+our @EXPORT_OK = qw{
+    has_method instance load_package my_dist_config quoter
+};
 
 sub has_method {
     my ( $object, $method ) = @_;
@@ -65,6 +68,16 @@ sub instance {
 
 	return ( $loaded{$key} = undef );
     }
+}
+
+
+sub my_dist_config {
+    my ( $opt ) = @_;
+
+    return File::HomeDir->my_dist_config(
+	'Astro-App-Satpass2',
+	{ create => $opt->{'create-directory'} },
+    );
 }
 
 
@@ -145,6 +158,21 @@ actually loaded. If no attempt succeeds, C<undef> is returned.
 
 Arguments are cached, and subsequent attempts to load a module simply
 return the contents of the cache.
+
+=head2 my_dist_config
+
+ my $cfg_dir = my_dist_config( { 'create-directory' => 1 } );
+
+This subroutine simply wraps
+
+ File::HomeDir->my_dist_config( 'Astro-App-Satpass2' );
+
+You can pass an optional reference to an options hash (sic!). The only
+supported option is {'create-directory'}, which is passed verbatim to
+the C<File::HomeDir> C<'create'> option.
+
+If the configuration directory is found or successfully created, the
+path to it is returned. Otherwise C<undef> is returned.
 
 =head2 quoter
 
