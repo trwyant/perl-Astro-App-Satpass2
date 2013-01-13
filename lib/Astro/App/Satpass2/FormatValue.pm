@@ -6,7 +6,7 @@ use warnings;
 use base qw{ Astro::App::Satpass2::Copier };
 
 use Astro::App::Satpass2::FormatTime;
-use Astro::App::Satpass2::Utils qw{ has_method instance };
+use Astro::App::Satpass2::Utils qw{ has_method instance merge_hashes };
 use Astro::App::Satpass2::Warner;
 use Astro::Coord::ECI::Sun;
 use Astro::Coord::ECI::TLE qw{ :constants };
@@ -211,7 +211,7 @@ use constant TITLE_GRAVITY_TOP		=> 'top';
 	    $args{fixed_width} :
 	    1;
 
-	$self->{locale} = $args{locale} || \%locale;
+	$self->{locale} = merge_hashes( \%locale, $args{locale} );
 
 	$self->{overflow} = $args{overflow} || 0;
 
@@ -760,6 +760,15 @@ sub __list_dimensions {
     return \%dimensions;
 }
 
+sub __list_dimension_names {
+    return ( keys %dimensions );
+}
+
+sub __get_dimension_data {
+    my ( $class, $name ) = @_;
+    return $dimensions{$name};
+}
+
 #	The following hash is used for generating formatter methods, as
 #	a way of avoiding the replication of common code. The keys are
 #	the method names, and the values are hashes which specify the
@@ -914,25 +923,7 @@ my %formatter_data = (	# For generating formatters
     },
 
     azimuth	=> {
-	chain	=> sub {
-	    my ( $self, $name, $value, $arg ) = @_;
-	    $arg->{bearing}
-		and $arg->{bearing} =~ m/ \A \d+ \z /sxm
-		or $arg->{bearing} = 0;
-
-	    $arg->{bearing} or return $arg;
-
-	    if ( defined $value ) {
-		my $ab = { %{ $arg } };	# Shallow clone
-		$ab->{width} and $ab->{width} = $ab->{bearing};
-		$ab->{units} = 'bearing';
-		return ( $arg, $ab );
-	    } else {
-		$arg->{width}
-		    and $arg->{width} += $arg->{bearing} + 1;
-		return $arg;
-	    }
-	},
+	chain	=> \&__chain_bearing,
 	default	=> {
 	    bearing	=> 0,
 	    places	=> 1,
@@ -1557,39 +1548,58 @@ sub _fetch {
     return $info->{fetch}->( $self, $name, $arg );
 }
 
-while ( my ( $name, $info ) = each %formatter_data ) {
-    __PACKAGE__->can( $name ) and next;
-
-    no strict qw{ refs };
-
-    *$name = sub {
-	my ( $self, %arg ) = _arguments( @_ );
-
-	$self->_apply_defaults( $name => \%arg, $info->{default} );
-
-	my $value = ( $self->{title} || defined $arg{literal} ) ?
-	    NONE :
-	    $self->_fetch( $info, $name, \%arg );
-
-	my @rslt;
-	foreach my $parm ( $info->{chain} ?
-	    $info->{chain}->( $self, $name, $value, \%arg ) :
-	    \%arg ) {
-
-	    push @rslt, defined $arg{literal} ?
-		$self->_format_string( $arg{literal}, \%arg ) :
-		$self->_apply_dimension(
-		    $name => $value, $parm, $info->{dimension} );
-
-	}
-
-	return join ' ', @rslt;
-    };
+sub __list_formatter_names {
+    return ( keys %formatter_data );
 }
 
-sub __list_formatters {
-    return \%formatter_data;
+sub __get_formatter_data {
+    my ( $class, $name ) = @_;
+    return $formatter_data{$name};
 }
+
+sub __make_formatter_methods {
+    my ( $class ) = @_;
+
+    foreach my $name ( $class->__list_formatter_names() ) {
+
+	my $info = $class->__get_formatter_data( $name );
+
+	$class->can( $name )
+	    and next;
+
+	my $fq = "${class}::$name";
+
+	no strict qw{ refs };
+
+	*$fq = sub {
+	    my ( $self, %arg ) = _arguments( @_ );
+
+	    $self->_apply_defaults( $name => \%arg, $info->{default} );
+
+	    my $value = ( $self->{title} || defined $arg{literal} ) ?
+		NONE :
+		$self->_fetch( $info, $name, \%arg );
+
+	    my @rslt;
+	    foreach my $parm ( $info->{chain} ?
+		$info->{chain}->( $self, $name, $value, \%arg ) :
+		\%arg ) {
+
+		push @rslt, defined $arg{literal} ?
+		    $self->_format_string( $arg{literal}, \%arg ) :
+		    $self->_apply_dimension(
+			$name => $value, $parm, $info->{dimension} );
+
+	    }
+
+	    return join ' ', @rslt;
+	};
+
+    }
+    return;
+}
+
+__PACKAGE__->__make_formatter_methods();
 
 #	Title control
 
@@ -1667,24 +1677,26 @@ sub _apply_dimension {
     defined( my $dimension = $dim->{dimension} )
 	or $self->warner()->weep( 'No dimension specified' );
 
-    defined( my $units = _dor( $arg->{units}, $dim->{units},
-	$self->_get( default => $name, 'units' ),
-	$dimensions{$dimension}{default} ) )
+    my $dim_data;
+    $dim_data = $self->__get_dimension_data( $dimension )
+	and defined( my $units = _dor( $arg->{units}, $dim->{units},
+	    $self->_get( default => $name, 'units' ),
+	    $dim_data->{default} ) )
 	or $self->warner()->weep( "Dimension $dimension undefined" );
 
-    my $hash = $dimensions{$dimension}{define}{$units}
+    my $hash = $dim_data->{define}{$units}
 	or $self->{warner}->wail(
 	    "Units $units not valid for $dimension" );
 
     if ( defined $hash->{alias} ) {
-	$hash = $dimensions{$dimension}{define}{$hash->{alias}}
+	$hash = $dim_data->{define}{$hash->{alias}}
 	    or $self->warner()->weep( "Undefined alias '$hash->{alias}'" );
 	$units = $hash->{alias};
     }
 
     defined $arg->{align_left}
 	or $arg->{align_left} = _dor( $hash->{align_left},
-	    $dimensions{$dimension}{align_left} );
+	    $dim_data->{align_left} );
 
     $self->{title}
 	and return $self->_do_title( $name, $arg );
@@ -1710,7 +1722,7 @@ sub _apply_dimension {
 
     defined( my $formatter = _dor( $hash->{formatter},
 	    $dim->{formatter},
-	    $dimensions{$dimension}{formatter},
+	    $dim_data->{formatter},
 	) )
 	or $self->warner()->weep( "No formatter for $dimension $units" );
 
@@ -1824,6 +1836,26 @@ sub _do_title_wrap {
     my $wrap = Text::Wrap::wrap( '', '', $title );
     my @lines = split qr{ \n }sxm, $wrap;
     return [ map { $self->_format_string( $_, $arg ) } @lines ];
+}
+
+sub __chain_bearing {
+    my ( $self, $name, $value, $arg ) = @_;
+    $arg->{bearing}
+	and $arg->{bearing} =~ m/ \A \d+ \z /sxm
+	or $arg->{bearing} = 0;
+
+    $arg->{bearing} or return $arg;
+
+    if ( defined $value ) {
+	my $ab = { %{ $arg } };	# Shallow clone
+	$ab->{width} and $ab->{width} = $ab->{bearing};
+	$ab->{units} = 'bearing';
+	return ( $arg, $ab );
+    } else {
+	$arg->{width}
+	    and $arg->{width} += $arg->{bearing} + 1;
+	return $arg;
+    }
 }
 
 sub _dor {
