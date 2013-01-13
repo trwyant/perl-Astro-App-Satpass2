@@ -22,6 +22,7 @@ my %static = (
     gmt		=> 0,
     local_coord	=> DEFAULT_LOCAL_COORD,
     provider	=> 'Astro::App::Satpass2',
+    value_formatter	=> 'Astro::App::Satpass2::FormatValue',
 );
 
 sub new {
@@ -48,6 +49,10 @@ sub new {
     $args{time_format}
 	or $self->time_format( $self->time_formatter()->TIME_FORMAT() );
 
+    $self->value_formatter( delete $args{value_formatter} ||
+	$static{value_formatter} );
+    $self->value_formatter()->warner( $self->warner() );
+
     $self->init( %args );
 
     return $self;
@@ -58,6 +63,7 @@ sub attribute_names {
     return ( $self->SUPER::attribute_names(),
 	qw{ date_format desired_equinox_dynamical gmt
 	    local_coord provider time_format time_formatter tz
+	    value_formatter
 	} );
 }
 
@@ -90,15 +96,18 @@ sub attribute_names {
 		and next;
 
 	    my $val = $self->$name();
+	    $args{decode}
+		and ref $val
+		and $val = $self->decode( $name );
 
 	    no warnings qw{ uninitialized };
+
 	    next if $args{changes} &&
 		$val eq ( $original_value{$name} ?
 		    $original_value{$name}->( $self, $name ) :
 		    undef );
 
-	    push @data, [ $name, $args{decode} ? $self->decode( $name )
-		: $val ];
+	    push @data, [ $name, $val ];
 	}
 
 	return wantarray ? @data : \@data;
@@ -125,6 +134,7 @@ sub attribute_names {
 	    return ref $rslt || $rslt;
 	},
     );
+    $decoder{value_formatter} = $decoder{time_formatter};
 
     sub decode {
 	my ( $self, $method, @args ) = @_;
@@ -170,6 +180,7 @@ sub time_formatter {
 	    $fmtr = $class->new();
 	};
 	my $old = $self->{time_formatter}
+	    and ref $self->{time_formatter}
 	    and $self->{time_formatter}->copy( $fmtr );
 	$self->{time_formatter} = $fmtr;
 	if ( ! $old || $old->FORMAT_TYPE() ne $fmtr->FORMAT_TYPE() ) {
@@ -189,6 +200,28 @@ sub tz {
 	return $self;
     } else {
 	return $self->{tz};
+    }
+}
+
+sub value_formatter {
+    my ( $self, @args ) = @_;
+    if ( @args ) {
+	my $fmtr = $args[0];
+	defined $fmtr and $fmtr ne ''
+	    or $fmtr = 'Astro::App::Satpass2::FormatValue';
+	ref $fmtr or do {
+	    my $class = load_package( $fmtr,
+		'Astro::App::Satpass2' )
+		or $self->warner()->wail( "Can not load $fmtr" );
+	    $fmtr = $class->new();
+	};
+	$self->{value_formatter}
+	    and ref $self->{value_formatter}
+	    and $self->{value_formatter}->copy( $fmtr );
+	$self->{value_formatter} = $fmtr;
+	return $self;
+    } else {
+	return $self->{value_formatter};
     }
 }
 
@@ -218,8 +251,8 @@ No user-serviceable parts inside.
 =head1 DETAILS
 
 This formatter is an abstract class providing output formatting
-functionality for L<Astro::App::Satpass2|Astro::App::Satpass2>. It should not be
-instantiated directly.
+functionality for L<Astro::App::Satpass2|Astro::App::Satpass2>. It
+should not be instantiated directly.
 
 This class is a subclass of
 L<Astro::App::Satpass2::Copier|Astro::App::Satpass2::Copier>.
@@ -456,6 +489,26 @@ A complication is that subclasses may need to validate zone values. It
 is to be hoped that their digestions will be rugged enough to handle the
 usual conventions, since convention rather than standard seems to rule
 here.
+
+=head3 value_formatter
+
+This method acts as both accessor and mutator for the object used to
+format values. It will probably be a
+L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
+object of some sort, and will certainly conform to that interface. When
+setting the value, you can specify either a class name or an object. If
+a class name, the leading C<Astro::App::Satpass2::> can be omitted.
+
+Author's note:
+
+This method is B<experimental and unsupported>. Documentation is for the
+benefit of the author and the curious. I wanted to screw around with
+extra formatters, and the best way to do that seemed to be to subclass
+C<Astro::App::Satpass2::FormatValue>, but then I needed a way to put the
+subclass into use. But I am not really ready to document the necessary
+interface (and therefore commit to not changing it, or at least not
+doing so without going through a deprecation cycle). If you have a need
+for this kind of thing, please contact me.
 
 =head2 Formatters
 

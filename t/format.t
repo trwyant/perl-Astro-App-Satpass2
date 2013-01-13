@@ -58,6 +58,8 @@ method config => decode => 1,
 	[ time_format			=> '%H:%M:%S' ],
 	[ time_formatter		=> $expect_time_formatter ],
 	[ tz				=> 'est5edt' ],
+	[ value_formatter		=>
+	    'Astro::App::Satpass2::FormatValue' ],
     ],
     'Dump configuration';
 
