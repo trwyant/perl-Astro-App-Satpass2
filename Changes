@@ -1,3 +1,12 @@
+0.012_01	2013-01-13	T. R. Wyant
+  Make 'input redirection' (<file) work, but more like `file`; that is,
+    the contents of the file become a token at that point in the
+    command.
+  Make Astro::App::Satpass2::FormatValue more amenable to subclassing,
+    though subclassing is still unsupported.
+  Give Astro::App::Satpass2::Format a 'value_formatter' attribute to
+    control what class (or object) is used for formatting values.
+
 0.012		2012-12-26	T. R. Wyant
   Fix tests to work under versions of Perl that do not allow multiple
     labels for the same block.
