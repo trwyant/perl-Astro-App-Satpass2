@@ -167,6 +167,8 @@ sub local_coord {
     }
 }
 
+=begin comment
+
 sub time_formatter {
     my ( $self, @args ) = @_;
     if ( @args ) {
@@ -193,6 +195,51 @@ sub time_formatter {
     }
 }
 
+=end comment
+
+=cut
+
+foreach my $attribute (
+    [ time_formatter => 'Astro::App::Satpass2::FormatTime',
+	'Astro::App::Satpass2::FormatTime', sub {
+	    my ( $self, $old, $new ) = @_;
+	    if ( $old->FORMAT_TYPE() ne $new->FORMAT_TYPE() ) {
+		$self->date_format( $new->DATE_FORMAT() );
+		$self->time_format( $new->TIME_FORMAT() );
+	    }
+	    return;
+	},
+    ],
+    [ value_formatter => 'Astro::App::Satpass2::FormatValue',
+	'Astro::App::Satpass2', sub {}	],
+) {
+    my ( $name, $class, $prefix, $pre_set ) = @{ $attribute };
+    __PACKAGE__->can( $name )
+	and next;
+    no strict qw{ refs };
+    *$name = sub {
+	my ( $self, @args ) = @_;
+	if ( @args ) {
+	    my $fmtr = $args[0];
+	    defined $fmtr and $fmtr ne ''
+		or $fmtr = $class;
+	    ref $fmtr or do {
+		my $class = load_package( $fmtr, $prefix )
+		    or $self->warner()->wail( "Can not load $fmtr" );
+		$fmtr = $class->new();
+	    };
+	    if ( ref ( my $old = $self->{$name} ) ) {
+		$old->copy( $fmtr );
+		$pre_set->( $self, $old, $fmtr );
+	    }
+	    $self->{$name} = $fmtr;
+	    return $self;
+	} else {
+	    return $self->{$name};
+	}
+    };
+}
+
 sub tz {
     my ( $self, @args ) = @_;
     if ( @args ) {
@@ -202,6 +249,8 @@ sub tz {
 	return $self->{tz};
     }
 }
+
+=begin comment
 
 sub value_formatter {
     my ( $self, @args ) = @_;
@@ -224,6 +273,10 @@ sub value_formatter {
 	return $self->{value_formatter};
     }
 }
+
+=end comment
+
+=cut
 
 sub warner {
     my ( $self, @args ) = @_;
