@@ -5,20 +5,14 @@ use warnings;
 
 use base qw{ Astro::App::Satpass2::ParseTime };
 
-use Astro::App::Satpass2::Utils qw{ load_package };
+use Astro::App::Satpass2::Utils qw{ load_package __date_manip_backend };
 
 our $VERSION = '0.012_01';
 
 my $delegate;
 
-if ( load_package( 'Date::Manip' ) ) {
-    my $ver = Date::Manip->VERSION();
-    $ver =~ s/ _ //smxg;
-    if ( $ver < 6 ) {
-	$delegate = __PACKAGE__ . '::v5';
-    } else {
-	$delegate = __PACKAGE__ . '::v6';
-    }
+if ( defined ( my $backend = __date_manip_backend() ) ) {
+    $delegate = __PACKAGE__ . "::v$backend";
 };
 
 sub delegate {

@@ -16,18 +16,12 @@ my $invalid;
 
 BEGIN {
     eval {
+	local $Date::Manip::Backend = 'DM5';
+
 	load_package( 'Date::Manip' )
 	    or return;
-	my $ver = Date::Manip->VERSION();
-	$ver =~ s/ _ //smxg;
-	$ver < 6
-	    and do {
-		Date::Manip->import();
-		1;
-	    }
-	    or $invalid = sprintf
-		'%s assumes a Date::Manip version < 6. You have %s',
-		__PACKAGE__, Date::Manip->VERSION();
+
+	Date::Manip->import();
 	1;
     } or $invalid = ( $@ || 'Unable to load Date::Manip' );
 }
@@ -86,7 +80,7 @@ sub tz {
 
 =head1 NAME
 
-Astro::App::Satpass2::ParseTime::Date::Manip::v5 - Astro::App::Satpass2 wrapper for Date::Manip v5 or less
+Astro::App::Satpass2::ParseTime::Date::Manip::v5 - Astro::App::Satpass2 wrapper for Date::Manip v5 interface
 
 =head1 SYNOPSIS
 
@@ -94,7 +88,8 @@ No user-serviceable parts inside.
 
 =head1 DETAILS
 
-This class wraps L<Date::Manip|Date::Manip> version 5.54 or lower, and
+This class wraps L<Date::Manip|Date::Manip> version 5.54 or lower and
+the C<DM5> back-end for L<Date::Manip|Date::Manip> 6.0 and higher, and
 uses it to parse dates. It uses the C<perltime> mechanism, since these
 versions of L<Date::Manip|Date::Manip> do not understand summer time.
 

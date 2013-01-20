@@ -17,21 +17,24 @@ BEGIN {
     local $ENV{PATH} = $path;
 
     eval {
+	# The following localizations are to force the Date::Manip 6
+	# backend
+	local $ENV{DATE_MANIP} = 'DM6';
+	local $Date::Manip::Backend = 'DM6';
 	require Date::Manip;
 	1;
-    } or do {
-	plan skip_all => 'Date::Manip not available';
-	exit;
-    };
+    } or plan skip_all => 'Date::Manip not available';
 
     my $ver = Date::Manip->VERSION();
     Date::Manip->import();
     ( my $test = $ver ) =~ s/ _ //smxg;
-    $test >= 6 or do {
-	plan skip_all =>
+    $test >= 6
+	or plan skip_all =>
 	    "Date::Manip $ver installed; this test is for 6.00 or greater";
-	exit;
-    };
+
+    $] >= 5.010
+	or plan skip_all =>
+	    "Date::Manip version 6 backend not available under Perl $]";
 
     eval {
 	require Time::y2038;

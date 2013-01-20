@@ -4489,14 +4489,13 @@ installed, C<Astro::App::Satpass2> will use it to parse times. If it is
 not available a home-grown ISO-8601-ish parser will be used. There are
 really three options here:
 
-* If you have Perl 5.10 or above, you can install the latest version of
+* If you have Perl 5.10 or above, you have the full functionality of
 L<Date::Manip|Date::Manip>.
 
-* If you a Perl before 5.10, the latest version of
-L<Date::Manip|Date::Manip> will not work, and you will have to install
-version 5.56. This version of C<Date::Manip> is known not to support
-summer time (or daylight saving time, if you will), and may have other
-deficiencies versus the current release.
+* If you a Perl before 5.10, you can (as of this writing) install the
+latest L<Date::Manip|Date::Manip>, but you will be using the version 5
+back end, which may not support summer time (a.k.a. daylight saving
+time) and may have other deficiencies versus the current release.
 
 * The home-grown parser is
 L<Astro::App::Satpass2::ParseTime::ISO86O1|Astro::App::Satpass2::ParseTime::ISO8601>.

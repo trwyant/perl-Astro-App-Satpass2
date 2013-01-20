@@ -7,15 +7,6 @@ use Test::More 0.88;
 
 sub instantiate (@);
 
-my $date_manip_delegate;
-
-eval {	## no critic (RequireCheckingReturnValueOfEval)
-    require Date::Manip;
-    $date_manip_delegate = 'Astro::App::Satpass2::ParseTime::Date::Manip::v5';
-    Date::Manip->VERSION( 6.0 );
-    $date_manip_delegate = 'Astro::App::Satpass2::ParseTime::Date::Manip::v6';
-};
-
 my @copier_methods =
     qw{ attribute_names clone copy create_attribute_methods init warner };
 
@@ -36,6 +27,9 @@ my @parse_time_methods = ( @copier_methods,
 
 defined $ENV{TZ}
     and diag "\$ENV{TZ} is '$ENV{TZ}'";
+
+require_ok 'Astro::App::Satpass2::Utils'
+    or BAIL_OUT;
 
 require_ok 'Astro::App::Satpass2::Warner'
     or BAIL_OUT;
@@ -221,6 +215,11 @@ require_ok 'Astro::App::Satpass2::ParseTime::Date::Manip'
 
 can_ok 'Astro::App::Satpass2::ParseTime::Date::Manip', @parse_time_methods
     or BAIL_OUT;
+
+my $date_manip_delegate = Astro::App::Satpass2::Utils::__date_manip_backend();
+defined $date_manip_delegate
+    and $date_manip_delegate =
+	"Astro::App::Satpass2::ParseTime::Date::Manip::v$date_manip_delegate";
 
 is eval { Astro::App::Satpass2::ParseTime::Date::Manip->delegate() },	## no critic (RequireCheckingReturnValueOfEval)
     $date_manip_delegate,

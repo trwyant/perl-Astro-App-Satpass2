@@ -15,7 +15,24 @@ our $VERSION = '0.012_01';
 
 our @EXPORT_OK = qw{
     has_method instance load_package merge_hashes my_dist_config quoter
+    __date_manip_backend
 };
+
+# $backend = __date_manip_backend()
+#
+# This subroutine loads Date::Manip and returns the backend available,
+# either 5 or 6. If Date::Manip can not be loaded it returns undef.
+#
+# The idea here is to return 6 if the O-O interface is available, and 5
+# if it is not but Date::Manip is.
+
+sub __date_manip_backend {
+    load_package( 'Date::Manip' )
+	or return;
+    Date::Manip->isa( 'Date::Manip::DM6' )
+	and return 6;
+    return 5;
+}
 
 sub has_method {
     my ( $object, $method ) = @_;

@@ -10,40 +10,14 @@ use Astro::App::Satpass2::Test::App;
 
 BEGIN {
 
-    # The idea here is that the given directory is assumed to contain a
-    # Date::Manip v5 installation that we can use to test the v5 logic
-    # on a system with v6 installed in Perl. But we don't want to look
-    # in this directory if we're using Test::Without::Module to block
-    # Date::Manip, because if we do we will defeat the blockage.
-
-    if ( -d 'date_manip_v5' ) {
-	my $forbidden = eval {
-	    require Test::Without::Module;
-	    Test::Without::Module::get_forbidden_list();
-	} || {};
-
-	if ( ! exists $forbidden->{ 'Date::Manip' } ) {
-	    require lib;
-	    lib->import( 'date_manip_v5' );
-	}
-    }
-
     eval {
+
+	# Force Date::Manip 5 backend if we have Date::Manip 6.
+	local $Date::Manip::Backend = 'DM5';
+
 	require Date::Manip;
 	1;
-    } or do {
-	plan skip_all => 'Date::Manip not available';
-	exit;
-    };
-
-    my $ver = Date::Manip->VERSION();
-    Date::Manip->import();
-    ( my $test = $ver ) =~ s/ _ //smxg;
-    $test < 6 or do {
-	plan skip_all =>
-	    "Date::Manip $ver installed; this test is for 5.54 or less";
-	exit;
-    };
+    } or plan skip_all => 'Date::Manip not available';
 
     eval {
 	require Time::y2038;
@@ -59,6 +33,17 @@ BEGIN {
 	exit;
     };
 
+}
+
+# The following is a hook for the author test that forces this to run
+# under Date::Manip 5.54. We want the author test to fail if we get
+# version 6.
+
+our $DATE_MANIP_5_REALLY;
+
+if ( $DATE_MANIP_5_REALLY ) {
+    ( my $ver = Date::Manip->VERSION() ) =~ s/ _ //smxg;
+    cmp_ok $ver, '<', 6, 'Date::Manip version is really less than 6';
 }
 
 require_ok 'Astro::App::Satpass2::ParseTime';
