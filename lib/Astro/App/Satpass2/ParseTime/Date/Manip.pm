@@ -9,14 +9,15 @@ use Astro::App::Satpass2::Utils qw{ load_package __date_manip_backend };
 
 our $VERSION = '0.012_01';
 
-my $delegate;
-
-if ( defined ( my $backend = __date_manip_backend() ) ) {
-    $delegate = __PACKAGE__ . "::v$backend";
-};
+sub class_name_of_record {
+    return __PACKAGE__;
+}
 
 sub delegate {
-    return $delegate;
+    my $back_end;
+    defined ( $back_end = __date_manip_backend() )
+	or return $back_end;
+    return __PACKAGE__ . "::v$back_end";
 }
 
 1;

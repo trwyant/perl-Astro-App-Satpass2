@@ -1464,7 +1464,9 @@ EOD
 
     foreach my $attribute ( qw{ formatter spacetrack time_parser } ) {
 	my $obj = $self->get( $attribute ) or next;
-	my $class = ref $obj;
+	my $class = $obj->can( 'class_name_of_record' ) ?
+	    $obj->class_name_of_record() :
+	    ref $obj || $obj;
 	$output .= <<"EOD" .
 
 # $class $title
@@ -1772,7 +1774,7 @@ sub show : Verb( changes! deprecated! readonly! ) {
 sub _show_copyable {
     my ( $self, $name ) = @_;
     my $obj = $self->get( $name );
-    my $val = ref $obj || $obj;
+    my $val = $obj->class_name_of_record();
     return ( 'set', $name, $val );
 }
 

@@ -14,6 +14,11 @@ sub attribute_names {
     return ( qw{ warner } );
 }
 
+sub class_name_of_record {
+    my ( $self ) = @_;
+    return ref $self || $self;
+}
+
 sub clone {
     my ( $self ) = @_;
     return Clone::clone( $self );
@@ -157,6 +162,14 @@ this:
      my ( $self ) = @_;
      return ( $self->SUPER::attribute_names(), qw{ foo bar baz } );
  }
+
+=head2 class_name_of_record
+
+ say 'I am a ', $obj->class_name_of_record();
+
+This method returns the class name of record of the object. By default
+this is simply the name of the object's class (i.e. C<ref $obj>, but
+subclasses can override this to hide implementation details.
 
 =head2 clone
 
