@@ -2247,7 +2247,7 @@ sub time : method Verb() {	## no critic (ProhibitBuiltInHomonyms,RequireArgUnpac
 }
 
 sub time_parser : Verb() {
-    splice @_, ( 'HASH' eq ref $_[1] ? 2 : 1 ), 0, 'formatter';
+    splice @_, ( 'HASH' eq ref $_[1] ? 2 : 1 ), 0, 'time_parser';
     goto &_helper_handler;
 }
 
