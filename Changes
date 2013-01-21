@@ -1,3 +1,17 @@
+0.012_02	2013-01-20	T. R. Wyant
+  Correct problem with configuring (and dumping the configuration of)
+    the time parser. The formatter object was being accessed instead.
+    This has apparantly been present since pretty much the beginning.
+  Make the time_parser class of record
+    Astro::App::Satpass2::ParseTime::Date::Manip rather than ::v5 or
+    ::v6, since we have no control over the environment variables in
+    effect when we are launched, and thus, if Date::Manip 6 is
+    installed, which back end is in use.
+  Redo Astro::App::Satpass2::ParseTime::Date::Manip logic so that if
+    Date::Manip 6 is initialized in DM5 mode calls to it get routed
+    through Astro::App::Satpass2::ParseTime::Date::Manip::v5. This was
+    causing failures under Perl 5.8.
+
 0.012_01	2013-01-13	T. R. Wyant
   Make 'input redirection' (<file) work, but more like `file`; that is,
     the contents of the file become a token at that point in the

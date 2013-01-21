@@ -14,7 +14,7 @@ use DateTime;
 use DateTime::TimeZone;
 use POSIX ();
 
-our $VERSION = '0.012_01';
+our $VERSION = '0.012_02';
 
 sub format_datetime {
     my ( $self, $tplt, $time, $gmt ) = @_;
