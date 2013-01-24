@@ -53,10 +53,11 @@ sub instance {
 {
     my %loaded;
     my $my_lib = my_dist_config();
-    defined $my_lib
-	and $my_lib = File::Spec->catdir( $my_lib, 'lib' );
-    -d $my_lib
-	or $my_lib = undef;
+    if ( defined $my_lib ) {
+	$my_lib = File::Spec->catdir( $my_lib, 'lib' );
+	-d $my_lib
+	    or $my_lib = undef;
+    }
 
     sub load_package {
 	my ( $module, @prefix ) = @_;
