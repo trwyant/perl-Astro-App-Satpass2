@@ -16,6 +16,7 @@ BEGIN {
 	local $Date::Manip::Backend = 'DM5';
 
 	require Date::Manip;
+
 	1;
     } or plan skip_all => 'Date::Manip not available';
 
@@ -111,13 +112,45 @@ method perltime => 0, TRUE, 'Set perltime false';
 
 method parse => '20090101T000000Z',
     timegm( 0, 0, 0, 1, 0, 109 ),
-    'Parse ISO-8601 20090101T000000Z';
+    'Parse ISO-8601 20090101T000000Z'
+    or dump_date_manip();
 
 method parse => '20090701T000000Z',
     timegm( 0, 0, 0, 1, 6, 109 ),
-    'Parse ISO-8601 20090701T000000Z';
+    'Parse ISO-8601 20090701T000000Z'
+    or dump_date_manip();
 
 done_testing;
+
+{
+
+    my $dumped;
+
+    sub dump_date_manip {
+	$dumped++
+	    and return;
+
+	my $vers = Date::Manip->VERSION();
+
+	diag '';
+
+	diag "Date::Manip version: $vers";
+
+	$vers =~ s/ _ //smxg;
+
+	if ( $vers >= 6 ) {
+
+	    diag 'Date::Manip superclasses: ', join ', ', @Date::Manip::ISA;
+
+	    if ( Date::Manip->isa( 'Date::Manip::DM5' ) ) {
+		diag '$Cnf{Language}: ', $Date::Manip::DM5::Cnf{Language};
+	    }
+
+	}
+
+	return;
+    }
+}
 
 1;
 
