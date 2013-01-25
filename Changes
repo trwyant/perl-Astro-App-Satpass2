@@ -1,3 +1,8 @@
+0.012_03	2013-01-25	T. R. Wyant
+  Put traps in t/parse_time_date_manip_5.t to try to figure out where
+    the DM5 errors are coming from.
+  Fix warning thrown when there is no configuration directory.
+
 0.012_02	2013-01-20	T. R. Wyant
   Correct problem with configuring (and dumping the configuration of)
     the time parser. The formatter object was being accessed instead.
