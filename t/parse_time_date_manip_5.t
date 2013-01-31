@@ -20,6 +20,9 @@ BEGIN {
 	1;
     } or plan skip_all => 'Date::Manip not available';
 
+    $^O eq 'MSWin32'
+	and plan skip_all => 'Date::Manip 5 tests fail under Windows';
+
     eval {
 	require Time::y2038;
 	Time::y2038->import( qw{ timegm timelocal } );
