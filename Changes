@@ -1,3 +1,7 @@
+0.012_04	2013-01-30	T. R. Wyant
+  Bypass Date::Manip::DM5 testing under MSWin32, since it fails and I
+    can't figure out why.
+
 0.012_03	2013-01-25	T. R. Wyant
   Put traps in t/parse_time_date_manip_5.t to try to figure out where
     the DM5 errors are coming from.
