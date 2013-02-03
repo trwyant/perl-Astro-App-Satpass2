@@ -12,6 +12,7 @@ BEGIN {
 
     eval {
 
+	no warnings qw{ once };
 	# Force Date::Manip 5 backend if we have Date::Manip 6.
 	local $Date::Manip::Backend = 'DM5';
 
@@ -146,6 +147,7 @@ done_testing;
 	    diag 'Date::Manip superclasses: ', join ', ', @Date::Manip::ISA;
 
 	    if ( Date::Manip->isa( 'Date::Manip::DM5' ) ) {
+		no warnings qw{ once };
 		diag '$Cnf{Language}: ', $Date::Manip::DM5::Cnf{Language};
 	    }
 
