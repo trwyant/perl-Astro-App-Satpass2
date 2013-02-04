@@ -18,6 +18,8 @@ our @EXPORT = qw{
     application
     check_access
     class
+    dump_date_manip
+    dump_date_manip_init
     execute
     method
     normalize_path
@@ -72,6 +74,50 @@ sub check_access ($) {
 sub class ($) {
     ( $app ) = @_;
     return;
+}
+
+{
+
+    my $dumped;
+
+    sub dump_date_manip {
+	$dumped++
+	    and return;
+
+	my $vers = Date::Manip->VERSION();
+
+	diag '';
+
+	diag "Date::Manip version: $vers";
+
+	$vers =~ s/ _ //smxg;
+
+	if ( $vers >= 6 ) {
+
+	    diag 'Date::Manip superclasses: ', join ', ', @Date::Manip::ISA;
+
+	    if ( Date::Manip->isa( 'Date::Manip::DM5' ) ) {
+		no warnings qw{ once };
+		diag '$Cnf{Language}: ', $Date::Manip::DM5::Cnf{Language};
+	    }
+
+	}
+
+	if ( my $code = Date::Manip->can( 'Date_TimeZone' ) ) {
+	    diag 'Date_TimeZone = ', $code->();
+	} else {
+	    diag 'Date_TimeZone unavailable';
+	}
+
+	diag q<$ENV{TZ} = >, defined $ENV{TZ} ? "'$ENV{TZ}'" : 'undef';
+
+	return;
+    }
+
+    sub dump_date_manip_init {
+	$dumped = undef;
+	return;
+    }
 }
 
 sub execute (@) {	## no critic (RequireArgUnpacking)

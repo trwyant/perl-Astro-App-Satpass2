@@ -50,6 +50,8 @@ BEGIN {
     };
 
 }
+
+dump_date_manip_init();
 my $path = $ENV{PATH};
 
 require_ok 'Astro::App::Satpass2::ParseTime';
@@ -121,29 +123,35 @@ method perltime => 1, TRUE, 'Set perltime true';
 
 method parse => '20090101T000000',
     timelocal( 0, 0, 0, 1, 0, 109 ),
-    'Parse ISO-8601 20090101T000000';
+    'Parse ISO-8601 20090101T000000'
+    or dump_date_manip();
 
 method parse => '20090701T000000',
     timelocal( 0, 0, 0, 1, 6, 109 ),
-    'Parse ISO-8601 20090701T000000';
+    'Parse ISO-8601 20090701T000000'
+    or dump_date_manip();
 
 method perltime => 0, TRUE, 'Set perltime false';
 
 method parse => '20090101T000000',
     timelocal( 0, 0, 0, 1, 0, 109 ),
-    'Parse ISO-8601 20090101T000000, no help from perltime';
+    'Parse ISO-8601 20090101T000000, no help from perltime'
+    or dump_date_manip();
 
 method parse => '20090701T000000',
     timelocal( 0, 0, 0, 1, 6, 109 ),
-    'Parse ISO-8601 20090701T000000, no help from perltime';
+    'Parse ISO-8601 20090701T000000, no help from perltime'
+    or dump_date_manip();
 
 method parse => '20090101T000000Z',
     timegm( 0, 0, 0, 1, 0, 109 ),
-    'Parse ISO-8601 20090101T000000Z';
+    'Parse ISO-8601 20090101T000000Z'
+    or dump_date_manip();
 
 method parse => '20090701T000000Z',
     timegm( 0, 0, 0, 1, 6, 109 ),
-    'Parse ISO-8601 20090701T000000Z';
+    'Parse ISO-8601 20090701T000000Z'
+    or dump_date_manip();
 
 done_testing;
 

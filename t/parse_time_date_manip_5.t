@@ -40,6 +40,8 @@ BEGIN {
 
 }
 
+dump_date_manip_init();
+
 # The following is a hook for the author test that forces this to run
 # under Date::Manip 5.54. We want the author test to fail if we get
 # version 6.
@@ -106,11 +108,13 @@ method perltime => 1, TRUE, 'Set perltime true';
 
 method parse => '20090101T000000',
     timelocal( 0, 0, 0, 1, 0, 109 ),
-    'Parse ISO-8601 20090101T000000';
+    'Parse ISO-8601 20090101T000000'
+    or dump_date_manip();
 
 method parse => '20090701T000000',
     timelocal( 0, 0, 0, 1, 6, 109 ),
-    'Parse ISO-8601 20090701T000000';
+    'Parse ISO-8601 20090701T000000'
+    or dump_date_manip();
 
 method perltime => 0, TRUE, 'Set perltime false';
 
@@ -125,37 +129,6 @@ method parse => '20090701T000000Z',
     or dump_date_manip();
 
 done_testing;
-
-{
-
-    my $dumped;
-
-    sub dump_date_manip {
-	$dumped++
-	    and return;
-
-	my $vers = Date::Manip->VERSION();
-
-	diag '';
-
-	diag "Date::Manip version: $vers";
-
-	$vers =~ s/ _ //smxg;
-
-	if ( $vers >= 6 ) {
-
-	    diag 'Date::Manip superclasses: ', join ', ', @Date::Manip::ISA;
-
-	    if ( Date::Manip->isa( 'Date::Manip::DM5' ) ) {
-		no warnings qw{ once };
-		diag '$Cnf{Language}: ', $Date::Manip::DM5::Cnf{Language};
-	    }
-
-	}
-
-	return;
-    }
-}
 
 1;
 
