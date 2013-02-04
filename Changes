@@ -1,3 +1,9 @@
+0.012_05	2013-02-03	T. R. Wyant
+  Further tweak dumping of Date::Manip info in tests, in the hope of
+    getting enough information to actually diagnose test failures.
+  Eliminate warnings in t/parse_time_date_manip_5.t if Date::Manip v5 is
+    being used (rather than Date::Manip 6's DM5 back end).
+
 0.012_04	2013-01-30	T. R. Wyant
   Bypass Date::Manip::DM5 testing under MSWin32, since it fails and I
     can't figure out why.

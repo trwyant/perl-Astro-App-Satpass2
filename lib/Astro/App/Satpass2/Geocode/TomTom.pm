@@ -9,7 +9,7 @@ use base qw{ Astro::App::Satpass2::Geocode };
 
 use Astro::App::Satpass2::Utils qw{ instance };
 
-our $VERSION = '0.012_04';
+our $VERSION = '0.012_05';
 
 use constant GEOCODER_CLASS => 'Geo::Coder::TomTom';
 
