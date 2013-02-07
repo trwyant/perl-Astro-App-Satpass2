@@ -1,3 +1,6 @@
+0.012_06	2013-02-06	T. R. Wyant
+  Require File::HomeDir 0.93, since we are using my_dist_config().
+
 0.012_05	2013-02-03	T. R. Wyant
   Further tweak dumping of Date::Manip info in tests, in the hope of
     getting enough information to actually diagnose test failures.

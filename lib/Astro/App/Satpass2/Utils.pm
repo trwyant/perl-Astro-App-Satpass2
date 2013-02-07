@@ -11,7 +11,7 @@ use File::HomeDir;
 use File::Spec;
 use Scalar::Util qw{ blessed looks_like_number };
 
-our $VERSION = '0.012_05';
+our $VERSION = '0.012_06';
 
 our @EXPORT_OK = qw{
     has_method instance load_package merge_hashes my_dist_config quoter
