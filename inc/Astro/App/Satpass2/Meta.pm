@@ -43,7 +43,7 @@ sub requires {
 	'Clone'			=> 0,
 	'Cwd'			=> 0,
 	'File::Glob'		=> 0,
-	'File::HomeDir'		=> 0,
+	'File::HomeDir'		=> 0.93,	# For my_dist_config
 	'File::Temp'		=> 0,
 	'Getopt::Long'		=> 0,
 	'IO::File'		=> 1.14,
