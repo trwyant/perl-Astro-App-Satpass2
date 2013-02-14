@@ -109,6 +109,11 @@ sub class ($) {
 	    diag 'Date_TimeZone unavailable';
 	}
 
+	if ( $app->isa( 'Astro::App::Satpass2::ParseTime' ) ) {
+	    $app->can( 'dmd_zone' )
+		and diag 'dmd_zone = ', $app->dmd_zone();
+	} 
+
 	diag q<$ENV{TZ} = >, defined $ENV{TZ} ? "'$ENV{TZ}'" : 'undef';
 
 	return;
