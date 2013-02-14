@@ -10,7 +10,7 @@ use base qw{ Astro::App::Satpass2::Copier };
 use Astro::App::Satpass2::Utils qw{ instance load_package };
 use Astro::App::Satpass2::Warner;
 
-our $VERSION = '0.012_06';
+our $VERSION = '0.013';
 
 sub new {
     my ( $class, %args ) = @_;

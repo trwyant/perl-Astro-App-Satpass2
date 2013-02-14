@@ -10,7 +10,7 @@ use base qw{ Astro::App::Satpass2::FormatTime };
 use Astro::App::Satpass2::FormatTime::Strftime;
 use POSIX ();
 
-our $VERSION = '0.012_06';
+our $VERSION = '0.013';
 
 sub format_datetime {
     my ( $self, $tplt, $time, $gmt ) = @_;

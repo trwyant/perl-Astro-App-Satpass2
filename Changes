@@ -1,3 +1,7 @@
+0.013		2013-02-14	T. R. Wyant
+  On failures in t/parse_time_date_manip_*.t, dump the zone of the
+    parser object, if any.
+
 0.012_06	2013-02-06	T. R. Wyant
   Require File::HomeDir 0.93, since we are using my_dist_config().
 
