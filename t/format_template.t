@@ -137,8 +137,6 @@ is $ft->format(
 EOD
 
 {
-    my $list_template = $ft->template( { raw => 1 }, 'list' );
-
     $ft->template( list => <<'EOD' );
 [%- title.oid( align_left = 0 ) %] [% title.name %]
 [% FOR item IN data %]
