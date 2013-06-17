@@ -68,3 +68,10 @@ allow	= exiting once substr uninitialized
 # I customarily use.
 
 severity	= cruel
+
+[Perl::Critic::Policy::Variables::ProhibitUnusedVarsStricter]
+
+add_themes	= core
+allow_if_computed_by	= _arguments
+allow_unused_subroutine_arguments	= 1
+severity	= stern
