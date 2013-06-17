@@ -30,7 +30,7 @@ foreach my $method ( qw{ requires build_requires } ) {
 	my @modspec = ( $module );
 	$mod{$module}
 	    and push @modspec, $mod{$module};
-	ok eval "use @modspec; 1", "$method @modspec"
+	ok eval "use @modspec (); 1", "$method @modspec"
 	    or diag $@;
     }
 }
