@@ -3636,11 +3636,25 @@ sub _simbad4 {
     my $query = shift;
     my $simbad = Astro::SIMBAD::Client->new (
 	format => {txt => 'FORMAT_TXT_SIMPLE_BASIC'},
-	parser => {txt => 'Parse_TXT_Simple'},
+	parser => {
+	    script	=> 'Parse_TXT_Simple',
+	    txt		=> 'Parse_TXT_Simple',
+	},
 	server => $self->{simbad_url},
 	type => 'txt',
     );
-    my @rslt = $simbad->query (id => $query)
+    # I prefer script() to query() these days because the former does
+    # not require SOAP::Lite, which seems to be getting flakier as time
+    # goes on.
+    # TODO get rid of $fmt =~ s/// once I massage
+    # FORMAT_TXT_SIMPLE_BASIC in Astro::SIMBAD::Client
+#   my @rslt = $simbad->query (id => $query)
+    my $fmt = Astro::SIMBAD::Client->FORMAT_TXT_SIMPLE_BASIC();
+    $fmt =~ s/ \n //smxg;
+    my @rslt = $simbad->script( <<"EOD" )
+format obj "$fmt"
+query id $query
+EOD
 	or $self->_wail("No entry found for $query");
     @rslt > 1
 	and $self->_wail("More than one entry found for $query");
