@@ -118,6 +118,8 @@ EOD
 sub ACTION_authortest {
     my ( $self, @args ) = @_;
 
+    local $ENV{AUTHOR_TESTING} = 1;
+
     my @depends_on = ( qw{ build make_optional_modules_tests } );
     -e 'META.yml' or push @depends_on, 'distmeta';
     $self->depends_on( @depends_on );
