@@ -7,6 +7,7 @@ use warnings;
 
 use base qw{ Exporter };
 
+use Cwd ();
 use File::HomeDir;
 use File::Spec;
 use Scalar::Util qw{ blessed looks_like_number };
@@ -14,9 +15,52 @@ use Scalar::Util qw{ blessed looks_like_number };
 our $VERSION = '0.013';
 
 our @EXPORT_OK = qw{
+    __arguments expand_tilde
     has_method instance load_package merge_hashes my_dist_config quoter
     __date_manip_backend
 };
+
+# Documented in POD
+
+{
+
+    my @default_config = qw{default pass_through};
+####    my @default_config = qw{default};
+
+    sub __arguments {
+	my ( $self, @args ) = @_;
+
+	has_method( $self, '__parse_time_reset' )
+	    and $self->__parse_time_reset();
+
+	@args = map {
+	    has_method( $_, 'dereference' ) ?  $_->dereference() : $_
+	} @args;
+
+	'HASH' eq ref $args[0]
+	    and return ( $self, @args );
+
+	my @data = caller(1);
+	my $code = \&{$data[3]};
+
+	local @ARGV = @args;
+	my $lgl = $self->_get_attr($code, 'Verb') || [];
+	my %opt;
+	my $err;
+	local $SIG{__WARN__} = sub {$err = $_[0]};
+	my $config = 
+	    $self->_get_attr($code, 'Configure') || \@default_config;
+	my $go = Getopt::Long::Parser->new(config => $config);
+	if ( !  $go->getoptions(\%opt, @$lgl) ) {
+	    $self->can( 'wail' )
+		and $self->wail($err);
+	    require Carp;
+	    Carp::croak( $err );
+	}
+
+	return ( $self, \%opt, @ARGV );
+    }
+}
 
 # $backend = __date_manip_backend()
 #
@@ -32,6 +76,39 @@ sub __date_manip_backend {
     Date::Manip->isa( 'Date::Manip::DM6' )
 	and return 6;
     return 5;
+}
+
+sub expand_tilde {
+    my ( $self, $fn ) = @_;
+    defined $fn
+	and $fn =~ s{ \A ~ ( [^/]* ) }{ _user_home_dir( $self, $1 ) }smxe;
+    return $fn;
+}
+
+{
+    my %special = (
+	'+'	=> sub { return Cwd::cwd() },
+	'~'	=> sub { my_dist_config() },
+	''	=> sub { return File::HomeDir->my_home() },
+    );
+#	$dir = $self->_user_home_dir( $user );
+#
+#	Find the home directory for the given user, croaking if this can
+#	not be done. If $user is '' or undef, returns the home directory
+#	for the current user.
+
+    sub _user_home_dir {
+	my ( $self, $user ) = @_;
+	defined $user
+	    or $user = '';
+	$special{$user}
+	    and return $special{$user}->( $user );
+
+	my $home_dir = File::HomeDir->users_home( $user );
+	defined $home_dir
+	    or $self->wail( "Unable to find home for $user" );
+	return $home_dir;
+    }
 }
 
 sub has_method {
@@ -58,16 +135,23 @@ sub instance {
 	-d $my_lib
 	    or $my_lib = undef;
     }
+    my %valid_complaint = map { $_ => 1 } qw{ whinge wail weep };
 
     sub load_package {
-	my ( $module, @prefix ) = @_;
-	defined $module or $module = '';
+#	my ( $module, @prefix ) = @_;
+	my @prefix = @_;
+	my $self;
+	blessed( $prefix[0] )
+	    and $self = shift @prefix;
+	my $opt = 'HASH' eq ref $prefix[0] ? shift @prefix : {};
+	my $module = shift @prefix;
 
 	local @INC = @INC;
 
-	if ( defined $my_lib ) {
+	my $use_lib = exists $opt->{lib} ? $opt->{lib} : $my_lib;
+	if ( defined $use_lib ) {
 	    require lib;
-	    lib->import( $my_lib );
+	    lib->import( $use_lib );
 	}
 
 	foreach ( $module, @prefix ) {
@@ -75,9 +159,20 @@ sub instance {
 		and next;
 	    m/ \A [[:alpha:]]\w* (?: :: [[:alpha:]]\w* )* \z /smx
 		and next;
+
+	    my $msg = "Invalid package name '$_'";
+
+	    if ( $self ) {
+	        my $method = $opt->{complaint} || 'weep';
+		$valid_complaint{$method}
+		    or $method = 'weep';
+		$self->can( $method )
+		    and return $self->$method( $msg );
+	    }
+
 	    require Carp;
 	    Carp::confess( 
-		"Programming error - Invalid module name $_"
+		"Programming error - $msg"
 	    );
 	}
 
@@ -98,7 +193,21 @@ sub instance {
 	    return ( $loaded{$key} = $package );
 	}
 
-	return ( $loaded{$key} = undef );
+	if ( $opt->{fatal} ) {
+	    my $msg = "Can not load $module: $@";
+	    my $method = $opt->{fatal};
+	    $valid_complaint{$method}
+		or $method = 'wail';
+	    $self
+		and $self->can( $method )
+		and return $self->$method( $msg );
+	    require Carp;
+	    Carp::croak( $msg );
+	}
+
+	$loaded{$key} = undef;
+
+	return;
     }
 }
 
@@ -130,6 +239,12 @@ sub my_dist_config {
 
 
 sub quoter {
+    my @args = @_;
+    my @rslt = map { _quoter( $_ ) } @args;
+    return wantarray ? @rslt : join ' ', @rslt;
+}
+
+sub _quoter {
     my ( $string ) = @_;
     return 'undef' unless defined $string;
     return $string if looks_like_number ($string);
@@ -171,6 +286,19 @@ default.
 
 This module supports the following exportable subroutines:
 
+=head2 expand_tilde
+
+ $expansion = $self->expand_tilde( $file_name );
+
+This mixin (so-called) performs tilde expansion on the argument,
+returning the result. Arguments that do not begin with a tilde are
+returned unmodified. In addition to the usual F<~/> and F<~user/>, we
+support F<~+/> (equivalent to F<./>) and F<~~/> (the user's
+configuration directory).
+
+All that is required of the invocant is that it support the package's
+suite of error-reporting methods C<whinge()>, C<wail()>, and C<weep()>.
+
 =head2 has_method
 
  has_method( $object, $method );
@@ -193,10 +321,52 @@ return is false.
 
  load_package( $module );
  load_package( $module, 'Astro::App::Satpass2' );
+ load_package( { lib => '.lib' }, $module );
+ $object->load_package( { complaint => 'wail' }. $module );
 
 This exportable subroutine loads a Perl module. The first argument is
 the name of the module itself. Subsequent arguments are prefixes to try,
 B<without> any trailing colons.
+
+This subroutine can also be called as a method. If this is done errors
+will be reported with a call to the invocant's C<weep()> method if that
+exists. Otherwise C<Carp> will be loaded and errors will be reported by
+C<Carp::confess()>.
+
+An optional first argument is a reference to a hash of option values.
+The supported values are:
+
+=over
+
+=item complaint
+
+This specifies how to report errors if C<load_package()> is called as a
+method. Valid values are C<'whinge'>, C<'wail'>, and C<'weep'>. An
+invalid value is equivalent to C<'weep'>, which is the default. If not
+called as a method, this option is ignored and a call to
+C<Carp::confess()> is done.
+
+=item fatal
+
+If C<load_package()> is called as a method, this argument specifies how
+to report a failure to load the requested module. Valid values are
+C<'whinge'>, C<'wail'> and C<'weep'>. An invalid value is equivalent to
+C<'wail'>, which is the default. If C<load_package()> is not called as a
+method, any true value will cause C<Carp::croak()> to be called, and the
+failure B<not> to be recorded, so that the load can be retried with a
+different path.
+
+Either way, a false value causes C<load_package()> to simply return if
+the requested module can not be loaded.
+
+=item lib
+
+This specifies a directory to add to C<@INC> before attempting the load.
+If it is not specified, F<lib/> in the configuration directory is used.
+If it is specified as C<undef>, nothing is added to C<@INC>. No
+expansion is done on the directory name.
+
+=back
 
 In the examples, if C<$module> contains C<'Foo'>, the first example will
 try to C<require 'Foo'>, and the second will try to
@@ -237,10 +407,11 @@ path to it is returned. Otherwise C<undef> is returned.
 
 =head2 quoter
 
- quoter( $string )
+ say scalar quoter( @vals );
+ say quoter( @vals );
 
-This exportable subroutine quotes and escapes its argument as necessary
-for the parser. Specifically, if C<$string> is:
+This exportable subroutine quotes and escapes its arguments as necessary
+for the parser. Specifically, if an argument is:
 
 * undef, C<'undef'> is returned;
 
@@ -253,6 +424,45 @@ escaped and enclosed in double quotes (C<"">).
 
 * anything else is returned unmodified.
 
+If called in scalar context, the results are concatenated with
+C<< join ' ', ... >>. Otherwise they are simply returned.
+
+=head2 __arguments
+
+ my ( $self, $opt, @args ) = __arguments( @_ );
+
+This subroutine is intended to be used to unpack the arguments of an
+C<Astro::App::Satpass2> interactive method or a code macro.
+
+Specifically, this subroutine expects to be called from a subroutine or
+method that has the C<Verb()> attribute, and expects the contents of the
+parentheses in the C<Verb()> attribute to be a set of
+white-space-delimited L<Getopt::Long|Getopt::Long> option
+specifications. Further, if the subroutine has a C<Configure()>
+attribute, it will be used to configure the L<Getopt::Long|Getopt::Long>
+object.
+
+The first argument is expected to be the invocant, and is always
+returned intact.
+
+Subsequent arguments are preprocessed by calling their C<dereference()>
+method if it exists. This is a severe wart on the code, but was needed
+(I thought) to get certain arguments through C<Template-Toolkit>.
+Arguments that do not have a C<dereference()> method are left
+unmodified, as are any unblessed arguments.
+
+If the first remaining argument after preprocessing is a hash reference,
+it is assumed that the options have already been processed, and we
+simply return the invocant and the remaining arguments as they now
+stand.
+
+If the first remaining argument after preprocessing is B<not> a hash
+reference, we run all the remaining arguments through
+L<Getopt::Long|Getopt::Long>, and return the invocant, the options hash
+populated by L<Getopt::Long>, and all remaining arguments. If
+L<Getopt::Long|Getopt::Long> encounters an error an exception is thrown.
+This is done using the invocant's C<wail()> method if it has one,
+otherwise C<Carp> is loaded and C<Carp::croak()> is called.
 
 =head1 SUPPORT
 

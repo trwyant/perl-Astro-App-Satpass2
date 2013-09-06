@@ -17,8 +17,24 @@ flare_vcalendar - A source file, to be executed by, for example,
 	(a.k.a. summer time), in that predictions made before the switch
 	for events after the switch get assigned the wrong time, even
 	though the UT event time is correct in the emitted file. I have
-	not changed the event times to local time eg/flare_vcalendar
+	not changed the event times to local times in eg/flare_vcalendar
 	because the vcalendar standard specifies UT.
+
+My/Macros.pm - A module that implements the following code macros
+	* angle - Given the names or OIDs of two objects (either
+		satellites or background bodies like the Moon or Sun)
+		computes the angle between them at the time specified by
+		the third argument, which defaults to the current time.
+		Options specify radians or degrees, and the number of
+		decimal places.
+	* hi - A 'hello world' macro. It takes one argument, which
+		defaults to 'world'.
+	* dumper - A diagnostic macro, which displays the class of its
+		first argument, and all other arguments as a YAML dump.
+
+	To use this, it must be placed in directory My/ somewhere in
+	@INC, remembering that the lib/ directory in your configuration
+	directory is added to @INC before your module is loaded.
 
 pass_vcalendar - A source file, to be executed by, for example,
 	satpass2> source eg/pass_vcalendar

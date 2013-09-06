@@ -5,19 +5,22 @@ use 5.008;
 use strict;
 use warnings;
 
+use Astro::App::Satpass2::Macro::Command;
+use Astro::App::Satpass2::Macro::Code;
 use Astro::App::Satpass2::ParseTime;
 use Astro::App::Satpass2::Utils qw{
-    has_method instance load_package my_dist_config quoter
+    __arguments expand_tilde has_method instance load_package
+    my_dist_config quoter
 };
 
-use Astro::Coord::ECI 0.049;			# This really needs 0.049.
-use Astro::Coord::ECI::Moon 0.049;
-use Astro::Coord::ECI::Star 0.049;
-use Astro::Coord::ECI::Sun 0.049;
-use Astro::Coord::ECI::TLE 0.049 qw{:constants}; # This really needs 0.049.
-use Astro::Coord::ECI::TLE::Iridium 0.049;	# This really needs 0.049.
-use Astro::Coord::ECI::TLE::Set 0.049;
-use Astro::Coord::ECI::Utils 0.049 qw{:all};
+use Astro::Coord::ECI 0.057;			# This needs at least 0.049.
+use Astro::Coord::ECI::Moon 0.057;
+use Astro::Coord::ECI::Star 0.057;
+use Astro::Coord::ECI::Sun 0.057;
+use Astro::Coord::ECI::TLE 0.057 qw{:constants}; # This needs at least 0.057.
+use Astro::Coord::ECI::TLE::Iridium 0.057;	# This needs at least 0.049.
+use Astro::Coord::ECI::TLE::Set 0.057;
+use Astro::Coord::ECI::Utils 0.057 qw{:all};
 
 use Clone ();
 use Cwd ();
@@ -32,7 +35,7 @@ use Scalar::Util qw{ blessed openhandle };
 use Text::Abbrev;
 use Text::ParseWords ();	# Used only for {level1} stuff.
 
-use constant ASTRO_SPACETRACK_VERSION => 0.050;
+use constant ASTRO_SPACETRACK_VERSION => 0.074;
 
 BEGIN {
     eval {
@@ -150,7 +153,7 @@ my %twilight_abbr = abbrev (keys %twilight_def);
     }
 
     sub _get_attr {
-	my ($code, $name) = @_;
+	my ( $pkg, $code, $name ) = @_;
 	defined $name or return $attr{$code};
 	return $attr{$code}{$name};
     }
@@ -345,7 +348,7 @@ sub new {
 }
 
 sub alias : Verb() {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
 
     if ( @args ) {
 	Astro::Coord::ECI::TLE->alias( @args );
@@ -363,25 +366,20 @@ sub alias : Verb() {
 # Attributes must all be on one line to process correctly under Perl
 # 5.8.8.
 sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter! ) {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
     _apply_boolean_default(
 	$opt, 0, qw{ horizon transit twilight quarter } );
 
-    $self->_parse_time_reset();
-    my $almanac_start = $self->_parse_time(
+    my $almanac_start = $self->__parse_time(
 	shift @args, $self->_get_today_midnight());
-    my $almanac_end = $self->_parse_time (shift @args || '+1');
+    my $almanac_end = $self->__parse_time (shift @args || '+1');
 
     $almanac_start >= $almanac_end
-	and $self->_wail("End time must be after start time");
+	and $self->wail("End time must be after start time");
 
 #	Build an object representing our ground location.
 
     my $sta = $self->station();
-
-##  my $id = looks_like_number($self->{twilight}) ?
-##	"twilight ($self->{twilight} degrees)" :
-##	"$self->{twilight} twilight (@{[rad2deg $self->{_twilight}]} degrees)";
 
     my @almanac;
 
@@ -389,14 +387,12 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter
 #	complaining about the lack of an almanac() method as
 #	appropriate.
 
-    my @sky = @{ $opt->{choose} ?
-	    scalar _choose($opt->{choose}, $self->{sky}) :
-	    $self->{sky} }
-	or $self->_wail( 'No bodies selected' );
+    my @sky = $self->__choose( $opt->{choose}, $self->{sky} )
+	or $self->wail( 'No bodies selected' );
 
     foreach my $body ( @sky ) {
 	$body->can ('almanac') or do {
-	    $self->_whinge(
+	    $self->whinge(
 		ref $body, ' does not support the almanac method');
 	    next;
 	};
@@ -420,28 +416,28 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter
 }
 
 sub begin : Verb() {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
     $self->_frame_push(
 	begin => @args ? \@args : $self->{frame}[-1]{args});
     return;
 }
 
 sub cd : Verb() {
-    my ( $self, $opt, $dir ) = _arguments( @_ );
+    my ( $self, $opt, $dir ) = __arguments( @_ );
     if (defined($dir)) {
-	chdir $dir or $self->_wail("Can not cd to $dir: $!");
+	chdir $dir or $self->wail("Can not cd to $dir: $!");
     } else {
 	chdir File::HomeDir->my_home()
-	    or $self->_wail("Can not cd to home: $!");
+	    or $self->wail("Can not cd to home: $!");
     }
     return;
 }
 
 sub choose : Verb( epoch=s ) {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
 
     if ($opt->{epoch}) {
-	my $epoch = $self->_parse_time($opt->{epoch});
+	my $epoch = $self->__parse_time($opt->{epoch});
 	$self->{bodies} = [
 	map {
 	    $_->select($epoch);
@@ -450,15 +446,15 @@ sub choose : Verb( epoch=s ) {
 	];
     }
     if ( @args ) {
-	my @bodies = @{ _choose( \@args, $self->{bodies} ) }
-	    or $self->_wail( 'No bodies chosen' );
+	my @bodies = @{ $self->__choose( \@args, $self->{bodies} ) }
+	    or $self->wail( 'No bodies chosen' );
 	@{ $self->{bodies} } = @bodies;
     }
     return;
 }
 
 sub clear : Verb() {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
     @{$self->{bodies}} = ();
     return;
 }
@@ -475,8 +471,8 @@ sub dispatch {
     my $code;
     $verb =~ s/ \A core [.] //smx;
     $code = $self->can($verb)
-	and _get_attr($code, 'Verb')
-	or $self->_wail("Unknown interactive method '$verb'");
+	and $self->_get_attr($code, 'Verb')
+	or $self->wail("Unknown interactive method '$verb'");
 
 ##    $self->{_interactive} = \$verb;	# Any local variable will do.
 ##    weaken ($self->{_interactive});	# Goes away when $verb does.
@@ -485,17 +481,22 @@ sub dispatch {
 }
 
 sub drop : Verb() {
-    my ( $self, $opt, @args ) = _arguments( @_ );
-    if ( @args ) {
-	my @bodies = @{ _choose( { invert => 1 }, \@args, $self->{bodies} ) }
-	    or $self->_wail( 'No bodies left' );
-	@{ $self->{bodies} } = @bodies;
-    }
+    my ( $self, $opt, @args ) = __arguments( @_ );
+
+    @args
+	or return;
+
+    my @bodies = @{
+	$self->__choose( { invert => 1 }, \@args, $self->{bodies} ) }
+	or $self->wail( 'No bodies left' );
+
+    @{ $self->{bodies} } = @bodies;
+
     return;
 }
 
 sub dump : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
-    my ( $self, $opt, $arg ) = _arguments( @_ );
+    my ( $self, $opt, $arg ) = __arguments( @_ );
     if ( defined $arg && 'twilight' eq $arg ) {
 	return <<"EOD";
 twilight => @{[ $self->{twilight} ]}
@@ -511,17 +512,17 @@ EOD
 }
 
 sub echo : Verb( n! ) {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
     my $output = join( ' ', @args );
     $opt->{n} or $output .= "\n";
     return $output;
 }
 
 sub end : Verb() {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
 
     $self->{frame}[-1]{type} eq 'begin'
-	or $self->_wail("End without begin");
+	or $self->wail("End without begin");
     $self->_frame_pop();
     return;
 }
@@ -549,7 +550,7 @@ sub execute {
     }
     @args = map { split qr{ (?<= \n ) }smx, $_ } @args;
     while ( defined ( local $_ = $in->( $self->get( 'prompt' ) ) ) ) {
-	$self->{echo} and $self->_whinge($self->get( 'prompt' ), $_);
+	$self->{echo} and $self->whinge($self->get( 'prompt' ), $_);
 	m/ \A \s* [#] /smx and next;
 	my $stdout = $self->{frame}[-1]{stdout};
 	my ($args, $redirect) = $self->_tokenize(
@@ -572,7 +573,7 @@ sub execute {
 	if ($redirect->{'>'}) {
 	    my ($mode, $name) = map {$redirect->{'>'}{$_}} qw{mode name};
 	    my $fh = IO::File->new($name, $mode)
-		or $self->_wail("Unable to open $name: $!");
+		or $self->wail("Unable to open $name: $!");
 	    $stdout = $fh;
 	}
 
@@ -613,7 +614,7 @@ sub _execute {
 	eval {
 	    $self->execute( $in, shift @args );
 	    1;
-	} or warn $@;	# Not _whinge, since presumably we already did.
+	} or warn $@;	# Not whinge, since presumably we already did.
     }
     return;
 }
@@ -641,7 +642,7 @@ sub _execute_output {
 }
 
 sub exit : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
 
     $self->_frame_pop(1);	# Leave only the inital frame.
 
@@ -649,18 +650,18 @@ sub exit : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
 	no warnings qw{exiting};
 	last SATPASS2_EXECUTE;
     };
-    $self->_whinge("$@Exiting Perl");
+    $self->whinge("$@Exiting Perl");
     exit;
 
 }
 
 sub export : Verb() {
-    my ( $self, $opt, $name, @args ) = _arguments( @_ );
+    my ( $self, $opt, $name, @args ) = __arguments( @_ );
     if ($mutator{$name}) {
 	@args and $self->set ($name, shift @args);
 	$self->{exported}{$name} = 1;
     } else {
-	@args or $self->_wail("You must specify a value");
+	@args or $self->wail("You must specify a value");
 	$self->{exported}{$name} = shift @args;
     }
     return;
@@ -670,13 +671,12 @@ sub export : Verb() {
 # 5.8.8.
 sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! quiet! tz|zone=s )
 {
-    my ( $self, $opt, @args ) = _arguments( @_ );
-    $self->_parse_time_reset();
-    my $pass_start = $self->_parse_time (
+    my ( $self, $opt, @args ) = __arguments( @_ );
+    my $pass_start = $self->__parse_time (
 	shift @args, $self->_get_today_noon());
-    my $pass_end = $self->_parse_time (shift @args || '+7');
+    my $pass_end = $self->__parse_time (shift @args || '+7');
     $pass_start >= $pass_end
-	and $self->_wail("End time must be after start time");
+	and $self->wail("End time must be after start time");
     my $sta = $self->station();
 
     my $max_mirror_angle = deg2rad( $self->{max_mirror_angle} );
@@ -697,8 +697,8 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! q
 #	Select only the bodies capable of flaring.
 
     my @active;
-    foreach my $tle ( $self->_aggregate( $opt->{choose} ?
-	    scalar _choose( $opt->{choose}, $self->{bodies} ) : $self->{bodies}
+    foreach my $tle ( $self->_aggregate(
+	    scalar $self->__choose( $opt->{choose}, $self->{bodies} )
 	) )
     {
 	$tle->can_flare ($opt->{questionable}) or next;
@@ -719,7 +719,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! q
 	);
 	push @active, $tle;
     }
-    @active or $self->_wail("No bodies capable of flaring");
+    @active or $self->wail("No bodies capable of flaring");
 
     my @flares;
     foreach my $tle (@active) {
@@ -727,8 +727,8 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! q
 	    push @flares, $tle->flare( $pass_start, $pass_end );
 	    1;
 	} or do {
-	    $@ =~ m/ \Q$interrupted\E /smxo and $self->_wail($@);
-	    $opt->{quiet} or $self->_whinge($@);
+	    $@ =~ m/ \Q$interrupted\E /smxo and $self->wail($@);
+	    $opt->{quiet} or $self->whinge($@);
 	};
     }
 
@@ -747,7 +747,7 @@ sub formatter : Verb() {
 }
 
 sub geocode : Verb( debug! ) {
-    my ( $self, $opt, $loc ) = _arguments( @_ );
+    my ( $self, $opt, $loc ) = __arguments( @_ );
 
     my $set_loc;
     if ( defined $loc ) {
@@ -782,16 +782,16 @@ sub geocode : Verb( debug! ) {
 }
 
 sub geodetic : Verb() {
-    my ( $self, $opt, $name, $lat, $lon, $alt ) = _arguments( @_ );
-    @_ == 5 or $self->_wail( "Want exactly four arguments" );
+    my ( $self, $opt, $name, $lat, $lon, $alt ) = __arguments( @_ );
+    @_ == 5 or $self->wail( "Want exactly four arguments" );
     my $body = Astro::Coord::ECI::TLE->new(
 	name => $name,
 	id => '',
 	model => 'null',
     )->geodetic(
-	deg2rad( _parse_angle( $lat ) ),
-	deg2rad( _parse_angle( $lon ) ),
-	$self->_parse_distance( $alt ),
+	deg2rad( $self->__parse_angle( $lat ) ),
+	deg2rad( $self->__parse_angle( $lon ) ),
+	$self->__parse_distance( $alt ),
     );
     push @{ $self->{bodies} }, $body;
     return;
@@ -805,7 +805,7 @@ sub get {
 }
 
 sub height : Verb( debug! ) {
-    return _height_us( _arguments( @_ ) );
+    return _height_us( __arguments( @_ ) );
 }
 
 sub _height_us {
@@ -824,7 +824,7 @@ sub _height_us {
 	$self->set( height => $rslt->{Elevation} );
     } else {
 	$opt->{geocoding}
-	    or $self->_wail( $eq->error() || 'No valid result found' );
+	    or $self->wail( $eq->error() || 'No valid result found' );
 	$self->set( height => 0 );
 	$output .= "# Unable to obtain height. Setting to 0\n";
     }
@@ -846,7 +846,7 @@ sub _height_us {
 	utils => 'Astro::Coord::ECI::Utils',
     );
     sub help : Verb() {
-	my ( $self, $opt, $arg ) = _arguments( @_ );
+	my ( $self, $opt, $arg ) = __arguments( @_ );
 	if ( my $cmd = $self->get( 'webcmd' ) ) {
 	    $self->system( $cmd,
 		"http://search.cpan.org/~wyant/Astro-App-Satpass2-$VERSION/");
@@ -907,7 +907,7 @@ sub init {
 		# A missing init file is only an error if it was
 		# specified explicitly.
 		-f $init_file
-		    or $self->_wail(
+		    or $self->wail(
 			"Initialization file $init_file not found"
 		    );
 		return ( $init_file, $opt->{level1} )
@@ -933,7 +933,7 @@ sub init {
 
 
 sub initfile : Verb( create-directory! quiet! ) {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
 
     my $init_dir = my_dist_config(
 	{ create => $opt->{'create-directory'} } );
@@ -941,7 +941,7 @@ sub initfile : Verb( create-directory! quiet! ) {
     defined $init_dir
 	or do {
 	$opt->{quiet} and return;
-	$self->_wail(
+	$self->wail(
 	    'Init file directory not found' );
     };
 
@@ -969,18 +969,17 @@ sub _init_file_01 {
 }
 
 sub list : Verb( choose=s@ ) {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
 
-    my $bodies = $self->{bodies};
-    $opt->{choose} and $bodies = _choose($opt->{choose}, $bodies);
+    my @bodies = $self->__choose( $opt->{choose}, $self->{bodies} );
 
-    if (@$bodies) {
-	return $self->_format_data(
-	    list => $bodies, $opt );
-    } else {
-	$self->{warn_on_empty}
-	    and $self->_whinge("The observing list is empty");
-    }
+    @bodies
+	and return $self->_format_data(
+	    list => \@bodies, $opt );
+
+    $self->{warn_on_empty}
+	and $self->whinge("The observing list is empty");
+
     return;
 }
 
@@ -999,8 +998,8 @@ sub _glob_files {
 }
 
 sub load : Verb( verbose! ) {
-    my ( $self, $opt, @names ) = _arguments( @_ );
-    @names or $self->_wail( 'No file names specified' );
+    my ( $self, $opt, @names ) = __arguments( @_ );
+    @names or $self->wail( 'No file names specified' );
 
 =begin comment
 
@@ -1013,7 +1012,7 @@ sub load : Verb( verbose! ) {
 
 =cut
 
-    @names or $self->_wail( 'No files found' );
+    @names or $self->wail( 'No files found' );
     foreach my $fn ( @names ) {
 	$opt->{verbose} and warn "Loading $fn\n";
 	my $data = $self->_file_reader( $fn, { glob => 1 } );
@@ -1023,7 +1022,7 @@ sub load : Verb( verbose! ) {
 }
 
 sub localize : Verb( all|except! ) {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
 
     foreach my $name ( @args ) {
 	$self->_attribute_exists( $name );
@@ -1062,16 +1061,30 @@ sub _localize {
 }
 
 sub location : Verb( dump! ) {
-    my ( $self, $opt ) = _arguments( @_ );
+    my ( $self, $opt ) = __arguments( @_ );
     return $self->_format_data(
 	location => $self->station(), $opt );
 }
 
 {
 
+    # TODO the %mac_cmd hash is only needed for level1 compatibility.
+    # Once that goes away, it can too PROVIDED we also drop the
+    # subcommand defaulting functionality.
     my %mac_cmd;
     {
-	my @cmdnam = qw{brief define delete list};
+	my $stb = __PACKAGE__ . '::';
+	my @cmdnam;
+	{
+	    no strict qw{ refs };
+	    foreach my $entry ( keys %{ $stb } ) {
+		$entry =~ m/ \A _macro_ ( \w+ ) /smx
+		    or next;
+		# Strictly speaking I should make sure the {CODE} slot
+		# is occupied here.
+		push @cmdnam, $1;
+	    }
+	}
 	my %abbr = abbrev(@cmdnam);
 	foreach (keys %abbr) {
 	    $mac_cmd{'-' . $_} = $abbr{$_};
@@ -1081,8 +1094,11 @@ sub location : Verb( dump! ) {
 	}
     }
 
+    # NOTE that we must not define command options here, but on the
+    # individual _macro_* methods. Or at least we must not define any
+    # command options here that get passed to the _macro_* methods.
     sub macro : Verb() {
-	my ( $self, $opt, @args ) = _arguments( @_ );
+	my ( $self, $opt, @args ) = __arguments( @_ );
 	my $cmd;
 	if (!@args) {
 	    $cmd = 'brief';
@@ -1093,59 +1109,130 @@ sub location : Verb( dump! ) {
 	} else {
 	    $cmd = 'list';
 	}
-	my $output;
-	if ($cmd eq 'brief') {
-	    foreach my $name (sort @args ? @args : keys %{$self->{macro}}) {
-		$self->{macro}{$name} and $output .= $name . "\n";
-	    }
-	} elsif ($cmd eq 'list') {
-	    foreach my $name (sort @args ? @args : keys %{$self->{macro}}) {
-		$self->{macro}{$name}
-		    and $output .= "macro define $name " .
-			join (" \\\n    ", map {
-			quoter ($_)} @{ $self->{macro}{$name}{def} }) . "\n";
-	    }
-	} elsif ($cmd eq 'delete') {
-	    foreach my $name (@args ? @args : keys %{$self->{macro}}) {
-		delete $self->{macro}{$name};
-	    }
-	} else {
-	    (@args || $cmd eq 'define')
-		or $self->_wail(
-		"You must provide a definition for the macro");
-	    my $name = $cmd eq 'define' ? shift @args : $cmd;
-	    $name !~ m/ \W /smx
-		and $name !~ m/ \A _ /smx
-		or $self->_wail("Invalid macro name '$name'");
-	    $self->{macro}{$name} = {
-		def => [ _unescape( @args ) ],
-		level1 => $self->{frame}[-1]{level1},
-	    };
-	}
-	return $output;
+
+	my $code = $self->can( "_macro_$cmd" )
+	    or $self->wail( "Subcommand '$cmd' unknown" );
+	return $code->( $self, @args );
     }
 
+}
+
+sub _macro_brief : Verb() {
+    my ( $self, undef, @args ) = __arguments( @_ );
+    my $output;
+    foreach my $name (sort @args ? @args : keys %{$self->{macro}}) {
+	$self->{macro}{$name} and $output .= $name . "\n";
+    }
+    return $output;
+}
+
+sub _macro_define : Verb() {
+    my ( $self, undef, $name, @args ) = __arguments( @_ );
+    my $output;
+    defined $name
+	or $self->wail( 'You must provide a name for the macro' );
+    @args
+	or $self->wail( 'You must provide a definition for the macro' );
+    $name !~ m/ \W /smx
+	and $name !~ m/ \A _ /smx
+	or $self->wail("Invalid macro name '$name'");
+
+    $self->{macro}{$name} =
+	Astro::App::Satpass2::Macro::Command->new(
+	    name	=> $name,
+	    parent	=> $self,
+	    def		=> [ _unescape( @args ) ],
+	    generate	=> \&_macro_define_generator,
+	    level1	=> $self->{frame}[-1]{level1},
+	    warner	=> $self->{_warner},
+	);
+    return $output;
+}
+
+sub _macro_define_generator {
+    my ( $self, @args ) = @_;
+    my $output;
+    foreach my $macro ( @args ) {
+	$output .= "macro define $macro \\\n    " .
+	    join( " \\\n    ", map { quoter( $_ ) } $self->def() ) .
+	    "\n";
+    }
+    return $output;
+}
+
+sub _macro_delete : Verb() {
+    my ( $self, undef, @args ) = __arguments( @_ );
+    my $output;
+    foreach my $name (@args ? @args : keys %{$self->{macro}}) {
+	delete $self->{macro}{$name};
+    }
+    return $output;
+}
+
+sub _macro_list : Verb() {
+    my ( $self, undef, @args ) = __arguments( @_ );
+    my $output;
+    foreach my $name (sort @args ? @args : keys %{$self->{macro}}) {
+	$self->{macro}{$name}
+	    or next;
+	$output .= $self->{macro}{$name}->generator( $name );
+    }
+    return $output;
+}
+
+sub _macro_load : Verb( lib=s ) {
+    my ( $self, $opt, $name, @args ) = __arguments( @_ );
+    my $output;
+    defined $name
+	or $self->wail( 'Must provide name of macro to load' );
+    my %marg = (
+	name	=> $name,
+	parent	=> $self,
+	generate	=> \&_macro_load_generator,
+	warner	=> $self->{_warner},
+    );
+    exists $opt->{lib}
+    and $marg{lib} = $opt->{lib};
+    my $obj = $self->{_macro_load}{$name} ||=
+	Astro::App::Satpass2::Macro::Code->new( %marg );
+    @args or @args = $obj->implements();
+    foreach my $mn ( @args ) {
+	$obj->implements( $mn, required => 1 )
+	    and $self->{macro}{$mn} = $obj;
+    }
+    return $output;
+}
+
+sub _macro_load_generator {
+    my ( $self, @args ) = @_;
+    my @preamble = qw{ macro load };
+    $self->has_lib()
+	and push @preamble, '-lib', $self->lib();
+    push @preamble, $self->name();
+    my $output;
+    foreach my $macro ( @args ) {
+	$output .= quoter( @preamble, $macro ) . "\n";
+    }
+    return $output;
 }
 
 # Attributes must all be on one line to process correctly under Perl
 # 5.8.8.
 sub pass : Verb( choose=s@ appulse! chronological! dump! events! horizon|rise|set! illumination! quiet! transit|maximum|culmination! )
 {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
 
     _apply_boolean_default(
 	$opt, 0, qw{ horizon illumination transit appulse } );
-    $self->_parse_time_reset();
-    my $pass_start = $self->_parse_time (
+    my $pass_start = $self->__parse_time (
 	shift @args, $self->_get_today_noon());
-    my $pass_end = $self->_parse_time (shift @args || '+7');
+    my $pass_end = $self->__parse_time (shift @args || '+7');
     $pass_start >= $pass_end
-	and $self->_wail("End time must be after start time");
+	and $self->wail("End time must be after start time");
 
     my $sta = $self->station();
-    my @bodies = @{$opt->{choose} ? scalar _choose($opt->{choose},
-	    $self->{bodies}) : $self->{bodies}}
-	or $self->_wail("No bodies selected");
+    my @bodies = $self->__choose( $opt->{choose}, $self->{bodies} )
+	or $self->wail("No bodies selected");
     my $pass_step = shift @args || 60;
 
 #	Decide which model to use.
@@ -1193,8 +1280,8 @@ sub pass : Verb( choose=s@ appulse! chronological! dump! events! horizon|rise|se
 		$pass_start, $pass_end, $self->{sky} ) );
 	    1;
 	} or do {
-	    $@ =~ m/ \Q$interrupted\E /smxo and $self->_wail($@);
-	    $opt->{quiet} or $self->_whinge($@);
+	    $@ =~ m/ \Q$interrupted\E /smxo and $self->wail($@);
+	    $opt->{quiet} or $self->whinge($@);
 	};
     }
 
@@ -1240,16 +1327,13 @@ sub pass : Verb( choose=s@ appulse! chronological! dump! events! horizon|rise|se
     }
 }
 
-sub phase : Verb() {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+sub phase : Verb( choose=s@ ) {
+    my ( $self, $opt, @args ) = __arguments( @_ );
 
-    $self->_parse_time_reset();
-    my $time = $self->_parse_time (shift @args, time );
+    my $time = $self->__parse_time (shift @args, time );
 
-    my @sky = @{ $opt->{choose} ?
-	    scalar _choose($opt->{choose}, $self->{sky}) :
-	    $self->{sky} }
-	or $self->_wail( 'No bodies selected' );
+    my @sky = $self->__choose( $opt->{choose}, $self->{sky} )
+	or $self->wail( 'No bodies selected' );
     return $self->_format_data(
 	phase => [
 	    map { { body => $_->universal( $time ), time => $time } }
@@ -1259,11 +1343,10 @@ sub phase : Verb() {
 }
 
 sub position : Verb( choose=s@ questionable|spare! quiet! ) {
-    my ( $self, $opt, $time ) = _arguments( @_ );
+    my ( $self, $opt, $time ) = __arguments( @_ );
 
     if ( defined $time ) {
-	$self->_parse_time_reset();
-	$time = $self->_parse_time($time);
+	$time = $self->__parse_time($time);
     } else {
 	$time = time;
     }
@@ -1274,10 +1357,8 @@ sub position : Verb( choose=s@ questionable|spare! quiet! ) {
     my $sta = $self->station();
     $sta->universal( $time );
 
-
-    my @list = ( $self->_aggregate( $self->{bodies} ), @{$self->{sky}});
-    $opt->{choose}
-	and @list = _choose($opt->{choose}, \@list);
+    my @list = $self->__choose( { bodies => 1, sky => 1 },
+	$opt->{choose} );
 
     my @good;
     my $horizon = deg2rad ($self->{horizon});
@@ -1300,8 +1381,8 @@ sub position : Verb( choose=s@ questionable|spare! quiet! ) {
 	    push @good, $body;
 	    1;
 	} or do {
-	    $@ =~ m/ \Q$interrupted\E /smxo and $self->_wail($@);
-	    $opt->{quiet} or $self->_whinge($@);
+	    $@ =~ m/ \Q$interrupted\E /smxo and $self->wail($@);
+	    $opt->{quiet} or $self->whinge($@);
 	};
     }
 
@@ -1321,16 +1402,13 @@ sub pwd : Verb() {
 }
 
 sub quarters : Verb( choose=s@ dump! ) {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
 
-    $self->_parse_time_reset();
-    my $start = $self->_parse_time ($args[0], $self->_get_today_midnight());
-    my $end = $self->_parse_time ($args[1] || '+30');
+    my $start = $self->__parse_time ($args[0], $self->_get_today_midnight());
+    my $end = $self->__parse_time ($args[1] || '+30');
 
-    my @sky = @{ $opt->{choose} ?
-	    scalar _choose($opt->{choose}, $self->{sky}) :
-	    $self->{sky} }
-	or $self->_wail( 'No bodies selected' );
+    my @sky = $self->__choose( $opt->{choose}, $self->{sky} )
+	or $self->wail( 'No bodies selected' );
 
     my @almanac;
 
@@ -1376,7 +1454,7 @@ sub run {
     GetOptions( \%opt, qw{ echo! filter! initialization_file|initfile=s
 	gmt!  help level1! version },
     )
-	or $self->_wail( "See the help method for valid options" );
+	or $self->wail( "See the help method for valid options" );
 
     # If -version, do it and return.
     if ( $opt{version} ) {
@@ -1410,7 +1488,7 @@ sub run {
 		delete $opt{initialization_file},
 	    ), $self->get( 'stdout' ) );
 	1;
-    } or warn $@;	# Not _whinge, since presumably we already did.
+    } or warn $@;	# Not whinge, since presumably we already did.
 
     # The remaining options set the corresponding attributes.
     %opt and $self->set(%opt);
@@ -1429,12 +1507,12 @@ SATPASS2_EXECUTE:
 }
 
 sub save : Verb( changes! overwrite! ) {
-    my ( $self, $opt, $fn ) = _arguments( @_ );
+    my ( $self, $opt, $fn ) = __arguments( @_ );
 
     defined $fn or $fn = $self->initfile( { 'create-directory' => 1 } );
     chomp $fn;	# because initfile() adds a newline for printing
     if ($fn ne '-' && -e $fn) {
-	-f $fn or $self->_wail(
+	-f $fn or $self->wail(
 	    "Can not overwrite $fn: not an ordinary file");
 	$opt->{overwrite} or do {
 	    my $rslt = $self->_get_readline()->(
@@ -1477,7 +1555,7 @@ EOD
 
     if ($fn ne '-') {
 	my $fh = IO::File->new($fn, '>')
-	    or $self->_wail("Unable to open $fn: $!");
+	    or $self->wail("Unable to open $fn: $!");
 	print {$fh} $output;
 	$output = "$fn\n";
     }
@@ -1485,15 +1563,14 @@ EOD
 }
 
 sub set : Verb() {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
 
-    $self->{time_parser} and $self->_parse_time_reset();
     while (@args) {
 	my ( $name, $value ) = splice @args, 0, 2;
 	$self->_attribute_exists( $name );
 	if ( _is_interactive() ) {
 	    $nointeractive{$name}
-		and $self->_wail(
+		and $self->wail(
 		    "Attribute '$name' may not be set interactively");
 	    defined $value and $value eq 'undef'
 		and $value = undef;
@@ -1502,7 +1579,7 @@ sub set : Verb() {
 	    $self->_deprecation_notice( attribute => $name );
 	    $mutator{$name}->($self, $name, $value);
 	} else {
-	    $self->_wail("Read-only attribute '$name'");
+	    $self->wail("Read-only attribute '$name'");
 	}
     }
     return;
@@ -1511,7 +1588,7 @@ sub set : Verb() {
 sub _set_almanac_horizon {
     my ( $self, $name, $value ) = @_;
     my $eci = Astro::Coord::ECI->new();
-    my $parsed = _parse_angle( $value );
+    my $parsed = $self->__parse_angle( { accept => 1 }, $value );
     $eci->set( almanac_horizon => $parsed );	# To validate.
     my $internal = looks_like_number( $parsed ) ? deg2rad( $parsed ) :
     $parsed;
@@ -1520,17 +1597,19 @@ sub _set_almanac_horizon {
 }
 
 sub _set_angle {
-    return ($_[0]{$_[1]} = _parse_angle ($_[2]));
+    my ( $self, $name, $value ) = @_;
+    return ( $self->{$name} = $self->__parse_angle( $value ) );
 }
 
 sub _set_angle_or_undef {
-    defined $_[2] and 'undef' ne $_[2] and goto &_set_angle;
-    return ( $_[0]{$_[1]} = $_[2] );
+    my ( $self, $name, $value ) = @_;
+    defined $value and 'undef' ne $value and goto &_set_angle;
+    return ( $self->{$name} = undef );
 }
 
 sub _set_code_ref {
     'CODE' eq ref $_[2]
-	or $_[0]->_wail( "Attribute $_[1] must be a code reference" );
+	or $_[0]->wail( "Attribute $_[1] must be a code reference" );
     return( $_[0]{$_[1]} = $_[2] );
 }
 
@@ -1554,7 +1633,7 @@ sub _set_copyable {
     my $obj;
     if ( ref $arg{value} ) {
 	blessed( $arg{value} )
-	    or $self->_wail( "$arg{name} may not be unblessed reference" );
+	    or $self->wail( "$arg{name} may not be unblessed reference" );
 	$obj = $arg{value};
 	$obj->can( 'warner' )
 	    and $obj->warner( $self->{_warner} );
@@ -1566,7 +1645,7 @@ sub _set_copyable {
 	}
 	if ( ! defined $arg{value} || $arg{value} eq '' ) {
 	    $arg{undefined}
-		or $self->_wail(
+		or $self->wail(
 		"$arg{name} must be defined and not empty",
 	    );
 	    return ( $self->{$arg{name}} = $arg{value} = undef );
@@ -1580,18 +1659,18 @@ sub _set_copyable {
 	}
 	push @args, substr $arg{value}, $base;
 	my $pkg = shift @args;
-	my $cls = load_package( $pkg, @{ $arg{prefix} || [] } )
-	    or $self->_wail( "Unable to load $pkg" );
+	my $cls = $self->load_package(
+	    { fatal => 'wail' }, $pkg, @{ $arg{prefix} || [] } );
 	$obj = $cls->new(
 	    warner	=> $self->{_warner},
 	    map { split qr{ = }smx, $_, 2 } @args
 	)
-	    or $self->_wail( $arg{message} ||
+	    or $self->wail( $arg{message} ||
 	    "Can not instantiate object from '$arg{value}'" );
     }
     defined $arg{class}
 	and not $obj->isa( $arg{class} )
-	and $self->_wail( "$arg{name} must be of class $arg{class}" );
+	and $self->wail( "$arg{name} must be of class $arg{class}" );
     blessed( $old )
 	and not $arg{nocopy}
 	and $old->can( 'copy' )
@@ -1602,7 +1681,7 @@ sub _set_copyable {
 
 sub _set_distance_meters {
     return ( $_[0]{$_[1]} = defined $_[2] ?
-	( $_[0]->_parse_distance( $_[2], '0m' ) * 1000 ) : $_[2] );
+	( $_[0]->__parse_distance( $_[2], '0m' ) * 1000 ) : $_[2] );
 }
 
 sub _set_ellipsoid {
@@ -1649,7 +1728,7 @@ sub _set_geocoder {
 sub _set_model {
     my ( $self, $name, $val ) = @_;
     Astro::Coord::ECI::TLE->is_valid_model( $val )
-	or $self->_wail(
+	or $self->wail(
 	"'$val' is not a valid Astro::Coord::ECI::TLE model" );
     return ( $self->{$name} = $val );
 }
@@ -1658,11 +1737,11 @@ sub _set_spacetrack {
     my ($self, $name, $val) = @_;
     if (defined $val) {
 	instance($val, 'Astro::SpaceTrack')
-	    or $self->_wail("$name must be an Astro::SpaceTrack instance");
+	    or $self->wail("$name must be an Astro::SpaceTrack instance");
 	my $version = $val->VERSION();
 	$version =~ s/ _ //smxg;
 	$version >= ASTRO_SPACETRACK_VERSION
-	    or $self->_wail("$name must be Astro::SpaceTrack version ",
+	    or $self->wail("$name must be Astro::SpaceTrack version ",
 	    ASTRO_SPACETRACK_VERSION, ' or greater' );
     }
     return ($self->{$name} = $val);
@@ -1704,9 +1783,9 @@ sub _set_twilight {
 	$self->{$name} = $key;
 	$self->{_twilight} = $twilight_def{$key};
     } else {
-	my $angle = _parse_angle ($val);
+	my $angle = $self->__parse_angle( { accept => 1 }, $val );
 	looks_like_number( $angle )
-	    or $self->_wail("Twilight must be number or known keyword" );
+	    or $self->wail("Twilight must be number or known keyword" );
 	$self->{$name} = $val;
 	$self->{_twilight} = deg2rad ($angle);
     }
@@ -1740,7 +1819,7 @@ sub _set_webcmd {
 }
 
 sub show : Verb( changes! deprecated! readonly! ) {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
 
     foreach my $name ( qw{ deprecated readonly } ) {
 	exists $opt->{$name} or $opt->{$name} = 1;
@@ -1756,7 +1835,7 @@ sub show : Verb( changes! deprecated! readonly! ) {
 
     foreach my $name (@args) {
 	exists $shower{$name}
-	    or $self->_wail("No such attribute as '$name'");
+	    or $self->wail("No such attribute as '$name'");
 
 	my @val = $shower{$name}->( $self, $name );
 	if ( $opt->{changes} ) {
@@ -1765,8 +1844,7 @@ sub show : Verb( changes! deprecated! readonly! ) {
 	}
 
 	exists $mutator{$name} or unshift @val, '#';
-	$output .= join ' ', map { quoter( $_ ) } @val;
-	$output .= "\n";
+	$output .= quoter( @val ) . "\n";
     }
     return $output;
 }
@@ -1837,21 +1915,21 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    }
 	    unless (@{$self->{sky}}) {
 		$self->{warn_on_empty}
-		    and $self->_whinge("The sky is empty");
+		    and $self->whinge("The sky is empty");
 	    }
 	    return $output;
 	},
 	add	=> sub {
 	    my ( $self, @args ) = @_;
 	    my $name = shift @args
-		or $self->_wail("You did not specify what to add");
+		or $self->wail("You did not specify what to add");
 	    my $fcn = _fold_case( $name );
 	    if ( my $class = $planet_class{$fcn} ) {
 		foreach my $body ( @{ $self->{sky} } ) {
 		    $body->isa( $class )
 			and return;
 		}
-		load_module( $class );
+		load_package( $class );
 		push @{ $self->{sky} }, $class->new(
 		    debug	=> $self->{debug},
 		);
@@ -1862,12 +1940,12 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 			and return;
 		}
 		@args >= 2 
-		    or $self->_wail(
+		    or $self->wail(
 		    'You must give at least right ascension and declination' );
-		my $ra = deg2rad( _parse_angle( shift @args ) );
-		my $dec = deg2rad( _parse_angle( shift @args ) );
+		my $ra = deg2rad( $self->__parse_angle( shift @args ) );
+		my $dec = deg2rad( $self->__parse_angle( shift @args ) );
 		my $rng = @args ?
-		    $self->_parse_distance( shift @args, '1pc' ) :
+		    $self->__parse_distance( shift @args, '1pc' ) :
 		    10000 * PARSEC;
 		my $pmra = @args ? do {
 		    my $angle = shift @args;
@@ -1891,7 +1969,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	},
 	drop	=> sub {
 	    my ( $self, @args ) = @_;
-	    @args or $self->_wail(
+	    @args or $self->wail(
 		"You must specify at least one name to drop");
 	    my $match = qr< @{[ join '|', map {quotemeta $_} @args ]} >smxi;
 	    @{$self->{sky}} = grep {
@@ -1907,7 +1985,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    foreach my $fn ( @args ) {
 		local $/ = undef;
 		open my $fh, '<', $fn
-		    or $self->_wail( "Failed to open $fn: $!" );
+		    or $self->wail( "Failed to open $fn: $!" );
 		$tle .= <$fh>;
 		close $fh;
 	    }
@@ -1921,16 +1999,16 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    foreach my $body (@{$self->{sky}}) {
 		next unless $body->isa ('Astro::Coord::ECI::Star') &&
 			$lcn eq lc $body->get ('name');
-		$self->_wail( "Duplicate sky entry '$name'" );
+		$self->wail( "Duplicate sky entry '$name'" );
 	    }
 	    my ($ra, $dec, $rng, $pmra, $pmdec, $pmrec) =
 		$self->_simbad4 ($name);
 	    $rng = sprintf '%.2f', $rng;
 	    $output .= "sky add " . quoter ($name) .
 		" $ra $dec $rng $pmra $pmdec $pmrec\n";
-	    $ra = deg2rad (_parse_angle ($ra));
+	    $ra = deg2rad ($self->__parse_angle ($ra));
 	    my $body = Astro::Coord::ECI::Star->new (name => $name);
-	    $body->position ($ra, deg2rad (_parse_angle ($dec)),
+	    $body->position ($ra, deg2rad ($self->__parse_angle ($dec)),
 		$rng * PARSEC, deg2rad ($pmra * 24 / 360 / cos ($ra) / SPY2DPS),
 		deg2rad ($pmdec / SPY2DPS), $pmrec);
 	    push @{$self->{sky}}, $body;
@@ -1943,14 +2021,14 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
     );
 
     sub sky : Verb() {
-	my ( $self, $opt, @args ) = _arguments( @_ );
+	my ( $self, $opt, @args ) = __arguments( @_ );
 
 	my $verb = lc ( shift @args || 'list' );
 
 	if ( my $code = $handler{$verb} ) {
 	    return $code->( $self, @args );
 	} else {
-	    $self->_wail("'sky' subcommand '$verb' not known");
+	    $self->wail("'sky' subcommand '$verb' not known");
 	}
 	return;	# We can't get here, but Perl::Critic does not know this.
     }
@@ -1967,14 +2045,14 @@ sub _sky_tle {
     foreach my $body ( @bodies ) {
 	my $id = $body->get( 'id' );
 	$extant{$id}
-	    and $self->_wail( "Duplicate sky entry $id" );
+	    and $self->wail( "Duplicate sky entry $id" );
     }
     push @{ $self->{sky} }, @bodies;
     return sprintf "sky tle %s\n", quoter( $tle );
 }
 
 sub source : Verb( optional! ) {
-    my ( $self, $opt, $src, @args ) = _arguments( @_ );
+    my ( $self, $opt, $src, @args ) = __arguments( @_ );
 
     my $output;
     my $reader = $self->_file_reader( $src, $opt )
@@ -2007,7 +2085,7 @@ sub source : Verb( optional! ) {
     } or $err = $@;
 
     $self->_frame_pop( $frames );
-    $ok or $self->_whinge( $err );
+    $ok or $self->whinge( $err );
 
     $opt->{level1} and $self->_rewrite_level1_macros();
     return $output;
@@ -2039,9 +2117,7 @@ sub source : Verb( optional! ) {
 		$opt->{raw} and return \@values;
 		my $output = '';
 		foreach ( @values ) {
-		    $output .= join ' ', map { quoter( $_ ) } qw{
-			spacetrack set }, @{ $_ };
-		    $output .= "\n";
+		    $output .= quoter( qw{ spacetrack set }, @{ $_ } ) . "\n";
 		}
 		$rslt->content( $output );
 	    }
@@ -2052,8 +2128,8 @@ sub source : Verb( optional! ) {
 	    my $rslt = $obj->get( @args );
 	    $rslt->is_success
 		and not $opt->{raw}
-		and $rslt->content( join ' ', map { quoter( $_ ) }
-		    qw{ spacetrack set }, $args[0], $rslt->content() );
+		and $rslt->content( scalar quoter(
+		    qw{ spacetrack set }, $args[0], $rslt->content() ) );
 	    return $rslt;
 	},
 	set	=> sub {
@@ -2070,7 +2146,7 @@ sub source : Verb( optional! ) {
     # Attributes must all be on one line to process correctly under
     # 5.8.8.
     sub spacetrack : Verb( all! changes! descending! effective! end_epoch=s exclude=s last5! raw! rcs! status=s sort=s start_epoch=s tle! verbose! ) {
-	my ( $self, $opt, $method, @args ) = _arguments( @_ );
+	my ( $self, $opt, $method, @args ) = __arguments( @_ );
 
 	exists $opt->{raw}
 	    or $opt->{raw} = ( ! _is_interactive() );
@@ -2078,14 +2154,13 @@ sub source : Verb( optional! ) {
 	my $object = $self->_helper_get_object( 'spacetrack' );
 	$method !~ m/ \A _ /smx and $object->can( $method )
 	    or $handler{$method}
-	    or $self->_wail("No such spacetrack method as '$method'");
+	    or $self->wail("No such spacetrack method as '$method'");
 
-	$self->_parse_time_reset();
 	$opt->{start_epoch}
-	    and $opt->{start_epoch} = $self->_parse_time(
+	    and $opt->{start_epoch} = $self->__parse_time(
 		$opt->{start_epoch} );
 	$opt->{end_epoch}
-	    and $opt->{end_epoch} = $self->_parse_time(
+	    and $opt->{end_epoch} = $self->__parse_time(
 		$opt->{end_epoch} );
 
 	my ( $rslt, @rest ) = $handler{$method} ?
@@ -2093,7 +2168,7 @@ sub source : Verb( optional! ) {
 	    $object->$method( $opt, @args );
 
 	$rslt->is_success()
-	    or $self->_wail( $rslt->status_line() );
+	    or $self->wail( $rslt->status_line() );
 
 	my $output;
 	my $content_type = $object->content_type || '';
@@ -2123,7 +2198,7 @@ sub source : Verb( optional! ) {
 }
 
 sub st : Verb() {
-    my ( $self, $opt, $func, @args ) = _arguments( @_ );
+    my ( $self, $opt, $func, @args ) = __arguments( @_ );
 
     $self->_deprecation_notice( method => 'st' );
     if ( 'localize' eq $func ) {
@@ -2145,7 +2220,7 @@ sub station {
     defined $self->{height}
 	and defined $self->{latitude}
 	and defined $self->{longitude}
-	or $self->_wail( 'You must set height, latitude, and longitude' );
+	or $self->wail( 'You must set height, latitude, and longitude' );
 
     return Astro::Coord::ECI->new (
 	    almanac_horizon	=> $self->{_almanac_horizon},
@@ -2167,7 +2242,7 @@ sub station {
     my @status_code_map = qw{+ S -};
 
     sub status : Verb( name! reload! ) {
-	my ( $self, $opt, @args ) = _arguments( @_ );
+	my ( $self, $opt, @args ) = __arguments( @_ );
 
 	@args or @args = qw{show};
 
@@ -2201,9 +2276,9 @@ sub station {
 	    $output .= '';	# Don't want it to be undef.
 
 	    foreach my $tle (@data) {
-		$output .= join (' ', map {quoter($_)} 'status', 'add',
+		$output .= quoter( 'status', 'add',
 		    $tle->[0], $tle->[1], $status_code_map[$tle->[2]],
-		    $tle->[3], $tle->[4]) . "\n";
+		    $tle->[3], $tle->[4] ) . "\n";
 	    }
 
 	} else {
@@ -2216,7 +2291,7 @@ sub station {
 }
 
 sub system : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
-    my ( $self, $opt, $verb, @args ) = _arguments( @_ );
+    my ( $self, $opt, $verb, @args ) = __arguments( @_ );
 
     @args = map {
 	bsd_glob( $_, GLOB_NOCHECK | GLOB_BRACE | GLOB_QUOTE )
@@ -2229,8 +2304,7 @@ sub system : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
 	CORE::system {$verb} $verb, @args;
 	return;
     } else {
-	load_package( 'IPC::System::Simple' )
-	    or $self->_wail( 'Can not load IPC::System::Simple' );
+	$self->load_package( { fatal => 'wail' }, 'IPC::System::Simple' );
 	return IPC::System::Simple::capturex( $verb, @args );
     }
 }
@@ -2238,7 +2312,7 @@ sub system : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
 
 sub time : method Verb() {	## no critic (ProhibitBuiltInHomonyms,RequireArgUnpacking)
     my ($self, @args) = map { 'ARRAY' eq ref $_ ? @{ $_ } : $_ } @_;
-    $have_time_hires->() or $self->_wail( 'Time::HiRes not available' );
+    $have_time_hires->() or $self->wail( 'Time::HiRes not available' );
     my $start = Time::HiRes::time();
     my $output = $self->dispatch(@args);
     defined $output and $output .= "\n";
@@ -2252,9 +2326,9 @@ sub time_parser : Verb() {
 }
 
 sub tle : Verb( verbose! ) {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
 
-    my $bodies = @args ? _choose([@args], $self->{bodies}) : $self->{bodies};
+    my $bodies = $self->__choose( \@args, $self->{bodies} );
     my $method = $opt->{verbose} ? 'tle_verbose' : 'tle';
     return $self->_format_data(
 	$method => $bodies, $opt );
@@ -2262,7 +2336,7 @@ sub tle : Verb( verbose! ) {
 
 
 sub unexport : Verb() {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
 
     foreach my $name ( @args ) {
 	delete $self->{exported}{$name};
@@ -2272,17 +2346,16 @@ sub unexport : Verb() {
 
 
 sub validate : Verb( quiet! ) {
-    my ( $self, $opt, @args ) = _arguments( @_ );
+    my ( $self, $opt, @args ) = __arguments( @_ );
 
-    $self->_parse_time_reset();
-    my $pass_start = $self->_parse_time (
+    my $pass_start = $self->__parse_time (
 	shift @args, $self->_get_today_noon());
-    my $pass_end = $self->_parse_time (shift @args || '+7');
+    my $pass_end = $self->__parse_time (shift @args || '+7');
     $pass_start >= $pass_end
-	and $self->_wail("End time must be after start time");
+	and $self->wail("End time must be after start time");
 
     @{ $self->{bodies} }
-	or $self->_wail("No bodies selected");
+	or $self->wail("No bodies selected");
 
 #	Validate each body.
 
@@ -2346,49 +2419,6 @@ sub _apply_boolean_default {
     return;
 }
 
-#	@args = $self->_arguments(@args);
-#
-#	This subroutine determines the name of its caller, and parses
-#	out of the argument list any options specified in the caller's
-#	Verb() attribute. Before the parse, Getopt::Long is configured
-#	according to the caller's Configure() attribute if present, or
-#	the default configuration if not. The return is a list whose
-#	first element is the invocant, whose second element is a
-#	reference to the hash containing the parsed options, and whose
-#	subsequent elements are the remaining arguments, if any.
-#
-{
-
-    my @default_config = qw{default pass_through};
-####    my @default_config = qw{default};
-
-    sub _arguments {
-	my ( $self, @args ) = @_;
-
-	@args = map {
-	    has_method( $_, 'dereference' ) ?  $_->dereference() : $_
-	} @args;
-
-	'HASH' eq ref $args[0]
-	    and return ( $self, @args );
-
-	my @data = caller(1);
-	my $code = \&{$data[3]};
-
-	local @ARGV = @args;
-	my $lgl = _get_attr($code, 'Verb') || [];
-	my %opt;
-	my $err;
-	local $SIG{__WARN__} = sub {$err = $_[0]};
-	my $config = 
-	    _get_attr($code, 'Configure') || \@default_config;
-	my $go = Getopt::Long::Parser->new(config => $config);
-	$go->getoptions(\%opt, @$lgl) or $self->_wail($err);
-
-	return ( $self, \%opt, @ARGV );
-    }
-}
-
 #	$self->_attribute_exists( $name );
 #
 #	This method returns true if an accessor for the given attribute
@@ -2397,66 +2427,96 @@ sub _apply_boolean_default {
 sub _attribute_exists {
     my ( $self, $name ) = @_;
     exists $accessor{$name}
-	or $self->_wail("No such attribute as '$name'");
+	or $self->wail("No such attribute as '$name'");
     return $accessor{$name};
 }
 
-#	$chosen = _choose($opt, $choice, $list)
+# Documented in POD
 
-#	This subroutine chooses objects from a list. The arguments are:
-#
-#	$opt is an optional hash reference to options for the choice.
-#	The only valid option is
-#	    invert => 1 to invert the choice, retaining all objects that
-#	    do _NOT_ match.
-#
-#	$choice is a reference to an array of choices These are strings,
-#	which will be split on commas to yield the actual choice
-#	criteria. Items which represent numbers greater than 999 will be
-#	considered OID numbers, and match any object with the same OID.
-#	All other items will be turned into regular expressions, and
-#	matched against the name of the object.
-#
-#	$list is a reference to an array of objects to be selected from.
-#	These objects must implement get() to get their attributes, and
-#	must have attributes 'id' and 'name'.
-
-sub _choose {
-    my @args = @_;
-    my $opt = ref $args[0] eq 'HASH' ? shift @args : {};
-    my ($choice, $list) = @args;
-    my @rslt;
-    my @regex;
-    my %oid;
-    foreach (@$choice) {
-	foreach (split ',', $_) {
-	    if (m/ \D /smx) {
-		push @regex, qr/ @{[ quotemeta $_ ]} /smxi;
-	    } elsif ($_ < 1000) {
-		push @regex, qr/ $_ /smx;
-	    } else {
-		$oid{$_} = 1;
-	    }
-	}
-    }
-    foreach my $tle (@$list) {
-	my $id = ref $tle eq 'ARRAY' ? $tle->[0] : $tle->get('id');
-	my $match = $opt->{invert};
-	if ($oid{$id}) {
-	    $match = !$match;
-	} else {
-	    my $name = ref $tle eq 'ARRAY' ? $tle->[1] : $tle->get('name');
-	    if ( defined $name ) {
-		foreach my $re (@regex) {
-		    $name =~ m/ $re /smx or next;
-		    $match = !$match;
-		    last;
+{
+    my %chooser = (
+        ''	=> sub {
+	    my ( $sel ) = @_;
+	    my @rslt;
+	    foreach my $s ( split qr{ \s* , \s* }smx, $sel ) {
+		if ( $s =~ m/ \D /smx || $s < 1000 ) {
+		    my $re = qr{\Q$s\E}i;
+		    push @rslt, sub {
+			my ( $tle, $context ) = @_;
+			$context->{name} ||= $tle->get( 'name' );
+			return $context->{name} =~ $re;
+		    };
+		} else {
+		    push @rslt, sub {
+		        my ( $tle, $context ) = @_;
+			$context->{id} ||= $tle->get( 'id' );
+			return $context->{id} == $s;
+		    };
 		}
+		return @rslt;
 	    }
+	},
+	CODE	=> sub {
+	    my ( $sel ) = @_;
+	    return $sel;
+	},
+	Regexp	=> sub {
+	    my ( $sel ) = @_;
+	    return sub {
+	        my ( $tle, $context ) = @_;
+		$context->{name} ||= $tle->get( 'name' );
+		return $context->{name} =~ $sel;
+	    };
+	},
+    );
+
+    sub __choose {
+	my ( $self, @args ) = @_;
+	my $opt = ref $args[0] eq 'HASH' ? shift @args : {};
+	my $choice = shift @args;
+	defined $choice
+	    or $choice = [];
+	'ARRAY' eq ref $choice
+	    or $self->weep( 'Choice invalid' );
+	my @rslt;
+	my @selector;
+	foreach my $sel ( @{ $choice } ) {
+	    my $ref = ref $sel;
+	    my $code = $chooser{$ref}
+	    or $self->weep( "$ref not supported as chooser" );
+	    push @selector, $code->( $sel );
 	}
-	$match and push @rslt, $tle;
+
+	$opt->{bodies}
+	    and push @args,
+		$self->_aggregate( $self->{bodies} );
+	$opt->{sky}
+	    and push @args, $self->{sky};
+
+	@args = map { 'ARRAY' eq ref $_ ? @{ $_ } : $_ } @args;
+
+	not @selector
+	    and return wantarray ? @args : \@args;
+
+	foreach my $tle ( @args ) {
+	    'ARRAY' eq ref $tle
+		and $self->weep( 'Schwartzian-transform objects not supported' );
+
+	    my $match = $opt->{invert};
+	    my $context = {};
+	    foreach my $sel ( @selector ) {
+		$sel->( $tle, $context )
+		    or next;
+		$match = !$match;
+		last;
+	    }
+
+	    $match and push @rslt, $tle;
+	}
+
+	return wantarray ? @rslt : \@rslt;
     }
-    return wantarray ? @rslt : \@rslt;
+
 }
 
 
@@ -2508,9 +2568,9 @@ sub _choose {
 	defined $repl
 	    and $msg .= "; use $repl instead";
 	$deprecate{$type}{$name} >= 3
-	    and $self->_wail( $msg );
+	    and $self->wail( $msg );
 	warnings::enabled( 'deprecated' )
-	    and $self->_whinge( $msg );
+	    and $self->whinge( $msg );
 	$deprecate{$type}{$name} == 1
 	    and $deprecate{$type}{$name} = 0;
 	return;
@@ -2556,7 +2616,7 @@ sub _file_reader {
 
     my $ref = ref $file;
     my $code = $self->can( "_file_reader_$ref" )
-	or $self->_wail( sprintf "Opening a $ref ref is unsupported" );
+	or $self->wail( sprintf "Opening a $ref ref is unsupported" );
 
     goto &$code;
 }
@@ -2569,7 +2629,7 @@ sub _file_reader_ {
 
     if ( ! defined $file || ! ref $file &&  '' eq $file ) {
 	$opt->{optional} and return;
-	$self->_wail( 'Defined file required' );
+	$self->wail( 'Defined file required' );
     }
 
     if ( $self->_file_reader__validate_url( $file ) ) {
@@ -2578,16 +2638,16 @@ sub _file_reader_ {
 	$resp->is_success()
 	    or do {
 	    $opt->{optional} and return;
-	    $self->_wail( "Failed to retrieve $file: ",
+	    $self->wail( "Failed to retrieve $file: ",
 		$resp->status_line() );
 	};
 	$opt->{glob} and return $resp->content();
 	return $self->_file_reader( \( scalar $resp->content() ), $opt );
     } else {
-	my $fh = IO::File->new( $self->_tilde_expand( $file ), '<' )
+	my $fh = IO::File->new( $self->expand_tilde( $file ), '<' )
 	    or do {
 	    $opt->{optional} and return;
-	    $self->_wail( "Failed to open $file: $!" );
+	    $self->wail( "Failed to open $file: $!" );
 	};
 	$opt->{glob}
 	    or return sub { return scalar <$fh> };
@@ -2657,7 +2717,7 @@ sub _file_reader_SCALAR {
 	and return ${ $file };
 
     my $fh = IO::File->new( $file, '<' )	# Needs IO::File 1.14.
-	or $self->_wail( "Failed to open SCALAR ref: $!" );
+	or $self->wail( "Failed to open SCALAR ref: $!" );
 
     return sub { return scalar <$fh> };
 }
@@ -2747,7 +2807,7 @@ sub _frame_push {
 	my $frames = @args ? shift @args : @{$self->{frame}} - 1;
 	while (@{$self->{frame}} > $frames) {
 	    my $frame = pop @{$self->{frame}}
-		or $self->_weep( 'No frame to pop' );
+		or $self->weep( 'No frame to pop' );
 	    my $local = $frame->{local} || {};
 	    while (my ( $name, $value) = each %{ $local } ) {
 		if ( exists $self->{$name} && !$force_set{$name} ) {
@@ -2766,7 +2826,7 @@ sub _frame_push {
 		and $self->_get_spacetrack()->set(%{$frame->{spacetrack}});
 	}
 	if (delete $self->{pending}) {
-	    $self->_wail("Input ended on continued line");
+	    $self->wail("Input ended on continued line");
 	}
 	return;
     }
@@ -2996,7 +3056,7 @@ sub _get_warner_attribute {
 sub _helper_get_object {
     my ( $self, $attribute ) = @_;
     my $object = $self->get( $attribute )
-	or $self->_wail( "No $attribute object available" );
+	or $self->wail( "No $attribute object available" );
     return $object;
 }
 
@@ -3007,8 +3067,7 @@ sub _helper_get_object {
 	    desired_equinox_dynamical => sub {
 		my ( $self, $opt, @args ) = @_;
 		if ( $args[0] ) {
-		    $self->_parse_time_reset();
-		    $args[0] = $self->_parse_time( $args[0], 0 );
+		    $args[0] = $self->__parse_time( $args[0], 0 );
 		}
 		return @args;
 	    },
@@ -3022,22 +3081,35 @@ sub _helper_get_object {
 		);
 	    },
 	},
+	time_parser	=> {
+	    base	=> sub {
+		my ( $self, $opt, @args ) = @_;
+		if ( @args && defined $args[0] ) {
+		    $args[0] = $self->__parse_time( $args[0], time );
+		}
+		return @args;
+	    }
+	},
     );
 
     sub _helper_handler : Verb( changes! raw! ) {
-	my ( $self, $opt, $name, $method, @args ) = _arguments( @_ );
+	my ( $self, $opt, $name, $method, @args ) = __arguments( @_ );
 
 	exists $opt->{raw}
 	    or $opt->{raw} = ( ! _is_interactive() );
+
+	defined $method
+	    or $self->wail( 'No method name specified' );
 
 	'config' eq $method
 	    and return $self->_helper_config_handler( $name => $opt );
 
 	my $object = $self->_helper_get_object( $name );
 	$method !~ m/ \A _ /smx and $object->can( $method )
-	    or $self->_wail("No such $name method as '$method'");
+	    or $self->wail("No such $name method as '$method'");
 
 	@args
+	    and $parse_input{$name}
 	    and $parse_input{$name}{$method}
 	    and @args = $parse_input{$name}{$method}->( $self, $opt, @args );
 	$opt->{raw} and return $object->$method( @args );
@@ -3045,8 +3117,7 @@ sub _helper_get_object {
 
 	instance( $rslt, ref $object ) and return;
 	ref $rslt and return $rslt;
-	return join( ' ', map { quoter( $_ ) } $name, $method,
-	    $rslt ) . "\n";
+	return quoter( $name, $method, $rslt ) . "\n";
     }
 }
 
@@ -3060,8 +3131,7 @@ sub _helper_config_handler {
     $opt->{raw} and return $rslt;
     my $output = '';
     foreach my $item ( @{ $rslt } ) {
-	$output .= join ' ', map { quoter( $_ ) } $name, @{ $item };
-	$output .= "\n";
+	$output .= quoter( $name, @{ $item } ) . "\n";
     }
     return $output;
 }
@@ -3078,7 +3148,7 @@ sub _iridium_status {
     unless ($status) {
 	my $st = $self->_get_spacetrack();
 	(my $rslt, $status) = $st->iridium_status;
-	$rslt->is_success or $self->_wail($rslt->status_line);
+	$rslt->is_success or $self->wail($rslt->status_line);
     }
 
     if (ref $status eq 'ARRAY') {
@@ -3088,7 +3158,7 @@ sub _iridium_status {
 		$_->[4], $_->[1], $_->[5]);
 	}
     } else {
-	$self->_weep(
+	$self->weep(
 	    'Portable status not passed, and unavailable from Astro::SpaceTrack'
 	);
     }
@@ -3134,7 +3204,7 @@ sub _is_interactive {
     sub _load_module {
 	my ($self, @module) = @_;
 	ref $module[0] eq 'ARRAY' and @module = @{$module[0]};
-	@module or $self->_weep( 'No module specified' );
+	@module or $self->weep( 'No module specified' );
 	my @probs;
 	foreach my $module (@module) {
 	    load_package ($module) or do {
@@ -3163,7 +3233,7 @@ sub _is_interactive {
 	    }
 	}
 	my $pfx = 'Error -';
-	$self->_wail(map {my $x = "$pfx $_\n"; $pfx = ' ' x 7; $x} @probs);
+	$self->wail(map {my $x = "$pfx $_\n"; $pfx = ' ' x 7; $x} @probs);
 	return;	# Can't get here, but Perl::Critic does not know this.
     }
 
@@ -3175,22 +3245,18 @@ sub _is_interactive {
 
 sub _macro {
     my ($self, $name, @args) = @_;
-    $self->{macro}{$name} or $self->_wail("No such macro as '$name'");
+    $self->{macro}{$name} or $self->wail("No such macro as '$name'");
     my $frames = $self->_frame_push(macro => [@args]);
     my $macro = $self->{frame}[-1]{macro}{$name} =
 	delete $self->{macro}{$name};
     my $output;
     my $err;
     my $ok = eval {
-	foreach (@{ $macro->{def} }) {
-	    if (defined (my $buffer = $self->execute($_))) {
-		$output .= $buffer;
-	    }
-	}
+	$output = $macro->execute( $name, @args );
 	1;
     } or $err = $@;
     $self->_frame_pop($frames);
-    $ok or $self->_wail($err);
+    $ok or $self->wail($err);
     return $output;
 }
 
@@ -3221,13 +3287,12 @@ sub _parse_angle_parts {
     return sprintf( '%.*f', $places, $angle ) + 0;
 }
 
-#	$angle = _parse_angle ($string)
+# Documented in POD
 
-#	Parses an angle in degrees, hours:minutes:seconds, or
-#	degreesDminutesMsecondsS and returns the angle in degrees.
-
-sub _parse_angle {
-    my ( $angle ) = @_;
+sub __parse_angle {
+    my ( $self, @args ) = @_;
+    my $opt = 'HASH' eq ref $args[0] ? shift @args : {};
+    my ( $angle ) = @args;
     defined $angle or return;
 
     if ( $angle =~ m/ : /smx ) {
@@ -3254,14 +3319,14 @@ sub _parse_angle {
 	return $angle;
     }
 
+    $opt->{accept}
+	or looks_like_number( $angle )
+	or $self->wail( "Invalid angle '$angle'" );
+
     return $angle;
 }
 
-#	$distance = $self->_parse_distance ($string, $units)
-
-#	Strips 'm', 'km', 'au', 'ly', or 'pc' from the end of $string,
-#	the default being $units. Converts to km.
-
+# Documented in POD
 {
     my %units = (
 	au => AU,
@@ -3273,51 +3338,42 @@ sub _parse_angle {
 	pc => PARSEC,
     );
 
-    sub _parse_distance {
+    sub __parse_distance {
 	my ($self, $string, $dfdist) = @_;
 	defined $dfdist or $dfdist = 'km';
 	my $dfunits = $dfdist =~ s/ ( [[:alpha:]]+ ) \z //smx ? $1 : 'km';
 	my $units = lc (
-	    $string =~ s/ ( [[:alpha:]]+ ) \z //smx ? $1 : $dfunits);
+	    $string =~ s/ \s* ( [[:alpha:]]+ ) \z //smx ? $1 : $dfunits );
 	$units{$units}
-	    or $self->_wail( "Units of '$units' are unknown" );
+	    or $self->wail( "Units of '$units' are unknown" );
 	$string ne '' or $string = $dfdist;
 	looks_like_number ($string)
-	    or $self->_wail( "'$string' is not a number" );
+	    or $self->wail( "'$string' is not a number" );
 	return $string * $units{$units};
     }
 }
 
-#	$time = $satpass2->_parse_time($string, $default)
+# Documented in POD
 
-#	Parses a time string in any known format. Strings with a
-#	leading "+" or "-" are assumed to be relative to the last
-#	explicit setting. Otherwise the time is assumed to be explicit,
-#	and passed to Date::Manip. The parsed time is returned. If the
-#	time to be parsed is false (in the Perl sense) we return the
-#	default (if specified) or the current time. We die on an
-#	invalid time.
-
-sub _parse_time {
+sub __parse_time {
     my ($self, $time, $default) = @_;
     my $pt = $self->{time_parser};
     if ( defined( my $time = $pt->parse( $time, $default ) ) ) {
 	return $time;
     }
-    $self->_wail( "Invalid time '$time'" );
+    $self->wail( "Invalid time '$time'" );
     return;
 }
 
 
 #	Reset the last time set.
 
-sub _parse_time_reset {
+sub __parse_time_reset {
     my ( $self ) = @_;
-    my $pt = $self->{time_parser};
-    defined $pt
-	or $self->_weep( '$self->{time_parser} not defined' );
+    defined ( my $pt = $self->{time_parser} )
+	or return;
     $pt->reset();
-    return $pt->base();
+    return;
 }
 
 #	$string = _rad2hms ($angle)
@@ -3340,7 +3396,7 @@ sub _rad2hms {
 #
 #	Acquire a line from $in, which must be a code reference taking
 #	the prompt as an argument. If $in is not a code reference, or if
-#	it returns undef, we _wail() with the error message.  Otherwise
+#	it returns undef, we wail() with the error message.  Otherwise
 #	we return the line read. I expect this to be used only by
 #	_tokenize().
 
@@ -3351,9 +3407,9 @@ sub _read_continuation {
 	or do {
 	    $error or return;
 	    ref $error eq 'CODE' and return $error->();
-	    $self->_wail( $error );
+	    $self->wail( $error );
 	};
-    $self->{echo} and $self->_whinge( $prompt, $more );
+    $self->{echo} and $self->whinge( $prompt, $more );
     $more =~ m/ \n \z /smx or $more .= "\n";
     return $more;
 }
@@ -3594,29 +3650,31 @@ sub _read_continuation {
 	},
     );
 
+    # Called by macro object's __level1_rewrite().
+    sub __rewrite_level1_macro_def {
+	my ( $self, $name, $args ) = @_;
+
+	my ( $rewrote, @rslt );
+	foreach ( @{ $args } ) {
+	    if ( m/ ( \S+ ) /smx
+		    and ( not $self->{macro}{$1}
+			or $1 eq $name )
+		    and my $code = $filter{$1} ) {
+		push @rslt, $code->( $1, $_ );
+		$rewrote++;
+	    } else {
+		push @rslt, $_;
+	    }
+	}
+
+	return $rewrote ? \@rslt : $args;
+    }
+
     sub _rewrite_level1_macros {
 	my ( $self ) = @_;
 
-	while ( my ( $name, $macro ) = each %{ $self->{macro} } ) {
-
-	    delete $macro->{level1} or next;
-
-	    my ( $rewrote, @rslt );
-	    foreach ( @{ $macro->{def} } ) {
-		if ( m/ ( \S+ ) /smx
-			and ( not $self->{macro}{$1}
-			    or $1 eq $name )
-			and my $code = $filter{$1} ) {
-		    push @rslt, $code->( $1, $_ );
-		    $rewrote++;
-		} else {
-		    push @rslt, $_;
-		}
-	    }
-
-	    $rewrote
-		and $macro->{def} = \@rslt;
-
+	foreach my $macro ( values %{ $self->{macro} } ) {
+	    $macro->__level1_rewrite();
 	}
 
 	return;
@@ -3655,34 +3713,17 @@ sub _simbad4 {
 format obj "$fmt"
 query id $query
 EOD
-	or $self->_wail("No entry found for $query");
+	or $self->wail("No entry found for $query");
     @rslt > 1
-	and $self->_wail("More than one entry found for $query");
+	and $self->wail("More than one entry found for $query");
     @rslt = map {$rslt[0]{$_} eq '~' ? 0 : $rslt[0]{$_} || 0} qw{
 	ra dec plx pmra pmdec radial};
     ($rslt[0] && $rslt[1])
-	or $self->_wail("No position returned by $query");
+	or $self->wail("No position returned by $query");
     $rslt[2] = $rslt[2] ? 1000 / $rslt[2] : 10000;
     $rslt[3] and $rslt[3] /= 1000;
     $rslt[4] and $rslt[4] /= 1000;
     return wantarray ? @rslt : join ' ', @rslt;
-}
-
-#	$result = $self->_tilde_expand($token);
-#
-#	This does a tilde expansion on the token. If the token does not
-#	in fact begin with a tilde, it is simply returned. If it does
-#	begin with a tilde, everything between the tilde and the first
-#	slash is considered to be a username. If the username is empty
-#	the user's home directory is prepended, otherwise the given
-#	user's home directory is prepended, or an exception is thrown if
-#	getpwnam doesn't work or the user does not exist.
-
-sub _tilde_expand {
-    my ( $self, $fn ) = @_;
-    $fn =~ m{ \A ~ ( [^/]* ) }smx or return $fn;
-    substr $fn, 0, $+[0], $self->_user_home_dir( $1 );
-    return $fn;
 }
 
 #	@result = _unescape( @args );
@@ -3696,23 +3737,6 @@ sub _unescape {
 	s/ \\ (.) /$1/smxg;
     }
     return @args;
-}
-
-#	$dir = $self->_user_home_dir( $user );
-#
-#	Find the home directory for the given user, croaking if this can
-#	not be done. If $user is '' or undef, returns the home directory
-#	for the current user.
-
-sub _user_home_dir {
-    my ( $self, $user ) = @_;
-    defined $user or $user = '';
-    '+' eq $user and return Cwd::cwd();
-    '' eq $user and return File::HomeDir->my_home();
-    my $home_dir = File::HomeDir->users_home( $user );
-    defined $home_dir
-	or $self->_wail( "Unable to find home for $user" );
-    return $home_dir;
 }
 
 #	($tokens, $redirect) = $self->_tokenize(
@@ -3753,7 +3777,7 @@ sub _user_home_dir {
 #	returned. If noredirect and single are both specified, the
 #	parsed and interpolated token is returned.
 #
-#	If interpolation is being done, an un-escaped dollar sign
+#	If interpolation is being done, an unescaped dollar sign
 #	introduces the interpolation. This works pretty much the same
 #	way as under bash: if the first character after the dollar sign
 #	is a left curly bracket, everything to the corresponding right
@@ -3946,7 +3970,7 @@ sub _user_home_dir {
 			$name .= $char;
 		    }
 		    $char eq '}'
-			or $self->_wail("Missing right curly bracket");
+			or $self->wail("Missing right curly bracket");
 		
 		# If the name begins with an alpha or an underscore, we
 		# simply append any word ('\w') characters to it and
@@ -4026,11 +4050,11 @@ sub _user_home_dir {
 				s/ \A \s+ //smx;
 			    }
 			    @pos > 2
-				and $self->_wail(
+				and $self->wail(
 				"Substring expansion has extra arguments" );
 			    foreach ( @pos ) {
 				m/ \A [-+]? \d+ \z /smx
-				    or $self->_wail(
+				    or $self->wail(
 				    "Substring expansion argument non-numeric"
 				);
 			    }
@@ -4066,7 +4090,7 @@ sub _user_home_dir {
 		    } elsif ($flag eq '=') {
 			$value = $mod;
 			if ( $special{$name} || $name !~ m/ \D /smx ) {
-			    $self->_wail("Cannot assign to \$$name");
+			    $self->wail("Cannot assign to \$$name");
 ##			} elsif ($name !~ m/\D/) {
 ##			    $args->[$name - 1] = $value;
 			} elsif (exists $mutator{$name}) {
@@ -4080,7 +4104,7 @@ sub _user_home_dir {
 		    # as the text.
 
 		    } elsif ($flag eq '?') {
-			$self->_wail($mod);
+			$self->wail($mod);
 
 		    # If there is no cabbalistic sign at all, we fell
 		    # through here trying to do substring expansion on
@@ -4162,7 +4186,7 @@ sub _user_home_dir {
 		    if ($next eq $char) {
 			$rslt[-1]{mode} .= $next;
 			length $rslt[-1]{mode} > 2
-			    and $self->_wail(
+			    and $self->wail(
 			    "Syntax error near $rslt[-1]{mode}");
 		    } else {
 			--$inx;
@@ -4253,8 +4277,8 @@ sub _user_home_dir {
 	# multi-line quotes, and if we have run out of input we catch it
 	# above.
 
-	$absquote and $self->_wail( 'Unclosed terminal single quote' );
-	$relquote and $self->_wail( 'Unclosed terminal double quote' );
+	$absquote and $self->wail( 'Unclosed terminal single quote' );
+	$relquote and $self->wail( 'Unclosed terminal double quote' );
 
 	# Go through our prospective tokens, keeping only those that
 	# were actually defined, and shuffling the redirects off into
@@ -4272,12 +4296,12 @@ sub _user_home_dir {
 		    $redir{$type} = {
 			mode => $_->{mode},
 			name => ($_->{expand} ?
-			    $self->_tilde_expand($_->{token}) :
+			    $self->expand_tilde($_->{token}) :
 			    $_->{token}),
 		    };
 		}
 	    } else {
-		push @tokens, $_->{tilde} ? $self->_tilde_expand($_->{token}) :
+		push @tokens, $_->{tilde} ? $self->expand_tilde($_->{token}) :
 		    $_->{token};
 	    }
 	}
@@ -4346,37 +4370,37 @@ sub _user_home_dir {
     }
 }
 
-#	$self->_wail(...)
+#	$self->wail(...)
 #
 #	Either die or croak with the arguments, depending on the value
 #	of the 'warning' attribute. If we die, a trailing period and
 #	newline are provided if necessary. If we croak, any trailing
 #	punctuation and newline are stripped.
 
-sub _wail {
+sub wail {
     my ($self, @args) = @_;
     $self->{_warner}->wail( @args );
     return;	# We can't hit this, but Perl::Critic does not know that.
 }
 
-#	$self->_weep(...)
+#	$self->weep(...)
 #
 #	Die with a stack dump (Carp::confess).
 
-sub _weep {
+sub weep {
     my ($self, @args) = @_;
     $self->{_warner}->weep( @args );
     return;	# We can't hit this, but Perl::Critic does not know that.
 }
 
-#	$self->_whinge(...)
+#	$self->whinge(...)
 #
 #	Either warn or carp with the arguments, depending on the value
 #	of the 'warn' attribute. If we warn, a trailing period and
 #	newline are provided if necessary. If we carp, any trailing
 #	punctuation and newline are stripped.
 
-sub _whinge {
+sub whinge {
     my ($self, @args) = @_;
     $self->{_warner}->whinge( @args );
     return;
@@ -5246,12 +5270,15 @@ are available:
  'brief' lists the names of defined macros;
  'list' lists the definitions of macros;
  'delete' deletes macros;
- 'define' defines a macro.
+ 'define' defines a command macro;
+ 'load' loads a code macro.
 
-For semi-compatibility backward, each of these can be specified with a
-leading dash (e.g. '-delete'). With the leading dash specified,
-subcommands can be abbreviated as long as the abbreviation is unique.
-For example, '-del' is equivalent to 'delete', but 'del' is not.
+For semi-compatibility backward, each of these except C<'load'> can be
+specified with a leading dash (e.g. '-delete'). With the leading dash
+specified, subcommands can be abbreviated as long as the abbreviation is
+unique.  For example, '-del' is equivalent to 'delete', but 'del' is
+not. This compatibility functionality will go away when support for
+compatibility with the F<satpass> script does.
 
 If no arguments at all are provided to C<macro()>, 'brief' is assumed.
 
@@ -5266,6 +5293,12 @@ subsequent arguments are the commands that make up that macro. For
 example, 'say' can be defined in terms of 'echo' by
 
  $satpass2->macro( define => say => 'echo $@' );
+
+The first argument of the C<'load'> subcommand is the name of a Perl
+module (e.g. C<My::Macros>) that implements one or more code macros.
+Subsequent arguments, if any, are the names of macros to load from the
+module. If no subsequent arguments are given, all macros defined by the
+macro are loaded.
 
 For subcommands other than 'define', the arguments are macro names.
 
@@ -5874,6 +5907,189 @@ appropriate.
 This interactive method simply returns C<Astro::App::Satpass2> version
 information.
 
+=head2 wail
+
+ $satpass2->wail( 'Something went wrong' );
+
+This non-interactive method is simply a wrapper for our
+C<Astro::App::Satpass2::Warner> object's C<wail()> method, which
+corresponds more or less to C<Carp::croak()>.
+
+=head2 weep
+
+ $satpass2->weep( 'Something went very wrong' );
+
+This non-interactive method is simply a wrapper for our
+C<Astro::App::Satpass2::Warner> object's C<weep()> method, which
+corresponds more or less to C<Carp::confess()>.
+
+=head2 whinge
+
+ $satpass2->whinge( 'Something went a little wrong' );
+
+This non-interactive method is simply a wrapper for our
+C<Astro::App::Satpass2::Warner> object's C<whinge()> method, which
+corresponds more or less to C<Carp::carp()>.
+
+=head2 __choose
+
+ $chosen = $self->__choose( \%opt, \@choice, @list )
+ @chosen = $self->__choose( \%opt, \@choice, @list )
+
+This method is exposed for the use of code macros, and is unsupported
+until such time as code macros themselves are.
+
+This method filters the list of bodies provided in C<@list> according to
+the criteria in C<@choice> (possibly modified by the options in C<%opt>,
+and returns all matching bodies. If called in scalar context, it returns
+a reference to an array containing all matching bodies.
+
+Argument C<\%opt> is optional, and defaults to an empty hash. If
+present, it specifies modifiers for the choice operation. The supported
+options are:
+
+=over
+
+=item invert
+
+If specified as a true value, it inverts the sense of the match; that
+is, the return is everything B<not> selected by the C<\@choice>
+argument.
+
+=item bodies
+
+If specified as a true value, all currently-loaded orbiting bodies (that
+is, all objects displayed by
+
+ satpass2> list
+ 
+)will be aggregated and appended to the C<@list>.
+
+=item sky
+
+If specified as a true value, all currently-loaded background objects
+(that is, objects displayed by
+
+ satpass2> sky list
+
+) will be appended to the C<@list>.
+
+=back
+
+The C<\@choice> argument specifies things to choose from the C<@list>.
+It must be specified, but may be specified as C<undef>. If C\<@list> is
+C<undef> or a reference to an empty array, the entire contents of
+C<@list> are returned. Otherwise all objects in C<@list> that match any
+item in C<@choice> are returned -- unless C<invert> is in effect, in
+which case all objects in C<@list> that match no item in C<@choice> are
+returned.
+
+The contents of C<@choice> are interpreted as follows:
+
+=over
+
+=item strings
+
+Strings are split on commas, and the resultant pieces used as though
+they were specified separately. Numbers greater than C<999> are assumed
+to be OIDs, and select objects having that value of the C<'id'>
+attribute of each item in C<@list>. Anything else is made into an
+unanchored regular expression and matched to the value of the C<'name'>
+attribute of each item in C<@list>.
+
+=item Regexp objects
+
+These are matched against the value of the C<'name'> attribute of each
+item in C<@list>.
+
+=back
+
+The C<@list> argument is actually optional, though if it is omitted
+nothing interesting happens unless the C<bodies> or C<sky> options (or
+both) are specified.
+
+The C<@list> argument is expected to contain C<Astro::Coord::ECI>
+objects (or, of course, C<Astro::Coord::ECI::TLE::Set> objects), or
+references to arrays of such objects. Any array references are flattened
+into C<@list> before processing.
+
+=head2 __parse_angle
+
+ $angle = $satpass2->__parse_angle( $string );
+
+This method is exposed for the use of code macros, and is unsupported
+until such time as code macros themselves are.
+
+This method parses the C<$string> as an angle in degrees,
+hours:minutes:seconds of right ascension, or degreesDminutesMsecondsS of
+arc, and returns the angle in degrees. If C<$string> is C<undef>, we
+simply return. An exception is thrown if the C<$string> can not be
+parsed.
+
+A reference to an options hash can be passed before the C<$string>
+argument. The supported options are:
+
+=over
+
+=item accept
+
+If this is true (in the perl sense) anything not parsed as an angle is
+simply returned. In this case the caller is responsible for being sure
+the return is valid.
+
+=back
+
+=head2 __parse_distance
+
+ $distance = $self->__parse_distance( $string, $default_units );
+
+This method is exposed for the use of code macros, and is unsupported
+until such time as code macros themselves are.
+
+This method parses the C<$string> as a distance, applying the
+C<$default_units> if no units are specified, and returns the distance in
+kilometers.
+
+The C<$string> is presumed to be a magnitude and optional appended
+units. Supported units are:
+
+ au - astronomical units
+ ft - feet
+ km - kilometers
+ ly - light years
+ m -- metars
+ mi - miles
+ pc - parsecs
+
+Specified units are converted to lower case before use.
+
+=head2 __parse_time
+
+ $time = $satpass2->__parse_time( $string, $default );
+
+This method is exposed for the use of code macros, and is unsupported
+until such time as code macros themselves are.
+
+This method parses the C<$string> as a time and returns the time. If
+C<$string> is false (in the Perl sense) we return C<$default>.
+
+If C<$string> begins with a C<'+'> or C<'-'>, it is assumed to be
+an offset in C<days hours:minutes:seconds> from the last
+explicitly-specified time. Otherwise it is handed to C<Date::Manip> for
+parsing. Invalid times result in an exception.
+
+=head2 __parse_time_reset
+
+ $satpass2->__parse_time();
+
+This method is exposed for the use of code macros, and is unsupported
+until such time as code macros themselves are.
+
+This method resets the time parser. The reason for doing this is to
+prevent relative times from leaking from one method to another. It is
+called by C<__arguments()>, so there should be no need for any code that
+calls C<__arguments()> to call this on its own.
+
 =head1 ATTRIBUTES
 
 The Astro::App::Satpass2 object has a number of attributes to configure its
@@ -5970,8 +6186,12 @@ The default is 'us'.
 
 This string attribute is deprecated. It is provided for backward
 compatibility with the F<satpass> script. The preferred way to
-manipulate this is either directly on the formatter object, or via the
-L<formatter()|/formatter> method.
+manipulate this is either directly on the formatter object (if you set
+it yourself and retained a reference), or via the
+L<formatter()|/formatter> method, e.g.:
+
+ $satpass2->get( 'formatter' )->date_format( '%d-%b-%Y' );
+ satpass2> formatter date_format '%d-%b-%Y'
 
 This attribute allows access to and manipulation of the formatter
 object's L<date_format|Astro::App::Satpass2::Format/date_format> attribute.
@@ -6334,7 +6554,7 @@ The default is 'model', which specifies whatever model is favored.
 This boolean attribute is deprecated. It is provided for backward
 compatibility with the F<satpass> script. The preferred way to
 manipulate this is either directly on the formatter object, or via the
-L<formatter()|/formatter> method.
+L<time_parser()|/time_parser> method.
 
 This boolean attribute allows access to and manipulation of the time
 parser object's L<perltime|Astro::App::Satpass2::ParseTime/perltime>
@@ -6491,8 +6711,9 @@ The default is C<'civil'>.
 
 This string attribute is deprecated. It is provided for backward
 compatibility with the F<satpass> script. The preferred way to
-manipulate this is either directly on the formatter object, or via the
-L<formatter()|/formatter> method on the relevant objects.
+manipulate this is either directly on the time parser and formatter
+objects, or via the L<formatter()|/formatter> and
+L<time_parser()|/time_parser> methods on the relevant objects.
 
 This string attribute specifies both the default time zone for date
 parsing and the time zone for formatting of local times. This
@@ -6612,10 +6833,10 @@ been specified.
 
 Any time string not beginning with '+' or '-' is assumed to be an
 absolute time, and is fed to one of the
-L<Astro::App::Satpass2::ParseTime|Astro::App::Satpass2::ParseTime> modules for
-parsing. What is legal here depends on which parser is in use. If you
-have L<Date::Manip|Date::Manip>, you will get a parser based on that
-module, with all the functionality that implies. If
+L<Astro::App::Satpass2::ParseTime|Astro::App::Satpass2::ParseTime>
+modules for parsing. What is legal here depends on which parser is in
+use. If you have L<Date::Manip|Date::Manip>, you will get a parser based
+on that module, with all the functionality that implies. If
 L<Date::Manip|Date::Manip> is not installed, you get
 L<Astro::App::Satpass2::ParseTime::ISO8601|Astro::App::Satpass2::ParseTime::ISO8601>,
 which parses a subset of the ISO 8601 times, as a fall-back.

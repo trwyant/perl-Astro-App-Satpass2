@@ -462,7 +462,7 @@ execute 'macro define place location', undef, "Define 'place' macro";
 
 execute 'macro brief', 'place', 'Brief macro listing, with a macro';
 
-execute 'macro list', 'macro define place location', 'Normal macro listing';
+execute 'macro list', "macro define place \\\n    location", 'Normal macro listing';
 
 execute 'place', <<'EOD', 'Execute place macro';
 Location: Royal Observatory, Greenwich England

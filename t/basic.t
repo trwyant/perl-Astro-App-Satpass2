@@ -44,6 +44,18 @@ require_ok 'Astro::App::Satpass2::Copier'
 can_ok 'Astro::App::Satpass2::Copier', @copier_methods
     or BAIL_OUT;
 
+require_ok 'Astro::App::Satpass2::Macro';
+
+require_ok 'Astro::App::Satpass2::Macro::Command';
+
+isa_ok 'Astro::App::Satpass2::Macro::Command',
+    'Astro::App::Satpass2::Macro';
+
+require_ok 'Astro::App::Satpass2::Macro::Code';
+
+isa_ok 'Astro::App::Satpass2::Macro::Code',
+    'Astro::App::Satpass2::Macro';
+
 require_ok 'Astro::App::Satpass2::FormatTime'
     or BAIL_OUT;
 

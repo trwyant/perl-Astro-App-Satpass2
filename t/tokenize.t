@@ -15,6 +15,7 @@ sub tokenize (@);
 sub tokenize_fail (@);
 
 use Astro::App::Satpass2;
+use Astro::App::Satpass2::Utils qw{ my_dist_config };
 
 new;
 
@@ -142,6 +143,24 @@ SKIP:{
 	or dump_tokens;
 
     tokenize q{~/foo}, [ [ "$home/foo" ], {} ]
+	or dump_tokens;
+
+}
+
+SKIP:{
+
+    my $tests = 2;
+
+    my $home;
+    eval {
+	$home = my_dist_config();
+	1;
+    } or skip 'Can not find configuration directory', $tests;
+
+    tokenize q{~~}, [ [ $home ], {} ]
+	or dump_tokens;
+
+    tokenize q{~~/foo}, [ [ "$home/foo" ], {} ]
 	or dump_tokens;
 
 }

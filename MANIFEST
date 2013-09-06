@@ -9,6 +9,7 @@ bin/satpass2
 eg/README
 eg/almanac
 eg/flare_vcalendar
+eg/My/Macros.pm
 eg/pass_vcalendar
 eg/tle_celestia.tt
 eg/tle_json.tt
@@ -19,11 +20,6 @@ inc/Astro/App/Satpass2/Recommend.pm
 inc/Astro/App/Satpass2/Test/App.pm
 inc/Astro/App/Satpass2/Test/Geocode.pm
 lib/Astro/App/Satpass2.pm
-lib/Astro/App/Satpass2/ParseTime.pm
-lib/Astro/App/Satpass2/ParseTime/ISO8601.pm
-lib/Astro/App/Satpass2/ParseTime/Date/Manip.pm
-lib/Astro/App/Satpass2/ParseTime/Date/Manip/v5.pm
-lib/Astro/App/Satpass2/ParseTime/Date/Manip/v6.pm
 lib/Astro/App/Satpass2/Copier.pm
 lib/Astro/App/Satpass2/Format.pm
 lib/Astro/App/Satpass2/Format/Dump.pm
@@ -41,6 +37,14 @@ lib/Astro/App/Satpass2/Geocode.pm
 lib/Astro/App/Satpass2/Geocode/Geocoder/US.pm
 lib/Astro/App/Satpass2/Geocode/OSM.pm
 lib/Astro/App/Satpass2/Geocode/TomTom.pm
+lib/Astro/App/Satpass2/Macro.pm
+lib/Astro/App/Satpass2/Macro/Code.pm
+lib/Astro/App/Satpass2/Macro/Command.pm
+lib/Astro/App/Satpass2/ParseTime.pm
+lib/Astro/App/Satpass2/ParseTime/ISO8601.pm
+lib/Astro/App/Satpass2/ParseTime/Date/Manip.pm
+lib/Astro/App/Satpass2/ParseTime/Date/Manip/v5.pm
+lib/Astro/App/Satpass2/ParseTime/Date/Manip/v6.pm
 lib/Astro/App/Satpass2/TUTORIAL.pod
 lib/Astro/App/Satpass2/Utils.pm
 lib/Astro/App/Satpass2/Warner.pm
@@ -62,6 +66,7 @@ t/geocode_geocoder_us.t
 t/geocode_osm.t
 t/geocode_tomtom.t
 t/list.tt
+t/macro_code.t
 t/parse_time_iso8601.t
 t/parse_time_date_manip_5.t
 t/parse_time_date_manip_6.t

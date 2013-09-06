@@ -64,31 +64,37 @@ method  source => { level1 => 1 }, 't/rewrite_macros',
     undef, 'Load satpass-format macros';
 
 execute 'macro list farmers', <<'EOD', 'Rewrite almanac';
-macro define farmers location \
+macro define farmers \
+    location \
     almanac
 EOD
 
 execute 'macro list glint', <<'EOD', 'Rewrite flare';
-macro define glint 'flare -noam $@'
+macro define glint \
+    'flare -noam $@'
 EOD
 
 execute 'macro list burg', <<'EOD', 'Rewrite localize';
-macro define burg 'localize horizon formatter verbose'
+macro define burg \
+    'localize horizon formatter verbose'
 EOD
 
 execute 'macro list overtake', <<'EOD', 'Rewrite pass';
-macro define overtake location \
+macro define overtake \
+    location \
     'pass $@'
 EOD
 
 execute 'macro list exhibit', <<'EOD', 'Rewrite show';
-macro define exhibit 'formatter date_format' \
+macro define exhibit \
+    'formatter date_format' \
     'show horizon verbose' \
     'formatter time_format'
 EOD
 
 execute 'macro list assign', <<'EOD', 'Rewrite set';
-macro define assign 'set horizon 10' \
+macro define assign \
+    'set horizon 10' \
     'formatter date_format "%a %d-%b-%Y"' \
     'formatter time_format "%I:%M:%S %p"' \
     'set verbose 1 appulse 5' \
@@ -96,11 +102,13 @@ macro define assign 'set horizon 10' \
 EOD
 
 execute 'macro list norad', <<'EOD', 'Rewrite st invocation';
-macro define norad 'st $@'
+macro define norad \
+    'st $@'
 EOD
 
 execute 'macro list st', <<'EOD', 'Rewrite st use';
-macro define st 'spacetrack $@'
+macro define st \
+    'spacetrack $@'
 EOD
 
 done_testing;

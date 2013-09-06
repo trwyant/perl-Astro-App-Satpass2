@@ -502,6 +502,28 @@ The C<time_parser> and C<formatter> time zones are set separately not
 only so that you can make them different, but because the author can not
 guarantee that the underlying modules will accept the same settings.
 
+=head2 Command Macros
+
+A command macro is simply a named set of C<Astro::App::Satpass2>
+commands, somewhat like a C<bash> shell function. A command macro is
+executed by giving its name, so in essence command macros are ways of
+creating new commands.
+
+The definition of a macro is simply the list of commands it issues. Each
+command is a single argument, and therefore probably needs to be quoted.
+When the command to be issued itself contains quotes, you either use a
+different style (single versus double quotes) or you escape the quote
+mark with a back slash (C<'\'>). A simple macro definition would be
+something like
+
+ satpass2> macro defined hi 'echo "Hello world!"'
+
+When a command macro is executed it can be passed arguments. The details
+of how these work will be deferred for the sake of getting on with the
+tutorial, but a case of interest is the fact that C<"$@"> (the quotes
+being part of the syntax) expands to all the arguments passed to the
+macro.
+
 =head2 Multiple Locations
 
 What this topic actually describes is a way to have multiple locations
@@ -509,21 +531,8 @@ on tap, so that if you are going to be at point 'A' from Monday through
 Wednesday, and point 'B' Thursday and Friday you can easily switch
 between them.
 
-This section relies on the fact that C<Astro::App::Satpass2> can define
-a thing called a C<macro>, which is a named set of commands, somewhat
-like a C<bash> shell function. The macro is executed by giving its name,
-so in essence macros are a way to create new commands. You can pass
-arguments to macros, but that is a more advanced topic. Here, we are
-just going to set up macros representing a number of locations.
-
-The definition of a macro is simply the list of commands it issues. Each
-command is a single argument, and therefore probably needs to be quoted.
-When the command to be issued itself contains quotes, you either use a
-different style (single versus double quotes) or you escape the quote
-mark with a back slash (C<'\'>).
-
-The first thing our hypothetical user needs is a macro to set the
-location to his or her home location. The definition comes from our
+The first thing our hypothetical user needs is a command macro to set
+the location to his or her home location. The definition comes from our
 first example:
 
  satpass2> macro define home \
@@ -572,10 +581,11 @@ As you recall from the section on L<IRIDIUM FLARES|/IRIDIUM FLARES>, if
 you are trying to imitate the results from Heavens Above you have to
 tweak the default settings a bit. These settings stay tweaked until you
 put them back to their original values. If you always want the tweaks
-when you do Iridium flare predictions, you can put them into a macro
-along with the flare prediction. Values of settings can be localized to
-a macro (among other things), so that the old values are restored when
-the macro exits. The example could be defined as a macro like this:
+when you do Iridium flare predictions, you can put them into a command
+macro along with the flare prediction. Values of settings can be
+localized to a macro (among other things), so that the old values are
+restored when the macro exits. The example could be defined as a command
+macro like this:
 
  satpass2> macro define iridium_flare \
  > 'localize twilight flare_mag_night' \
@@ -584,14 +594,14 @@ the macro exits. The example could be defined as a macro like this:
  satpass2>
 
 Note the use of single quotes rather than double quotes to enclose the
-C<flare> command. In double
-quotes, or outside quotes altogether, the C<$> is magical, and
-introduces something to be interpolated into the command. Exactly what
-is interpolated depends on what follows the C<$>. The C<$@> is replaced
-by the arguments of the macro (or whatever), but we do not want this to
-happen until the macro is expanded. Enclosing the C<$@> in double quotes
-ensures that macro arguments containing spaces remain single arguments;
-without the double quotes they would become multiple arguments.
+C<flare> command. In double quotes, or outside quotes altogether, the
+C<$> is magical, and introduces something to be interpolated into the
+command. Exactly what is interpolated depends on what follows the C<$>.
+The C<$@> is replaced by the arguments of the command macro (or
+whatever), but we do not want this to happen until the command macro is
+expanded. Enclosing the C<$@> in double quotes ensures that macro
+arguments containing spaces remain single arguments; without the double
+quotes they would become multiple arguments.
 
 So if you say
 
@@ -612,10 +622,10 @@ L<Astro::SpaceTrack|Astro::SpaceTrack> object,
 
  satpass2> localize spacetrack
 
-inside the appropriate scope. Yes, you can localize outside a macro (or
-any other localization scope, such as inside a C<source> file or a
-C<begin>-C<end> block), but it does no good to do so, because the old
-value is not restored until you exit, and what good is that?
+inside the appropriate scope. Yes, you can localize outside a command
+macro (or any other localization scope, such as inside a C<source> file
+or a C<begin>-C<end> block), but it does no good to do so, because the
+old value is not restored until you exit, and what good is that?
 
 =head2 Reporting Position
 
@@ -662,6 +672,136 @@ See the
 L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
 documentation for what format effectors are available. Inside the
 template, the C<data> object will contain the data you want to format.
+
+=head1 ADVANCED TOPICS
+
+=head2 Code Macros
+
+In addition to L<Command Macros|/Command Macros>, a macro can be defined
+using Perl code. This allows one to add new functionality to
+C<Astro::App::Satpass2>, over and above that provided by interactive
+methods.
+
+A code macro is simply a Perl subroutine which is called by
+C<Astro::App::Satpass2> as though it were an interactive method. In the
+following discussion, some words are used with particular meanings:
+
+=over
+
+=item must
+
+means that the code macro will not work unless this is done;
+
+=item should
+
+means that the code macro will work without doing this, but you might
+not like the results;
+
+=item may
+
+means that the code macro will work without doing this, but you might
+want the functionality described.
+
+=back
+
+Now, Perl subroutines do not live in a vacuum. They in fact live in Perl
+modules; that is, F<.pm> files defining a C<package> whose name reflects
+the path name of the file. A module that defines a code macro can be
+installed like a normal Perl module, but can also live in the F<lib/>
+directory in the user's C<Astro::App::Satpass2> configuration directory.
+
+In addition to the things that go into making a Perl module, a module
+that provides code macros:
+
+=over
+
+=item must be a subclass of C<Astro::App::Satpass2>;
+
+=item must import C<__arguments()> from C<Astro::App::Satpass2::Utils>.
+
+=back
+
+In order to work as a code macro, a subroutine:
+
+=over
+
+=item must have the C<Verb()> attribute
+
+Subroutine attributes are declared after the name (and signature if any)
+and a colon.
+
+The contents of the parentheses that follow the attribute name will be
+split on white space and used as L<Getopt::Long|Getopt::Long> option
+specifications should these be needed to process the subroutine's
+arguments.
+
+=item may have the C<Configure()> attribute
+
+If this attribute is present, the contents of the parentheses will be
+used to configure the L<Getopt::Long|Getopt::Long> object prior to
+processing the subroutine's arguments.
+
+=item must call C<__arguments()> to unpack C<@_>
+
+This subroutine is imported from
+L<Astro::App::Satpass2::Utils|Astro::App::Satpass2::Utils>. See this
+documentation for details of its use.
+
+=item should report warnings and exceptions properly
+
+In order to have warnings and exceptions be handled consistently with
+the rest of C<Astro::App::Satpass2>, C<< $self->whinge() >> should be
+called instead of C<warn> or C<Carp::carp()>, C<< $self->wail() >>
+should be called instead of C<die> or C<Carp::croak() >>, and
+C<< $self->weep() >> instead of C<Carp::confess() >>.
+
+=item must return human-readable results
+
+This almost goes without saying, since it is the string returned by the
+subroutine which will be displayed.
+
+=back
+
+You should be aware that the first argument to your code macro
+subroutine is the C<Astro::App::Satpass2> object that called it. This is
+B<not> reblessed into the package that contains the code macro, so it is
+not an invocant in the usual sense. This has several implications,
+including:
+
+=over
+
+=item * You can not call other code in your module as methods;
+
+This is a direct result of the "invocant" not being blessed into the
+name space of your module.
+
+=item * Your code macro can not be called as a method;
+
+This is because nothing has been done to make it appear in the
+invocant's name space.
+
+=item * Your code can not recurse, even indirectly via a command macro.
+
+This is because all macros become undefined within the scope of their
+own execution, so that a macro of any sort that redefines an interactive
+method has access to the original method.
+
+=back
+
+If you want to call your code macro from inside Perl code, you must call
+it as
+
+ $satpass2->dispatch( your_code_macro => ... );
+
+and capture any output that is returned. Note that you can still specify
+options either command-line style or as a hash reference in the second
+argument to C<dispatch()>.
+
+However, calling C<dispatch()> inside your code macro is unsupported.
+This does not mean it is forbidden; rather it means that the author does
+not intend to provide any particular behavior when this is done, and
+whatever the behavior actually is he reserves the right to change it
+without notice of any sort at any time.
 
 =head1 AUTHOR
 

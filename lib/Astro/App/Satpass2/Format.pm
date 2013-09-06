@@ -123,7 +123,7 @@ sub attribute_names {
 	    my $rslt = $self->$method( @args );
 	    @args and return $rslt;
 	    $rslt or return $rslt;
-	    return $self->{time_formatter}->strftime(
+	    return $self->{time_formatter}->format_datetime(
 		$self->{time_formatter}->ISO_8601_FORMAT(),
 		$rslt, 1 );
 	},

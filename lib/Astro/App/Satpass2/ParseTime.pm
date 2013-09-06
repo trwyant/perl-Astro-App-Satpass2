@@ -1,10 +1,13 @@
 package Astro::App::Satpass2::ParseTime;
 
+use 5.008;
+
 use strict;
 use warnings;
 
 use base qw{ Astro::App::Satpass2::Copier };
 
+use Astro::App::Satpass2::FormatTime;
 use Astro::App::Satpass2::Utils qw{ load_package };
 use Astro::Coord::ECI::Utils qw{ looks_like_number };
 
@@ -95,6 +98,19 @@ sub delegate {	## no critic (RequireFinalReturn)
 {
 
     my %decoder = (
+	base	=> sub {
+	    my ( $self, $method, @args ) = @_;
+	    my $rslt = $self->$method( @args );
+	    @args
+		and return $rslt;
+	    $rslt
+		or return $rslt;
+	    $self->{_time_formatter} ||=
+		Astro::App::Satpass2::FormatTime->new();
+	    return $self->{_time_formatter}->format_datetime(
+		$self->{_time_formatter}->ISO_8601_FORMAT(),
+		$rslt, 1 );
+	},
     );
 
     sub decode {
@@ -117,15 +133,16 @@ sub delegate {	## no critic (RequireFinalReturn)
     sub parse {
 	my ( $self, $string, $default ) = @_;
 
-	defined $string and '' ne $string or do {
-	    defined $default and $self->{absolute} = $default;
+	if ( ! defined $string || '' eq $string ) {
+	    defined $default
+		and $self->base( $self->{absolute} = $default );
 	    return $default;
-	};
+	}
 
 	if ( $string =~ m/ \A \s* [+-] /smx ) {
 	    defined $self->{base} or return;
 	    defined $self->{absolute}
-		or $self->{absolute} = $self->{base};
+		or $self->{absolute} = $self->base();
 	    $string =~ s/ \A \s+ //smx;
 	    $string =~ s/ \s+ \z //smx;
 	    my $sign = substr $string, 0, 1;
@@ -143,17 +160,17 @@ sub delegate {	## no critic (RequireFinalReturn)
 	    return ( $self->{absolute} = $dt + $self->{absolute} );
 
 	} elsif ( $string =~
-	    m/ \A epoch \s+ ( \d+ (?: [.] \d* )? ) \z /smx ) {
+	    m/ \A epoch \s* ( \d+ (?: [.] \d* )? ) \z /smx ) {
 
 	    my $time = $1 + 0;
-	    $self->{base} = $self->{absolute} = $time;
+	    $self->base( $self->{absolute} = $time );
 	    return $time;
 
 	} else {
 
 	    defined( my $time = $self->parse_time_absolute( $string ) )
 		or return;
-	    $self->{base} = $self->{absolute} = $time;
+	    $self->base( $self->{absolute} = $time );
 	    return $time;
 
 	}
@@ -171,8 +188,8 @@ sub parse_time_absolute {	## no critic (RequireFinalReturn)
 }
 
 sub reset : method {	## no critic (ProhibitBuiltinHomonyms)
-    my ( $self ) = shift;
-    $self->{absolute} = $self->{base};
+    my ( $self ) = @_;
+    $self->{absolute} = $self->base();
     return $self;
 }
 
@@ -246,8 +263,9 @@ Astro::App::Satpass2::ParseTime - Parse time for Astro::App::Satpass2
 =head1 NOTICE
 
 This class and its subclasses are private to the
-L<Astro::App::Satpass2|Astro::App::Satpass2> package. The author reserves the right to
-add, change, or retract functionality without notice.
+L<Astro::App::Satpass2|Astro::App::Satpass2> package. The author
+reserves the right to add, change, or retract functionality without
+notice.
 
 =head1 DETAILS
 
@@ -412,11 +430,13 @@ with, and return whatever C<SUPER::> returns.
 
 =head2 parse
 
- defined( $epoch_time = $pt->parse( $string ) )
+ defined( $epoch_time = $pt->parse( $string, $default ) )
    or die "'$string' can not be parsed.";
 
-This method parses a time, returning the resultant Perl time. If the
-string fails to parse, C<undef> is returned.
+This method parses a time, returning the resultant Perl time. If
+C<$string> is C<undef> or C<''>, $default is returned, or C<undef> if
+C<$default> is not specified. If C<$string> fails to parse, C<undef> is
+returned.
 
 =head2 reset
 
