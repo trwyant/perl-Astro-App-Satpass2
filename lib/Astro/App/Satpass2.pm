@@ -9,7 +9,7 @@ use Astro::App::Satpass2::Macro::Command;
 use Astro::App::Satpass2::Macro::Code;
 use Astro::App::Satpass2::ParseTime;
 use Astro::App::Satpass2::Utils qw{
-    __arguments expand_tilde has_method instance load_package
+    __arguments expand_tilde fold_case has_method instance load_package
     my_dist_config quoter
 };
 
@@ -1878,10 +1878,10 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 {
 
     my %planet_class = (
-	( map { _fold_case( $_ ) => "Astro::Coord::ECI::$_" } qw{ Sun
+	( map { fold_case( $_ ) => "Astro::Coord::ECI::$_" } qw{ Sun
 	    Moon } ),
 	# The shape of things to come -- maybe
-	( map { _fold_case( $_ ) =>
+	( map { fold_case( $_ ) =>
 	    "Astro::Coord::ECI::Heliocentric::$_" } qw{ Mercury Venus
 	    Mars Jupiter Saturn Uranus Neptune } ),
     );
@@ -1923,7 +1923,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    my ( $self, @args ) = @_;
 	    my $name = shift @args
 		or $self->wail("You did not specify what to add");
-	    my $fcn = _fold_case( $name );
+	    my $fcn = fold_case( $name );
 	    if ( my $class = $planet_class{$fcn} ) {
 		foreach my $body ( @{ $self->{sky} } ) {
 		    $body->isa( $class )
@@ -1936,7 +1936,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    } else {
 		foreach my $body ( @{ $self->{sky} } ) {
 		    $body->isa( 'Astro::Coord::ECI::Star' )
-			and $fcn eq _fold_case( $body->get( 'name' ) )
+			and $fcn eq fold_case( $body->get( 'name' ) )
 			and return;
 		}
 		@args >= 2 
@@ -2720,19 +2720,6 @@ sub _file_reader_SCALAR {
 	or $self->wail( "Failed to open SCALAR ref: $!" );
 
     return sub { return scalar <$fh> };
-}
-
-BEGIN {
-
-    # sub _fold_case(). This needs to be inside a BEGIN block because it
-    # is called to initialize the planet-to-class map.
-
-    if ( my $code = CORE->can( 'fc' ) ) {
-	*_fold_case = sub { $code->( $_[0] ) };
-    } else {
-	*_fold_case = sub { lc $_[0] };
-    }
-
 }
 
 #	$text = $satpass2->_format_data( $template, $data, $opt );

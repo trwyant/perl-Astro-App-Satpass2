@@ -129,6 +129,7 @@ perigee
 perltime
 pm
 POSIX
+pre
 precessed
 preprocessed
 preprocessing

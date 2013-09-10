@@ -15,10 +15,15 @@ use Scalar::Util qw{ blessed looks_like_number };
 our $VERSION = '0.013';
 
 our @EXPORT_OK = qw{
-    __arguments expand_tilde
+    __arguments expand_tilde fold_case
     has_method instance load_package merge_hashes my_dist_config quoter
     __date_manip_backend
 };
+
+BEGIN {
+    *fold_case = CORE->can( 'fc' ) || CORE->can( 'lc' ) ||
+	sub { return lc $_[0] };
+}
 
 # Documented in POD
 
@@ -298,6 +303,19 @@ configuration directory).
 
 All that is required of the invocant is that it support the package's
 suite of error-reporting methods C<whinge()>, C<wail()>, and C<weep()>.
+
+=head2 fold_case
+
+ my $folded = fold_case( $text );
+
+This subroutine performs best-effort case folding of data for case-blind
+operations. Under Perl 5.16 or higher, it is an alias for the C<fc()>
+built-in. Otherwise it is an alias for the C<lc()> built-in if that can
+be aliased. As a last resort under older Perls, it is a subroutine that
+calls C<lc()> on its argument. The exact output should not be relied on,
+and in particular the author may make unannounced twiddles to the
+pre-5.16 case if a strong case for something more sophisticated than a
+simple C<lc()> manifests itself.
 
 =head2 has_method
 
