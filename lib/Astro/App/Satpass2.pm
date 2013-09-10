@@ -406,7 +406,7 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter
 
 #	Sort the almanac data by date, and display the results.
 
-    return $self->_format_data(
+    return $self->__format_data(
 	almanac => [
 	    sort { $a->{time} <=> $b->{time} }
 	    grep { $opt->{$_->{almanac}{event}} }
@@ -732,7 +732,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! q
 	};
     }
 
-    return $self->_format_data(
+    return $self->__format_data(
 	flare => [
 	    sort { $a->{time} <=> $b->{time} }
 	    grep { $_->{magnitude} <= $flare_mag['day' eq $_->{type}] }
@@ -974,7 +974,7 @@ sub list : Verb( choose=s@ ) {
     my @bodies = $self->__choose( $opt->{choose}, $self->{bodies} );
 
     @bodies
-	and return $self->_format_data(
+	and return $self->__format_data(
 	    list => \@bodies, $opt );
 
     $self->{warn_on_empty}
@@ -1062,7 +1062,7 @@ sub _localize {
 
 sub location : Verb( dump! ) {
     my ( $self, $opt ) = __arguments( @_ );
-    return $self->_format_data(
+    return $self->__format_data(
 	location => $self->station(), $opt );
 }
 
@@ -1296,7 +1296,7 @@ sub pass : Verb( choose=s@ appulse! chronological! dump! events! horizon|rise|se
 		@accumulate;
     }
 
-    return $self->_format_data(
+    return $self->__format_data(
 	$template => \@accumulate, $opt );
 }
 
@@ -1334,7 +1334,7 @@ sub phase : Verb( choose=s@ ) {
 
     my @sky = $self->__choose( $opt->{choose}, $self->{sky} )
 	or $self->wail( 'No bodies selected' );
-    return $self->_format_data(
+    return $self->__format_data(
 	phase => [
 	    map { { body => $_->universal( $time ), time => $time } }
 	    grep { $_->can( 'phase' ) }
@@ -1386,7 +1386,7 @@ sub position : Verb( choose=s@ questionable|spare! quiet! ) {
 	};
     }
 
-    return $self->_format_data(
+    return $self->__format_data(
 	position => {
 	    bodies		=> \@good,
 	    questionable	=> $opt->{questionable},
@@ -1430,7 +1430,7 @@ sub quarters : Verb( choose=s@ dump! ) {
 
 #	Sort and display the quarter-phase information.
 
-    return $self->_format_data(
+    return $self->__format_data(
 	almanac => [
 	    sort { $a->{time} <=> $b->{time} }
 	    @almanac
@@ -2330,7 +2330,7 @@ sub tle : Verb( verbose! ) {
 
     my $bodies = $self->__choose( \@args, $self->{bodies} );
     my $method = $opt->{verbose} ? 'tle_verbose' : 'tle';
-    return $self->_format_data(
+    return $self->__format_data(
 	$method => $bodies, $opt );
 }
 
@@ -2722,16 +2722,9 @@ sub _file_reader_SCALAR {
     return sub { return scalar <$fh> };
 }
 
-#	$text = $satpass2->_format_data( $template, $data, $opt );
-#
-#	This method expects a $template name, the $data to be formatted
-#	by the template, and an optional $opt hash reference. If the
-#	{dump} key in $opt is true, the $data are formatted using a
-#	dumper template, otherwise they are formatted by the current
-#	Template object. The $data are the data used by the template,
-#	typically (though not necessarily) an array reference.
+# Documented in POD
 
-sub _format_data {
+sub __format_data {
     my ( $self, $action, $data, $opt ) = @_;
     return $self->_get_formatter_object( $opt )->format(
 	template => $action,
@@ -3362,7 +3355,8 @@ sub __parse_time {
 }
 
 
-#	Reset the last time set.
+#	Reset the last time set. This is called from __arguments() in
+#	::Utils if the invocant is an Astro::App::Satpass2.
 
 sub __parse_time_reset {
     my ( $self ) = @_;
@@ -5294,7 +5288,9 @@ The first argument of the C<'load'> subcommand is the name of a Perl
 module (e.g. C<My::Macros>) that implements one or more code macros.
 Subsequent arguments, if any, are the names of macros to load from the
 module. If no subsequent arguments are given, all macros defined by the
-macro are loaded.
+macro are loaded. Code macros are experimental. See
+L<Astro::App::Satpass2::TUTORIAL|Astro::App::Satpass2::TUTORIAL> for how
+to write one.
 
 For subcommands other than 'define', the arguments are macro names.
 
@@ -6009,6 +6005,20 @@ objects (or, of course, C<Astro::Coord::ECI::TLE::Set> objects), or
 references to arrays of such objects. Any array references are flattened
 into C<@list> before processing.
 
+=head2 __format_data
+
+ $text = $satpass2->__format_data( $template, $data, $opt );
+
+This method is exposed for the use of code macros, and is unsupported
+until such time as code macros themselves are.
+
+This method expects a C<Template-Toolkit> C<$template> name, the
+C<$data> to be formatted by the template, and an optional C<$opt> hash
+reference. If the {dump} key in $opt is true, the C<$data> are formatted
+using a dumper template, otherwise they are formatted by the current
+Template object. The C<$data> are the data used by the template,
+typically (though not necessarily) an array reference.
+
 =head2 __parse_angle
 
  $angle = $satpass2->__parse_angle( $string );
@@ -6073,18 +6083,6 @@ If C<$string> begins with a C<'+'> or C<'-'>, it is assumed to be
 an offset in C<days hours:minutes:seconds> from the last
 explicitly-specified time. Otherwise it is handed to C<Date::Manip> for
 parsing. Invalid times result in an exception.
-
-=head2 __parse_time_reset
-
- $satpass2->__parse_time();
-
-This method is exposed for the use of code macros, and is unsupported
-until such time as code macros themselves are.
-
-This method resets the time parser. The reason for doing this is to
-prevent relative times from leaking from one method to another. It is
-called by C<__arguments()>, so there should be no need for any code that
-calls C<__arguments()> to call this on its own.
 
 =head1 ATTRIBUTES
 
