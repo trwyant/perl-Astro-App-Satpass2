@@ -682,6 +682,16 @@ using Perl code. This allows one to add new functionality to
 C<Astro::App::Satpass2>, over and above that provided by interactive
 methods.
 
+Code macros are currently unsupported, though it might be better to call
+them experimental. The real situation is that I have been looking for
+ways to plug bits of code into the system, and handling them like macros
+seemed to be the best way. So I knocked something together along those
+lines, and played with it. Further experience may show that the
+interface or the implementation was ill-chosen, or even that there is
+something deeply flawed about the whole idea. The bottom line is that if
+you want this to become supported, you should tell me what you like or
+do not like about it.
+
 A code macro is simply a Perl subroutine which is called by
 C<Astro::App::Satpass2> as though it were an interactive method. In the
 following discussion, some words are used with particular meanings:

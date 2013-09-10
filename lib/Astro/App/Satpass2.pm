@@ -2735,6 +2735,15 @@ BEGIN {
 
 }
 
+#	$text = $satpass2->_format_data( $template, $data, $opt );
+#
+#	This method expects a $template name, the $data to be formatted
+#	by the template, and an optional $opt hash reference. If the
+#	{dump} key in $opt is true, the $data are formatted using a
+#	dumper template, otherwise they are formatted by the current
+#	Template object. The $data are the data used by the template,
+#	typically (though not necessarily) an array reference.
+
 sub _format_data {
     my ( $self, $action, $data, $opt ) = @_;
     return $self->_get_formatter_object( $opt )->format(
@@ -5977,7 +5986,7 @@ If specified as a true value, all currently-loaded background objects
 =back
 
 The C<\@choice> argument specifies things to choose from the C<@list>.
-It must be specified, but may be specified as C<undef>. If C\<@list> is
+It must be specified, but may be specified as C<undef>. If C<\@choice> is
 C<undef> or a reference to an empty array, the entire contents of
 C<@list> are returned. Otherwise all objects in C<@list> that match any
 item in C<@choice> are returned -- unless C<invert> is in effect, in
