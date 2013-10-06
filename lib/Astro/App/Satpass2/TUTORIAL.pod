@@ -818,11 +818,10 @@ and capture any output that is returned. Note that you can still specify
 options either command-line style or as a hash reference in the second
 argument to C<dispatch()>.
 
-However, calling C<dispatch()> inside your code macro is unsupported.
-This does not mean it is forbidden; rather it means that the author does
-not intend to provide any particular behavior when this is done, and
-whatever the behavior actually is he reserves the right to change it
-without notice of any sort at any time.
+You should be cautious about calling C<dispatch()> inside your code
+macro, except perhaps as C<< return $self->dispatch( ... ) >>. If you
+call it internally, you probably need to be sure you concatenate the
+output of your calls, and return that.
 
 A number of methods of L<Astro::App::Satpass2|Astro::App::Satpass2> may
 be useful in your code macro, and in fact were exposed for the use of

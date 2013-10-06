@@ -29,6 +29,8 @@ My/Macros.pm - A module that implements the following code macros
 		decimal places.
 	* hi - A 'hello world' macro. It takes one argument, which
 		defaults to 'world'.
+	* test - A macro that issues a command (or not) based on whether
+		or not specified conditions are met.
 	* dumper - A diagnostic macro, which displays the class of its
 		first argument, and all other arguments as a YAML dump.
 

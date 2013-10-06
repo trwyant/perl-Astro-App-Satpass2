@@ -9,8 +9,31 @@ use base qw{ Astro::App::Satpass2 };
 
 use Astro::App::Satpass2::Utils qw{ __arguments };
 use Astro::Coord::ECI::Utils qw{ rad2deg };
+use Scalar::Util qw{ refaddr };
 
 our $VERSION = '0.000_01';
+
+{
+    my %operands;
+
+    sub MODIFY_CODE_ATTRIBUTES {
+	my ( $pkg, $code, @args ) = @_;
+	my @rslt;
+	foreach ( @args ) {
+	    if ( m{ \A Operands [(] ( \d+ ) [)] \z }smx ) {
+		$operands{ refaddr( $code ) } = $1;
+	    } else {
+		push @rslt, $_;
+	    }
+	}
+	return $pkg->SUPER::MODIFY_CODE_ATTRIBUTES( $code, @rslt );
+    }
+
+    sub operands {
+	my ( $code ) = @_;
+	return $operands{ refaddr( $code ) } || 0;
+    }
+}
 
 sub angle : Verb( radians! places=i ) {
     my ( $self, $opt, $name1, $name2, $time ) = __arguments( @_ );
@@ -48,6 +71,72 @@ sub hi : Verb() {
     defined $name
 	or $name = 'world';
     return "Hello, $name!\n";
+}
+
+{
+    my %operator = (
+	and		=> sub : Operands(2) {
+	    my ( $self, $stack ) = @_;
+	    push @{ $stack }, pop @{ $stack } && pop @{ $stack };
+	    return;
+	},
+	choose	=> sub : Operands(1) {
+	    my ( $self, $stack ) = @_;
+	    my $count = () = $self->__choose(
+		{ bodies	=> 1 },
+		[ pop @{ $stack } ],
+	    );
+	    push @{ $stack }, $count;
+	    return;
+	},
+	else		=> sub : Operands(1) {
+	    my ( undef, $stack ) = @_;
+	    $stack->[-1] = ! $stack->[-1];
+	    no warnings qw{ exiting };
+	    last TEST_LOOP;
+	},
+	not		=> sub : Operands(1) {
+	    my ( $self, $stack ) = @_;
+	    $stack->[-1] = ! $stack->[-1];
+	    return;
+	},
+	or		=> sub : Operands(2) {
+	    my ( $self, $stack ) = @_;
+	    push @{ $stack }, pop @{ $stack } || pop @{ $stack };
+	    return;
+	},
+	then		=> sub : Operands(1) {
+	    no warnings qw{ exiting };
+	    last TEST_LOOP;
+	},
+    );
+
+    sub test : Verb() {
+	my ( $self, undef, @arg ) = __arguments( @_ );
+	my @stack;
+
+	eval {
+	    TEST_LOOP:
+	    while ( @arg ) {
+		my $current = shift @arg;
+		if ( my $code = $operator{$current} ) {
+		    my $operands = operands( $code );
+		    @stack >= $operands
+			or $self->wail( "Not enough operands. Need $operands" );
+		    $code->( $self, \@stack );
+		} else {
+		    push @stack, $current;
+		}
+	    }
+	    1;
+	} or $self->wail( $@ );
+	@stack > 1
+	    and $self->wail( 'More than one value left on stack' );
+	$stack[-1]
+	    and @arg
+	    or return;
+	return $self->dispatch( @arg );
+    }
 }
 
 sub dumper : Verb() {
@@ -138,11 +227,83 @@ C<"Hello, $name\n">.
 
 There are no options.
 
+=head2 test
+
+ $output = $satpass2->spaceflight( qw{ -all -effective } );
+ $output .= $satpass2->dispatch(
+     qw{ test 25544 choose else spacetrack retrieve 25544 } );
+ 
+ satpass2> spaceflight -all -full
+ satpass2> test 25544 choose else spacetrack retrieve 25544
+ 
+ # In either of the above cases, the orbital elements come
+ # from Space Track only if they could not be retrieved from
+ # the NASA's Human Space Flight web site.
+
+This subroutine implements conditional logic. Its arguments are a
+logical expression expressed in reverse Polish notation, and a command
+to dispatch if the expression is true.
+
+In a reverse Polish system, everything can be evaluated as it is
+encountered. Operands (in practice, anything not recognized as an
+operator) are placed on the stack. Operators remove their operands from
+the stack, and place their results on the stack.
+
+The last operator is either C<then> or C<else> (but not both!).
+Everything after this is taken as a command, to be dispatched only if
+the single operand left on the stack has the expected logical value:
+true for C<then>, or false for C<else>.
+
+The following operators are implemented:
+
+=over
+
+=item and
+
+This operator removes two arguments from the top of the stack, takes the
+logical C<and> of them, and pushes the result onto the stack.
+
+=item choose
+
+This operator removes an operand from the stack, which is interpreted as
+a satellite OID or name, or perhaps more than one, comma-delimited. It
+pushes onto the stack the number of satellites matching any of the names
+or numbers given. Note that this produces a true value provided any
+satellites were found.
+
+=item else
+
+This operator requires an argument on the stack, but does not remove it.
+Instead it logically negates it, and causes the Polish notation code to
+terminate.
+
+=item or
+
+This operator removes two arguments from the top of the stack, takes the
+logical C<or> of them, and pushes the result onto the stack.
+
+=item not
+
+This operator removes an argument from the top of the stack, logically
+negates it, and pushes the result onto the stack.
+
+=item then
+
+This operator requires an argument on the stack, but does not remove it.
+Instead it causes the Polish notation code to terminate.
+
+=back
+
+There are no options.
+
 =head1 SEE ALSO
 
 L<Astro::App::Satpass2|Astro::App::Satpass2>
 
 L<Astro::App::Satpass2::Macro::Code|Astro::App::Satpass2::Macro::Code>.
+
+The L<Code Macros|Astro::App::Satpass2::TUTORIAL/Code Macros> write-up
+in the L<TUTORIAL|Astro::App::Satpass2::TUTORIAL>.
 
 =head1 SUPPORT
 

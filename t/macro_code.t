@@ -39,7 +39,7 @@ eval {
     1;
 } or plan skip_all => "Can not instantiate macro: $@";
 
-cmp_ok scalar $mac->implements(), '==', 3, 'Module implements 3 macros';
+cmp_ok scalar $mac->implements(), '==', 4, 'Module implements 4 macros';
 
 ok $mac->implements( 'angle' ), 'Module implements angle()';
 
@@ -47,10 +47,13 @@ ok $mac->implements( 'dumper' ), 'Module implements dumper()';
 
 ok $mac->implements( 'hi' ), 'Module implements hi()';
 
+ok $mac->implements( 'test' ), 'Module implements test()';
+
 is $mac->generator(), <<'EOD', 'Module serializes correctly';
 macro load -lib eg My::Macros angle
 macro load -lib eg My::Macros dumper
 macro load -lib eg My::Macros hi
+macro load -lib eg My::Macros test
 EOD
 
 is $mac->generator( 'angle' ), <<'EOD', 'Single macro serializes';
