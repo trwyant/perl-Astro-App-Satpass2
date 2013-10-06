@@ -66,8 +66,7 @@ sub angle : Verb( radians! places=i ) {
 }
 
 sub hi : Verb() {
-    my ( $self, $opt, $name ) =
-	Astro::App::Satpass2::__arguments( @_ );
+    my ( undef, undef, $name ) = __arguments( @_ );
     defined $name
 	or $name = 'world';
     return "Hello, $name!\n";
@@ -82,6 +81,11 @@ sub hi : Verb() {
 	},
 	choose	=> sub : Operands(1) {
 	    my ( $self, $stack ) = @_;
+	    # We want the number of bodies, but __choose(), for better
+	    # or worse, provides a reference to the array of bodies in
+	    # scalar context. So the empty parens provide list context
+	    # to __choose(), hiding the fact that ultimately we do a
+	    # scalar assign.
 	    my $count = () = $self->__choose(
 		{ bodies	=> 1 },
 		[ pop @{ $stack } ],
