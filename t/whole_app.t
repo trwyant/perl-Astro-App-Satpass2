@@ -895,27 +895,21 @@ SKIP: {
 
     eval {
 	require File::Spec;
-	require Cwd;
 	1;
-    } or skip 'File::Spec or Cwd not available', $tests;
+    } or skip 'File::Spec not available', $tests;
 
     -d 't' or skip "No t directory found", $tests;
-    my $t = File::Spec->catfile(Cwd::cwd(), 't');
+    my $t = File::Spec->catfile( cwd(), 't');
 
     execute 'cd t', undef, 'Change to t directory';
 
-    same_path Cwd::cwd(), $t, 'Change to t directory succeeded';
+    same_path cwd(), $t, 'Change to t directory succeeded';
 
 }
 
 SKIP: {
 
     my $tests = 1;
-
-    eval {
-	require Cwd;
-	1;
-    } or skip 'Cwd not available', $tests;
 
     my $home;
     eval {
@@ -925,22 +919,10 @@ SKIP: {
 
     execute 'cd', undef, 'Change to directory, no argument';
 
-    my %check_inode = map { $_ => 1 } qw{ freebsd };
+    my $got_home = cwd();
 
-    my $got_home = Cwd::cwd();
-
-    if ( $check_inode{$^O} ) {
-	note <<"EOD";
-$^O seems not to round-trip on home directory name, so we compare
-inode numbers to be sure we got the same file irrespective of what it is
-called.
-EOD
-	my ( $got, $want ) = map { ( stat $_ )[1] } $got_home, $home;
-	cmp_ok $got, '==', $want, 'Change to home directory succeeded';
-    } else {
-	same_path $got_home, $home,
-	    "Change to home directory succeeded. \$^O = '$^O'";
-    }
+    same_path $got_home, $home,
+	"Change to home directory succeeded. \$^O = '$^O'";
 }
 
 TODO: {

@@ -9,6 +9,7 @@ use base qw{ Exporter };
 
 use Carp;
 
+use Cwd qw{ abs_path };
 use Scalar::Util qw{ blessed };
 use Test::More 0.52;
 
@@ -178,6 +179,7 @@ sub method (@) {	## no critic (RequireArgUnpacking)
 
     sub normalize_path {
 	my ( $path ) = @_;
+	$path = abs_path( $path );
 	my $code = $normalizer{$^O}
 	    or return $path;
 	return $code->( $path );
@@ -334,7 +336,8 @@ C<is_deeply()>. Otherwise, they are tested with C<is()>.
 
  my $normalized = normalize_path( $path );
 
-This subroutine performs OS-specific normalization on path names.
+This subroutine normalizes paths. It converts them to absolute using
+C<Cwd::cwd()>, then it performs OS-specific normalization on them.
 Typically this consists of changing slash direction (MSWin32 and
 friends) and lopping off trailing slashes (DragonFly BSD).
 
