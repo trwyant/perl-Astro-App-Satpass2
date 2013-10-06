@@ -1,3 +1,29 @@
+0.013_01	2013-10-06	T. R. Wyant
+  Fixed failure in Astro::App::Satpass2::Format->decode(
+    'desired_equinox_dynamical' ) when the value was not 0.
+  In file name expansion, made ~~/... expand to configuration directory.
+  Added the ability to implement a macro as Perl code. These are handled
+    by Astro::App::Satpass2::Macro::Code. The corresponding satpass2
+    syntax is 'macro load Module_name'. Document this in TUTORIAL.
+  Updated required version of Astro::SpaceTrack to one that supports the
+    REST interface.
+  Require Astro::Coord::ECI 0.57 because of the international launch
+    designator problems introduced in 0.051_01.
+  Make load_package() optionally callable as a method so it can use the
+    same error reporting mechanism as everyone else if it is available.
+  Add options to the load_package() calling sequence: lib (which
+    directory to add to @INC), complain (how to report validation
+    failures), and fatal (whether and how to report failures to load the
+    module). A true value of 'fatal' causes the failure not to be cached
+    so that another load of the module will produce the same failure.
+  Made $satpass2->time_parser( base => ... ) both parse an input time
+    and return a formatted time.
+  Made time parsing conform to the documentation in that if the time was
+    defaulted, the default sets the base time for the parser.
+  Implement Astro::App::Satpass2 method sky( lookup => ... ) in terms of
+    the Astro::SIMBAD::Client script method rather than the query()
+    method, since the former does not use SOAP::Lite.
+
 0.013		2013-02-14	T. R. Wyant
   On failures in t/parse_time_date_manip_*.t, dump the zone of the
     parser object, if any.
