@@ -1,3 +1,9 @@
+0.013_02	2013-10-07	T. R. Wyant
+  Have the expansion of ~~ throw an exception if the configuration
+    directory does not exist. Skip test of ~~ expansion in this case.
+  Improve tests that compare path to expected, to handle better the case
+    where the path contains a symbolic link.
+
 0.013_01	2013-10-06	T. R. Wyant
   Fixed failure in Astro::App::Satpass2::Format->decode(
     'desired_equinox_dynamical' ) when the value was not 0.
