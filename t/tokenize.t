@@ -6,7 +6,10 @@ use warnings;
 use Test::More 0.88;
 
 use Cwd qw{ cwd };
-use File::HomeDir;
+
+use lib qw{ inc/mock };
+
+use File::HomeDir;	# Mocked
 
 sub dump_tokens;
 sub new;
@@ -129,15 +132,11 @@ tokenize q{~+/foo}, [ [ cwd() . '/foo' ], {} ]
 tokenize q{x~}, [ [ 'x~' ], {} ]
     or dump_tokens;
 
-SKIP:{
+{
 
-    my $tests = 2;
 
-    my $home;
-    eval {
-	$home = File::HomeDir->my_home();
-	1;
-    } or skip "File::HomeDir->my_home() failed: $@", $tests;
+    my $home = '/home/menuhin';
+    local $File::HomeDir::MOCK_FILE_HOMEDIR_MY_HOME = $home;
 
     tokenize q{~}, [ [ $home ], {} ]
 	or dump_tokens;
@@ -147,22 +146,52 @@ SKIP:{
 
 }
 
-SKIP:{
+{
+    my $home = {
+	menuhin	=> '/home/menuhin',
+    };
+    local $File::HomeDir::MOCK_FILE_HOMEDIR_USERS_HOME = $home;
 
-    my $tests = 2;
-
-    my $home;
-    eval {
-	$home = my_dist_config();
-	defined $home;
-    } or skip 'tokenize ~~: can not find configuration directory', $tests;
-
-    tokenize q{~~}, [ [ $home ], {} ]
+    tokenize q{~menuhin}, [ [ $home->{menuhin} ], {} ]
 	or dump_tokens;
 
-    tokenize q{~~/foo}, [ [ "$home/foo" ], {} ]
+    tokenize q{~menuhin/foo}, [ [ "$home->{menuhin}/foo" ], {} ]
 	or dump_tokens;
 
+    tokenize { fail => 1 }, q{~pearlman},
+	qr{ \A Unable \s to \s find \s home \s for \s pearlman }smx,
+	'Tokenize ~pearlman should fail';
+
+    tokenize { fail => 1 }, q{~pearlman/foo},
+	qr{ \A Unable \s to \s find \s home \s for \s pearlman }smx,
+	'Tokenize ~pearlman/foo should fail';
+
+}
+
+{
+
+    my $cfg = '/home/menuhin/.local/perl/Astro-App-Satpass2';
+    local $File::HomeDir::MOCK_FILE_HOMEDIR_MY_DIST_CONFIG = $cfg;
+
+    tokenize q{~~}, [ [ $cfg ], {} ]
+	or dump_tokens;
+
+    tokenize q{~~/foo}, [ [ "$cfg/foo" ], {} ]
+	or dump_tokens;
+
+}
+
+{
+
+    local $File::HomeDir::MOCK_FILE_HOMEDIR_MY_DIST_CONFIG = undef;
+
+    tokenize { fail => 1 }, q{~~},
+	qr{ \A Unable \s to \s find \s ~~ }smx,
+	'Tokenize ~~ without dist dir should fail';
+
+    tokenize { fail => 1 }, q{~~/foo},
+	qr{ \A Unable \s to \s find \s ~~ }smx,
+	'Tokenize ~~/foo without dist dir should fail';
 }
 
 local $ENV{foo} = 'bar';
@@ -496,13 +525,31 @@ done_testing;
 		    @got = $tt->_tokenize( $opt, $source, \@positional );
 		    1;
 		} ) {
-		@_ = ( \@got, $tokens, $name );
-		goto &is_deeply;
+		if ( $opt->{fail} ) {
+		    @_ = ( "$name unexpectedly succeeded" );
+		    goto &fail;
+		} else {
+		    @_ = ( \@got, $tokens, $name );
+		    goto &is_deeply;
+		}
 	    } else {
-		$name .= ": $@";
-		chomp $name;
-		@_ = ( $name );
-		goto &fail;
+		my $err = $@;
+		if ( $opt->{fail} ) {
+		    if ( $err =~ m/$tokens/ ) {
+			@_ = ( $name );
+			goto &pass;
+		    } else {
+			$name .= ": $err";
+			chomp $name;
+			@_ = ( $name );
+			goto &fail;
+		    }
+		} else {
+		    $name .= ": $err";
+		    chomp $name;
+		    @_ = ( $name );
+		    goto &fail;
+		}
 	    }
 	}
 	return;
