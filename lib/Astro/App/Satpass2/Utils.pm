@@ -93,7 +93,7 @@ sub expand_tilde {
 {
     my %special = (
 	'+'	=> sub { return Cwd::cwd() },
-	'~'	=> sub { my_dist_config() },
+	'~'	=> sub { return my_dist_config() },
 	''	=> sub { return File::HomeDir->my_home() },
     );
 #	$dir = $self->_user_home_dir( $user );
@@ -106,13 +106,16 @@ sub expand_tilde {
 	my ( $self, $user ) = @_;
 	defined $user
 	    or $user = '';
-	$special{$user}
-	    and return $special{$user}->( $user );
 
-	my $home_dir = File::HomeDir->users_home( $user );
-	defined $home_dir
-	    or $self->wail( "Unable to find home for $user" );
-	return $home_dir;
+	if ( my $code = $special{$user} ) {
+	    defined( my $special_dir = $code->( $user ) )
+		or $self->wail( "Unable to find ~$user" );
+	    return $special_dir;
+	} else {
+	    defined( my $home_dir = File::HomeDir->users_home( $user ) )
+		or $self->wail( "Unable to find home for $user" );
+	    return $home_dir;
+	}
     }
 }
 
@@ -299,7 +302,8 @@ This mixin (so-called) performs tilde expansion on the argument,
 returning the result. Arguments that do not begin with a tilde are
 returned unmodified. In addition to the usual F<~/> and F<~user/>, we
 support F<~+/> (equivalent to F<./>) and F<~~/> (the user's
-configuration directory).
+configuration directory). The expansion of F<~~/> will result in an
+exception if the configuration directory does not exist.
 
 All that is required of the invocant is that it support the package's
 suite of error-reporting methods C<whinge()>, C<wail()>, and C<weep()>.

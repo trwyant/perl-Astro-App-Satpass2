@@ -6996,6 +6996,11 @@ B<and> the user actually exists; otherwise an exception is raised. Tilde
 expansion is not done inside quotes (either single or double), even if
 the tilde is the first character. This is consistent with C<bash(1)>.
 
+As special cases of tilde expansion, C<~.> expands to the current
+directory, and C<~~> expands to the configuration directory. The
+expansion of C<~~> will throw an exception if the configuration
+directory does not exist.
+
 Wild card expansion is never performed by the tokenizer. If an
 individual method does wild card expansion on its arguments, this will
 be noted in its documentation.

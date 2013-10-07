@@ -154,8 +154,8 @@ SKIP:{
     my $home;
     eval {
 	$home = my_dist_config();
-	1;
-    } or skip 'Can not find configuration directory', $tests;
+	defined $home;
+    } or skip 'tokenize ~~: can not find configuration directory', $tests;
 
     tokenize q{~~}, [ [ $home ], {} ]
 	or dump_tokens;
