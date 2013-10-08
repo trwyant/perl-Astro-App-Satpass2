@@ -1,3 +1,6 @@
+0.013_03	2013-10-08	T. R. Wyant
+  Use a mock File::HomeDir object for testing.
+
 0.013_02	2013-10-07	T. R. Wyant
   Have the expansion of ~~ throw an exception if the configuration
     directory does not exist. Skip test of ~~ expansion in this case.
