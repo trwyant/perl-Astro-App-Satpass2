@@ -12,7 +12,7 @@ use File::HomeDir;
 use File::Spec;
 use Scalar::Util qw{ blessed looks_like_number };
 
-our $VERSION = '0.013_03';
+our $VERSION = '0.014';
 
 our @EXPORT_OK = qw{
     __arguments expand_tilde fold_case
