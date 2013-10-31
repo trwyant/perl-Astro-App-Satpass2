@@ -2163,9 +2163,14 @@ sub source : Verb( optional! ) {
 	    and $opt->{end_epoch} = $self->__parse_time(
 		$opt->{end_epoch} );
 
-	my ( $rslt, @rest ) = $handler{$method} ?
-	    $handler{$method}->( $self, $object, $method, $opt, @args ) :
-	    $object->$method( $opt, @args );
+	my ( $rslt, @rest );
+       	if ( $handler{$method} ) {
+	    ( $rslt, @rest ) = $handler{$method}->(
+		$self, $object, $method, $opt, @args );
+	} else {
+	    delete $opt->{raw};
+	    ( $rslt, @rest ) = $object->$method( $opt, @args );
+	}
 
 	$rslt->is_success()
 	    or $self->wail( $rslt->status_line() );
@@ -3101,7 +3106,8 @@ sub _helper_get_object {
 	    and $parse_input{$name}
 	    and $parse_input{$name}{$method}
 	    and @args = $parse_input{$name}{$method}->( $self, $opt, @args );
-	$opt->{raw} and return $object->$method( @args );
+	delete $opt->{raw}
+	    and return $object->$method( @args );
 	my $rslt = $object->decode( $method, @args );
 
 	instance( $rslt, ref $object ) and return;
