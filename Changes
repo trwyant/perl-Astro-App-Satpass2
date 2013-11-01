@@ -1,3 +1,8 @@
+0.014_01	2013-10-31	T. R. Wyant
+  Use O-O version of Getopt::Long everywhere, to prevent leakage of
+    configuration in (or out).
+  Clean up options hash passed to external methods.
+
 0.014		2013-10-14	T. R. Wyant
   No changes since 0.013_03
 
