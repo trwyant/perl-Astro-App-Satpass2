@@ -9,7 +9,7 @@ use base qw{ Template::Provider };
 
 use Template::Constants ();
 
-our $VERSION = '0.014_01';
+our $VERSION = '0.014_02';
 
 sub __satpass2_defined_templates {
     my ( $self ) = @_;

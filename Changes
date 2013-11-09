@@ -1,3 +1,7 @@
+0.014_02	2013-11-08	T. R. Wyant
+  Require Getopt::Long 2.39 (up from 2.33) because I am using
+    getoptionsfromarray().
+
 0.014_01	2013-10-31	T. R. Wyant
   Use O-O version of Getopt::Long everywhere, to prevent leakage of
     configuration in (or out).
