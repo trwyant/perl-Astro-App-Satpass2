@@ -45,7 +45,7 @@ sub requires {
 	'File::Glob'		=> 0,
 	'File::HomeDir'		=> 0.93,	# For my_dist_config
 	'File::Temp'		=> 0,
-	'Getopt::Long'		=> 2.33,
+	'Getopt::Long'		=> 2.39,	# For getoptionsfromarray
 	'IO::File'		=> 1.14,
 	'IO::Handle'		=> 0,
 	'IPC::System::Simple'	=> 0,
