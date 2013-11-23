@@ -1016,7 +1016,8 @@ sub load : Verb( verbose! ) {
     foreach my $fn ( @names ) {
 	$opt->{verbose} and warn "Loading $fn\n";
 	my $data = $self->_file_reader( $fn, { glob => 1 } );
-	push @{$self->{bodies}}, Astro::Coord::ECI::TLE->parse( $data );
+	$self->__add_to_observing_list(
+	    Astro::Coord::ECI::TLE->parse( $data ) );
     }
     return;
 }
@@ -2399,6 +2400,20 @@ EOD
 ########################################################################
 
 #	$self->_aggregate( $list_ref );
+
+sub __add_to_observing_list {
+    my ( $self, @args ) = @_;
+    foreach my $body ( @args ) {
+	embodies( $body, 'Astro::Coord::ECI::TLE' )
+	    and next;
+	my $id = $body->get( 'id' );
+	defined $id
+	    or $id = $body->get( 'name' );
+	$self->wail( "Body $id is not a TLE" );
+    }
+    push @{ $self->{bodies} }, @args;
+    return $self;
+}
 
 #	This is just a wrapper for
 #	Astro::Coord::ECI::TLE::Set->aggregate.
@@ -5938,6 +5953,16 @@ corresponds more or less to C<Carp::confess()>.
 This non-interactive method is simply a wrapper for our
 C<Astro::App::Satpass2::Warner> object's C<whinge()> method, which
 corresponds more or less to C<Carp::carp()>.
+
+=head2 __add_to_observing_list( @bodies );
+
+This method is exposed for the use of code macros, and is unsupported
+until such time as code macros themselves are.
+
+This method adds the given bodies to the observing list. All must
+represent L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE> objects, or
+an exception will be thrown and none will be added to the observing
+list.
 
 =head2 __choose
 
