@@ -1193,14 +1193,15 @@ sub _macro_load : Verb( lib=s ) {
 	warner	=> $self->{_warner},
     );
     exists $opt->{lib}
-    and $marg{lib} = $opt->{lib};
+	and $marg{lib} = $opt->{lib};
     my $obj = $self->{_macro_load}{$name} ||=
 	Astro::App::Satpass2::Macro::Code->new( %marg );
-    @args or @args = $obj->implements();
-    foreach my $mn ( @args ) {
+    foreach my $mn ( @args ? @args : $obj->implements() ) {
 	$obj->implements( $mn, required => 1 )
 	    and $self->{macro}{$mn} = $obj;
     }
+    $obj->implements( 'after_load', required => 0 )
+	and $output = $self->dispatch( after_load => $opt, $name, @args );
     return $output;
 }
 
@@ -5319,11 +5320,18 @@ The first argument of the C<'load'> subcommand is the name of a Perl
 module (e.g. C<My::Macros>) that implements one or more code macros.
 Subsequent arguments, if any, are the names of macros to load from the
 module. If no subsequent arguments are given, all macros defined by the
-macro are loaded. Code macros are experimental. See
+macro are loaded.
+
+By default, the F<lib/> subdirectory of the user's configuration
+directory is added to C<@INC> before the code macro is loaded. The
+C<-lib> option can be used to specify a different directory.
+
+Code macros are experimental. See
 L<Astro::App::Satpass2::TUTORIAL|Astro::App::Satpass2::TUTORIAL> for how
 to write one.
 
-For subcommands other than 'define', the arguments are macro names.
+For subcommands other than C<'define'> and C<'load'>, the arguments are
+macro names.
 
 The C<brief> and C<list> subcommands return their documented output. The
 C<delete> and C<define> subcommands return nothing.

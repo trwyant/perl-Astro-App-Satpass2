@@ -10,10 +10,10 @@ use Astro::App::Satpass2::Utils ();
 use Astro::App::Satpass2::Macro::Code;
 use Test::More 0.88;	# Because of done_testing();
 
-use constant lib_dir => 'eg';
+use constant LIB_DIR => 'eg';
 
--d lib_dir
-    or plan skip_all => 'Can not find eg/ directory';
+-d LIB_DIR
+    or plan skip_all => "Can not find @{[ LIB_DIR ]}/ directory";
 
 my ( $mac, $sp );
 
@@ -30,7 +30,7 @@ eval {
 
 eval {
    $mac = Astro::App::Satpass2::Macro::Code->new(
-	lib	=> lib_dir,
+	lib	=> LIB_DIR,
 	name	=> 'My::Macros',
 	generate	=> \&Astro::App::Satpass2::_macro_load_generator,
 	parent	=> $sp,
@@ -39,7 +39,9 @@ eval {
     1;
 } or plan skip_all => "Can not instantiate macro: $@";
 
-cmp_ok scalar $mac->implements(), '==', 4, 'Module implements 4 macros';
+cmp_ok scalar $mac->implements(), '==', 5, 'Module implements 5 macros';
+
+ok $mac->implements( 'after_load' ), 'Module implements after_load()';
 
 ok $mac->implements( 'angle' ), 'Module implements angle()';
 
@@ -50,6 +52,7 @@ ok $mac->implements( 'hi' ), 'Module implements hi()';
 ok $mac->implements( 'test' ), 'Module implements test()';
 
 is $mac->generator(), <<'EOD', 'Module serializes correctly';
+macro load -lib eg My::Macros after_load
 macro load -lib eg My::Macros angle
 macro load -lib eg My::Macros dumper
 macro load -lib eg My::Macros hi

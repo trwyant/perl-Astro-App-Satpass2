@@ -35,6 +35,18 @@ our $VERSION = '0.015';
     }
 }
 
+sub after_load : Verb() {
+    my ( $self, $opt, @args ) = @_;
+    my $rslt;
+    foreach my $key ( keys %{ $opt } ) {
+	$rslt .= "-$key $opt->{$key}\n";
+    }
+    foreach my $val ( @args ) {
+	$rslt .= "$val\n";
+    }
+    return $rslt;
+}
+
 sub angle : Verb( radians! places=i ) {
     my ( $self, $opt, $name1, $name2, $time ) = __arguments( @_ );
     $time = $self->__parse_time( $time, time );
@@ -180,6 +192,16 @@ their results as text.
 
 This class supports the following public subroutines, which are
 documented as though they are methods of Astro::App::Satpass2:
+
+=head2 after_load
+
+If this subroutine exists, it will be called after the code macro is
+successfully loaded, and passed the processed arguments of the
+C<macro load> command. That is, the first argument (after the invocant)
+will be the option hash, followed by the non-option arguments in order.
+
+This subroutine returns the options (if any) one per line, followed by
+the arguments, also one per line.
 
 =head2 angle
 
