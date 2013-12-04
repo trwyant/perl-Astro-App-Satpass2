@@ -30,11 +30,12 @@ eval {
 
 eval {
    $mac = Astro::App::Satpass2::Macro::Code->new(
-	lib	=> LIB_DIR,
-	name	=> 'My::Macros',
+	lib		=> LIB_DIR,
+	relative	=> 1,
+	name		=> 'My::Macros',
 	generate	=> \&Astro::App::Satpass2::_macro_load_generator,
 	parent	=> $sp,
-	warner	=> $sp->{_warner},	# Encapsulation violation
+	warner	=> $sp->{_warner},	# TODO Encapsulation violation
     );
     1;
 } or plan skip_all => "Can not instantiate macro: $@";
@@ -52,15 +53,15 @@ ok $mac->implements( 'hi' ), 'Module implements hi()';
 ok $mac->implements( 'test' ), 'Module implements test()';
 
 is $mac->generator(), <<'EOD', 'Module serializes correctly';
-macro load -lib eg My::Macros after_load
-macro load -lib eg My::Macros angle
-macro load -lib eg My::Macros dumper
-macro load -lib eg My::Macros hi
-macro load -lib eg My::Macros test
+macro load -lib eg -relative My::Macros after_load
+macro load -lib eg -relative My::Macros angle
+macro load -lib eg -relative My::Macros dumper
+macro load -lib eg -relative My::Macros hi
+macro load -lib eg -relative My::Macros test
 EOD
 
 is $mac->generator( 'angle' ), <<'EOD', 'Single macro serializes';
-macro load -lib eg My::Macros angle
+macro load -lib eg -relative My::Macros angle
 EOD
 
 is $mac->execute( hi => 'sailor' ), <<'EOD', q{Macro 'hi' executes};

@@ -1208,8 +1208,11 @@ sub _macro_load : Verb( lib=s ) {
 sub _macro_load_generator {
     my ( $self, @args ) = @_;
     my @preamble = qw{ macro load };
-    $self->has_lib()
-	and push @preamble, '-lib', $self->lib();
+    if ( $self->has_lib() ) {
+	push @preamble, '-lib', $self->lib();
+	$self->relative()
+	    and push @preamble, '-relative';
+    }
     push @preamble, $self->name();
     my $output;
     foreach my $macro ( @args ) {

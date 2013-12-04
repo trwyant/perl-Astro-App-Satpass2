@@ -18,6 +18,10 @@ sub init {
     my %popt = ( complaint => 'wail', fatal => 'wail' );
     exists $self->{lib}
 	and $popt{lib} = $self->expand_tilde( $self->{lib} );
+    defined $self->{lib}
+	and not $self->{relative}
+	and not $self->{lib} =~ m/ \A ~ /smx
+	and $self->{lib} = File::Spec->rel2abs( $self->{lib} );
     my $module = $self->load_package(
 	\%popt, $self->name(), 'Astro::App::Satpass2::Macro::Code'
     );
@@ -77,6 +81,11 @@ sub has_lib {
 sub lib {
     my ( $self ) = @_;
     return $self->{lib};
+}
+
+sub relative {
+    my ( $self ) = @_;
+    return $self->{relative};
 }
 
 1;
@@ -140,6 +149,14 @@ C<has_lib()> method if the difference is important to your code.
 =item name
 
 This is the name of the Perl module containing the desired code macros.
+
+=item relative
+
+If this attribute is true, the value of the C<-lib> option, if any, is
+left untouched. Otherwise, it is made into an absolute file reference
+unless it begins with a tilde.
+
+This is really only here to make testing easier.
 
 =back
 
