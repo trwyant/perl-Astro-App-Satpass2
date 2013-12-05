@@ -701,12 +701,24 @@ method local_coord => [], ' 27.5 153.8 SE',
 method appulse => [], local_coord => [], ' 29.2 151.2 SE',
     'Expand local_coord azel for appulsed body';
 
+method list => [],
+    ' 25544 ISS                       34.0765  -74.2084   353.9',
+    'List fixed body';
+method_good body => [], eci => [ 1000, 1000, 1000 ],
+    'Set coordinates inertial';
+method list => [],
+    ' 25544 ISS                      2008-10-09 10:53:02     01:31:36',
+    'List inertial body';
+
 
 create title => 1, 'Create empty formatter for titles';
 method altitude => [], 'Altitud', 'Altitude title';
 method angle => [], 'Angle', 'Angle title';
 method local_coord => [], 'Eleva  Azimuth      Range',
     'Titles for local_coord azel';
+method list => [],
+    'OID    Name                     Epoch               Period',
+    'Title for list';
 
 done_testing;
 

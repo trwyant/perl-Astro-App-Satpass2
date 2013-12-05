@@ -228,6 +228,15 @@ use constant TITLE_GRAVITY_TOP		=> 'top';
 		'or the name of a known coordinate system'
 	    );
 
+	defined( $self->{list_formatter} = $args{list_formatter} )
+	    or $self->{list_formatter} = $self->can( '__list_formatter' );
+	'CODE' eq ref $self->{list_formatter}
+	    or $self->{warner}->wail(
+		'Argument list_formatter must be a code reference ',
+		'or the name of a known coordinate system'
+	    );
+
+
 	$self->{title} = $args{title};
 
 	$self->title_gravity( _dor( $args{title_gravity},
@@ -473,6 +482,35 @@ sub station {
 }
 
 #	Formatters
+
+sub list {
+    my ( $self, %arg ) = _arguments( @_ );
+    return $self->{list_formatter}->( $self, %arg );
+}
+
+sub __list_formatter {
+    my ( $self, @arg ) = _arguments( @_ );
+    my $body;
+    my $type = ( $body = $self->body() ) ?
+	$body->__list_type() :
+	'inertial';
+    my $code;
+    $code = $self->can( "__list_formatter_$type" )
+	and return $code->( $self, @arg );
+    $code = $self->can( "__list_formatter_args_$type" ) ||
+	$self->can( '__list_formatter_args_inertial' );
+    my $rslt = join ' ', map { $self->$_( @arg ) } $code->( $self );
+    $rslt =~ s/ \s+ \z //smx;
+    return $rslt;
+}
+
+sub __list_formatter_args_fixed {
+    return ( qw{ oid name latitude longitude altitude } );
+}
+
+sub __list_formatter_args_inertial {
+    return ( qw{ oid name epoch period } );
+}
 
 sub local_coord {
     my ( $self, %arg ) = _arguments( @_ );
@@ -2476,6 +2514,13 @@ to be produced. If true (the default) numeric default widths are applied
 where needed. If false the default width is C<''>, which is the
 convention for variable-width fields.
 
+=item list_formatter
+
+This optional argument provides the implementation of the
+L<list()|/list> formatter method. If you provide a defined value it must
+be a code reference. The code reference will be called with the same
+arguments as were used for C<local_coord()>, including the invocant.
+
 =item local_coordinates
 
 This optional argument provides the implementation of the
@@ -3590,6 +3635,15 @@ value if you do not wish to enforce a specific width. The default is
 C<8>.
 
 =back
+
+=head3 list
+
+ print $fmt->list();
+
+This method formats the object as specified by the C<list_formatter>
+argument when the object was initialized. It has no arguments of its
+own, but will pass through any arguments given to the methods it calls.
+See L<local_coord()|/local_coord> below for details.
 
 =head3 local_coord
 
