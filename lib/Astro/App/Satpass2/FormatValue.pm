@@ -787,18 +787,13 @@ my %dimensions = (
 
 );
 
-sub __list_dimensions {
-    return \%dimensions;
-}
-
-sub __list_dimension_names {
-    return ( keys %dimensions );
-}
-
-sub __get_dimension_data {
-    my ( $class, $name ) = @_;
-    return $dimensions{$name};
-}
+# The following was for a utility script to generate documentation for
+# the dimensions.
+#
+# sub __get_dimension_data {
+#     my ( $class, $name ) = @_;
+#     return $dimensions{$name};
+# }
 
 #	The following hash is used for generating formatter methods, as
 #	a way of avoiding the replication of common code. The keys are
@@ -1792,7 +1787,8 @@ sub _apply_dimension {
 	or $self->warner()->weep( 'No dimension specified' );
 
     my $dim_data;
-    $dim_data = $self->__get_dimension_data( $dimension )
+#   $dim_data = $self->__get_dimension_data( $dimension )
+    $dim_data = $dimensions{$dimension}
 	and defined( my $units = _dor( $arg->{units}, $dim->{units},
 	    $self->_get( default => $name, 'units' ),
 	    $dim_data->{default} ) )
