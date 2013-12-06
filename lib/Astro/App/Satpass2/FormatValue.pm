@@ -258,13 +258,6 @@ use constant TITLE_GRAVITY_TOP		=> 'top';
 	defined $self->{time_format}
 	    or $self->{time_format} = $self->{time_formatter}->TIME_FORMAT();
 
-	foreach my $action ( $self->_uses_date_format() ) {
-	    my $fmt = $self->_make_date_format( $action );
-	    my $width = $self->{time_formatter}->format_datetime_width( $fmt );
-	    $self->{internal}{$action}{width} = $width;
-	    $self->{internal}{$action}{format} = $fmt;
-	}
-
 	return $self;
     }
 
@@ -1017,6 +1010,7 @@ my %formatter_data = (	# For generating formatters
 	},
 	dimension	=> {
 	    dimension	=> 'time_units',
+	    format	=> [ 'date_format' ],
 	},
 	fetch	=> sub {
 	    my ( $self, $name, $arg ) = @_;
@@ -1068,6 +1062,7 @@ my %formatter_data = (	# For generating formatters
 	},
 	dimension	=> {
 	    dimension	=> 'time_units',
+	    format	=> [ 'date_format', 'time_format' ],
 	},
 	fetch	=> sub {
 	    my ( $self, $name, $arg ) = @_;
@@ -1131,6 +1126,7 @@ my %formatter_data = (	# For generating formatters
 	},
 	dimension	=> {
 	    dimension	=> 'time_units',
+	    format	=> [ 'date_format', 'time_format' ],
 	},
 	fetch	=> sub {
 	    my ( $self, $name, $arg ) = @_;
@@ -1535,7 +1531,25 @@ my %formatter_data = (	# For generating formatters
 	},
     },
 
-#   time	=> duplicated from date, below
+    time	=> {
+	default	=> {
+	    delta	=> 0,
+	    format	=> undef,	# Just to get it looked at
+	    gmt		=> undef,
+	    places	=> 5,
+	    width	=> '',
+	},
+	dimension	=> {
+	    dimension	=> 'time_units',
+	    format	=> [ 'time_format' ],
+	},
+	fetch	=> sub {
+	    my ( $self, $name, $arg ) = @_;
+	    defined( my $value = $self->_get( data => 'time' ) )
+		or return NONE;
+	    return $value + $arg->{delta};
+	},
+    },
 
     tle	=> {
 	default	=> {},
@@ -1568,7 +1582,6 @@ foreach my $name ( qw{ apogee periapsis perigee } ) {
 }
 $formatter_data{semiminor} = $formatter_data{semimajor};
 $formatter_data{illumination} = $formatter_data{event};
-$formatter_data{time} = $formatter_data{date};
 
 sub _fetch {
     my ( $self, $info, $name, $arg ) = @_;
@@ -1595,12 +1608,73 @@ sub __get_formatter_data {
     return $formatter_data{$name};
 }
 
+# Used when the normal reporting mechanism is unavailable.
+sub _confess {
+    my ( @arg ) = @_;
+    require Carp;
+    Carp::confess( @arg );
+}
+
 sub __make_formatter_methods {
     my ( $class ) = @_;
 
     foreach my $name ( $class->__list_formatter_names() ) {
 
 	my $info = $class->__get_formatter_data( $name );
+
+	# Validate the dimension information
+	$info->{dimension}
+	    or _confess(
+	    "'$name' does not specify a {dimension} hash" );
+	defined( my $dim = $info->{dimension}{dimension} )
+	    or _confess(
+	    "'$name' does not specify the dimension" );
+	eval {	# Because I can return out of it
+	    foreach my $d ( keys %dimensions ) {
+		$d eq $dim
+		    and return 1;
+	    }
+	    return 0;
+	} or _confess(
+	    "'$name' specifies invalid dimension '$dim'" );
+	if ( defined( my $dflt = $info->{dimension}{default} ) ) {
+	    eval {	# Because I can return out of it
+		foreach my $u ( keys %{ $dimensions{$dim}{define} } ) {
+		    $u eq $dflt
+			and return 1;
+		}
+		return 0;
+	    } or _confess(
+		"'$name' specifies invalid default units '$dflt'" );
+	}
+
+	# If the dimension is 'time_units' we need to validate that the
+	# format key is defined and valid
+	if ( 'time_units' eq $info->{dimension}{dimension} ) {
+	    if ( 'ARRAY' eq ref $info->{dimension}{format} ) {
+		foreach my $entry ( @{ $info->{dimension}{format} } ) {
+		    $class->_valid_time_format_name( $entry )
+			or _confess(
+			"In '$name', '$entry' is not a valid format" );
+		}
+		$info->{default}{format} = sub {
+		    my ( $self ) = @_;
+		    return $self->_get_date_format_data( $name, format => $info );
+		};
+		$info->{default}{width} = sub {
+		    my ( $self ) = @_;
+		    return $self->_get_date_format_data( $name, width => $info );
+		};
+	    } else {
+		_confess(
+		    "'$name' must specify a {format} key in {dimension}" );
+	    }
+	}
+
+	# Validate the fetch information
+	'CODE' eq ref $info->{fetch}
+	    or _confess(
+	    "In '$name', {fetch} is not a code reference" );
 
 	$class->can( $name )
 	    and next;
@@ -1695,7 +1769,9 @@ sub reset_title_lines {
 		    and next APPLY_DEFAULT_LOOP;
 	    }
 
-	    $arg->{$key} = $dflt->{$key};
+	    my $default = $dflt->{$key};
+	    $arg->{$key} = 'CODE' eq ref $default ?
+		$default->( $self, $action, $arg ) : $default
 
 	}
 
@@ -1915,6 +1991,8 @@ sub _get {
 	    $hash = $hash->{$key};
 	} elsif ( 'ARRAY' eq $ref ) {
 	    $hash = $hash->[$key];
+	} elsif ( 'CODE' eq $ref ) {
+	    $hash = $hash->( $self, $key );
 	} else {
 	    return NONE;
 	}
@@ -2319,51 +2397,45 @@ sub _julian_day {
     return julianday( $value );
 }
 
-{
+sub _get_date_format_data {
+    my ( $self, $name, $datum, $info ) = @_;
+    $self->{internal}{_date_format}{$name} ||=
+	$self->_manufacture_date_format( $name, $info );
+    return $self->{internal}{_date_format}{$name}{$datum};
+}
 
-    my %date_format = (
-	date	=> [ 'date_format' ],
-	effective_date	=> [ 'date_format', 'time_format' ],
-	epoch	=> [ 'date_format', 'time_format' ],
-	time	=> [ 'time_format' ],
-    );
-
-    sub _make_date_format {
-	my ( $self, $action ) = @_;
-
-	$date_format{$action}
-	    or return;
-
-	return join ' ', grep { defined $_ && '' ne $_ }
-	    map { $self->{$_} } @{ $date_format{$action} };
-
-    }
-
-    sub _uses_date_format {
-	return ( keys %date_format );
-    }
-
+sub _manufacture_date_format {
+    my ( $self, $name, $info ) = @_;
+    my $fmt = join ' ', grep { defined $_ && '' ne $_ }
+	map { $self->{$_} } @{ $info->{dimension}{format} };
+    my $wid =
+	$self->{time_formatter}->format_datetime_width( $fmt );
+    return { format => $fmt, width => $wid };
 }
 
 {
 
-    my %fmt = map { $_ => 1 } qw{ date_format time_format };
+    my %fmt;
 
-    sub _set_time_format {
-	my ($self, $name, $data) = @_;
-	$fmt{$name}
-	    or $self->warner()->weep(
-		"'$name' invalid for _set_time_format()" );
-	my $fmtr = $self->{time_formatter};
-	$self->{$name} = $data;
-	foreach my $action ( $self->_uses_date_format() ) {
-	    my $fmt = $self->_make_date_format( $action );
-	    my $width = $fmtr->format_datetime_width( $fmt );
-	    $self->{internal}{$action}{width} = $width;
-	    $self->{internal}{$action}{format} = $fmt;
-	}
-	return $self;
+    BEGIN {
+	%fmt = map { $_ => 1 } qw{ date_format time_format };
     }
+
+    sub _valid_time_format_name {
+	my ( undef, $name ) = @_;
+	return $fmt{$name};
+    }
+}
+
+sub _set_time_format {
+    my ($self, $name, $data) = @_;
+    $self->_valid_time_format( $name )
+	or $self->warner()->weep(
+	    "'$name' invalid for _set_time_format()" );
+    $self->{$name} = $data;
+    delete $self->{internal}{_date_format};
+
+    return $self;
 }
 
 sub _subtract_epoch {
