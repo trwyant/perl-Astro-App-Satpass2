@@ -7,10 +7,10 @@ use warnings;
 
 use Test::More 0.88;
 
-use Astro::Coord::ECI;
-use Astro::Coord::ECI::Moon;
-use Astro::Coord::ECI::TLE;
-use Astro::Coord::ECI::Utils qw{ deg2rad PI };
+use Astro::Coord::ECI 0.059;
+use Astro::Coord::ECI::Moon 0.059;
+use Astro::Coord::ECI::TLE 0.059;
+use Astro::Coord::ECI::Utils 0.059 qw{ deg2rad PI };
 
 use Astro::App::Satpass2::FormatTime;
 use Astro::App::Satpass2::FormatValue;

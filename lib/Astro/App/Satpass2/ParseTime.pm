@@ -9,7 +9,7 @@ use base qw{ Astro::App::Satpass2::Copier };
 
 use Astro::App::Satpass2::FormatTime;
 use Astro::App::Satpass2::Utils qw{ load_package };
-use Astro::Coord::ECI::Utils qw{ looks_like_number };
+use Astro::Coord::ECI::Utils 0.059 qw{ looks_like_number };
 
 our $VERSION = '0.015';
 

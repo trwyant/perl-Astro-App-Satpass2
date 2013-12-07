@@ -31,14 +31,14 @@ sub distribution {
 sub requires {
     my ( $self, @extra ) = @_;
     return {
-	'Astro::Coord::ECI'		=> 0.057,
-	'Astro::Coord::ECI::Moon'	=> 0.057,
-	'Astro::Coord::ECI::Star'	=> 0.057,
-	'Astro::Coord::ECI::Sun'	=> 0.057,
-	'Astro::Coord::ECI::TLE'	=> 0.057,
-	'Astro::Coord::ECI::TLE::Iridium'	=> 0.057,
-	'Astro::Coord::ECI::TLE::Set'	=> 0.057,
-	'Astro::Coord::ECI::Utils'	=> 0.057,
+	'Astro::Coord::ECI'		=> 0.059,
+	'Astro::Coord::ECI::Moon'	=> 0.059,
+	'Astro::Coord::ECI::Star'	=> 0.059,
+	'Astro::Coord::ECI::Sun'	=> 0.059,
+	'Astro::Coord::ECI::TLE'	=> 0.059, # for __list_type()
+	'Astro::Coord::ECI::TLE::Iridium'	=> 0.059,
+	'Astro::Coord::ECI::TLE::Set'	=> 0.059,
+	'Astro::Coord::ECI::Utils'	=> 0.059,
 	'Carp'			=> 0,
 	'Clone'			=> 0,
 	'Cwd'			=> 0,

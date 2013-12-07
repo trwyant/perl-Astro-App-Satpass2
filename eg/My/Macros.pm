@@ -8,7 +8,7 @@ use warnings;
 use base qw{ Astro::App::Satpass2 };
 
 use Astro::App::Satpass2::Utils qw{ __arguments };
-use Astro::Coord::ECI::Utils qw{ rad2deg };
+use Astro::Coord::ECI::Utils 0.059 qw{ rad2deg };
 use Scalar::Util qw{ refaddr };
 
 our $VERSION = '0.015';

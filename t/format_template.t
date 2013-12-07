@@ -9,12 +9,12 @@ use Test::More 0.88;
 
 use Astro::App::Satpass2::Format::Template;
 
-use Astro::Coord::ECI;
-use Astro::Coord::ECI::Moon;
-use Astro::Coord::ECI::Sun;
-use Astro::Coord::ECI::TLE qw{ :constants };
-use Astro::Coord::ECI::TLE::Iridium;
-use Astro::Coord::ECI::Utils qw{ deg2rad };
+use Astro::Coord::ECI 0.059;
+use Astro::Coord::ECI::Moon 0.059;
+use Astro::Coord::ECI::Sun 0.059;
+use Astro::Coord::ECI::TLE 0.059 qw{ :constants };
+use Astro::Coord::ECI::TLE::Iridium 0.059;
+use Astro::Coord::ECI::Utils 0.059 qw{ deg2rad };
 
 use Cwd ();
 use Time::Local;

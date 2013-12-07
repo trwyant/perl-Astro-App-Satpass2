@@ -9,8 +9,8 @@ use Astro::App::Satpass2::Format::Template::Provider;
 # use Astro::App::Satpass2::FormatValue;
 use Astro::App::Satpass2::Utils qw{ instance };
 use Astro::App::Satpass2::Wrap::Array;
-use Astro::Coord::ECI::TLE qw{ :constants };
-use Astro::Coord::ECI::Utils qw{
+use Astro::Coord::ECI::TLE 0.059 qw{ :constants };
+use Astro::Coord::ECI::Utils 0.059 qw{
     deg2rad embodies julianday PI rad2deg TWOPI
 };
 use Clone qw{ };

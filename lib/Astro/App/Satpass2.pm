@@ -13,14 +13,14 @@ use Astro::App::Satpass2::Utils qw{
     my_dist_config quoter
 };
 
-use Astro::Coord::ECI 0.057;			# This needs at least 0.049.
-use Astro::Coord::ECI::Moon 0.057;
-use Astro::Coord::ECI::Star 0.057;
-use Astro::Coord::ECI::Sun 0.057;
-use Astro::Coord::ECI::TLE 0.057 qw{:constants}; # This needs at least 0.057.
-use Astro::Coord::ECI::TLE::Iridium 0.057;	# This needs at least 0.049.
-use Astro::Coord::ECI::TLE::Set 0.057;
-use Astro::Coord::ECI::Utils 0.057 qw{:all};
+use Astro::Coord::ECI 0.059;			# This needs at least 0.049.
+use Astro::Coord::ECI::Moon 0.059;
+use Astro::Coord::ECI::Star 0.059;
+use Astro::Coord::ECI::Sun 0.059;
+use Astro::Coord::ECI::TLE 0.059 qw{:constants}; # This needs at least 0.059.
+use Astro::Coord::ECI::TLE::Iridium 0.059;	# This needs at least 0.049.
+use Astro::Coord::ECI::TLE::Set 0.059;
+use Astro::Coord::ECI::Utils 0.059 qw{:all};
 
 use Clone ();
 use Cwd ();
