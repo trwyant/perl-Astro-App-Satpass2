@@ -5,9 +5,13 @@ use 5.008;
 use strict;
 use warnings;
 
+use POSIX ();
+
 use base qw{ Astro::App::Satpass2::Copier };
 
 our $VERSION = '0.015';
+
+use constant ROUND_TIME => 1;
 
 my $delegate = eval {
     require Astro::App::Satpass2::FormatTime::DateTime::Strftime;
@@ -23,7 +27,9 @@ sub new {
 
     __PACKAGE__ eq $class and $class = $delegate;
 
-    my $self = {};
+    my $self = {
+	round_time	=> ROUND_TIME,
+    };
     bless $self, $class;
     return $self;
 }
@@ -79,6 +85,40 @@ sub _format_datetime_width_try {
     }
     $time = $self->__format_datetime_width_adjust_object( $time, $name, $max_trial );
     return ( $time, $wid );
+}
+
+{
+    my %valid = (
+	hour	=> 3600,
+	minute	=> 60,
+	second	=> 1,
+    );
+
+    sub round_time {
+	my ( $self, @arg ) = @_;
+	if ( @arg ) {
+	    my $val = $arg[0];
+	    if ( defined $val && $val =~ m/ [^0-9] /smx ) {
+		exists $valid{$val}
+		    or $self->warner()->wail( "Invalid rounding spec '$val'" );
+		$val = $valid{$val}
+	    }
+	    $self->{round_time} = $val;
+	    return $self;
+	} else {
+	    return $self->{round_time};
+	}
+    }
+}
+
+sub __round_time_value {
+    my ( $self, $time ) = @_;
+    ref $time
+	and return $time;
+    if ( defined( my $round = $self->round_time() ) ) {
+	$time = POSIX::floor( ( $time + $round / 2 ) / $round ) * $round;
+    }
+    return $time;
 }
 
 __PACKAGE__->create_attribute_methods();
@@ -177,6 +217,40 @@ L<format_datetime()|/format_datetime> method, the name of a component
 value for that component. The time is returned with the given component
 set to the given value. If the time is C<undef>, a new time representing
 C<01-Jan-2100 00:00:00> is constructed, adjusted, and returned.
+
+=head2 round_time
+
+ $ft->round_time( 60 );
+ print 'Time rounded to ', $ft->round_time(), ' seconds';
+
+This method is both accessor and mutator for the time rounding
+specification maintained on behalf of the subclass. If the subclass
+overrides this, it B<must> call SUPER::round_time with the same
+arguments.
+
+If called with an argument, the argument becomes the new rounding
+specification, in seconds. The argument must be an integer number of
+seconds, the special-cased strings C<'second'>, C<'minute'> or C<'hour'>
+(which specify C<1>, C<60> and C<3600> respectively), or C<undef> to
+turn off rounding. Be aware that if rounding is turned off the time
+formatter may truncate the time.
+
+If called without an argument, the current value of the C<round_time>
+attribute is returned. This will always be an integer.
+
+The default value is C<1>.
+
+=head2 __round_time_value
+
+ $time = $ft->__round_time_value( $time );
+
+This method exists to support the rounding of time values by subclasses,
+and should not be called directly. It is not itself supported, in the
+sense that the author reserves the right to change or revoke it without
+notice.
+
+This method takes as its argument an epoch time, and returns it rounded
+to the precision specified by C<< $ft->round_time() >>.
 
 =head2 tz
 

@@ -12,19 +12,19 @@ use base qw{
 use Astro::App::Satpass2::Utils qw{ instance };
 use DateTime;
 use DateTime::TimeZone;
-use POSIX ();
 
 our $VERSION = '0.015';
 
 sub format_datetime {
     my ( $self, $tplt, $time, $gmt ) = @_;
+    $time = $self->__round_time_value( $time );
     if ( instance( $time, 'DateTime' ) ) {
 	return $self->__format_datetime( $time, $tplt );
     } else {
 	# Oh, for 5.010 and the // operator.
 	my $dt = DateTime->from_epoch(
-	    epoch => POSIX::floor( $time + 0.5),
-	    time_zone => $self->_get_zone( defined $gmt ? $gmt :
+	    epoch	=> $time,
+	    time_zone	=> $self->_get_zone( defined $gmt ? $gmt :
 		$self->gmt() ) );
 	return $self->__format_datetime( $dt, $tplt );
     }

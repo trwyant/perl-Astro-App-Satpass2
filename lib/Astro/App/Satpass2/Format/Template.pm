@@ -566,6 +566,7 @@ sub _wrap {
 	    desired_equinox_dynamical =>
 			    $self->desired_equinox_dynamical(),
 	    provider	=> $self->provider(),
+	    round_time	=> $self->round_time(),
 	    time_format => $self->time_format(),
 	    time_formatter => $self->time_formatter(),
 	    local_coordinates => sub {

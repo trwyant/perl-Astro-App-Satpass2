@@ -14,15 +14,18 @@ our $VERSION = '0.015';
 
 sub format_datetime {
     my ( $self, $tplt, $time, $gmt ) = @_;
+    $time = $self->__round_time_value( $time );
     defined $gmt or $gmt = $self->gmt();
     my @parts;
     if ( ref $time eq 'ARRAY' ) {
 	@parts = @{ $time };
     } elsif ( $gmt ) {
-	@parts = gmtime POSIX::floor( $time + 0.5 );
+	@parts = gmtime $time;
     } else {
 	my $tz = $self->tz();
-	defined $tz and $tz ne '' and local $ENV{TZ} = $tz;
+	defined $tz
+	    and $tz ne ''
+	    and local $ENV{TZ} = $tz;
 	@parts = localtime $time;
     }
     return POSIX::strftime( $tplt, @parts );

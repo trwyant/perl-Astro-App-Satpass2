@@ -14,7 +14,7 @@ use Astro::Coord::ECI::Utils 0.059 qw{ deg2rad embodies julianday PI rad2deg TWO
 use Clone ();
 use List::Util qw{ max min };
 use POSIX qw{ floor };
-use Scalar::Util qw{ reftype };
+use Scalar::Util qw{ isdual reftype };
 use Text::Wrap ();
 
 our $VERSION = '0.015';
@@ -257,6 +257,11 @@ use constant TITLE_GRAVITY_TOP		=> 'top';
 	$self->{time_format} = $args{time_format};
 	defined $self->{time_format}
 	    or $self->{time_format} = $self->{time_formatter}->TIME_FORMAT();
+	if ( exists $args{round_time} ) {
+	    $self->{round_time} = $args{round_time};
+	} else {
+	    $self->{round_time} = $self->{time_formatter}->ROUND_TIME();
+	}
 
 	return $self;
     }
@@ -1001,6 +1006,7 @@ my %formatter_data = (	# For generating formatters
 	    format	=> undef,	# Just to get it looked at
 	    gmt		=> undef,
 	    places	=> 5,
+	    round_time	=> undef,	# Just to get it looked at
 	    width	=> '',
 	},
 	dimension	=> {
@@ -1053,6 +1059,7 @@ my %formatter_data = (	# For generating formatters
 	    format	=> undef,	# Just to get it looked at
 	    gmt		=> undef,
 	    places	=> '',
+	    round_time	=> undef,	# Just to get it looked at
 	    width	=> '',
 	},
 	dimension	=> {
@@ -1117,6 +1124,7 @@ my %formatter_data = (	# For generating formatters
 	    format	=> undef,	# Just to get it looked at
 	    gmt		=> undef,
 	    places	=> '',
+	    round_time	=> undef,	# Just to get it looked at
 	    width	=> '',
 	},
 	dimension	=> {
@@ -1140,7 +1148,7 @@ my %formatter_data = (	# For generating formatters
 	    my ( $self, $name, $arg ) = @_;
 	    defined( my $value = $self->_get( data => $name ) )
 		or return NONE;
-	    return $value + 0;
+	    return $value;
 	},
     },
 
@@ -1532,6 +1540,7 @@ my %formatter_data = (	# For generating formatters
 	    format	=> undef,	# Just to get it looked at
 	    gmt		=> undef,
 	    places	=> 5,
+	    round_time	=> undef,	# Just to get it looked at
 	    width	=> '',
 	},
 	dimension	=> {
@@ -1664,6 +1673,10 @@ sub __make_formatter_methods {
 		_confess(
 		    "'$name' must specify a {format} key in {dimension}" );
 	    }
+	    $info->{default}{round_time} = sub {
+		my ( $self ) = @_;
+		return $self->{round_time};
+	    };
 	}
 
 	# Validate the fetch information
@@ -2151,8 +2164,11 @@ sub _format_duration {
 	my ( $self, $value, $arg ) = @_;
 
 	defined $value
-	    and $value !~ m/ \D /sxm
 	    or goto &_format_undef;
+
+	isdual( $value )
+	    or $value !~ m/ \D /sxm
+	    or goto &_format_string;
 
 	my $table;
 	if ( 'string' ne $arg->{units} ) {
@@ -2341,6 +2357,7 @@ sub _format_time {
 	or goto &_format_undef;
 
     my $fmtr = $self->{time_formatter};
+    $fmtr->round_time( $arg->{round_time} );
     my $fmt = $arg->{format};
     defined $fmt
 	or $self->warner()->weep( "No time format" );

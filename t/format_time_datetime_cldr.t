@@ -30,6 +30,8 @@ BEGIN {
     require Astro::App::Satpass2::FormatTime::DateTime::Cldr;
 }
 
+use constant DATE_TIME_FORMAT => 'yyyy/MM/dd HH:mm:ss';
+
 class 'Astro::App::Satpass2::FormatTime::DateTime::Cldr';
 
 method 'new', INSTANTIATE, 'Instantiate';
@@ -38,18 +40,23 @@ method gmt => 1, TRUE, 'Turn on gmt attribute';
 
 method 'gmt', 1, 'The gmt attribute is on';
 
-my $time = timegm( 0, 0, 0, 1, 3, 111 );	# midnight 1-Apr-2011
+my $time = timegm( 50, 0, 0, 1, 3, 111 );	# 1-Apr-2011 00:00:50
 
-method format_datetime => 'yyyy/MM/dd HH:mm:SS', $time,
-    '2011/04/01 00:00:00', 'Implicit GMT time';
+method format_datetime => DATE_TIME_FORMAT, $time,
+    '2011/04/01 00:00:50', 'Implicit GMT time';
 
-method format_datetime_width => 'yyyy/MM/dd HH:mm:SS', 19,
+method format_datetime_width => DATE_TIME_FORMAT, 19,
     'Compute width required for format';
 
 method gmt => 0, TRUE, 'Turn off gmt';
 
-method format_datetime => 'yyyy/MM/dd HH:mm:SS', $time, 1,
-    '2011/04/01 00:00:00', 'Explicit GMT time';
+method format_datetime => DATE_TIME_FORMAT, $time, 1,
+    '2011/04/01 00:00:50', 'Explicit GMT time';
+
+method round_time => 60, TRUE, 'Round to nearest minute';
+
+method format_datetime => DATE_TIME_FORMAT, $time, 1,
+    '2011/04/01 00:01:00', 'Explicit GMT time, rounded to minute';
 
 done_testing;
 

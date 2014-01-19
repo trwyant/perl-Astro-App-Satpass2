@@ -31,7 +31,7 @@ use Getopt::Long 2.33;
 use IO::File 1.14;
 use IO::Handle;
 use POSIX qw{ floor };
-use Scalar::Util qw{ blessed openhandle };
+use Scalar::Util qw{ blessed isdual openhandle };
 use Text::Abbrev;
 use Text::ParseWords ();	# Used only for {level1} stuff.
 
@@ -1323,12 +1323,43 @@ sub pass : Verb( choose=s@ appulse! chronological! dump! events! horizon|rise|se
 	my ( $self, $opt, @passes ) = @_;
 	my @rslt;
 	foreach my $pass ( @passes ) {
-	    @{ $pass->{events} } = grep { $_->{event} == PASS_EVENT_NONE
-	    ||
-		$opt->{ $selector[ $_->{event} ] } } @{ $pass->{events} }
+
+=begin comment
+
+	    @{ $pass->{events} } = grep {
+		    ! isdual( $_->{event} )
+		    || $_->{event} == PASS_EVENT_NONE
+		    || $opt->{ $selector[ $_->{event} ] }
+		} @{ $pass->{events} }
+		and push @rslt, $pass;
+
+=end comment
+
+=cut
+	    @{ $pass->{events} } = grep {
+		_pass_select_event_code( $opt, $_->{event} )
+		} @{ $pass->{events} }
 		and push @rslt, $pass;
 	}
 	return @rslt
+    }
+
+    # Determine whether an event is to be reported for the pass. The
+    # arguments are the $opt hash reference and the event code or name.
+    # Anything that is not a dualvar and not an integer is accepted, on
+    # the presumption that it is an ad-hoc event provided by some
+    # subclass. The null event is always accepted on the presumption
+    # that if the user did not want it he or she would not have asked
+    # for it. Anything that is left is accepted or rejected based on the
+    # option hash and the @selector array (defined above).
+    sub _pass_select_event_code {
+	my ( $opt, $event ) = @_;
+	isdual( $event )
+	    or $event !~ m/ \D /smx
+	    or return 1;
+	$event == PASS_EVENT_NONE
+	    and return 1;
+	return $opt->{ $selector[ $event ] };
     }
 }
 
@@ -1406,41 +1437,50 @@ sub pwd : Verb() {
     return Cwd::cwd() . "\n";
 }
 
-sub quarters : Verb( choose=s@ dump! ) {
-    my ( $self, $opt, @args ) = __arguments( @_ );
+{
+    my @quarter_name = qw{ new first full last };
 
-    my $start = $self->__parse_time ($args[0], $self->_get_today_midnight());
-    my $end = $self->__parse_time ($args[1] || '+30');
+    sub quarters : Verb( choose=s@ first! full! last! new! dump! ) {
+	my ( $self, $opt, @args ) = __arguments( @_ );
 
-    my @sky = $self->__choose( $opt->{choose}, $self->{sky} )
-	or $self->wail( 'No bodies selected' );
+	my $start = $self->__parse_time (
+	    $args[0], $self->_get_today_midnight() );
+	my $end = $self->__parse_time ($args[1] || '+30');
 
-    my @almanac;
+	_apply_boolean_default( $opt, 0, qw{ new first full last } );
 
-#	Iterate over any background objects, accumulating all
-#	quarter-phases of each until we get one after the
-#	end time. We silently ignore bodies that do not support
-#	the next_quarter() method.
+	my @sky = $self->__choose( $opt->{choose}, $self->{sky} )
+	    or $self->wail( 'No bodies selected' );
 
-    foreach my $body ( @sky ) {
-	next unless $body->can ('next_quarter_hash');
-	$body->universal ($start);
+	my @almanac;
 
-	while (1) {
-	    my $hash = $body->next_quarter_hash();
-	    $hash->{time} > $end and last;
-	    push @almanac, $hash;
+	# Iterate over any background objects, accumulating all
+	# quarter-phases of each until we get one after the end time. We
+	# silently ignore bodies that do not support the next_quarter()
+	# method.
+
+	foreach my $body ( @sky ) {
+	    next unless $body->can ('next_quarter_hash');
+	    $body->universal ($start);
+
+	    while (1) {
+		my $hash = $body->next_quarter_hash();
+		$hash->{time} > $end and last;
+		$opt->{$quarter_name[$hash->{almanac}{detail}]}
+		    or next;
+		push @almanac, $hash;
+	    }
 	}
+
+	# Sort and display the quarter-phase information.
+
+	return $self->__format_data(
+	    almanac => [
+		sort { $a->{time} <=> $b->{time} }
+		@almanac
+	    ], $opt );
+
     }
-
-#	Sort and display the quarter-phase information.
-
-    return $self->__format_data(
-	almanac => [
-	    sort { $a->{time} <=> $b->{time} }
-	    @almanac
-	], $opt );
-
 }
 
 {
@@ -5476,12 +5516,52 @@ zone, or GMT if the L</gmt> attribute is true. The end time defaults to
 30 days after the start time. See L</SPECIFYING TIMES> for how to
 specify times.
 
-The following option is available:
+The following options are available:
 
- -dump produces debugging output.
+=over
 
-The -dump option should be considered a troubleshooting tool, which may
-change or disappear without notice.
+=item -choose
+
+ -choose moon
+
+This option selects the body whose quarters are to be computed. It can
+be specified multiple times to select multiple bodies. If omitted, all
+bodies in the sky are selected. Note that in any event bodies that do
+not support the C<next_quarter_hash()> method are skipped.
+
+=item -dump
+
+This option produces debugging output. It should be considered a
+troubleshooting tool, which may change or disappear without notice.
+
+=item -first
+
+This option causes the time of first quarter to be displayed. See below
+for how this is defaulted.
+
+=item -full
+
+This option causes the time of full phase to be displayed. See below for
+how this is defaulted.
+
+=item -last
+
+This option causes the time of last quarter to be displayed. See below
+for how this is defaulted.
+
+=item -new
+
+This option causes the time of new phase to be displayed. See below for
+how this is defaulted.
+
+=back
+
+The C<-first>, C<-full>, C<-last>, and C<-new> options form a group, and
+are defaulted as a group. If none of the group is specified, all are
+asserted by default. If none is asserted but at least one is negated
+(e.g. C<-nonew>), all unspecified members of the group are asserted by
+default. If at least one member of the group is asserted, all
+unspecified members are negated by default.
 
 =head2 run
 

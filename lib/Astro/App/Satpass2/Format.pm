@@ -48,6 +48,8 @@ sub new {
 	or $self->date_format( $self->time_formatter()->DATE_FORMAT() );
     $args{time_format}
 	or $self->time_format( $self->time_formatter()->TIME_FORMAT() );
+    exists $args{round_time}
+	or $self->round_time( $self->time_formatter()->ROUND_TIME() );
 
     $self->value_formatter( delete $args{value_formatter} ||
 	$static{value_formatter} );
@@ -58,11 +60,22 @@ sub new {
     return $self;
 }
 
+sub round_time {
+    my ( $self, @arg ) = @_;
+    if ( @arg ) {
+	$self->time_formatter()->round_time( @arg );
+	$self->{round_time} = $arg[0];
+	return $self;
+    } else {
+	return $self->time_formatter()->round_time();
+    }
+}
+
 sub attribute_names {
     my ( $self ) = @_;
     return ( $self->SUPER::attribute_names(),
 	qw{ date_format desired_equinox_dynamical gmt
-	    local_coord provider time_format time_formatter tz
+	    local_coord provider round_time time_format time_formatter tz
 	    value_formatter
 	} );
 }
@@ -72,6 +85,9 @@ sub attribute_names {
     my %original_value = (
 	date_format	=> sub {
 	    return $_[0]->time_formatter()->DATE_FORMAT()
+	},
+	round_time	=> sub {
+	    return $_[0]->time_formatter()->ROUND_TIME()
 	},
 	time_format	=> sub {
 	    return $_[0]->time_formatter()->TIME_FORMAT()
@@ -466,6 +482,31 @@ value of the C<provider> attribute.
 If passed an argument, that argument becomes the new value of
 C<provider>, and the object itself is returned so that calls may be
 chained.
+
+=head3 round_time
+
+ print 'Time rounded to: ', $fmt->round_time(), " seconds\n";
+ $fmt->round_time( 60 );
+
+The C<round_time> attribute is maintained on behalf of subclasses of
+this class, which B<may> (but need not) use it to format times. This
+method B<may> be overridden by subclasses, but the override B<must> call
+C<SUPER::round_time>, and return values consistent with the following
+description.
+
+This method acts as both accessor and mutator for the C<round_time>
+attribute. Without arguments it is an accessor, returning the current
+value of the C<round_time> attribute.
+
+If passed an argument, that argument becomes the new value of
+C<round_time>, and the object itself is returned so that calls may be
+chained.
+
+The interpretation of the argument is up to the subclass, but
+it is recommended for sanity's sake that the subclasses interpret this
+value in the same way as
+L<Astro::App::Satpass2::FormatTime|Astro::App::Satpass2::FormatTime>
+if they use this attribute at all.
 
 =head3 time_format
 
