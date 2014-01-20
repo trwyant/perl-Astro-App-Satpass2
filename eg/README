@@ -45,6 +45,13 @@ pass_vcalendar - A source file, to be executed by, for example,
 
 	CAVEAT: The same as for flare_vcalendar.
 
+quarters_vcalendar - A source file, to be executed by, for example,
+        satpass2> source eg/quarters_vcalendar
+	This makes quarters calculations, and displays the results in
+	vCalendar format.
+
+	CAVEAT: The same as for flare_vcalendar.
+
 tle_celestia.tt - A Template-Toolkit file to display TLE data in the
 	format needed for the Celestia planetarium software. You would
 	use this by loading the orbital elements you want, and then

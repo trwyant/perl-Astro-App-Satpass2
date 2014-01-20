@@ -11,6 +11,7 @@ eg/almanac
 eg/flare_vcalendar
 eg/My/Macros.pm
 eg/pass_vcalendar
+eg/quarters_vcalendar
 eg/tle_celestia.tt
 eg/tle_json.tt
 eg/tle_stellarium.tt
