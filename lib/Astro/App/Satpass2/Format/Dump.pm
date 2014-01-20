@@ -71,8 +71,8 @@ sub _dump {
 }
 
 sub format : method {	## no critic (ProhibitBuiltInHomonyms)
-    splice @_, 1, 1;
-    goto &_dump;
+    my ( $self, %data ) = @_;
+    return $self->_dump( \%data );
 }
 
 1;
