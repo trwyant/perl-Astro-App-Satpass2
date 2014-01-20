@@ -1438,16 +1438,16 @@ sub pwd : Verb() {
 }
 
 {
-    my @quarter_name = qw{ new first full last };
+    my @quarter_name = map { "q$_" } 0 .. 3;
 
-    sub quarters : Verb( choose=s@ first! full! last! new! dump! ) {
+    sub quarters : Verb( choose=s@ dump! q0|new|spring! q1|first|summer!  q2|full|fall q3|last|winter ) {
 	my ( $self, $opt, @args ) = __arguments( @_ );
 
 	my $start = $self->__parse_time (
 	    $args[0], $self->_get_today_midnight() );
 	my $end = $self->__parse_time ($args[1] || '+30');
 
-	_apply_boolean_default( $opt, 0, qw{ new first full last } );
+	_apply_boolean_default( $opt, 0, map { "q$_" } 0 .. 3 );
 
 	my @sky = $self->__choose( $opt->{choose}, $self->{sky} )
 	    or $self->wail( 'No bodies selected' );
@@ -5534,30 +5534,34 @@ not support the C<next_quarter_hash()> method are skipped.
 This option produces debugging output. It should be considered a
 troubleshooting tool, which may change or disappear without notice.
 
-=item -first
+=item -q0, or -new, or -spring
 
-This option causes the time of first quarter to be displayed. See below
-for how this is defaulted.
-
-=item -full
-
-This option causes the time of full phase to be displayed. See below for
+This option causes the time of the zeroth quarter to be displayed. The
+synonyms are appropriate to the Moon and Sun respectively. See below for
 how this is defaulted.
 
-=item -last
+=item -q1, or -first, or -summer
 
-This option causes the time of last quarter to be displayed. See below
-for how this is defaulted.
+This option causes the time of the first quarter to be displayed. The
+synonyms are appropriate to the Moon and Sun respectively. See below for
+how this is defaulted.
 
-=item -new
+=item -q2, or -full, or -fall
 
-This option causes the time of new phase to be displayed. See below for
+This option causes the time of the second quarter to be displayed. The
+synonyms are appropriate to the Moon and Sun respectively. See below for
+how this is defaulted.
+
+=item -q3, or -last, or -winter
+
+This option causes the time of the third quarter to be displayed. The
+synonyms are appropriate to the Moon and Sun respectively. See below for
 how this is defaulted.
 
 =back
 
-The C<-first>, C<-full>, C<-last>, and C<-new> options form a group, and
-are defaulted as a group. If none of the group is specified, all are
+The C<-q0>, C<-q1>, C<-q2>, and C<-q3> options (and their synonyms) are
+defaulted as a group. If none of the group is specified, all are
 asserted by default. If none is asserted but at least one is negated
 (e.g. C<-nonew>), all unspecified members of the group are asserted by
 default. If at least one member of the group is asserted, all
