@@ -27,7 +27,8 @@ sub clone {
 sub copy {
     my ( $self, $copy ) = @_;
     foreach my $attr ( $self->attribute_names() ) {
-	$copy->$attr( $self->$attr() );
+	$copy->can( $attr )
+	    and $copy->$attr( $self->$attr() );
     }
     return $self;
 }
