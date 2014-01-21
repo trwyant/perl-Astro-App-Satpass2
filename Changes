@@ -1,3 +1,25 @@
+0.016		2014-01-20	T. R. Wyant
+  Make the rounding of time for display configurable. The default is to
+    round to the nearest second.
+  Support body-specific pass events. This is really in support of a
+    project to predict sounding rocket visibility based on published KMZ
+    files for the launch.
+  Add options to the quarters() method to select which are displayed.
+  Add eg/quarters_vcalendar.
+  In Astro::App::Satpass2::FormatValue:
+    Add formatter method list() to handle TLE output. Handle individual
+      lines of the list with sub-templates.
+    Build time formats when used. This to allow subclasses to add time
+      formatters.
+  "Code macro" support tweaks. This is all still experimental:
+    Add method Astro::App::Satpass2->__add_to_observing_list().
+    Call code macro after_load() (if it exists) after loading the
+      macros.
+    If a code macro is loaded using the -lib option, record the absolute
+      path to the directory unless -relative also asserted.
+  Fix Astro::App::Satpass2::Format::Dump. No telling how long it was
+    broken.
+
 0.015		2013-11-17	T. R. Wyant
   No changes from 0.014_02.
 

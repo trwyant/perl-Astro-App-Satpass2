@@ -9,7 +9,7 @@ use base qw{ Astro::App::Satpass2::Macro };
 
 use Astro::App::Satpass2::Utils qw{ quoter };
 
-our $VERSION = '0.015';
+our $VERSION = '0.016';
 
 sub execute {
     my ( $self, $name ) = @_;
@@ -112,7 +112,7 @@ Thomas R. Wyant, III F<wyant at cpan dot org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2013 by Thomas R. Wyant, III
+Copyright (C) 2013-2014 by Thomas R. Wyant, III
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl 5.10.0. For more details, see the full text
