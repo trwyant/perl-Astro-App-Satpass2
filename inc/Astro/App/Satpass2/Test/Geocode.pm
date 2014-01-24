@@ -10,7 +10,7 @@ use base qw{ Exporter };
 use Astro::App::Satpass2::Utils qw{ load_package };
 use Test::More 0.88;
 
-our $VERSION = '0.016';
+our $VERSION = '0.016_01';
 
 our @EXPORT_OK = qw{ setup geocode };
 our @EXPORT = @EXPORT_OK;

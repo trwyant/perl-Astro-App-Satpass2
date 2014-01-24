@@ -1,3 +1,7 @@
+0.016_01	2014-01-24	T. R. Wyant
+  Try to get better diagnostics for the occasional load failures
+    reported by CPAN testers.
+
 0.016		2014-01-20	T. R. Wyant
   Make the rounding of time for display configurable. The default is to
     round to the nearest second.

@@ -17,7 +17,7 @@ use POSIX qw{ floor };
 use Scalar::Util qw{ isdual reftype };
 use Text::Wrap ();
 
-our $VERSION = '0.016';
+our $VERSION = '0.016_01';
 
 use constant NONE => undef;
 use constant TITLE_GRAVITY_BOTTOM	=> 'bottom';
