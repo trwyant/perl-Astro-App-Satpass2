@@ -134,6 +134,28 @@ SKIP: {
 instantiate 'Astro::App::Satpass2::FormatTime'
     or BAIL_OUT;
 
+require_ok 'Astro::App::Satpass2::FormatValue'
+    or BAIL_OUT;
+
+can_ok 'Astro::App::Satpass2::FormatValue', qw{
+    almanac altitude angle apoapsis apogee appulse argument_of_perigee
+    ascending_node azimuth b_star_drag bodies body center classification
+    clone date declination deg2rad earth eccentricity effective_date
+    element_number elevation embodies ephemeris_type epoch event
+    events first_derivative fixed_width floor fraction_lit has_method
+    illumination inclination inertial instance international
+    is_valid_title_gravity julianday latitude local_coord longitude
+    magnitude maidenhead max mean_anomaly mean_motion min mma
+    more_title_lines name new oid operational periapsis perigee
+    period phase rad2deg range reflections reftype reset_title_lines
+    revolutions_at_epoch right_ascension second_derivative semimajor
+    semiminor station status time title_gravity tle type
+}
+    or BAIL_OUT;
+
+instantiate 'Astro::App::Satpass2::FormatValue'
+    or BAIL_OUT;
+
 require_ok 'Astro::App::Satpass2::Format'
     or BAIL_OUT;
 
@@ -162,28 +184,6 @@ can_ok 'Astro::App::Satpass2::Wrap::Array', qw{ new dereference };
 
 instantiate 'Astro::App::Satpass2::Wrap::Array', [],
     'Astro::App::Satpass2::Wrap::Array'
-    or BAIL_OUT;
-
-require_ok 'Astro::App::Satpass2::FormatValue'
-    or BAIL_OUT;
-
-can_ok 'Astro::App::Satpass2::FormatValue', qw{
-    almanac altitude angle apoapsis apogee appulse argument_of_perigee
-    ascending_node azimuth b_star_drag bodies body center classification
-    clone date declination deg2rad earth eccentricity effective_date
-    element_number elevation embodies ephemeris_type epoch event
-    events first_derivative fixed_width floor fraction_lit has_method
-    illumination inclination inertial instance international
-    is_valid_title_gravity julianday latitude local_coord longitude
-    magnitude maidenhead max mean_anomaly mean_motion min mma
-    more_title_lines name new oid operational periapsis perigee
-    period phase rad2deg range reflections reftype reset_title_lines
-    revolutions_at_epoch right_ascension second_derivative semimajor
-    semiminor station status time title_gravity tle type
-}
-    or BAIL_OUT;
-
-instantiate 'Astro::App::Satpass2::FormatValue'
     or BAIL_OUT;
 
 require_ok 'Astro::App::Satpass2::Format::Template::Provider'

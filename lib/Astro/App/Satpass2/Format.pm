@@ -183,38 +183,6 @@ sub local_coord {
     }
 }
 
-=begin comment
-
-sub time_formatter {
-    my ( $self, @args ) = @_;
-    if ( @args ) {
-	my $fmtr = $args[0];
-	defined $fmtr and $fmtr ne ''
-	    or $fmtr = 'Astro::App::Satpass2::FormatTime';
-	ref $fmtr or do {
-	    my $class = load_package( $fmtr,
-		'Astro::App::Satpass2::FormatTime' )
-		or $self->warner()->wail( "Can not load $fmtr" );
-	    $fmtr = $class->new();
-	};
-	my $old = $self->{time_formatter}
-	    and ref $self->{time_formatter}
-	    and $self->{time_formatter}->copy( $fmtr );
-	$self->{time_formatter} = $fmtr;
-	if ( ! $old || $old->FORMAT_TYPE() ne $fmtr->FORMAT_TYPE() ) {
-	    $self->date_format( $fmtr->DATE_FORMAT() );
-	    $self->time_format( $fmtr->TIME_FORMAT() );
-	}
-	return $self;
-    } else {
-	return $self->{time_formatter};
-    }
-}
-
-=end comment
-
-=cut
-
 foreach my $attribute (
     [ time_formatter => 'Astro::App::Satpass2::FormatTime',
 	'Astro::App::Satpass2::FormatTime', sub {
@@ -240,8 +208,8 @@ foreach my $attribute (
 	    defined $fmtr and $fmtr ne ''
 		or $fmtr = $class;
 	    ref $fmtr or do {
-		my $class = load_package( $fmtr, $prefix )
-		    or $self->warner()->wail( "Can not load $fmtr" );
+		my $class = $self->load_package(
+		    { fatal => 'wail' }, $fmtr, $prefix );
 		$fmtr = $class->new();
 	    };
 	    if ( ref ( my $old = $self->{$name} ) ) {
@@ -265,34 +233,6 @@ sub tz {
 	return $self->{tz};
     }
 }
-
-=begin comment
-
-sub value_formatter {
-    my ( $self, @args ) = @_;
-    if ( @args ) {
-	my $fmtr = $args[0];
-	defined $fmtr and $fmtr ne ''
-	    or $fmtr = 'Astro::App::Satpass2::FormatValue';
-	ref $fmtr or do {
-	    my $class = load_package( $fmtr,
-		'Astro::App::Satpass2' )
-		or $self->warner()->wail( "Can not load $fmtr" );
-	    $fmtr = $class->new();
-	};
-	$self->{value_formatter}
-	    and ref $self->{value_formatter}
-	    and $self->{value_formatter}->copy( $fmtr );
-	$self->{value_formatter} = $fmtr;
-	return $self;
-    } else {
-	return $self->{value_formatter};
-    }
-}
-
-=end comment
-
-=cut
 
 sub warner {
     my ( $self, @args ) = @_;
