@@ -13,7 +13,7 @@ use Astro::App::Satpass2::Utils qw{ instance };
 use DateTime;
 use DateTime::TimeZone;
 
-our $VERSION = '0.016_01';
+our $VERSION = '0.016_02';
 
 sub format_datetime {
     my ( $self, $tplt, $time, $gmt ) = @_;

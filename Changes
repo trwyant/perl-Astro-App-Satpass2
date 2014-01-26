@@ -1,3 +1,8 @@
+0.016_02	2014-01-26	T. R. Wyant
+  Require Scalar::Util version 1.25, since that is the version that
+    supports dualvar(), which is needed for the body-specific pass
+    events added in 0.016.
+
 0.016_01	2014-01-24	T. R. Wyant
   Try to get better diagnostics for the occasional load failures
     reported by CPAN testers.
