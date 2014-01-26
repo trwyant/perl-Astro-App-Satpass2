@@ -9,7 +9,7 @@ use Test::More 0.88;
 use Astro::App::Satpass2::Test::App;
 use Cwd qw{ cwd };
 use File::HomeDir;
-use Scalar::Util qw{ blessed };
+use Scalar::Util 1.26 qw{ blessed };
 
 $| = 1;	## no critic (RequireLocalizedPunctuationVars)
 

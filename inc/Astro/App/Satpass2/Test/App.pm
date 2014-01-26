@@ -10,7 +10,7 @@ use base qw{ Exporter };
 use Carp;
 
 use Cwd qw{ abs_path };
-use Scalar::Util qw{ blessed };
+use Scalar::Util 1.26 qw{ blessed };
 use Test::More 0.52;
 
 use Astro::App::Satpass2;

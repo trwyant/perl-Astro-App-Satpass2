@@ -52,7 +52,7 @@ sub requires {
 	'List::Util'		=> 0,
 ##	'Params::Util'		=> 0.250,
 	'POSIX'			=> 0,
-	'Scalar::Util'		=> 0,
+	'Scalar::Util'		=> 1.26,	# For isdual()
 ##	'Task::Weaken'		=> 0,
 	'Template'		=> 2.21,
 	'Template::Constants'	=> 2.21,

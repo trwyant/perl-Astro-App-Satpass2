@@ -7,7 +7,7 @@ use warnings;
 
 use Astro::App::Satpass2::Utils qw{ instance };
 use Astro::App::Satpass2::Warner;
-use Scalar::Util qw{ weaken };
+use Scalar::Util 1.26 qw{ weaken };
 
 our $VERSION = '0.016_01';
 

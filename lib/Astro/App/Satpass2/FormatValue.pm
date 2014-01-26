@@ -14,7 +14,7 @@ use Astro::Coord::ECI::Utils 0.059 qw{ deg2rad embodies julianday PI rad2deg TWO
 use Clone ();
 use List::Util qw{ max min };
 use POSIX qw{ floor };
-use Scalar::Util qw{ isdual reftype };
+use Scalar::Util 1.26 qw{ isdual reftype };
 use Text::Wrap ();
 
 our $VERSION = '0.016_01';

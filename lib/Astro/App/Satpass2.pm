@@ -31,7 +31,7 @@ use Getopt::Long 2.33;
 use IO::File 1.14;
 use IO::Handle;
 use POSIX qw{ floor };
-use Scalar::Util qw{ blessed isdual openhandle };
+use Scalar::Util 1.26 qw{ blessed isdual openhandle };
 use Text::Abbrev;
 use Text::ParseWords ();	# Used only for {level1} stuff.
 
