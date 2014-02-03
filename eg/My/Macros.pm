@@ -11,7 +11,7 @@ use Astro::App::Satpass2::Utils qw{ __arguments };
 use Astro::Coord::ECI::Utils 0.059 qw{ rad2deg };
 use Scalar::Util 1.26 qw{ refaddr };
 
-our $VERSION = '0.016_02';
+our $VERSION = '0.017';
 
 {
     my %operands;

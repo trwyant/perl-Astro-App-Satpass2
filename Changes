@@ -1,3 +1,6 @@
+0.017		2014-02-03	T. R. Wyant
+  No changes since 0.016_02.
+
 0.016_02	2014-01-26	T. R. Wyant
   Require Scalar::Util version 1.25, since that is the version that
     supports dualvar(), which is needed for the body-specific pass
