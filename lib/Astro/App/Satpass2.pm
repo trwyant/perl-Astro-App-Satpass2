@@ -1221,6 +1221,32 @@ sub _macro_load_generator {
     return $output;
 }
 
+sub magnitude_table : Verb( name! reload! ) {
+    my ( $self, $opt, @args ) = __arguments( @_ );
+
+    @args or @args = qw{show};
+
+    my $verb = lc (shift (@args) || 'show');
+
+    my $output;
+
+    if ( $verb eq 'show' || $verb eq 'list' ) {
+
+	my %data = Astro::Coord::ECI::TLE->magnitude_table( 'show', @args );
+
+	foreach my $oid ( sort keys %data ) {
+	    $output .= quoter( 'status', 'add', $oid, $data{$oid} )
+		. "\n";
+	}
+
+    } else {
+	Astro::Coord::ECI::TLE->magnitude_table( $verb, @args );
+    }
+
+    return $output;
+
+}
+
 # Attributes must all be on one line to process correctly under Perl
 # 5.8.8.
 sub pass : Verb( choose=s@ appulse! chronological! dump! events! horizon|rise|set! illumination! quiet! transit|maximum|culmination! )
@@ -5381,6 +5407,49 @@ C<delete> and C<define> subcommands return nothing.
 
 Macros can be called programmatically via the L<dispatch()|/dispatch>
 method.
+
+=head2 magnitude_table
+
+ $output = $satpass2->magnitude_table( $subcommand, ... );
+ satpass2> magnitude_table subcommand ...
+
+This interactive method manipulates the satellite magnitude table. This
+provides intrinsic magnitudes for satellites loaded via the
+L<load()|/load> method. The arguments are a subcommand (defaulting to
+'show'), and possibly further arguments that depend on that subcommand.
+Briefly, the valid subcommands are:
+
+C<add> - adds a body'a magnitude to the table, possibly replacing an existing
+entry. The arguments are OID and intrinsic magnitude, the latter defined
+as the magnitude at range 1000 kilometers when half illuminated.
+
+C<adjust> - If an argument is given, provides an adjustment to the
+magnitude table data whem loading TLE data. This adjustment, in
+magnitudes, is added to whatever value is in the table. If no argument
+is given, returns the current adjustment.
+
+C<clear> - clears the magnitude table.
+
+C<drop> - drops an entry from the magnitude table. The argument is the OID.
+
+C<list> - a synonym for C<show>.
+
+C<magnitude> - Load the magnitude table from a hash (not available
+interactively). The loaded data replace whatever was there before.
+
+C<molczan> - Load the magnitude table from a Molczan-format data file.
+The loaded data replace whatever was there before.
+
+C<molczan> - Load the magnitude table from a Quicksat-format data file.
+The loaded data replace whatever was there before.
+
+C<show> - displays the magnitude table, formatted as a series of
+C<'magnitude_table add'> commands.
+
+This method is really just a front-end for the
+L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE>
+L<magnitude_table()|Astro::Coord::ECI::TLE/magnitude_table> method. See
+the documentation for that for more details.
 
 =head2 pass
 
