@@ -9,7 +9,7 @@ use Astro::App::Satpass2::Macro::Command;
 use Astro::App::Satpass2::Macro::Code;
 use Astro::App::Satpass2::ParseTime;
 use Astro::App::Satpass2::Utils qw{
-    __arguments expand_tilde fold_case has_method instance load_package
+    __arguments expand_tilde has_method instance load_package
     my_dist_config quoter
 };
 

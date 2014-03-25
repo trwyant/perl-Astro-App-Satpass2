@@ -7,6 +7,7 @@ use warnings;
 
 use base qw{ Exporter };
 
+use Astro::Coord::ECI::Utils ();
 use Cwd ();
 use File::HomeDir;
 use File::Spec;
@@ -22,8 +23,9 @@ our @EXPORT_OK = qw{
 };
 
 BEGIN {
-    *fold_case = CORE->can( 'fc' ) || CORE->can( 'lc' ) ||
-	sub { return lc $_[0] };
+    *fold_case = Astro::Coord::ECI::Utils->can( 'fold_case' ) ||
+	CORE->can( 'fc' ) ||		# Perl 5.16 amd up
+	sub ($) { return lc $_[0] };
 }
 
 # Documented in POD
@@ -312,6 +314,14 @@ suite of error-reporting methods C<whinge()>, C<wail()>, and C<weep()>.
 =head2 fold_case
 
  my $folded = fold_case( $text );
+
+THIS SUBROUTINE IS DEPRECATED IN FAVOR OF THE SAME-NAMED SUBROUTINE IN
+L<Astro::Coord::ECI::Utils|Astro::Coord::ECI::Utils>. Because this
+module is documented as being B<private> to the C<Astro::App::Satpass2>
+package, I feel justified in using an accelerated deprecation schedule,
+and removing it completely the first release after June 30 2014. In the
+meantime it is equated to C<Astro::Coord::ECI::Utils::fold_case()>
+provided the latter exists.
 
 This subroutine performs best-effort case folding of data for case-blind
 operations. Under Perl 5.16 or higher, it is an alias for the C<fc()>
