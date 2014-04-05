@@ -1283,10 +1283,9 @@ my %formatter_data = (	# For generating formatters
 		and $body->can( 'magnitude' )
 		and $sta = $self->_get_eci( 'station' )
 		or return NONE;
-	    my $time;
-	    if ( defined( $time = $self->_get( data => 'time' ) ) ) {
+	    if ( defined( my $time = $self->_get( data => 'time' ) ) ) {
 		$body->universal( $time );
-	    } elsif ( ! defined( $time = $body->universal() ) ) {
+	    } elsif ( ! defined( $body->universal() ) ) {
 		return NONE;
 	    }
 	    return $body->magnitude( $sta );
@@ -3801,9 +3800,9 @@ C<9>.
  print $fmt->magnitude();
 
 This method formats the contents of C<{data}{magnitude}>, which
-generally represent the magnitude of an Iridium flare. If C<{magnitude}>
-is undefined but the body supports the C<magnitude()> method, both body
-and station time are set to the contents of C<{time}>, and then
+generally represents the magnitude of an Iridium flare. If
+C<{magnitude}> is undefined but the body supports the C<magnitude()>
+method, the body time is set to the contents of C<{time}>, and then
 C<< $body->magnitude( $station ) >> is called.
 
 In addition to the standard arguments, it takes the following:
