@@ -112,6 +112,7 @@ meanmotion
 merchantability
 mixin
 mma
+Molczan
 MSWin
 noappulse
 noquarter
@@ -135,6 +136,7 @@ preprocessed
 preprocessing
 programmatically
 pwd
+Quicksat
 quoter
 radian
 radians

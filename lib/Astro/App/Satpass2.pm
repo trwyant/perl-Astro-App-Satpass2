@@ -5419,12 +5419,12 @@ L<load()|/load> method. The arguments are a subcommand (defaulting to
 'show'), and possibly further arguments that depend on that subcommand.
 Briefly, the valid subcommands are:
 
-C<add> - adds a body'a magnitude to the table, possibly replacing an existing
+C<add> - adds a body's magnitude to the table, possibly replacing an existing
 entry. The arguments are OID and intrinsic magnitude, the latter defined
 as the magnitude at range 1000 kilometers when half illuminated.
 
 C<adjust> - If an argument is given, provides an adjustment to the
-magnitude table data whem loading TLE data. This adjustment, in
+magnitude table data when loading TLE data. This adjustment, in
 magnitudes, is added to whatever value is in the table. If no argument
 is given, returns the current adjustment.
 
