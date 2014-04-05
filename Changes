@@ -1,3 +1,10 @@
+0.017_01	2014-04-05	T. R. Wyant
+  Have 'magnitude' format effector call the magnitude() method if the
+    body supports it and there is no {magnitude} item in the data.
+  Add support for Astro::Coord::ECI::TLE static method
+    magnitude_table().
+  Bump Astro::Coord::ECI requirement to 0.062.
+
 0.017		2014-02-03	T. R. Wyant
   No changes since 0.016_02.
 
