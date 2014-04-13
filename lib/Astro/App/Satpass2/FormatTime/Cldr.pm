@@ -7,7 +7,7 @@ use warnings;
 
 use base qw{ Exporter };
 
-our $VERSION = '0.017_01';
+our $VERSION = '0.018';
 
 our @EXPORT_OK = qw{
     DATE_FORMAT FORMAT_TYPE ISO_8601_FORMAT TIME_FORMAT

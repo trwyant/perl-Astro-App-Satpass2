@@ -1,3 +1,6 @@
+0.018		2014-04-13	T. R. Wyant
+  Eliminate use of each() built-in.
+
 0.017_01	2014-04-05	T. R. Wyant
   Have 'magnitude' format effector call the magnitude() method if the
     body supports it and there is no {magnitude} item in the data.

@@ -11,7 +11,7 @@ use Astro::App::Satpass2::FormatTime;
 use Astro::App::Satpass2::Utils qw{ load_package };
 use Astro::Coord::ECI::Utils 0.059 qw{ looks_like_number };
 
-our $VERSION = '0.017_01';
+our $VERSION = '0.018';
 
 my %static = (
     perltime	=> 0,
