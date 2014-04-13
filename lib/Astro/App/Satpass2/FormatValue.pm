@@ -278,9 +278,9 @@ sub clone {
     } else {
 	%arg = @args;
     }
-    while ( my ( $name, $value ) = each %{ $self } ) {
+    foreach my $name ( keys %{ $self } ) {
 	defined $arg{$name}
-	    or $arg{$name} = $value;
+	    or $arg{$name} = $self->{ $name };
     }
     delete $arg{internal};
     return $self->new( %arg );

@@ -35,7 +35,8 @@ sub init {
     # traverse the symbol table of the loaded code, so:
     no strict qw{ refs };
 
-    while ( my ( $name, $val ) = each %$stb ) {
+    foreach my $name ( keys %$stb ) {
+	my $val = $stb->{$name};
 
 	# We are only interested in symbols that start with word
 	# characters, excluding '_'

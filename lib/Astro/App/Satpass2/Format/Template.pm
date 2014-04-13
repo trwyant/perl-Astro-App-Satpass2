@@ -305,8 +305,8 @@ sub new {
 
     $self->_new_tt( $self->permissive() );
 
-    while ( my ( $name, $def ) = each %template_definitions ) {
-	$self->template( $name => $def );
+    foreach my $name ( keys %template_definitions ) {
+	$self->template( $name => $template_definitions{ $name } );
     }
 
     $self->{default} = {};
