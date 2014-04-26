@@ -1385,7 +1385,7 @@ sub pass : Verb( choose=s@ appulse! chronological! dump! events! horizon|rise|se
 	    or return 1;
 	$event == PASS_EVENT_NONE
 	    and return 1;
-	return $opt->{ $selector[ $event ] };
+	return defined $selector[ $event ] && $opt->{ $selector[ $event ] };
     }
 }
 
