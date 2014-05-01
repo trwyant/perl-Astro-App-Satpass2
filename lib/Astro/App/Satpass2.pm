@@ -2007,12 +2007,21 @@ sub show : Verb( changes! deprecated! readonly! ) {
     }
     my $output;
 
-    @args or @args = sort grep {
-	!$nointeractive{$_} &&
-	( $opt->{deprecated} ||
-	    !$self->_deprecation_in_progress( attribute => $_ ) &&
-       	( $opt->{readonly} || exists  $mutator{$_} ) )
-    } keys %accessor;
+    unless ( @args ) {
+	foreach my $name ( sort keys %accessor ) {
+	    $nointeractive{$name}
+		and next;
+	    exists $mutator{$name}
+		or $opt->{readonly}
+		or next;
+	    my $depr;
+	    ( $depr = $self->_deprecation_in_progress( attribute =>
+		    $name ) )
+		and ( not $opt->{deprecated} or $depr >= 3 )
+		and next;
+	    push @args, $name;
+	}
+    }
 
     foreach my $name (@args) {
 	exists $shower{$name}
@@ -2734,7 +2743,7 @@ sub _attribute_exists {
 #	$self->_deprecation_in_progress( $type, $name )
 #
 #	This method returns true if the deprecation is in progress. In
-#	practice this means the %deprecate value is defined.
+#	fact it returns the deprecation level.
 
 {
 
@@ -2745,7 +2754,7 @@ sub _attribute_exists {
 	    desired_equinox_dynamical	=> 0,
 	    explicit_macro_delete	=> 0,
 	    gmt		=> 0,
-	    lit		=> 2,
+	    lit		=> 3,
 	    local_coord	=> 0,
 	    perltime	=> 0,
 	    time_format	=> 0,
@@ -2779,7 +2788,7 @@ sub _attribute_exists {
     sub _deprecation_in_progress {
 	my ( $self, $type, $name ) = @_;
 	$deprecate{$type} or return;
-	return defined $deprecate{$type}{$name};
+	return $deprecate{$type}{$name};
     }
 
 }
@@ -6775,24 +6784,10 @@ There is no default; you must specify a value.
 
 =head2 lit
 
-This boolean attribute is deprecated. It is provided for backward
-compatibility with the F<satpass> script. The
-L<edge_of_earths_shadow|/edge_of_earths_shadow> attribute is preferred,
-and C<lit> is implemented in terms of that attribute. Note that any
-non-zero value of L<edge_of_earths_shadow|/edge_of_earths_shadow> will
-cause C<< $app->get( 'lit' ) >> to return true.
-
-Like the current C<satpass> script, every use of this attribute will
-result in a warning. In the first release on or after March 1 2013, this
-will become fatal.
-
-This boolean attribute specifies how to determine if a body is lit by
-the Sun. If true (i.e. 1) it is considered to be lit if the upper limb
-of the sun is above the horizon, as seen from the body. If false (i.e.
-0), the body is considered lit if the center of the sun is above the
-horizon.
-
-The default is 1 (i.e. true).
+This Boolean attribute is deprecated, and produces an exception on
+access. On the first release after October 1 2014 it will be removed
+completely. You should use the
+L<edge_of_earths_shadow|/edge_of_earths_shadow> attribute instead.
 
 =head2 local_coord
 
