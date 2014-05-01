@@ -45,6 +45,7 @@ my $body = Astro::Coord::ECI::TLE->new(
     meananomaly => &deg2rad(279.8765),
     elementnumber => 456,
     revolutionsatepoch => 56789,
+    intrinsic_magnitude	=> -0.5,
 )->geodetic(&deg2rad(34.0765), &deg2rad(-74.2084), 353.9
 )->universal($time);
 
@@ -432,7 +433,7 @@ method appulse => [], longitude => [], ' -51.2625',
 method station => [], longitude => [], ' -77.0377',
     'Longitude of observing station';
 
-method magnitude => [], '    ', 'Magnitude (unavailable)';
+method magnitude => [], '-1.7', 'Magnitude';
 method center => [], magnitude => [], '    ',
     'Magnitude of flare center (unavailable)';
 method appulse => [], magnitude => [], '    ',

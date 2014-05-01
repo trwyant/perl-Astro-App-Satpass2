@@ -56,7 +56,9 @@ EOD
     # Main templates
 
     almanac	=> <<'EOD',
-[% DEFAULT data = sp.almanac( arg ) %]
+[% UNLESS data %]
+    [%- SET data = sp.almanac( arg ) %]
+[%- END %]
 [%- FOREACH item IN data %]
     [%- item.date %] [% item.time %]
         [%= item.almanac( units = 'description' ) %]
@@ -64,7 +66,9 @@ EOD
 EOD
 
     flare	=> <<'EOD',
-[% DEFAULT data = sp.flare( arg ) %]
+[% UNLESS data %]
+    [%- SET data = sp.flare( arg ) %]
+[%- END %]
 [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
 [%- WHILE title.more_title_lines %]
     [%- title.time %]
@@ -100,7 +104,9 @@ EOD
 EOD
 
     list => <<'EOD',
-[% DEFAULT data = sp.list( arg ) %]
+[% UNLESS data %]
+    [%- SET data = sp.list( arg ) %]
+[%- END %]
 [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
 [%- WHILE title.more_title_lines %]
     [%- title.list %]
@@ -124,7 +130,9 @@ EOD
 
 
     location	=> <<'EOD',
-[% DEFAULT data = sp.location( arg ) -%]
+[% UNLESS data %]
+    [%- SET data = sp.location( arg ) %]
+[%- END -%]
 Location: [% data.name( width = '' ) %]
           Latitude [% data.latitude( places = 4,
                 width = '' ) %], longitude
@@ -135,8 +143,11 @@ Location: [% data.name( width = '' ) %]
 EOD
 
     pass	=> <<'EOD',
-[% DEFAULT data = sp.pass( arg ) %]
+[% UNLESS data %]
+    [%- SET data = sp.pass( arg ) %]
+[%- END %]
 [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
+[%- SET do_mag = sp.want_pass_variant( 'brightest' ) %]
 [%- WHILE title.more_title_lines %]
     [%- title.time( align_left = 0 ) %]
         [%= title.local_coord %]
@@ -144,6 +155,9 @@ EOD
         [%= title.longitude %]
         [%= title.altitude %]
         [%= title.illumination %]
+	[%- IF do_mag %]
+	    [%= title.magnitude %]
+	[%- END %]
         [%= title.event( width = '' ) %]
 
 [%- END %]
@@ -160,6 +174,9 @@ EOD
             [%= evt.longitude %]
             [%= evt.altitude %]
             [%= evt.illumination %]
+	    [%- IF do_mag %]
+		[%= evt.magnitude %]
+	    [%- END %]
             [%= evt.event( width = '' ) %]
         [%- IF 'apls' == evt.event( units = 'string', width = '' ) %]
             [%- apls = evt.appulse %]
@@ -174,7 +191,9 @@ EOD
 EOD
 
     pass_events	=> <<'EOD',
-[% DEFAULT data = sp.pass( arg ) %]
+[% UNLESS data %]
+    [%- SET data = sp.pass( arg ) %]
+[%- END %]
 [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
 [%- WHILE title.more_title_lines %]
     [%- title.date %] [% title.time %]
@@ -190,7 +209,9 @@ EOD
 EOD
 
     phase	=> <<'EOD',
-[% DEFAULT data = sp.phase( arg ) -%]
+[% UNLESS data %]
+    [%- SET data = sp.phase( arg ) %]
+[%- END %]
 [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
 [%- WHILE title.more_title_lines %]
     [%- title.date( align_left = 0 ) %]
@@ -215,7 +236,9 @@ EOD
 EOD
 
     position	=> <<'EOD',
-[% DEFAULT data = sp.position( arg ) %]
+[% UNLESS data %]
+    [%- SET data = sp.position( arg ) %]
+[%- END %]
 [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
 [%- data.date %] [% data.time %]
 [%- WHILE title.more_title_lines %]
@@ -247,15 +270,19 @@ EOD
 EOD
 
     tle		=> <<'EOD',
-[% DEFAULT data = sp.tle( arg ) -%]
-[% FOR item IN data %]
+[% UNLESS data %]
+    [%- SET data = sp.tle( arg ) %]
+[%- END %]
+[%- FOR item IN data %]
     [%- item.tle -%]
 [% END -%]
 EOD
 
     tle_verbose	=> <<'EOD',
-[% DEFAULT data = sp.tle( arg ) -%]
-[% CALL title.fixed_width( 0 ) -%]
+[% UNLESS data %]
+    [%- SET data = sp.tle( arg ) %]
+[%- END %]
+[%- CALL title.fixed_width( 0 ) -%]
 [% FOR item IN data -%]
 [% CALL item.fixed_width( 0 ) -%]
 [% title.oid %]: [% item.oid %]

@@ -5,7 +5,9 @@
     satpass2> formatter format eg/tle_stellarium.tt
 
     -%]
-[% DEFAULT data = sp.tle( arg ) -%]
+[% UNLESS data %]
+    [%- SET data = sp.tle( arg ) %]
+[%- END -%]
 {
 	"creator": "[% provider %]",
 	"hintColor": [0.4, 0.4, 0.4],

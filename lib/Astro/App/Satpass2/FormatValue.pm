@@ -23,6 +23,24 @@ use constant NONE => undef;
 use constant TITLE_GRAVITY_BOTTOM	=> 'bottom';
 use constant TITLE_GRAVITY_TOP		=> 'top';
 
+# The @event_names table is used in two distinct ways. First, it is the
+# default localization of the event names. Second it is a
+# locale-independant stringification of the event ID. So we define it
+# all here. The array gets shallow-cloned into the %locale hash below,
+# and used verbatim in _format_event() much further below.
+my @event_names;
+$event_names[PASS_EVENT_NONE]		= '';
+$event_names[PASS_EVENT_SHADOWED]	= 'shdw';
+$event_names[PASS_EVENT_LIT]		= 'lit';
+$event_names[PASS_EVENT_DAY]		= 'day';
+$event_names[PASS_EVENT_RISE]		= 'rise';
+$event_names[PASS_EVENT_MAX]		= 'max';
+$event_names[PASS_EVENT_SET]		= 'set';
+$event_names[PASS_EVENT_APPULSE]	= 'apls';
+$event_names[PASS_EVENT_START]		= 'strt';
+$event_names[PASS_EVENT_END]		= 'end';
+$event_names[PASS_EVENT_BRIGHTEST]	= 'brgt';
+
 #	Instantiator
 
 {
@@ -90,7 +108,7 @@ use constant TITLE_GRAVITY_TOP		=> 'top';
 	    title	=> 'Epoch',
 	},
 	event	=> {
-	    table	=> [ '', qw{ shdw lit day rise max set apls } ],
+	    table	=> [ @event_names ],
 	    title	=> 'Event',
 	},
 	first_derivative	=> {
@@ -2160,43 +2178,26 @@ sub _format_duration {
     return $self->_format_string( $buffer, $arg );
 }
 
-{
-    my @evnt;
-    foreach (
-	[&PASS_EVENT_NONE => ''],
-	[&PASS_EVENT_SHADOWED => 'shdw'],
-	[&PASS_EVENT_LIT => 'lit'],
-	[&PASS_EVENT_DAY => 'day'],
-	[&PASS_EVENT_RISE => 'rise'],
-	[&PASS_EVENT_MAX => 'max'],
-	[&PASS_EVENT_SET => 'set'],
-	[&PASS_EVENT_APPULSE => 'apls'],
-    ) {
-	$evnt[$_->[0]] = $_->[1];
-    }
+sub _format_event {
+    my ( $self, $value, $arg ) = @_;
 
-    sub _format_event {
-	my ( $self, $value, $arg ) = @_;
+    defined $value
+	or goto &_format_undef;
 
-	defined $value
-	    or goto &_format_undef;
+    isdual( $value )
+	or $value !~ m/ \D /sxm
+	or goto &_format_string;
 
-	isdual( $value )
-	    or $value !~ m/ \D /sxm
-	    or goto &_format_string;
-
-	my $table;
-	if ( 'string' ne $arg->{units} ) {
-	    foreach my $source ( qw{ default locale } ) {
-		$table = $self->_get( $source => event => 'table' )
-		    and last;
-	    }
+    my $table;
+    if ( 'string' ne $arg->{units} ) {
+	foreach my $source ( qw{ default locale } ) {
+	    $table = $self->_get( $source => event => 'table' )
+		and last;
 	}
-	$table ||= \@evnt;
-
-	return $self->_format_string( $table->[$value] || '', $arg );
     }
+    $table ||= \@event_names;
 
+    return $self->_format_string( $table->[$value] || '', $arg );
 }
 
 sub _format_integer {

@@ -727,6 +727,47 @@ execute 'pass -chronological 19801013T000000Z +1', <<'EOD',
 EOD
     'Pass in chronological format';
 
+execute 'set pass_variant brightest', undef, 'Set pass variant brightest';
+
+execute 'pass 19801013T000000Z +1', <<'EOD',
+    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Magn Event
+
+1980/10/13     88888 -
+05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit    7.9 rise
+05:42:43  55.9 115.6 SE      255.5  50.9259    1.7791   213.1 lit    3.5 max
+05:43:25  30.5  48.7 NE      406.2  53.4292    3.8299   215.0 lit   -0.4 brgt
+05:46:37   0.0  29.7 NE     1778.5  64.0515   17.6896   224.9 lit        set
+EOD
+    'Pass with brightest event';
+
+execute 'pass -nobrightest 19801013T000000Z +1', <<'EOD',
+    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+
+1980/10/13     88888 -
+05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
+05:42:43  55.9 115.6 SE      255.5  50.9259    1.7791   213.1 lit   max
+05:46:37   0.0  29.7 NE     1778.5  64.0515   17.6896   224.9 lit   set
+EOD
+    'Pass without brightest, via -nobrightest';
+
+execute 'set pass_variant nobrightest', undef, 'Clear pass variant brightest';
+
+execute 'show pass_variant', <<'EOD',
+set pass_variant none
+EOD
+    'Ensure pass_variant is clear';
+
+execute 'pass -brightest 19801013T000000Z +1', <<'EOD',
+    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Magn Event
+
+1980/10/13     88888 -
+05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit    7.9 rise
+05:42:43  55.9 115.6 SE      255.5  50.9259    1.7791   213.1 lit    3.5 max
+05:43:25  30.5  48.7 NE      406.2  53.4292    3.8299   215.0 lit   -0.4 brgt
+05:46:37   0.0  29.7 NE     1778.5  64.0515   17.6896   224.9 lit        set
+EOD
+    'Pass with brightest event via -brightest';
+
 # TODO pass -events
 
 execute "phase '20090401T000000Z'", <<'EOD', 'Phase of moon April 1 2009';

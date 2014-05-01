@@ -214,6 +214,16 @@ is $ft->format(
 			time	=> timegm( 14, 7, 10, 13, 9, 80 ),
 		    },
 		    {
+			azimuth		=> 2.22028221624351,
+			body		=> $sat,
+			elevation	=> 0.507347011634507,
+			event		=> PASS_EVENT_BRIGHTEST,
+			illumination	=> PASS_EVENT_LIT,
+			range		=> 402.657696214206,
+			station		=> $sta,
+			time		=> timegm( 48, 7, 10, 13, 9, 80 ),
+		    },
+		    {
 			azimuth => 1.95627424522813,
 			body => $sat,
 			elevation => 0.535869703007124,
@@ -241,6 +251,7 @@ is $ft->format(
 
 1980-10-13     88888 - None
 10:07:14  20.1 156.2 SE      537.9  34.8367  -74.8798   204.0 lit   rise
+10:07:48  29.1 127.2 SE      402.7  36.9992  -73.9844   204.9 lit   brgt
 10:08:00  30.7 112.1 E       385.9  37.7599  -73.6545   205.2 lit   max
 10:08:56  19.8  56.6 NE      552.7  41.2902  -72.0053   207.0 lit   set
 EOD

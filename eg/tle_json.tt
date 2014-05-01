@@ -4,6 +4,8 @@
     satpass2> formatter format eg/tle_json.tt
 
     -%]
-[% DEFAULT data = sp.tle( arg ) -%]
-[% json = instantiate( 'JSON' ).pretty.canonical.utf8.convert_blessed -%]
+[% UNLESS data %]
+    [%- SET data = sp.tle( arg ) %]
+[%- END %]
+[%- json = instantiate( 'JSON' ).pretty.canonical.utf8.convert_blessed -%]
 [% json.encode( data.bodies ) -%]
