@@ -909,9 +909,10 @@ sub init {
 	    sub {
 		# A missing init file is only an error if it was
 		# specified explicitly.
-		-f $init_file
+		-e $init_file
+		    and not -d _
 		    or $self->wail(
-			"Initialization file $init_file not found"
+			"Initialization file $init_file not found, or is a directory"
 		    );
 		return ( $init_file, $opt->{level1} )
 	    },
