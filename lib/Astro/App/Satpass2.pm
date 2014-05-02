@@ -6595,9 +6595,9 @@ the Earth's shadow from the center of the illuminating body (typically
 the Sun) as seen from a body in space. The offset is in units of the
 apparent radius of the illuminating body, so that setting it to C<1>
 specifies the edge of the umbra, C<-1> specifies the edge of the
-penumbra, and C<0> specifies the middle of the penumbra. This parameter
+penumbra, and C<0> specifies the middle of the penumbra. This attribute
 corresponds to the same-named L<Astro::Coord::ECI|Astro::Coord::ECI>
-parameter.
+attribute.
 
 The default is 1 (i.e. edge of umbra).
 
@@ -6863,6 +6863,14 @@ the valid values are the same as for that package. An attempt to set an
 invalid model will result in an exception.
 
 The default is 'model', which specifies whatever model is favored.
+
+=head2 pass_threshold
+
+This numeric attribute specifies the number of degrees of elevation
+above the horizon a pass has to reach before it is reported. If visible
+passes are desired, it must be visible above that elevation.  This
+attribute corresponds to the same-named
+L<Astro::Coord::ECI|Astro::Coord::ECI> attribute.
 
 =head2 pass_variant
 
