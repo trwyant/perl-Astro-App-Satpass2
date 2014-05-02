@@ -1,3 +1,39 @@
+0.018_01	2014-05-02	T. R. Wyant
+  Require Astro::Coord::ECI (etc) 0.063.
+  Drop default template documentation, which was only intended for
+    informational purposes. Instead, we document how to extract the
+    default templates.
+  Add support for magnitudes. This involves:
+    * Add a pass_variant attribute so we can ask for the brightest
+      moment in the pass.
+    * Add a -brightest option to pass() to override pass_variant, so
+      that the interface is at least semi-consistent.
+    * Modify the value formatter's magnitude() formatter so that, if
+      there is no {magnitude} key in the thing being formatted, but
+      there is a magnitude() method on the body, that method is called
+      and the result formatted.
+    * Modify the template for pass() to check to see whether
+      PASS_VARIANT_BRIGHTEST is set, and if so add a magnitude column to
+      the report.
+    The last point above required a number of supporting changes:
+    - Add a want_pass_variant() convenience method to return true if the
+      specific variant is wanted.
+    - Pass the Astro::App::Satpass object as the sp variable to Template
+      Toolkit from the pass() method (and other non- formatter()
+      methods) so that the template can see if the brightest moment is
+      being requested.
+    - use [% UNLESS data %] instead of [% DEFAULT data = ... %] in all
+      templates, since it appears that the latter evaluates the
+      right-hand side of the expression even if it does not use the
+      value. This essentially causes each template to do a default
+      calculation (with possible errors) whose result is thrown away.
+  Permit initialization with special files. The idea is to allow /dev/null.
+  Document the pass_threshold attribute, which was introduced in version
+    0.000_38 (2012-01-19!) but somehow not documented then.
+  Use of the Astro::App::Satpass2 'lit' attribute now produces an error.
+  Suppress errors on pass events which have a numeric value but no
+    defined selector. The event is not reported.
+
 0.018		2014-04-13	T. R. Wyant
   Eliminate use of each() built-in.
 
