@@ -904,272 +904,74 @@ The required values of the C<template> argument are supported by
 same-named L<Template-Toolkit|Template> templates, as follows. The
 C<data> provided should be as described in the documentation for the
 L<Astro::App::Satpass2|Astro::App::Satpass2>
-L<format()|Astro::App::Satpass2/format> method.  if the C<data> value is
+L<format()|Astro::App::Satpass2/format> method. If the C<data> value is
 not provided, each of the default templates will call an appropriate
 L<Astro::App::Satpass2|Astro::App::Satpass2> method on the C<sp> value,
 passing it the C<arg> value as arguments.
 
+The following documentation no longer shows the default templates, since
+it has proven difficult to maintain. Instead it simply (and probably
+more helpfully) documents the circumstances under which each template is
+used. If you wish to display a default template you can do something
+like the following:
+
+ $ satpass2 -initfile /dev/null
+ satpass2> # Display the 'almanac' template
+ satpass2> formatter -raw template almanac
+
+Specifying the null device for -initfile ensures you get the default
+template, rather than one your own initialization file may have loaded.
+The example is for a Unix system; Windows and VMS users should
+substitute something appropriate. The C<-raw> simply displays the value,
+rather than formatting it as a command to set the value.
+
 =head3 almanac
 
-This template defaults to
-
- [% DEFAULT data = sp.almanac( arg ) %]
- [%- FOREACH item IN data %]
-     [%- item.date %] [% item.time %]
-         [%= item.almanac( units = 'description' ) %]
- [% END -%]
+This template is used by the C<almanac()> and C<quarters()> methods.
 
 =head3 flare
 
-This template defaults to
-
- [% DEFAULT data = sp.flare( arg ) %]
- [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
- [%- WHILE title.more_title_lines %]
-     [%- title.time %]
-         [%= title.name( width = 12 ) %]
-         [%= title.local_coord %]
-         [%= title.magnitude %]
-         [%= title.angle( 'Degrees From Sun' ) %]
-         [%= title.azimuth( 'Center Azimuth', bearing = 2 ) %]
-         [%= title.range( 'Center Range', width = 6 ) %]
- 
- [%- END %]
- [%- prior_date = '' -%]
- [% FOR item IN data %]
-     [%- center = item.center %]
-     [%- current_date = item.date %]
-     [%- IF prior_date != current_date %]
-         [%- prior_date = current_date %]
-         [%- current_date %]
- 
-     [%- END %]
-     [%- item.time %]
-         [%= item.name( units = 'title_case', width = 12 ) %]
-         [%= item.local_coord %]
-         [%= item.magnitude %]
-         [%= IF 'day' == item.type( width = '' ) %]
-             [%- item.appulse.angle %]
-         [%- ELSE %]
-             [%- item.appulse.angle( literal = 'night' ) %]
-         [%- END %]
-         [%= center.azimuth( bearing = 2 ) %]
-         [%= center.range( width = 6 ) %]
- [% END -%]
+This template is used by the C<flare()> method.
 
 =head3 list
 
-This template defaults to
-
- [% DEFAULT data = sp.list( arg ) %]
- [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
- [%- WHILE title.more_title_lines %]
-     [%- title.oid( align_left = 0 ) %]
-         [%= title.name %]
-         [%= title.epoch %]
-         [%= title.period( align_left = 1 ) %]
- 
- [%- END %]
- [%- FOR item IN data %]
-     [%- IF item.inertial %]
-         [%- item.oid %] [% item.name %] [% item.epoch %]
-             [%= item.period( align_left = 1 ) %]
-     [%- ELSE %]
-         [%- item.oid %] [% item.name %] [% item.latitude %]
-             [%= item.longitude %] [% item.altitude %]
-     [%- END %]
- [% END -%]
+This template is used by the C<list()> method.
 
 =head3 location
 
-This template defaults to
-
- [% DEFAULT data = sp.location( arg ) -%]
- Location: [% data.name( width = '' ) %]
-           Latitude [% data.latitude( places = 4,
-                 width = '' ) %], longitude
-             [%= data.longitude( places = 4, width = '' )
-                 %], height
-             [%= data.altitude( units = 'meters', places = 0,
-                 width = '' ) %] m
+This template is used by the C<location()> method.
 
 =head3 pass
 
-This template defaults to
-
- [% DEFAULT data = sp.pass( arg ) %]
- [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
- [%- WHILE title.more_title_lines %]
-     [%- title.time( align_left = 0 ) %]
-         [%= title.local_coord %]
-         [%= title.latitude %]
-         [%= title.longitude %]
-         [%= title.altitude %]
-         [%= title.illumination %]
-         [%= title.event( width = '' ) %]
- 
- [%- END %]
- [%- FOR pass IN data %]
-     [%- events = pass.events %]
-     [%- evt = events.first %]
- 
-     [%- evt.date %]    [% evt.oid %] - [% evt.name( width = '' ) %]
- 
-     [%- FOREACH evt IN events %]
-         [%- evt.time %]
-             [%= evt.local_coord %]
-             [%= evt.latitude %]
-             [%= evt.longitude %]
-             [%= evt.altitude %]
-             [%= evt.illumination %]
-             [%= evt.event( width = '' ) %]
-         [%- IF 'apls' == evt.event( units = 'string', width = '' ) %]
-             [%- apls = evt.appulse %]
- 
-             [%- title.time( '' ) %]
-                 [%= apls.local_coord %]
-                 [%= apls.angle %] degrees from [% apls.name( width = '' ) %]
-         [%- END %]
- 
-     [%- END %]
- [%- END -%]
+This template is used by the C<pass()> method, unless the C<-events>
+option is specified.
 
 =head3 pass_events
 
-This template defaults to
-
- [% DEFAULT data = sp.pass( arg ) %]
- [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
- [%- WHILE title.more_title_lines %]
-     [%- title.date %] [% title.time %]
-         [%= title.oid %] [% title.event %]
-         [%= title.illumination %] [% title.local_coord %]
- 
- [%- END %]
- [%- FOREACH evt IN data.events %]
-     [%- evt.date %] [% evt.time %]
-         [%= evt.oid %] [% evt.event %]
-         [%= evt.illumination %] [% evt.local_coord %]
- [% END -%]
-
-The difference between this template and the L<pass|/pass> template is
-that this template orders the events chronologically, without respect to
-their source, whereas the L<pass|/pass> template orders passes
-chronologically by satellite.
+This template is used by the C<pass()> method if the C<-events> option
+is specified. It orders events chronologically without respect to their
+source.
 
 =head3 phase
 
-This template defaults to
-
- [% DEFAULT data = sp.phase( arg ) -%]
- [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
- [%- WHILE title.more_title_lines %]
-     [%- title.date( align_left = 0 ) %]
-         [%= title.time( align_left = 0 ) %]
-         [%= title.name( width = 8, align_left = 0 ) %]
-         [%= title.phase( places = 0, width = 4 ) %]
-         [%= title.phase( width = 16, units = 'phase',
-             align_left = 1 ) %]
-         [%= title.fraction_lit( title = 'Lit', places = 0, width = 4,
-             units = 'percent', align_left = 0 ) %]
- 
- [%- END %]
- [%- FOR item IN data %]
-     [%- item.date %] [% item.time %]
-         [%= item.name( width = 8, align_left = 0 ) %]
-         [%= item.phase( places = 0, width = 4 ) %]
-         [%= item.phase( width = 16, units = 'phase',
-             align_left = 1 ) %]
-         [%= item.fraction_lit( places = 0, width = 4,
-             units = 'percent' ) %]%
- [% END -%]
+This template is used by the C<phase()> method.
 
 =head3 position
 
-This template defaults to
-
- [% DEFAULT data = sp.position( arg ) %]
- [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
- [%- data.date %] [% data.time %]
- [%- WHILE title.more_title_lines %]
-     [%- title.name( align_left = 0, width = 16 ) %]
-         [%= title.local_coord %]
-         [%= title.epoch( align_left = 0 ) %]
-         [%= title.illumination %]
- 
- [%- END %]
- [%- FOR item IN data.bodies() %]
-     [%- item.name( width = 16, missing = 'oid', align_left = 0 ) %]
-         [%= item.local_coord %]
-         [%= item.epoch( align_left = 0 ) %]
-         [%= item.illumination %]
- 
-     [%- FOR refl IN item.reflections() %]
-         [%- item.name( literal = '', width = 16 ) %]
-             [%= item.local_coord( literal = '' ) %] MMA
-         [%- IF refl.status( width = '' ) %]
-             [%= refl.mma( width = '' ) %] [% refl.status( width = '' ) %]
-         [%- ELSE %]
-             [%= refl.mma( width = '' ) %] mirror angle [%
-                 refl.angle( width = '' ) %] magnitude [%
-                 refl.magnitude( width = '' ) %]
-         [%- END %]
- 
-     [%- END -%]
- [% END -%]
+This template is used by the C<position()> method.
 
 =head3 tle
 
-This template defaults to
-
- [% DEFAULT data = sp.tle( arg ) -%]
- [% FOR item IN data %]
-     [%- item.tle -%]
- [% END -%]
-
-Note the absence of the trailing newline, which is assumed to be part of
-the tle data itself.
+This template is used by the C<tle()> method, unless C<-verbose> is
+specified. Note that the default template does not generate a trailing
+newline, since the result of the body's C<tle()> method is assumed to
+provide this.
 
 =head3 tle_verbose
 
-This template defaults to
-
- [% DEFAULT data = sp.tle( arg ) -%]
- [% CALL title.fixed_width( 0 ) -%]
- [% FOR item IN data -%]
- [% CALL item.fixed_width( 0 ) -%]
- [% title.oid %]: [% item.oid %]
-     [% title.name %]: [% item.name %]
-     [% title.international %]: [% item.international %]
-     [% title.epoch %]: [% item.epoch( units = 'zulu' ) %] GMT
-     [% title.effective_date %]: [%
-         item.effective_date( units = 'zulu',
-         missing = '<none>' ) %] GMT
-     [% title.classification %]: [% item.classification %]
-     [% title.mean_motion %]: [% item.mean_motion( places = 8 )
-         %] degrees/minute
-     [% title.first_derivative %]: [%
-         item.first_derivative( places = 8 ) %] degrees/minute squared
-     [% title.second_derivative %]: [%
-         item.second_derivative( places = 5 ) %] degrees/minute cubed
-     [% title.b_star_drag %]: [% item.b_star_drag( places = 5 ) %]
-     [% title.ephemeris_type %]: [% item.ephemeris_type %]
-     [% title.inclination %]: [% item.inclination( places = 4 ) %] degrees
-     [% title.ascending_node %]: [% item.ascending_node(
-         places = 0 ) %] in right ascension
-     [% title.eccentricity %]: [% item.eccentricity( places = 7 ) %]
-     [% title.argument_of_perigee %]: [%
-         item.argument_of_perigee( places = 4 )
-         %] degrees from ascending node
-     [% title.mean_anomaly %]: [%
-         item.mean_anomaly( places = 4 ) %] degrees
-     [% title.element_number %]: [% item.element_number %]
-     [% title.revolutions_at_epoch %]: [% item.revolutions_at_epoch %]
-     [% title.period %]: [% item.period %]
-     [% title.semimajor %]: [% item.semimajor( places = 1 ) %] kilometers
-     [% title.perigee %]: [% item.perigee( places = 1 ) %] kilometers
-     [% title.apogee %]: [% item.apogee( places = 1 ) %] kilometers
- [% END -%]
+This template is used by the C<tle()> method if C<-verbose> is
+specified. It is assumed to provide some sort of formatted version of
+the TLE.
 
 =head2 Other Methods
 
@@ -1250,8 +1052,10 @@ have a C<data> variable.
 
  print "Template 'almanac' is :\n", $fmt->template( 'almanac' );
  $fmt->template( almanac => <<'EOD' );
- [% DEFAULT data = sp.almanac( arg ) -%]
- [% FOREACH item IN data %]
+ [% UNLESS data %]
+     [%- SET data = sp.almanac( arg ) %]
+ [%- END %]
+ [%- FOREACH item IN data %]
      [%- item.date %] [% item.time %]
          [%= item.almanac( units = 'description' ) %]
  [% END -%]
