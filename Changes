@@ -1,3 +1,6 @@
+0.011		2014-05-14	T. R. Wyant
+  No changes since 0.010_01.
+
 0.018_01	2014-05-02	T. R. Wyant
   Require Astro::Coord::ECI (etc) 0.063.
   Drop default template documentation, which was only intended for
