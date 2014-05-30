@@ -388,8 +388,6 @@ sub _elevation {
 }
 
 sub _illumination {
-    my ( $station, $body, $time, $twilight, $sun ) = @_;
-
     my %arg = @_;
 
     embodies( $arg{body}, 'Astro::Coord::ECI::TLE' )
@@ -411,16 +409,17 @@ sub _illumination {
 
     defined $arg{time}
 	and embodies( $arg{station}, 'Astro::Coord::ECI' )
-	and _elevation( $arg{station}, $arg{body}, $arg{time} ) >= 0
+#	and _elevation( $arg{station}, $arg{body}, $arg{time} ) >= 0
 	or return PASS_EVENT_NONE;
 
+    $arg{body}->illuminated( $arg{time} )
+	or return PASS_EVENT_SHADOWED;
+
     _elevation( $arg{station}, $arg{sun}, $arg{time} ) > $arg{twilight}
+	and _elevation( $arg{station}, $arg{body}, $arg{time} ) >= 0
 	and return PASS_EVENT_DAY;
 
-    _elevation( $arg{body}, $arg{sun} ) > $arg{body}->dip()
-	and return PASS_EVENT_LIT;
-
-    return PASS_EVENT_SHADOWED;
+    return PASS_EVENT_LIT;
 }
 
 sub center {
@@ -1203,7 +1202,22 @@ my %formatter_data = (	# For generating formatters
 	},
     },
 
-#   illumination	=> duplicated from event, below
+    illumination	=> {
+	default	=> {
+	    width	=> 5,
+	},
+	dimension	=> {
+	    dimension	=> 'event_pseudo_units',
+	},
+	fetch	=> sub {
+	    my ( $self, $name, $arg ) = @_;
+	    my $value;
+	    defined( $value = $self->_get( data => $name ) )
+		and $value ne ''
+		and return $value;
+	    return NONE;
+	},
+    },
 
     inclination	=> {
 	default	=> {
@@ -1618,7 +1632,6 @@ foreach my $name ( qw{ apogee periapsis perigee } ) {
     $formatter_data{$name} = $formatter_data{apoapsis};
 }
 $formatter_data{semiminor} = $formatter_data{semimajor};
-$formatter_data{illumination} = $formatter_data{event};
 
 sub _fetch {
     my ( $self, $info, $name, $arg ) = @_;
@@ -3612,7 +3625,15 @@ C<4>.
 
 This method formats the contents of C<{illumination}>, which generally
 comes from an L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE> C<pass()>
-calculation.
+calculation, though it is also present if the template calls
+C<data.bodies()>.
+
+If the satellite is above the horizon, the illumination returned by
+C<bodies()> is the same as that provided by the pass calculation. Prior
+to version [%% next_version %%], nothing was returned if the satellite
+was below the horizon. Beginning with version [%% next_version %%], the
+satellite will be shown as either lit or shadowed if it is below the
+horizon.
 
 In addition to the standard arguments, it takes the following:
 
