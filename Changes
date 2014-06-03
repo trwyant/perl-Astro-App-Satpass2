@@ -1,3 +1,7 @@
+0.011_01	2014-06-03	T. R. Wyant
+  Make use of the TLE illuminated() method To calculate illumination for
+    the position() method. This requires Astro::Coord::ECI::TLE 0.064.
+
 0.011		2014-05-14	T. R. Wyant
   No changes since 0.010_01.
 

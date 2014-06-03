@@ -17,7 +17,7 @@ use POSIX qw{ floor };
 use Scalar::Util 1.26 qw{ isdual reftype };
 use Text::Wrap ();
 
-our $VERSION = '0.019';
+our $VERSION = '0.019_01';
 
 use constant NONE => undef;
 use constant TITLE_GRAVITY_BOTTOM	=> 'bottom';
@@ -3630,8 +3630,8 @@ C<data.bodies()>.
 
 If the satellite is above the horizon, the illumination returned by
 C<bodies()> is the same as that provided by the pass calculation. Prior
-to version [%% next_version %%], nothing was returned if the satellite
-was below the horizon. Beginning with version [%% next_version %%], the
+to version 0.019_01, nothing was returned if the satellite
+was below the horizon. Beginning with version 0.019_01, the
 satellite will be shown as either lit or shadowed if it is below the
 horizon.
 
