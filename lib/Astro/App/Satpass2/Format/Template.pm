@@ -20,7 +20,7 @@ use Template::Provider;
 use Text::Abbrev;
 use Text::Wrap qw{ wrap };
 
-our $VERSION = '0.019_01';
+our $VERSION = '0.020';
 
 my %template_definitions = (
 
