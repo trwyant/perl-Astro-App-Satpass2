@@ -7,7 +7,7 @@ use warnings;
 
 use Astro::App::Satpass2::Utils qw{ has_method };
 
-our $VERSION = '0.000_01';
+our $VERSION = '0.020_001';
 
 #	The %dimensions hash defines physical dimensions and the
 #	allowable units for each. The keys of this hash are the names of

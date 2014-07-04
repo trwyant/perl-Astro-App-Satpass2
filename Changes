@@ -1,3 +1,11 @@
+0.020_001	2014-07-03	T. R. Wyant
+  This version not released to CPAN.
+  Add Astro::App::Satpass2::FormatValue::Formatter to implement custom
+    formatters without subclassing. THIS IS EXPERIMENTAL.
+  Add Satpass2 interactive method perl(). This executes some Perl,
+    either from a file or via an eval. The invocant comes in in
+    $ARGV[0].
+
 0.020		2014-06-12	T. R. Wyant
   No changes since 0.019_01.
 
