@@ -199,6 +199,7 @@ warner
 webcmd
 WGS
 whinge
+wooly
 Wyant
 YAML
 zoneinfo

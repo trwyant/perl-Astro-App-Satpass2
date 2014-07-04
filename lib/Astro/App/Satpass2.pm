@@ -1417,6 +1417,25 @@ sub pass : Verb( choose=s@ appulse! brightest|magnitude! chronological! dump! ev
     }
 }
 
+sub perl : Verb( eval! ) {
+    my ( $self, $opt, $file, @args ) = __arguments( @_ );
+    defined $file
+	or $self->wail( 'At least one argument is required' );
+    local @ARGV = ( $self, @args );
+    if ( $opt->{eval} ) {
+	my $rslt = eval $file;	## no critic (BuiltinFunctions::ProhibitStringyEval)
+	$@
+	    and $self->wail( "Failed to eval '$file': $@" );
+	return $rslt;
+    }
+    my $path = $self->expand_tilde( $file );
+    local $0 = $path;
+    my $rslt = do $path;
+    $@ and $self->wail( "Failed to run $path: $@" );
+    $! and $self->wail( "Failed to run $path: $!" );
+    return $rslt;
+}
+
 sub phase : Verb( choose=s@ ) {
     my ( $self, $opt, @args ) = __arguments( @_ );
 
@@ -5638,6 +5657,19 @@ if the command is issued from a F<satpass> initialization file (as
 opposed to an C<Astro::App::Satpass2> initialization file, or from a macro
 defined in a F<satpass> initialization file. This functionality will be
 revoked when support for the F<satpass> script is dropped.
+
+=head2 perl
+
+ $output = $satpass2->perl( $perl_file );
+ satpass2> perl perl_file
+
+This interactive method runs the given Perl file using the C<do>
+built-in. The file is entered with C<$ARGV[0]> set to a reference to the
+invocant, and subsequent C<@ARGV> entries set to the arguments, if any.
+The return is the result of the last statement in the file.
+
+If you provide the option C<-eval>, the argument is passed to the
+C<eval> built-in instead.
 
 =head2 phase
 

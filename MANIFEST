@@ -35,6 +35,7 @@ lib/Astro/App/Satpass2/FormatTime/DateTime/Strftime.pm
 lib/Astro/App/Satpass2/FormatTime/POSIX/Strftime.pm
 lib/Astro/App/Satpass2/FormatTime/Strftime.pm
 lib/Astro/App/Satpass2/FormatValue.pm
+lib/Astro/App/Satpass2/FormatValue/Formatter.pm
 lib/Astro/App/Satpass2/Geocode.pm
 lib/Astro/App/Satpass2/Geocode/Geocoder/US.pm
 lib/Astro/App/Satpass2/Geocode/OSM.pm
@@ -79,6 +80,7 @@ t/rewrite_macros
 t/source.dat
 t/tokenize.t
 t/whole_app.t
+t/whole_app_file
 xt/author/basic.t
 xt/author/changes.t
 xt/author/critic.t

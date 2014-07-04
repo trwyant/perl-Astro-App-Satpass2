@@ -930,6 +930,8 @@ execute  'formatter format position 19801013T054326Z', <<'EOD',
 EOD
     'Position run from template';
 
+my $dist_dir = cwd();
+
 SKIP: {
 
     my $tests = 2;
@@ -966,6 +968,9 @@ SKIP: {
 	"Change to home directory succeeded. \$^O = '$^O'";
 }
 
+chdir $dist_dir
+    or BAIL_OUT "Can not get back to directory '$dist_dir': $!";
+
 TODO: {
     SKIP: {
 	my $tests = 4;
@@ -1000,6 +1005,10 @@ EOD
 	    'Geocode of White House returned expected longitude';
     }
 }
+
+execute 'perl -eval Fubar', '"Fubar"', 'perl -eval';
+
+execute 'perl t/whole_app_file', 'OK', 'perl -noeval';
 
 method __TEST__frame_stack_depth => 1, 'Object frame stack is clean';
 
