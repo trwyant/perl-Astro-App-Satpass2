@@ -445,6 +445,30 @@ OID: 88888
     Apogee: 313.4 kilometers
 EOD
 
+eval {
+    my $magic_word = 'Plugh';
+    $ft->add_formatter_method( magic_word => {
+	    default	=> {
+		width	=> 6,
+	    },
+	    dimension	=> {
+		dimension	=> 'string_pseudo_units',
+	    },
+	    fetch	=> sub {
+		my ( $self, $name, $arg ) = @_;
+		return qq["$self->{data}{magic_word}"];
+	    },
+	} );
+    $ft->template( advent => q<A hollow voice says [% data.magic_word( width = '' ) %]> );
+    is $ft->format(
+	template	=> 'advent',
+	data		=> {
+	    magic_word	=> $magic_word,
+	}
+    ), qq{A hollow voice says "$magic_word"}, 'Add a formatter';
+    1;
+} or fail "Added formatter failed: $@";
+
 done_testing;
 
 1;

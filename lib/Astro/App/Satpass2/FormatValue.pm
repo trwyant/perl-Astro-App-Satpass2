@@ -6,6 +6,7 @@ use warnings;
 use base qw{ Astro::App::Satpass2::Copier };
 
 use Astro::App::Satpass2::FormatTime;
+use Astro::App::Satpass2::FormatValue::Formatter;
 use Astro::App::Satpass2::Utils qw{ has_method instance merge_hashes };
 use Astro::App::Satpass2::Warner;
 use Astro::Coord::ECI::Sun 0.059;
@@ -564,6 +565,8 @@ sub __local_coord_equatorial_rng {
 	$self->range( @arg );
 }
 
+=begin comment
+
 #	The %dimensions hash defines physical dimensions and the
 #	allowable units for each. The keys of this hash are the names of
 #	physical dimensions (e.g. 'length', 'mass', 'volume', and so
@@ -808,6 +811,10 @@ my %dimensions = (
     },
 
 );
+
+=end comment
+
+=cut
 
 # The following was for a utility script to generate documentation for
 # the dimensions.
@@ -1665,70 +1672,42 @@ sub _confess {
     Carp::confess( @arg );
 }
 
+our $AUTOLOAD;
+sub AUTOLOAD {
+    my ( $self, @arg ) = @_;
+    ( my $method = $AUTOLOAD ) =~ s/ .* :: //smx;
+    my $fmtr = $self->{formatter_method}{$method}
+	or $self->{warner}->wail( "No such formatter as '$method'" );
+    return $fmtr->code()->( $self, @arg );
+}
+
+{
+    my $fmtr_class = 'Astro::App::Satpass2::FormatValue::Formatter';
+    sub add_formatter_method {
+	my ( $self, @formatters ) = @_;
+	foreach my $fmtr ( @formatters ) {
+	    instance( $fmtr, $fmtr_class )
+		or $self->{warner}->wail(
+		"Formatters must be instances of $fmtr_class" );
+	    my $name = $fmtr->name();
+	    $self->can( $name )
+		and $self->{warner}->wail(
+		"Formatter $name can not override built-in format" );
+	    $self->{formatter_method}{$name}
+		and $self->{warner}->wail(
+		"Formatter $name can not replace previously-set formatter of same name" );
+	    $self->{formatter_method}{$name} = $fmtr;
+	}
+	return $self;
+    }
+}
+
 sub __make_formatter_methods {
     my ( $class ) = @_;
 
     foreach my $name ( $class->__list_formatter_names() ) {
 
 	my $info = $class->__get_formatter_data( $name );
-
-	# Validate the dimension information
-	$info->{dimension}
-	    or _confess(
-	    "'$name' does not specify a {dimension} hash" );
-	defined( my $dim = $info->{dimension}{dimension} )
-	    or _confess(
-	    "'$name' does not specify the dimension" );
-	eval {	# Because I can return out of it
-	    foreach my $d ( keys %dimensions ) {
-		$d eq $dim
-		    and return 1;
-	    }
-	    return 0;
-	} or _confess(
-	    "'$name' specifies invalid dimension '$dim'" );
-	if ( defined( my $dflt = $info->{dimension}{default} ) ) {
-	    eval {	# Because I can return out of it
-		foreach my $u ( keys %{ $dimensions{$dim}{define} } ) {
-		    $u eq $dflt
-			and return 1;
-		}
-		return 0;
-	    } or _confess(
-		"'$name' specifies invalid default units '$dflt'" );
-	}
-
-	# If the dimension is 'time_units' we need to validate that the
-	# format key is defined and valid
-	if ( 'time_units' eq $info->{dimension}{dimension} ) {
-	    if ( 'ARRAY' eq ref $info->{dimension}{format} ) {
-		foreach my $entry ( @{ $info->{dimension}{format} } ) {
-		    $class->_valid_time_format_name( $entry )
-			or _confess(
-			"In '$name', '$entry' is not a valid format" );
-		}
-		$info->{default}{format} = sub {
-		    my ( $self ) = @_;
-		    return $self->_get_date_format_data( $name, format => $info );
-		};
-		$info->{default}{width} = sub {
-		    my ( $self ) = @_;
-		    return $self->_get_date_format_data( $name, width => $info );
-		};
-	    } else {
-		_confess(
-		    "'$name' must specify a {format} key in {dimension}" );
-	    }
-	    $info->{default}{round_time} = sub {
-		my ( $self ) = @_;
-		return $self->{round_time};
-	    };
-	}
-
-	# Validate the fetch information
-	'CODE' eq ref $info->{fetch}
-	    or _confess(
-	    "In '$name', {fetch} is not a code reference" );
 
 	$class->can( $name )
 	    and next;
@@ -1737,29 +1716,12 @@ sub __make_formatter_methods {
 
 	no strict qw{ refs };
 
-	*$fq = sub {
-	    my ( $self, %arg ) = _arguments( @_ );
-
-	    $self->_apply_defaults( $name => \%arg, $info->{default} );
-
-	    my $value = ( $self->{title} || defined $arg{literal} ) ?
-		NONE :
-		$self->_fetch( $info, $name, \%arg );
-
-	    my @rslt;
-	    foreach my $parm ( $info->{chain} ?
-		$info->{chain}->( $self, $name, $value, \%arg ) :
-		\%arg ) {
-
-		push @rslt, defined $arg{literal} ?
-		    $self->_format_string( $arg{literal}, \%arg ) :
-		    $self->_apply_dimension(
-			$name => $value, $parm, $info->{dimension} );
-
-	    }
-
-	    return join ' ', @rslt;
-	};
+	# TODO get rid of commented-out code if this works out
+#	*$fq = $class->make_formatter_method( $name, $info );
+	*$fq = Astro::App::Satpass2::FormatValue::Formatter->new(
+	    $name,
+	    $info,
+	)->code();
 
     }
     return;
@@ -1847,7 +1809,11 @@ sub _apply_dimension {
 
     my $dim_data;
 #   $dim_data = $self->__get_dimension_data( $dimension )
-    $dim_data = $dimensions{$dimension}
+#   $dim_data = $dimensions{$dimension}
+#   TODO figure out how to move the relevant parts of this logic to
+#   Astro::App::Satpass2::FormatValue::Formatter without introducing all
+#   sorts of Cadbury goo.
+    $dim_data = Astro::App::Satpass2::FormatValue::Formatter->__get_dimension_info( $dimension )
 	and defined( my $units = _dor( $arg->{units}, $dim->{units},
 	    $self->_get( default => $name, 'units' ),
 	    $dim_data->{default} ) )
@@ -1898,6 +1864,8 @@ sub _apply_dimension {
     return $self->$formatter( $value, $arg );
 }
 
+# TODO both this and Astro::App::Satpass2::FormatValue::Formatter need
+# this.
 sub _arguments {
     my @arg = @_;
 
@@ -2455,6 +2423,8 @@ sub _manufacture_date_format {
     return { format => $fmt, width => $wid };
 }
 
+=begin comment
+
 {
 
     my %fmt;
@@ -2468,6 +2438,10 @@ sub _manufacture_date_format {
 	return $fmt{$name};
     }
 }
+
+=end comment
+
+=cut
 
 sub _set_time_format {
     my ($self, $name, $data) = @_;
@@ -4498,6 +4472,24 @@ This method resets the title line logic to its original state. You will
 not normally need to call this unless you want to display titles more
 than once B<and> you have previously exited a C<more_title_lines()> loop
 prematurely.
+
+=head2 Adding format effectors
+
+=head3 add_formatter_method
+
+ $fmt->add_formatter_method( ... );
+
+This experimental method takes as its arguments one or more
+L<Astro::App::Satpass2::FormatValue::Formatter|Astro::App::Satpass2::FormatValue::Formatter>
+objects, and makes them available for use in formatting values. An
+exception will be thrown if you try to replace an existing formatter,
+whether it is built-in or previously added with this method.
+
+It is not anticipated that the user will need to call this directly.
+Instead the formatter object will call it on the user's behalf.
+
+The whole idea of custom format effectors is highly experimental, and
+should be considered undocumented and subject to change without notice.
 
 =head1 UNITS
 

@@ -7,6 +7,7 @@ use base qw{ Astro::App::Satpass2::Format };
 
 use Astro::App::Satpass2::Format::Template::Provider;
 # use Astro::App::Satpass2::FormatValue;
+use Astro::App::Satpass2::FormatValue::Formatter;
 use Astro::App::Satpass2::Utils qw{ instance };
 use Astro::App::Satpass2::Wrap::Array;
 use Astro::Coord::ECI::TLE 0.059 qw{ :constants };
@@ -337,6 +338,7 @@ sub new {
     }
 
     $self->{default} = {};
+    $self->{formatter_method} = {};
 
     return $self;
 }
@@ -357,6 +359,19 @@ sub _new_tt {
 	"Failed to instantate tt: $Template::ERROR" );
 
     return;
+}
+
+sub add_formatter_method {
+    my ( $self, $name, $hash ) = @_;
+    $self->{formatter_method}{$name}
+	and $self->{warner}->wail(
+	"Formatter method $name already exists" );
+    Astro::App::Satpass2::FormatValue->can( $name )
+	and $self->{warner}->wail(
+	"Formatter $name can not override built-in formatter" );
+    $self->{formatter_method}{$name} =
+    Astro::App::Satpass2::FormatValue::Formatter->new( $name, $hash );
+    return $self;
 }
 
 sub attribute_names {
@@ -617,6 +632,7 @@ sub _wrap {
 	    title	=> $title,
 	    warner	=> $self->warner(),
 	);
+	$data->add_formatter_method( values %{ $self->{formatter_method} } );
     } elsif ( 'ARRAY' eq ref $data ) {
 	$data = [ map { $self->_wrap( $_ ) } @{ $data } ];
     } elsif ( embodies( $data, 'Astro::Coord::ECI' ) ) {
@@ -897,6 +913,26 @@ You may specify an argument to C<fixed_width()>.
 Nothing is returned.
 
 =back
+
+=head3 add_formatter_method
+
+ $tplt->add_formatter_method( $name => \%definition );
+
+This experimental method adds the named formatter to any
+L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
+objects created. The first argument is the name of the formatter, which
+may not duplicate any formatter built in to
+L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>,
+nor any formatter previously added by this method. The second argument
+defines the formatter, and is purposefully left undocumented until the
+whole business of adding a formatter becomes considerably less wooly and
+experimental.
+
+What this really does is instantiate a
+L<Astro::App::Satpass2::FormatValue::Formatter|Astro::App::Satpass2::FormatValue::Formatter>
+and add that object to any
+L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
+objects created.
 
 =head2 Templates
 
