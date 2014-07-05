@@ -565,8 +565,6 @@ sub __local_coord_equatorial_rng {
 	$self->range( @arg );
 }
 
-=begin comment
-
 #	The %dimensions hash defines physical dimensions and the
 #	allowable units for each. The keys of this hash are the names of
 #	physical dimensions (e.g. 'length', 'mass', 'volume', and so
@@ -811,10 +809,6 @@ my %dimensions = (
     },
 
 );
-
-=end comment
-
-=cut
 
 # The following was for a utility script to generate documentation for
 # the dimensions.
@@ -1675,6 +1669,11 @@ sub _confess {
 our $AUTOLOAD;
 sub AUTOLOAD {
     my ( $self, @arg ) = @_;
+    ref $self
+	or do {
+	my ( undef, $filename, $line ) = caller( 1 );
+	_confess( "Undefined subroutine $AUTOLOAD called at $filename line $line" );
+    };
     ( my $method = $AUTOLOAD ) =~ s/ .* :: //smx;
     my $fmtr = $self->{formatter_method}{$method}
 	or $self->{warner}->wail( "No such formatter as '$method'" );
@@ -1702,6 +1701,84 @@ sub AUTOLOAD {
     }
 }
 
+sub __make_formatter_code {
+    my ( $class, $name, $info ) = @_;
+    defined $name
+	or _confess( 'The name argument must be defined' );
+    'HASH' eq ref $info
+	or _confess( 'The info argument must be a HASH reference' );
+
+    # Validate the dimension information
+    $info->{dimension}
+	or _confess(
+	"'$name' does not specify a {dimension} hash" );
+    defined( my $dim = $info->{dimension}{dimension} )
+	or _confess(
+	"'$name' does not specify the dimension" );
+    $dimensions{$dim}
+	or _confess( "'$name' specifies invalid dimension '$dim'" );
+    if ( defined( my $dflt = $info->{dimension}{default} ) ) {
+	defined $dimensions{$dim}{define}{$dflt}
+	    or _confess( "'$name' specifies invalid default units '$dflt'" );
+    }
+
+    # If the dimension is 'time_units' we need to validate that the
+    # format key is defined and valid
+    if ( 'time_units' eq $info->{dimension}{dimension} ) {
+	if ( 'ARRAY' eq ref $info->{dimension}{format} ) {
+	    foreach my $entry ( @{ $info->{dimension}{format} } ) {
+		$class->_valid_time_format_name( $entry )
+		    or _confess(
+		    "In '$name', '$entry' is not a valid format" );
+	    }
+	    $info->{default}{format} = sub {
+		my ( $self ) = @_;
+		return $self->_get_date_format_data( $name, format => $info );
+	    };
+	    $info->{default}{width} = sub {
+		my ( $self ) = @_;
+		return $self->_get_date_format_data( $name, width => $info );
+	    };
+	} else {
+	    _confess(
+		"'$name' must specify a {format} key in {dimension}" );
+	}
+	$info->{default}{round_time} = sub {
+	    my ( $self ) = @_;
+	    return $self->{round_time};
+	};
+    }
+
+    # Validate the fetch information
+    'CODE' eq ref $info->{fetch}
+	or _confess(
+	"In '$name', {fetch} is not a code reference" );
+
+    return sub {
+	my ( $self, %arg ) = _arguments( @_ );
+
+	$self->_apply_defaults( $name => \%arg, $info->{default} );
+
+	my $value = ( $self->{title} || defined $arg{literal} ) ?
+	    NONE :
+	    $self->_fetch( $info, $name, \%arg );
+
+	my @rslt;
+	foreach my $parm ( $info->{chain} ?
+	    $info->{chain}->( $self, $name, $value, \%arg ) :
+	    \%arg ) {
+
+	    push @rslt, defined $arg{literal} ?
+		$self->_format_string( $arg{literal}, \%arg ) :
+		$self->_apply_dimension(
+		    $name => $value, $parm, $info->{dimension} );
+
+	}
+
+	return join ' ', @rslt;
+    };
+}
+
 sub __make_formatter_methods {
     my ( $class ) = @_;
 
@@ -1716,12 +1793,7 @@ sub __make_formatter_methods {
 
 	no strict qw{ refs };
 
-	# TODO get rid of commented-out code if this works out
-#	*$fq = $class->make_formatter_method( $name, $info );
-	*$fq = Astro::App::Satpass2::FormatValue::Formatter->new(
-	    $name,
-	    $info,
-	)->code();
+	*$fq = __PACKAGE__->__make_formatter_code( $name, $info );
 
     }
     return;
@@ -1813,7 +1885,7 @@ sub _apply_dimension {
 #   TODO figure out how to move the relevant parts of this logic to
 #   Astro::App::Satpass2::FormatValue::Formatter without introducing all
 #   sorts of Cadbury goo.
-    $dim_data = Astro::App::Satpass2::FormatValue::Formatter->__get_dimension_info( $dimension )
+    $dim_data = $dimensions{$dimension}
 	and defined( my $units = _dor( $arg->{units}, $dim->{units},
 	    $self->_get( default => $name, 'units' ),
 	    $dim_data->{default} ) )
@@ -1864,8 +1936,6 @@ sub _apply_dimension {
     return $self->$formatter( $value, $arg );
 }
 
-# TODO both this and Astro::App::Satpass2::FormatValue::Formatter need
-# this.
 sub _arguments {
     my @arg = @_;
 
@@ -2423,8 +2493,6 @@ sub _manufacture_date_format {
     return { format => $fmt, width => $wid };
 }
 
-=begin comment
-
 {
 
     my %fmt;
@@ -2438,10 +2506,6 @@ sub _manufacture_date_format {
 	return $fmt{$name};
     }
 }
-
-=end comment
-
-=cut
 
 sub _set_time_format {
     my ($self, $name, $data) = @_;
