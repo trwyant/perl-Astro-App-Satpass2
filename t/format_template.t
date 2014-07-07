@@ -447,7 +447,7 @@ EOD
 
 eval {
     my $magic_word = 'Plugh';
-    $ft->add_formatter_method( magic_word => {
+    $ft->add_formatter_method( {
 	    default	=> {
 		width	=> 6,
 	    },
@@ -458,6 +458,7 @@ eval {
 		my ( $self, $name, $arg ) = @_;
 		return qq["$self->{data}{magic_word}"];
 	    },
+	    name	=> 'magic_word',
 	} );
     $ft->template( advent => q<A hollow voice says [% data.magic_word( width = '' ) %]> );
     is $ft->format(

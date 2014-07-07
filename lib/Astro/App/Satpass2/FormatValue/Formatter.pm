@@ -11,22 +11,24 @@ use Astro::App::Satpass2::Utils qw{ has_method };
 our $VERSION = '0.020_001';
 
 sub new {
-    my ( $class, $name, $info ) = @_;
+    my ( $class, $info ) = @_;
 
     return bless {
-	name	=> $name,
+	info	=> $info,
 	code	=> Astro::App::Satpass2::FormatValue
-	    ->__make_formatter_code( $name, $info ),
+	    ->__make_formatter_code( $info ),
     }, $class;
 
 }
 
-foreach my $method ( qw{ code name } ) {
-    no strict qw{ refs };
-    *$method = sub {
-	my ( $self ) = @_;
-	return $self->{$method};
-    };
+sub code {
+    my ( $self ) = @_;
+    return $self->{code};
+}
+
+sub name {
+    my ( $self ) = @_;
+    return $self->{info}{name};
 }
 
 1;
@@ -63,9 +65,8 @@ This class supports the following methods:
 
 =head2 new
 
-This static method instantiates the object. Besides the invocant, it
-takes two arguments: the name of the formatter and a hash that describes
-the formatter.
+This static method instantiates the object. Besides the invocant, its
+argument is a reference to a hash that describes the formatter.
 
 =head2 code
 

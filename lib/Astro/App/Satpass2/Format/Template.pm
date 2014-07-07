@@ -362,15 +362,18 @@ sub _new_tt {
 }
 
 sub add_formatter_method {
-    my ( $self, $name, $hash ) = @_;
-    $self->{formatter_method}{$name}
+    my ( $self, $fmtr ) = @_;
+    defined( my $fmtr_name = $fmtr->{name} )
+	or $self->warner()->wail(
+	    "Formatter definition must have {name} defined" );
+    $self->{formatter_method}{$fmtr_name}
 	and $self->{warner}->wail(
-	"Formatter method $name already exists" );
-    Astro::App::Satpass2::FormatValue->can( $name )
+	"Formatter method $fmtr_name already exists" );
+    Astro::App::Satpass2::FormatValue->can( $fmtr_name )
 	and $self->{warner}->wail(
-	"Formatter $name can not override built-in formatter" );
-    $self->{formatter_method}{$name} =
-    Astro::App::Satpass2::FormatValue::Formatter->new( $name, $hash );
+	"Formatter $fmtr_name can not override built-in formatter" );
+    $self->{formatter_method}{$fmtr_name} =
+    Astro::App::Satpass2::FormatValue::Formatter->new( $fmtr );
     return $self;
 }
 
@@ -916,17 +919,17 @@ Nothing is returned.
 
 =head3 add_formatter_method
 
- $tplt->add_formatter_method( $name => \%definition );
+ $tplt->add_formatter_method( \%definition );
 
 This experimental method adds the named formatter to any
 L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
-objects created. The first argument is the name of the formatter, which
-may not duplicate any formatter built in to
+objects created. The argument is a reference to a hash that defines the
+format. The name of the formatter must appear in the C<{name}> element
+of the hash, and this name may not duplicate any formatter built in to
 L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>,
-nor any formatter previously added by this method. The second argument
-defines the formatter, and is purposefully left undocumented until the
-whole business of adding a formatter becomes considerably less wooly and
-experimental.
+nor any formatter previously added by this method. The other elements in
+the hash are purposefully left undocumented until the whole business of
+adding a formatter becomes considerably less wooly and experimental.
 
 What this really does is instantiate a
 L<Astro::App::Satpass2::FormatValue::Formatter|Astro::App::Satpass2::FormatValue::Formatter>

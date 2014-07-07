@@ -847,8 +847,7 @@ my %dimensions = (
 #	{default} - A hash specifying all legal arguments, and their
 #	    default values. You can specify undef to make the argument
 #	    legal but give it no value (i.e. to pick up the value from
-#	    somewhere else). This hash is passed verbatim to the
-#	    _apply_defaults() method.
+#	    somewhere else).
 #
 #	{dimension} - A hash specifying the dimension of the value to be
 #	    formatted. This must contain a {dimension} key specifying
@@ -1629,10 +1628,22 @@ my %formatter_data = (	# For generating formatters
     },
 
 );
-foreach my $name ( qw{ apogee periapsis perigee } ) {
-    $formatter_data{$name} = $formatter_data{apoapsis};
+
+foreach my $fmtr_name ( keys %formatter_data ) {
+    $formatter_data{$fmtr_name}{name} = $fmtr_name;
 }
-$formatter_data{semiminor} = $formatter_data{semimajor};
+
+sub _clone_formatter {
+    my ( $from, $to ) = @_;
+    %{ $formatter_data{$to} } = %{ $formatter_data{$from} };
+    $formatter_data{$to}{name} = $to;
+    return;
+}
+
+_clone_formatter( apoapsis  => 'apogee' );
+_clone_formatter( apoapsis  => 'periapsis' );
+_clone_formatter( apoapsis  => 'perigee' );
+_clone_formatter( semimajor => 'semiminor' );
 
 sub _fetch {
     my ( $self, $info, $name, $arg ) = @_;
@@ -1656,6 +1667,8 @@ sub __list_formatter_names {
 
 sub __get_formatter_data {
     my ( $class, $name ) = @_;
+    defined $name
+	or return ( values %formatter_data );
     return $formatter_data{$name};
 }
 
@@ -1671,107 +1684,109 @@ sub AUTOLOAD {
     my ( $self, @arg ) = @_;
     ref $self
 	or do {
-	my ( undef, $filename, $line ) = caller( 1 );
+	my ( undef, $filename, $line ) = caller;
 	_confess( "Undefined subroutine $AUTOLOAD called at $filename line $line" );
     };
     ( my $method = $AUTOLOAD ) =~ s/ .* :: //smx;
-    my $fmtr = $self->{formatter_method}{$method}
+    my $fmtr_obj = $self->{formatter_method}{$method}
 	or $self->{warner}->wail( "No such formatter as '$method'" );
-    return $fmtr->code()->( $self, @arg );
+    return $fmtr_obj->code()->( $self, @arg );
 }
 
 {
     my $fmtr_class = 'Astro::App::Satpass2::FormatValue::Formatter';
     sub add_formatter_method {
 	my ( $self, @formatters ) = @_;
-	foreach my $fmtr ( @formatters ) {
-	    instance( $fmtr, $fmtr_class )
+	foreach my $fmtr_obj ( @formatters ) {
+	    instance( $fmtr_obj, $fmtr_class )
 		or $self->{warner}->wail(
 		"Formatters must be instances of $fmtr_class" );
-	    my $name = $fmtr->name();
+	    my $name = $fmtr_obj->name();
 	    $self->can( $name )
 		and $self->{warner}->wail(
 		"Formatter $name can not override built-in format" );
 	    $self->{formatter_method}{$name}
 		and $self->{warner}->wail(
 		"Formatter $name can not replace previously-set formatter of same name" );
-	    $self->{formatter_method}{$name} = $fmtr;
+	    $self->{formatter_method}{$name} = $fmtr_obj;
 	}
 	return $self;
     }
 }
 
 sub __make_formatter_code {
-    my ( $class, $name, $info ) = @_;
-    defined $name
-	or _confess( 'The name argument must be defined' );
-    'HASH' eq ref $info
+    my ( $class, $fmtr ) = @_;
+
+    'HASH' eq ref $fmtr
+	or _confess( 'The argument must be a hash reference' );
+    defined( my $fmtr_name = $fmtr->{name} )
+	or _confess( 'The {name} must be defined' );
+    'HASH' eq ref $fmtr
 	or _confess( 'The info argument must be a HASH reference' );
 
     # Validate the dimension information
-    $info->{dimension}
+    $fmtr->{dimension}
 	or _confess(
-	"'$name' does not specify a {dimension} hash" );
-    defined( my $dim = $info->{dimension}{dimension} )
+	"'$fmtr_name' does not specify a {dimension} hash" );
+    defined( my $dim_name = $fmtr->{dimension}{dimension} )
 	or _confess(
-	"'$name' does not specify the dimension" );
-    $dimensions{$dim}
-	or _confess( "'$name' specifies invalid dimension '$dim'" );
-    if ( defined( my $dflt = $info->{dimension}{default} ) ) {
-	defined $dimensions{$dim}{define}{$dflt}
-	    or _confess( "'$name' specifies invalid default units '$dflt'" );
+	"'$fmtr_name' does not specify the dimension" );
+    $dimensions{$dim_name}
+	or _confess( "'$fmtr_name' specifies invalid dimension '$dim_name'" );
+    if ( defined( my $dflt = $fmtr->{dimension}{default} ) ) {
+	defined $dimensions{$dim_name}{define}{$dflt}
+	    or _confess( "'$fmtr_name' specifies invalid default units '$dflt'" );
     }
 
     # If the dimension is 'time_units' we need to validate that the
     # format key is defined and valid
-    if ( 'time_units' eq $info->{dimension}{dimension} ) {
-	if ( 'ARRAY' eq ref $info->{dimension}{format} ) {
-	    foreach my $entry ( @{ $info->{dimension}{format} } ) {
+    if ( 'time_units' eq $dim_name ) {
+	if ( 'ARRAY' eq ref $fmtr->{dimension}{format} ) {
+	    foreach my $entry ( @{ $fmtr->{dimension}{format} } ) {
 		$class->_valid_time_format_name( $entry )
 		    or _confess(
-		    "In '$name', '$entry' is not a valid format" );
+		    "In '$fmtr_name', '$entry' is not a valid format" );
 	    }
-	    $info->{default}{format} = sub {
+	    $fmtr->{default}{format} = sub {
 		my ( $self ) = @_;
-		return $self->_get_date_format_data( $name, format => $info );
+		return $self->_get_date_format_data( $fmtr_name, format => $fmtr );
 	    };
-	    $info->{default}{width} = sub {
+	    $fmtr->{default}{width} = sub {
 		my ( $self ) = @_;
-		return $self->_get_date_format_data( $name, width => $info );
+		return $self->_get_date_format_data( $fmtr_name, width => $fmtr );
 	    };
 	} else {
 	    _confess(
-		"'$name' must specify a {format} key in {dimension}" );
+		"'$fmtr_name' must specify a {format} key in {dimension}" );
 	}
-	$info->{default}{round_time} = sub {
+	$fmtr->{default}{round_time} = sub {
 	    my ( $self ) = @_;
 	    return $self->{round_time};
 	};
     }
 
     # Validate the fetch information
-    'CODE' eq ref $info->{fetch}
+    'CODE' eq ref $fmtr->{fetch}
 	or _confess(
-	"In '$name', {fetch} is not a code reference" );
+	"In '$fmtr_name', {fetch} is not a code reference" );
 
     return sub {
 	my ( $self, %arg ) = _arguments( @_ );
 
-	$self->_apply_defaults( $name => \%arg, $info->{default} );
+	$self->_apply_defaults( \%arg, $fmtr );
 
 	my $value = ( $self->{title} || defined $arg{literal} ) ?
 	    NONE :
-	    $self->_fetch( $info, $name, \%arg );
+	    $self->_fetch( $fmtr, $fmtr_name, \%arg );
 
 	my @rslt;
-	foreach my $parm ( $info->{chain} ?
-	    $info->{chain}->( $self, $name, $value, \%arg ) :
+	foreach my $parm ( $fmtr->{chain} ?
+	    $fmtr->{chain}->( $self, $fmtr_name, $value, \%arg ) :
 	    \%arg ) {
 
 	    push @rslt, defined $arg{literal} ?
 		$self->_format_string( $arg{literal}, \%arg ) :
-		$self->_apply_dimension(
-		    $name => $value, $parm, $info->{dimension} );
+		$self->_apply_dimension( $value, $parm, $fmtr );
 
 	}
 
@@ -1782,18 +1797,17 @@ sub __make_formatter_code {
 sub __make_formatter_methods {
     my ( $class ) = @_;
 
-    foreach my $name ( $class->__list_formatter_names() ) {
+    foreach my $fmtr ( $class->__get_formatter_data() ) {
+	my $fmtr_name = $fmtr->{name};
 
-	my $info = $class->__get_formatter_data( $name );
-
-	$class->can( $name )
+	$class->can( $fmtr_name )
 	    and next;
 
-	my $fq = "${class}::$name";
+	my $fq = "${class}::$fmtr_name";
 
 	no strict qw{ refs };
 
-	*$fq = __PACKAGE__->__make_formatter_code( $name, $info );
+	*$fq = __PACKAGE__->__make_formatter_code( $fmtr );
 
     }
     return;
@@ -1833,9 +1847,10 @@ sub reset_title_lines {
     my @always = qw{ align_left missing title };
 
     sub _apply_defaults {
-	my ( $self, $action, $arg, $dflt ) = @_;
+	my ( $self, $arg, $fmtr ) = @_;
 
-	defined $dflt or $dflt = {};
+	my $fmtr_name = $fmtr->{name};
+	my $dflt = $fmtr->{default} || {};
 
 	defined $arg->{width}
 	    or $self->{fixed_width}
@@ -1846,20 +1861,21 @@ sub reset_title_lines {
 		format_datetime_width( $arg->{format} );
 	}
 
+	# TODO maybe apply locale here? But see also _do_title.
 	APPLY_DEFAULT_LOOP:
 	foreach my $key ( keys %{ $dflt }, @always ) {
 
 	    defined $arg->{$key} and next;
 
 	    foreach my $source ( qw{ default internal locale } ) {
-		defined( $arg->{$key} = $self->_get( $source, $action,
+		defined( $arg->{$key} = $self->_get( $source, $fmtr_name,
 			$key ) )
 		    and next APPLY_DEFAULT_LOOP;
 	    }
 
 	    my $default = $dflt->{$key};
 	    $arg->{$key} = 'CODE' eq ref $default ?
-		$default->( $self, $action, $arg ) : $default
+		$default->( $self, $fmtr_name, $arg ) : $default
 
 	}
 
@@ -1874,64 +1890,61 @@ sub reset_title_lines {
 }
 
 sub _apply_dimension {
-    my ( $self, $name, $value, $arg, $dim ) = @_;
+    my ( $self, $value, $arg, $fmtr ) = @_;
 
-    defined( my $dimension = $dim->{dimension} )
+    my $fmtr_name = $fmtr->{name};
+    defined( my $dim_name = $fmtr->{dimension}{dimension} )
 	or $self->warner()->weep( 'No dimension specified' );
 
-    my $dim_data;
-#   $dim_data = $self->__get_dimension_data( $dimension )
-#   $dim_data = $dimensions{$dimension}
-#   TODO figure out how to move the relevant parts of this logic to
-#   Astro::App::Satpass2::FormatValue::Formatter without introducing all
-#   sorts of Cadbury goo.
-    $dim_data = $dimensions{$dimension}
-	and defined( my $units = _dor( $arg->{units}, $dim->{units},
-	    $self->_get( default => $name, 'units' ),
-	    $dim_data->{default} ) )
-	or $self->warner()->weep( "Dimension $dimension undefined" );
+    my $dim;
+    $dim = $dimensions{$dim_name}
+	and defined( my $unit_name = _dor( $arg->{units}, $fmtr->{dimension}{units},
+	    $self->_get( default => $fmtr_name, 'units' ),
+	    $dim->{default} ) )
+	or $self->warner()->weep( "Dimension $dim_name undefined" );
 
-    my $hash = $dim_data->{define}{$units}
+    my $unit = $dim->{define}{$unit_name}
 	or $self->{warner}->wail(
-	    "Units $units not valid for $dimension" );
+	    "Units $unit_name not valid for $dim_name" );
 
-    if ( defined $hash->{alias} ) {
-	$hash = $dim_data->{define}{$hash->{alias}}
-	    or $self->warner()->weep( "Undefined alias '$hash->{alias}'" );
-	$units = $hash->{alias};
+    if ( defined $unit->{alias} ) {
+	my $alias = $dim->{define}{$unit->{alias}}
+	    or $self->warner()->weep( "Undefined alias '$unit->{alias}'" );
+	$unit_name = $unit->{alias};
+	$unit = $alias;
     }
 
     defined $arg->{align_left}
-	or $arg->{align_left} = _dor( $hash->{align_left},
-	    $dim_data->{align_left} );
+	or $arg->{align_left} = _dor( $unit->{align_left},
+	    $dim->{align_left} );
 
     $self->{title}
-	and return $self->_do_title( $name, $arg );
+	and return $self->_do_title( $arg, $fmtr );
 
     defined $value
 	or return $self->_format_undef( undef, $arg );
 
-    defined $hash->{method}
+    defined $unit->{method}
 	and do {
-	my $method = $hash->{method};
+	my $method = $unit->{method};
 	defined( $value = $self->$method( $value ) )
 	    or return $self->_format_undef( undef, $arg );
     };
 
-    defined $hash->{factor}
-	and $value *= $hash->{factor};
+    defined $unit->{factor}
+	and $value *= $unit->{factor};
 
-    defined $hash->{gmt}
+    defined $unit->{gmt}
 	and not defined $arg->{gmt}
-	and $arg->{gmt} = $hash->{gmt};
+	and $arg->{gmt} = $unit->{gmt};
 
-    $arg->{units} = $units;
+    $arg->{units} = $unit_name;
 
-    defined( my $formatter = _dor( $hash->{formatter},
+    defined( my $formatter = _dor( $unit->{formatter},
+	    $fmtr->{dimension}{formatter},
 	    $dim->{formatter},
-	    $dim_data->{formatter},
 	) )
-	or $self->warner()->weep( "No formatter for $dimension $units" );
+	or $self->warner()->weep( "No formatter for $dim_name $unit_name" );
 
     return $self->$formatter( $value, $arg );
 }
@@ -2011,13 +2024,15 @@ sub _attrib_hash {
     );
 
     sub _do_title {
-	my ( $self, $name, $arg ) = @_;
-	# TODO this looks like a good place to insert localized title code.
+	my ( $self, $arg, $fmtr ) = @_;
+	my $fmtr_name = $fmtr->{name};
+	# TODO this looks like a good place to insert localized title
+	# code. But see also _apply_defaults().
 	defined $arg->{title}
 	    or $arg->{title} = '';
 	my $title = $arg->{title};
-	my $wrapped = $self->{internal}{$name}{_title}{$title}{$arg->{width}}
-	    ||= $self->_do_title_wrap( $name, $arg );
+	my $wrapped = $self->{internal}{$fmtr_name}{_title}{$title}{$arg->{width}}
+	    ||= $self->_do_title_wrap( $arg );
 
 	return $do_title{$self->{title_gravity}}->( $self, $wrapped, $arg );
     }
@@ -2032,7 +2047,7 @@ sub _attrib_hash {
 }
 
 sub _do_title_wrap {
-    my ( $self, $name, $arg ) = @_;
+    my ( $self, $arg ) = @_;
     my $title = $arg->{title};
     $arg->{width} eq ''
 	and return [ $title ];
@@ -2423,13 +2438,13 @@ sub _format_time {
     defined $value
 	or goto &_format_undef;
 
-    my $fmtr = $self->{time_formatter};
-    $fmtr->round_time( $arg->{round_time} );
+    my $time_fmtr = $self->{time_formatter};
+    $time_fmtr->round_time( $arg->{round_time} );
     my $fmt = $arg->{format};
     defined $fmt
 	or $self->warner()->weep( "No time format" );
 
-    my $buffer = $fmtr->format_datetime(
+    my $buffer = $time_fmtr->format_datetime(
 	$fmt, $value, $arg->{gmt} );
     return $self->_format_string( $buffer, $arg );
 }
