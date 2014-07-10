@@ -46,6 +46,8 @@ sub requires {
 	'File::HomeDir'		=> 0.93,	# For my_dist_config
 	'File::Temp'		=> 0,
 	'Getopt::Long'		=> 2.39,	# For getoptionsfromarray
+	'I18N::LangTags'	=> 0,
+	'I18N::LangTags::Detect'	=> 0,
 	'IO::File'		=> 1.14,
 	'IO::Handle'		=> 0,
 	'IPC::System::Simple'	=> 0,

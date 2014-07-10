@@ -7,6 +7,7 @@ use base qw{ Astro::App::Satpass2::Copier };
 
 use Astro::App::Satpass2::FormatTime;
 use Astro::App::Satpass2::FormatValue::Formatter;
+use Astro::App::Satpass2::Locale qw{ __locale };
 use Astro::App::Satpass2::Utils qw{ has_method instance merge_hashes };
 use Astro::App::Satpass2::Warner;
 use Astro::Coord::ECI::Sun 0.059;
@@ -45,167 +46,6 @@ $event_names[PASS_EVENT_BRIGHTEST]	= 'brgt';
 #	Instantiator
 
 {
-    my %locale = (
-	almanac	=> {
-	    title	=> 'Almanac',
-	},
-	altitude	=> {
-	    title	=> 'Altitude',
-	},
-	angle	=> {
-	    title	=> 'Angle',
-	},
-	apoapsis	=> {
-	    title	=> 'Apoapsis',
-	},
-	apogee	=> {
-	    title	=> 'Apogee',
-	},
-	argument_of_perigee	=> {
-	    title	=> 'Argument Of Perigee',
-	},
-	ascending_node	=> {
-	    title	=> 'Ascending Node',
-	},
-	azimuth	=> {
-	    title	=> 'Azimuth',
-	},
-	bearing	=> {
-	    table	=> [
-		[ qw{ N E S W } ],
-		[ qw{ N NE E SE S SW W NW } ],
-		[ qw{ N NNE NE ENE E ESE SE SSE S SSW SW WSW W WNW NW
-		    NNW } ],
-	    ],
-	},
-	b_star_drag	=> {
-	    title	=> 'B Star Drag',
-	},
-	classification	=> {
-	    title	=> 'Classification',
-	},
-	date	=> {
-	    title	=> 'Date',
-	},
-	declination	=> {
-	    title	=> 'Declination',
-	},
-	eccentricity	=> {
-	    title	=> 'Eccentricity',
-	},
-	effective_date	=> {
-	    title	=> 'Effective Date',
-	},
-	element_number	=> {
-	    title	=> 'Element Number',
-	},
-	elevation	=> {
-	    title	=> 'Elevation',
-	},
-	ephemeris_type	=> {
-	    title	=> 'Ephemeris Type',
-	},
-	epoch	=> {
-	    title	=> 'Epoch',
-	},
-	event	=> {
-	    table	=> [ @event_names ],
-	    title	=> 'Event',
-	},
-	first_derivative	=> {
-	    title	=> 'First Derivative',
-	},
-	fraction_lit	=> {
-	    title	=> 'Fraction Lit',
-	},
-	illumination	=> {
-	    title	=> 'Illumination',
-	},
-	inclination	=> {
-	    title	=> 'Inclination',
-	},
-	international	=> {
-	    title	=> 'International Launch Designator',
-	},
-	latitude	=> {
-	    title	=> 'Latitude',
-	},
-	longitude	=> {
-	    title	=> 'Longitude',
-	},
-	magnitude	=> {
-	    title	=> 'Magnitude',
-	},
-	maidenhead	=> {
-	    title	=> 'Maidenhead Grid Square',
-	},
-	mean_anomaly	=> {
-	    title	=> 'Mean Anomaly',
-	},
-	mean_motion	=> {
-	    title	=> 'Mean Motion',
-	},
-	mma	=> {
-	    title	=> 'MMA',
-	},
-	name	=> {
-	    title	=> 'Name',
-	},
-	oid	=> {
-	    title	=> 'OID',
-	},
-	operational	=> {
-	    title	=> 'Operational',
-	},
-	periapsis	=> {
-	    title	=> 'Periapsis',
-	},
-	perigee	=> {
-	    title	=> 'Perigee',
-	},
-	period	=> {
-	    title	=> 'Period',
-	},
-	phase	=> {
-	    table	=> [
-		[6.1 => 'new'], [83.9 => 'waxing crescent'],
-		[96.1 => 'first quarter'], [173.9 => 'waxing gibbous'],
-		[186.1 => 'full'], [263.9 => 'waning gibbous'],
-		[276.1 => 'last quarter'], [353.9 => 'waning crescent'],
-	    ],
-	    title	=> 'Phase',
-	},
-	range	=> {
-	    title	=> 'Range',
-	},
-	revolutions_at_epoch	=> {
-	    title	=> 'Revolutions At Epoch',
-	},
-	right_ascension	=> {
-	    title	=> 'Right Ascension',
-	},
-	second_derivative	=> {
-	    title	=> 'Second Derivative',
-	},
-	semimajor	=> {
-	    title	=> 'Semimajor Axis',
-	},
-	semiminor	=> {
-	    title	=> 'Semiminor Axis',
-	},
-	status	=> {
-	    title	=> 'Status',
-	},
-	time	=> {
-	    title	=> 'Time',
-	},
-	tle	=> {
-	    title	=> 'TLE',
-	},
-	type	=> {
-	    title	=> 'Type',
-	},
-    );
 
     sub new {
 	my ( $class, %args ) = @_;
@@ -230,7 +70,13 @@ $event_names[PASS_EVENT_BRIGHTEST]	= 'brgt';
 	    $args{fixed_width} :
 	    1;
 
+=begin comment
+
 	$self->{locale} = merge_hashes( \%locale, $args{locale} );
+
+=end comment
+
+=cut
 
 	$self->{overflow} = $args{overflow} || 0;
 
@@ -861,6 +707,10 @@ my %dimensions = (
 #	    hash, which has already had _apply_defaults() called on it.
 #	    This code is _not_ called if the invocant was initialized
 #	    with title => 1.
+#
+#	{locale} - A hash specifying last-ditch localization
+#	    information. The keys are locale, the formatter name
+#	    (yes, this is a duplicate) and the item name.
 
 my %formatter_data = (	# For generating formatters
 
@@ -1785,7 +1635,7 @@ sub __make_formatter_code {
 	    \%arg ) {
 
 	    push @rslt, defined $arg{literal} ?
-		$self->_format_string( $arg{literal}, \%arg ) :
+		$self->_format_string( $arg{literal}, \%arg, $fmtr ) :
 		$self->_apply_dimension( $value, $parm, $fmtr );
 
 	}
@@ -1867,11 +1717,15 @@ sub reset_title_lines {
 
 	    defined $arg->{$key} and next;
 
-	    foreach my $source ( qw{ default internal locale } ) {
+	    foreach my $source ( qw{ default internal } ) {
 		defined( $arg->{$key} = $self->_get( $source, $fmtr_name,
 			$key ) )
 		    and next APPLY_DEFAULT_LOOP;
 	    }
+
+            defined( $arg->{$key} = __locale( $fmtr_name, $key,
+		    $fmtr->{locale} ) )
+		and next;
 
 	    my $default = $dflt->{$key};
 	    $arg->{$key} = 'CODE' eq ref $default ?
@@ -1922,13 +1776,13 @@ sub _apply_dimension {
 	and return $self->_do_title( $arg, $fmtr );
 
     defined $value
-	or return $self->_format_undef( undef, $arg );
+	or return $self->_format_undef( undef, $arg, $fmtr );
 
     defined $unit->{method}
 	and do {
 	my $method = $unit->{method};
 	defined( $value = $self->$method( $value ) )
-	    or return $self->_format_undef( undef, $arg );
+	    or return $self->_format_undef( undef, $arg, $fmtr );
     };
 
     defined $unit->{factor}
@@ -1940,13 +1794,19 @@ sub _apply_dimension {
 
     $arg->{units} = $unit_name;
 
+    if ( my $localize_value = __locale( $fmtr_name, 'localize_value' ) ) {
+	my $localized;
+	$localized = $localize_value->{$value}
+	    and $value = $localized;
+    }
+
     defined( my $formatter = _dor( $unit->{formatter},
 	    $fmtr->{dimension}{formatter},
 	    $dim->{formatter},
 	) )
 	or $self->warner()->weep( "No formatter for $dim_name $unit_name" );
 
-    return $self->$formatter( $value, $arg );
+    return $self->$formatter( $value, $arg, $fmtr );
 }
 
 sub _arguments {
@@ -1988,7 +1848,7 @@ sub _attrib_hash {
 
     my %do_title = (
 	TITLE_GRAVITY_TOP() => sub {
-	    my ( $self, $wrapped, $arg ) = @_;
+	    my ( $self, $wrapped, $arg, $fmtr ) = @_;
 	    defined $self->{internal}{_title_info}{inx}
 		or $self->{internal}{_title_info}{inx} = 0;
 	    my $inx = $self->{internal}{_title_info}{inx};
@@ -1997,10 +1857,10 @@ sub _attrib_hash {
 
 	    return defined $wrapped->[$inx] ?
 		$wrapped->[$inx] :
-		$self->_format_string( '', $arg );
+		$self->_format_string( '', $arg, $fmtr );
 	},
 	TITLE_GRAVITY_BOTTOM() => sub {
-	    my ( $self, $wrapped, $arg ) = @_;
+	    my ( $self, $wrapped, $arg, $fmtr ) = @_;
 	    defined $self->{internal}{_title_info}{inx}
 		or do {
 		$self->{internal}{_title_info}{inx} = -1;
@@ -2019,7 +1879,7 @@ sub _attrib_hash {
 	    $inx = $inx - $max + $size;
 	    return ( $inx >= 0 && defined $wrapped->[$inx] ) ?
 		$wrapped->[$inx] :
-		$self->_format_string( '', $arg );
+		$self->_format_string( '', $arg, $fmtr );
 	},
     );
 
@@ -2032,9 +1892,10 @@ sub _attrib_hash {
 	    or $arg->{title} = '';
 	my $title = $arg->{title};
 	my $wrapped = $self->{internal}{$fmtr_name}{_title}{$title}{$arg->{width}}
-	    ||= $self->_do_title_wrap( $arg );
+	    ||= $self->_do_title_wrap( $arg, $fmtr );
 
-	return $do_title{$self->{title_gravity}}->( $self, $wrapped, $arg );
+	return $do_title{$self->{title_gravity}}->( $self, $wrapped,
+	    $arg, $fmtr );
     }
 
     sub is_valid_title_gravity {
@@ -2047,7 +1908,7 @@ sub _attrib_hash {
 }
 
 sub _do_title_wrap {
-    my ( $self, $arg ) = @_;
+    my ( $self, $arg, $fmtr ) = @_;
     my $title = $arg->{title};
     $arg->{width} eq ''
 	and return [ $title ];
@@ -2057,7 +1918,7 @@ sub _do_title_wrap {
     local $Text::Wrap::huge = 'overflow';
     my $wrap = Text::Wrap::wrap( '', '', $title );
     my @lines = split qr{ \n }sxm, $wrap;
-    return [ map { $self->_format_string( $_, $arg ) } @lines ];
+    return [ map { $self->_format_string( $_, $arg, $fmtr ) } @lines ];
 }
 
 sub __chain_bearing {
@@ -2163,7 +2024,7 @@ sub _get_tle_attr {
     return $tle->get( $attr );
 }
 
-#	$string = $self->_format_*( $value, \%arg );
+#	$string = $self->_format_*( $value, \%arg, \%fmtr );
 #
 #	These methods take the value and turn it into a string.
 #	Recognized arguments are:
@@ -2172,43 +2033,35 @@ sub _get_tle_attr {
 #	    {width} => field width, ignored if not a non-negative
 #		number;
 
-{
-    my @bearings = (
-	[ qw{ N E S W } ],
-	[ qw{ N NE E SE S SW W NW } ],
-	[ qw{ N NNE NE ENE E ESE SE SSE S SSW SW WSW W WNW NW NNW } ],
-    );
+sub _format_bearing {
+    my ( $self, $value, $arg, $fmtr ) = @_;
+    defined $value
+	or goto &_format_undef;
 
-    sub _format_bearing {
-	my ( $self, $value, $arg ) = @_;
-	defined $value
-	    or goto &_format_undef;
+    my $table;
 
-	my $table;
-
-	foreach my $source ( qw{ default locale } ) {
-	    $table = $self->_get( $source => bearing => 'table' )
-		and last;
-	}
-
-	$table ||= \@bearings;
-
-	$arg->{bearing}
-	    or $arg->{bearing} = ( $arg->{width} || 2 );
-	$arg->{width}
-	    and $arg->{bearing} > $arg->{width}
-	    and $arg->{bearing} = $arg->{width};
-
-	my $inx = min( $arg->{bearing} || 2, scalar @{ $table } ) - 1;
-	my $tags = $table->[$inx];
-	my $bins = @{ $tags };
-	$inx = floor ($value / TWOPI * $bins + .5) % $bins;
-	return $self->_format_string( $tags->[$inx], $arg );
+    foreach my $source ( qw{ default } ) {
+	$table = $self->_get( $source => bearing => 'table' )
+	    and last;
     }
+
+    $table ||= __locale( bearing => 'table', $fmtr->{locale} );
+
+    $arg->{bearing}
+	or $arg->{bearing} = ( $arg->{width} || 2 );
+    $arg->{width}
+	and $arg->{bearing} > $arg->{width}
+	and $arg->{bearing} = $arg->{width};
+
+    my $inx = min( $arg->{bearing} || 2, scalar @{ $table } ) - 1;
+    my $tags = $table->[$inx];
+    my $bins = @{ $tags };
+    $inx = floor ($value / TWOPI * $bins + .5) % $bins;
+    return $self->_format_string( $tags->[$inx], $arg, $fmtr );
 }
 
 sub _format_duration {
-    my ( $self, $value, $arg ) = @_;
+    my ( $self, $value, $arg, $fmtr ) = @_;
 
     defined $arg->{align_left}
 	or $arg->{align_left} = 0;
@@ -2241,11 +2094,11 @@ sub _format_duration {
     $arg->{width} - length $buffer
 	or return $buffer;
 
-    return $self->_format_string( $buffer, $arg );
+    return $self->_format_string( $buffer, $arg, $fmtr );
 }
 
 sub _format_event {
-    my ( $self, $value, $arg ) = @_;
+    my ( $self, $value, $arg, $fmtr ) = @_;
 
     defined $value
 	or goto &_format_undef;
@@ -2256,18 +2109,18 @@ sub _format_event {
 
     my $table;
     if ( 'string' ne $arg->{units} ) {
-	foreach my $source ( qw{ default locale } ) {
+	foreach my $source ( qw{ default } ) {
 	    $table = $self->_get( $source => event => 'table' )
 		and last;
 	}
     }
-    $table ||= \@event_names;
+    $table ||= __locale( event => 'table' ) || \@event_names;
 
-    return $self->_format_string( $table->[$value] || '', $arg );
+    return $self->_format_string( $table->[$value] || '', $arg, $fmtr );
 }
 
 sub _format_integer {
-    my ( $self, $value, $arg ) = @_;
+    my ( $self, $value, $arg, $fmtr ) = @_;
     defined $value
 	or goto &_format_undef;
 
@@ -2285,15 +2138,15 @@ sub _format_integer {
 }
 
 sub _format_lower_case {
-    my ( $self, $value, $arg ) = @_;
+    my ( $self, $value, $arg, $fmtr ) = @_;
     defined $value
 	or goto &_format_undef;
 
-    return $self->_format_string( lc $value, $arg );
+    return $self->_format_string( lc $value, $arg, $fmtr );
 }
 
 sub _format_number {
-    my ( $self, $value, $arg ) = @_;
+    my ( $self, $value, $arg, $fmtr ) = @_;
     defined $value
 	and $value ne ''
 	or goto &_format_undef;
@@ -2319,7 +2172,7 @@ sub _format_number {
 
     if ($width && length $buffer > $width && $width >= 7) {
 	$arg->{places} = $width - 7;
-	return $self->_format_number_scientific( $value, $arg );
+	return $self->_format_number_scientific( $value, $arg, $fmtr );
     }
 
     length $buffer <= $width
@@ -2330,7 +2183,7 @@ sub _format_number {
 }
 
 sub _format_number_scientific {
-    my ( $self, $value, $arg ) = @_;
+    my ( $self, $value, $arg, $fmtr ) = @_;
     defined $value
 	and $value ne ''
 	or goto &_format_undef;
@@ -2359,36 +2212,27 @@ sub _format_number_scientific {
     return $buffer;
 }
 
-{
-    my @table = (
-	[6.1 => 'new'], [83.9 => 'waxing crescent'],
-	[96.1 => 'first quarter'], [173.9 => 'waxing gibbous'],
-	[186.1 => 'full'], [263.9 => 'waning gibbous'],
-	[276.1 => 'last quarter'], [353.9 => 'waning crescent'],
-    );
+sub _format_phase {
+    my ( $self, $value, $arg, $fmtr ) = @_;
+    defined $value
+	or goto &_format_undef;
+    my $angle = rad2deg( $value );
 
-    sub _format_phase {
-	my ( $self, $value, $arg ) = @_;
-	defined $value
-	    or goto &_format_undef;
-	my $angle = rad2deg( $value );
-
-	my $table;
-	foreach my $source ( qw{ default locale } ) {
-	    $table = $self->_get( $source => phase => 'table' )
-		and last;
-	}
-	$table ||= \@table;
-	foreach my $entry ( @{ $table } ) {
-	    $entry->[0] > $angle or next;
-	    return $self->_format_string( $entry->[1], $arg );
-	}
-	return $self->_format_string( $table[0][1], $arg );
+    my $table;
+    foreach my $source ( qw{ default } ) {
+	$table = $self->_get( $source => phase => 'table' )
+	    and last;
     }
+    $table ||= __locale( phase => 'table', $fmtr->{locale} );
+    foreach my $entry ( @{ $table } ) {
+	$entry->[0] > $angle or next;
+	return $self->_format_string( $entry->[1], $arg, $fmtr );
+    }
+    return $self->_format_string( $table->[0][1], $arg, $fmtr );
 }
 
 sub _format_right_ascension {
-    my ( $self, $value, $arg ) = @_;
+    my ( $self, $value, $arg, $fmtr ) = @_;
     defined $value
 	or goto &_format_undef;
     my $sec = $value / PI * 12;
@@ -2408,11 +2252,12 @@ sub _format_right_ascension {
     defined $arg->{align_left}
 	or $arg->{align_left} = 0;
     return $self->_format_string(
-	sprintf( "%02d:%02d:%0$wid${ps}f", $hr, $min, $sec ), $arg );
+	sprintf( "%02d:%02d:%0$wid${ps}f", $hr, $min, $sec ), $arg,
+	$fmtr );
 }
 
 sub _format_string {
-    my ( $self, $value, $arg ) = @_;
+    my ( $self, $value, $arg, $fmtr ) = @_;
 
     defined $value
 	or goto &_format_undef;
@@ -2434,7 +2279,7 @@ sub _format_string {
 }
 
 sub _format_time {
-    my ( $self, $value, $arg ) = @_;
+    my ( $self, $value, $arg, $fmtr ) = @_;
     defined $value
 	or goto &_format_undef;
 
@@ -2446,11 +2291,11 @@ sub _format_time {
 
     my $buffer = $time_fmtr->format_datetime(
 	$fmt, $value, $arg->{gmt} );
-    return $self->_format_string( $buffer, $arg );
+    return $self->_format_string( $buffer, $arg, $fmtr );
 }
 
 sub _format_title_case {
-    my ( $self, $value, $arg ) = @_;
+    my ( $self, $value, $arg, $fmtr ) = @_;
     defined $value
 	or goto &_format_undef;
 
@@ -2458,18 +2303,18 @@ sub _format_title_case {
 ##	split qr{ (?<= [^[:alpha:]] ) (?= [[:alpha:]] ) }sxm, $value;
     $value =~ s{ (?: \A | (?<= \s ) ) ( [[:alpha:]] \S* ) }
 	{ ucfirst lc $1 }sxmge;
-    return $self->_format_string( $value, $arg );
+    return $self->_format_string( $value, $arg, $fmtr );
 }
 
 sub _format_undef {
-    my ( $self, $value, $arg ) = @_;
+    my ( $self, $value, $arg, $fmtr ) = @_;
 
     $self->{title}
 	and defined $arg->{title}
-	and return $self->_format_string( $arg->{title}, $arg );
+	and return $self->_format_string( $arg->{title}, $arg, $fmtr );
 
     defined $arg->{missing}
-	and return $self->_format_string( $arg->{missing}, $arg );
+	and return $self->_format_string( $arg->{missing}, $arg, $fmtr );
 
     defined $arg->{width}
 	and $arg->{width} =~ m/ \A \d+ \z /sxm
@@ -2480,11 +2325,11 @@ sub _format_undef {
 }
 
 sub _format_upper_case {
-    my ( $self, $value, $arg ) = @_;
+    my ( $self, $value, $arg, $fmtr ) = @_;
     defined $value
 	or goto &_format_undef;
 
-    return $self->_format_string( uc $value, $arg );
+    return $self->_format_string( uc $value, $arg, $fmtr );
 }
 
 sub _julian_day {

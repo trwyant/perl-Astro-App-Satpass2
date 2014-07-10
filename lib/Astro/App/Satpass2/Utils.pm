@@ -87,7 +87,8 @@ sub __date_manip_backend {
 }
 
 sub expand_tilde {
-    my ( $self, $fn ) = @_;
+    my @args = @_;
+    my ( $self, $fn ) = @args > 1 ? @args : ( undef, @args );
     defined $fn
 	and $fn =~ s{ \A ~ ( [^/]* ) }{ _user_home_dir( $self, $1 ) }smxe;
     return $fn;
@@ -96,7 +97,9 @@ sub expand_tilde {
 {
     my %special = (
 	'+'	=> sub { return Cwd::cwd() },
-	'~'	=> sub { return my_dist_config() },
+	'~'	=> sub {
+	    return my_dist_config();
+	},
 	''	=> sub { return File::HomeDir->my_home() },
     );
 #	$dir = $self->_user_home_dir( $user );
@@ -112,14 +115,22 @@ sub expand_tilde {
 
 	if ( my $code = $special{$user} ) {
 	    defined( my $special_dir = $code->( $user ) )
-		or $self->wail( "Unable to find ~$user" );
+		or _wail( $self, "Unable to find ~$user" );
 	    return $special_dir;
 	} else {
 	    defined( my $home_dir = File::HomeDir->users_home( $user ) )
-		or $self->wail( "Unable to find home for $user" );
+		or _wail( $self, "Unable to find home for $user" );
 	    return $home_dir;
 	}
     }
+}
+
+sub _wail {
+    my ( $invocant, @msg ) = @_;
+    ref $invocant
+	and $invocant->wail( @msg );
+    require Carp;
+    Carp::croak( @msg );
 }
 
 sub has_method {
@@ -241,6 +252,9 @@ sub merge_hashes {	## no critic (RequireArgUnpacking)
 
 sub my_dist_config {
     my ( $opt ) = @_;
+
+    defined $ENV{ASTRO_APP_SATPASS2_CONFIG_DIR}
+	and return $ENV{ASTRO_APP_SATPASS2_CONFIG_DIR};
 
     return File::HomeDir->my_dist_config(
 	'Astro-App-Satpass2',
@@ -427,7 +441,9 @@ right-most argument is the one returned.
 
  my $cfg_dir = my_dist_config( { 'create-directory' => 1 } );
 
-This subroutine simply wraps
+This subroutine returns a path to the user's configuration directory. If
+environment variable C<ASTRO_APP_SATPASS2_CONFIG_DIR> is defined, that
+is returned regardless of any arguments. Otherwise it simply wraps
 
  File::HomeDir->my_dist_config( 'Astro-App-Satpass2' );
 

@@ -7,6 +7,12 @@ almanac - A simple almanac program, displaying sun and moon rise and
 	the moon, solstices and equinoxes for the next 30 days after the
 	given day.
 
+es.pm - A very, very rough Spanish localization. This is intended as a
+	user-specific localization, though it could be installed as a
+	system-wide localization by uncommenting the 'package'
+	statement. The main thing wrong with it is that it has not been
+	edited by someone who actually is fluent in Spanish.
+
 flare_vcalendar - A source file, to be executed by, for example,
 	satpass2> source eg/flare_vcalendar
 	This makes Iridium flare calculations for any satellites that
@@ -76,3 +82,5 @@ tle_stellarium.tt - A Template-Toolkit file to display TLE data in the
 	you want, and then issuing the command
 	    satpass2> formatter format eg/tle_stellarium.tt
 	All options to the tle command work here (e.g. -choose).
+
+# ex: set tw=72 ai :

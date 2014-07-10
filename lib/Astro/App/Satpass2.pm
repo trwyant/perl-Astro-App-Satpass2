@@ -5,6 +5,8 @@ use 5.008;
 use strict;
 use warnings;
 
+
+use Astro::App::Satpass2::Locale qw{ __locale };
 use Astro::App::Satpass2::Macro::Command;
 use Astro::App::Satpass2::Macro::Code;
 use Astro::App::Satpass2::ParseTime;
@@ -405,6 +407,16 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter
 	);
 	push @almanac, $body->almanac_hash(
 	    $almanac_start, $almanac_end);
+    }
+
+    # Localize the event descriptions if appropriate.
+
+    foreach my $event ( @almanac ) {
+	my $repl = __locale( almanac => $event->{body}->get( 'name' ) );
+	$repl
+	    or next;
+	$event->{almanac}{description} =
+	    $repl->{$event->{almanac}{event}}[$event->{almanac}{detail}];
     }
 
 #	Sort the almanac data by date, and display the results.
@@ -1545,6 +1557,16 @@ sub pwd : Verb() {
 	    }
 	}
 
+	# Localize the event descriptions if appropriate.
+
+	foreach my $event ( @almanac ) {
+	    my $repl = __locale( almanac => $event->{body}->get( 'name' ) );
+	    $repl
+		or next;
+	    $event->{almanac}{description} =
+		$repl->{$event->{almanac}{event}}[$event->{almanac}{detail}];
+	}
+
 	# Sort and display the quarter-phase information.
 
 	return $self->__format_data(
@@ -1564,6 +1586,11 @@ sub pwd : Verb() {
 
 	# We can be called statically. If we are, instantiate.
 	ref $self or $self = $self->new(warning => 1);
+
+	# Put all the I/O into UTF-8 mode.
+	binmode STDIN, ':encoding(UTF-8)';
+	binmode STDOUT, ':encoding(UTF-8)';
+	binmode STDERR, ':encoding(UTF-8)';
 
 	# If the undocumented first option is a code reference, use it to
 	# get input.
