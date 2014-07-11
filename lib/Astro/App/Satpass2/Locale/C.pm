@@ -5,6 +5,8 @@ use 5.008;
 use strict;
 use warnings;
 
+use utf8;	# Not actually needed for C locale, but maybe for others
+
 use Astro::Coord::ECI::TLE 0.059 qw{ :constants };
 our $VERSION = '0.020_001';
 
@@ -25,8 +27,45 @@ $event_names[PASS_EVENT_BRIGHTEST]	= 'brgt';
 # this.
 
 {	## no critic (Modules::RequireEndWithOne)
+    '-flare'	=> {
+	string	=> {
+	    'Degrees From Sun'	=> 'Degrees From Sun',
+	    'Center Azimuth'	=> 'Center Azimuth',
+	    'Center Range'	=> 'Center Range',
+	    'night'		=> 'night',
+	},
+    },
+    '-location'	=> {
+	string	=> {
+	    'Location'		=> 'Location',
+	    'Latitude'		=> 'Latitude',
+	    'longitude'		=> 'longitude',
+	    'height'		=> 'height',
+	},
+    },
     almanac	=> {
 	title	=> 'Almanac',
+	Moon	=> {
+	    horizon	=> [ 'Moon set', 'Moon rise' ],
+	    quarter	=> [
+			    'New Moon',
+			    'First quarter Moon',
+			    'Full Moon',
+			    'Last quarter Moon',
+	    ],
+	    transit	=> [ undef, 'Moon transits meridian' ],
+	},
+	Sun	=> {
+	    horizon	=> [ 'Sunset', 'Sunrise' ],
+	    quarter	=> [
+			    'Spring equinox',
+			    'Summer solstice',
+			    'Fall equinox',
+			    'Winter solstice',
+	    ],
+	    transit	=> [ 'local midnight', 'local noon' ],
+	    twilight	=> [ 'end twilight', 'begin twilight' ],
+	},
     },
     altitude	=> {
 	title	=> 'Altitude',
@@ -129,6 +168,10 @@ $event_names[PASS_EVENT_BRIGHTEST]	= 'brgt';
     },
     name	=> {
 	title	=> 'Name',
+	localize_value	=> {
+	    Sun		=> 'Sun',
+	    Moon	=> 'Moon',
+	},
     },
     oid	=> {
 	title	=> 'OID',

@@ -21,12 +21,28 @@ $event_names[PASS_EVENT_SET]		= 'pues';
 $event_names[PASS_EVENT_APPULSE]	= 'apls';
 $event_names[PASS_EVENT_START]		= 'inic';
 $event_names[PASS_EVENT_END]		= 'term';
-$event_names[PASS_EVENT_BRIGHTEST]	= 'brgt';
+$event_names[PASS_EVENT_BRIGHTEST]	= 'bril';
 
 # Any hash reference is a true value, but perlcritic seems not to know
 # this.
 
 {	## no critic (Modules::RequireEndWithOne)
+    '-flare'	=> {
+	string	=> {
+	    'Degrees From Sun'	=> 'Ángulo desde el sol',
+	    'Center Azimuth'	=> 'Azimut del centro',
+	    'Center Range'	=> 'Distancia desde el centro',
+	    'night'		=> 'noche',
+	},
+    },
+    '-location'	=> {
+	string	=> {
+	    'Location'		=> 'Posición',
+	    'Latitude'		=> 'Latitud',
+	    'longitude'		=> 'longitud',
+	    'height'		=> 'altura',
+	},
+    },
     almanac	=> {
 	title	=> 'Almanaque',
 	Moon	=> {

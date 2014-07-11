@@ -5,6 +5,7 @@ use warnings;
 
 use base qw{ Astro::App::Satpass2::Format };
 
+use Astro::App::Satpass2::Locale qw{ __localize };
 use Astro::App::Satpass2::Format::Template::Provider;
 # use Astro::App::Satpass2::FormatValue;
 use Astro::App::Satpass2::FormatValue::Formatter;
@@ -134,11 +135,11 @@ EOD
 [% UNLESS data %]
     [%- SET data = sp.location( arg ) %]
 [%- END -%]
-Location: [% data.name( width = '' ) %]
-          Latitude [% data.latitude( places = 4,
-                width = '' ) %], longitude
+[% localize( 'Location' ) %]: [% data.name( width = '' ) %]
+          [% localize( 'Latitude' ) %] [% data.latitude( places = 4,
+                width = '' ) %], [% localize( 'longitude' ) %]
             [%= data.longitude( places = 4, width = '' )
-                %], height
+                %], [% localize( 'height' ) %]
             [%= data.altitude( units = 'meters', places = 0,
                 width = '' ) %] m
 EOD
@@ -423,7 +424,10 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
     my ( $self, %data ) = @_;
 
     exists $data{data}
-	and $data{data} = $self->_wrap( $data{data} );
+	and $data{data} = $self->_wrap(
+	    data	=> $data{data},
+	    report	=> $data{template},
+	);
 
     _is_format() and return $data{data};
 
@@ -442,14 +446,23 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
 
     if ( $data{time} ) {
 	ref $data{time}
-	    or $data{time} = $self->_wrap( { time => $data{time} } );
+	    or $data{time} = $self->_wrap(
+		data => { time => $data{time} },
+		report	=> $template,
+	    );
     } else {
-	$data{time} = $self->_wrap( { time => time } );
+	$data{time} = $self->_wrap(
+	    data	=> { time => time },
+	    report	=> $template,
+	);
     }
 
     my $value_formatter = $self->value_formatter();
 
-    $data{title} = $self->_wrap( undef, $data{default} );
+    $data{title} = $self->_wrap(
+	default	=> $data{default},
+	report	=> $template,
+    );
     $data{TITLE_GRAVITY_BOTTOM} =
 	$value_formatter->TITLE_GRAVITY_BOTTOM;
     $data{TITLE_GRAVITY_TOP} =
@@ -473,6 +486,10 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
 	    $code->( $item, $value );
 	}
 	return;
+    };
+
+    $data{localize} = sub {
+	return _localize( $template, @_ );
     };
 
     my $output = $self->_process( $template, %data );
@@ -562,7 +579,7 @@ sub _all_events {
     @events or return;
     @events = sort { $a->{time} <=> $b->{time} } @events;
 
-    return [ map { $self->_wrap( $_ ) } @events ];
+    return [ map { $self->_wrap( data => $_ ) } @events ];
 }
 
 #	_is_format()
@@ -581,6 +598,16 @@ sub _is_format {
     return;
 }
 
+sub _localize {
+    my ( $report, $source, $default ) = @_;
+    defined $default
+	or $default = $source;
+    defined $report
+	or return defined $source ? $source : $default;
+
+    return __localize( "-$report", 'string', $source, $source );
+}
+
 sub _process {
     my ( $self, $tplt, %arg ) = @_;
     'ARRAY' eq ref $arg{arg}
@@ -594,7 +621,11 @@ sub _process {
 }
 
 sub _wrap {
-    my ( $self, $data, $default ) = @_;
+    my ( $self, %arg ) = @_;
+
+    my $data = $arg{data};
+    my $default = $arg{default};
+    my $report = $arg{report};
 
     my $title = ! $data;
     $data ||= {};
@@ -619,7 +650,13 @@ sub _wrap {
 		return $self->_process( $self->local_coord(),
 		    data	=> $data,
 		    arg		=> \@arg,
-		    title	=> $self->_wrap( undef, $default ),
+		    title	=> $self->_wrap(
+			default	=> $default,
+			report	=> $report,
+		    ),
+		    localize	=> sub {
+			return _localize( $report, @_ );
+		    },
 		);
 	    },
 	    list_formatter => sub {
@@ -629,17 +666,24 @@ sub _wrap {
 		return $self->_process( "list_$list_type",
 		    data	=> $data,
 		    arg		=> \@arg,
-		    title	=> $self->_wrap( undef, $default ),
+		    title	=> $self->_wrap(
+			default => $default,
+			report	=> $report,
+		    ),
 		);
 	    },
+	    report	=> $report,
 	    title	=> $title,
 	    warner	=> $self->warner(),
 	);
 	$data->add_formatter_method( values %{ $self->{formatter_method} } );
     } elsif ( 'ARRAY' eq ref $data ) {
-	$data = [ map { $self->_wrap( $_ ) } @{ $data } ];
+	$data = [ map { $self->_wrap( data => $_, report => $report ) } @{ $data } ];
     } elsif ( embodies( $data, 'Astro::Coord::ECI' ) ) {
-	$data = $self->_wrap( { body => $data } );
+	$data = $self->_wrap(
+	    data	=> { body => $data },
+	    report	=> $report,
+	);
     }
 
     return $data;
@@ -844,6 +888,19 @@ L<load_package()|Astro::App::Satpass2::Utils/load_package> subroutine.
 If the load succeeds, an object is instantiated by calling C<new()> on
 the loaded class name, and that object is returned. If no class can be
 loaded an exception is thrown.
+
+=item localize
+
+This is a code reference to localization code. It takes two arguments:
+the string to localize, and an optional default if the string can not be
+localized for some reason. The second argument defaults to the first.  A
+typical use would be something like
+
+ [% localize( 'Location' ) %]
+
+The localization comes from the locale system, specifically from key
+C<{"-$template"}{string}{$string}>, where C<$template> is the name of
+the main template being used, and C<$string> is the string to localize.
 
 =item provider
 

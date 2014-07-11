@@ -6,7 +6,7 @@ use strict;
 use warnings;
 
 
-use Astro::App::Satpass2::Locale qw{ __locale };
+use Astro::App::Satpass2::Locale qw{ __localize };
 use Astro::App::Satpass2::Macro::Command;
 use Astro::App::Satpass2::Macro::Code;
 use Astro::App::Satpass2::ParseTime;
@@ -412,11 +412,12 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter
     # Localize the event descriptions if appropriate.
 
     foreach my $event ( @almanac ) {
-	my $repl = __locale( almanac => $event->{body}->get( 'name' ) );
-	$repl
-	    or next;
-	$event->{almanac}{description} =
-	    $repl->{$event->{almanac}{event}}[$event->{almanac}{detail}];
+	$event->{almanac}{description} = __localize( almanac =>
+	    $event->{body}->get( 'name' ),
+	    $event->{almanac}{event},
+	    $event->{almanac}{detail},
+	    $event->{almanac}{description}
+	);
     }
 
 #	Sort the almanac data by date, and display the results.
@@ -1560,11 +1561,12 @@ sub pwd : Verb() {
 	# Localize the event descriptions if appropriate.
 
 	foreach my $event ( @almanac ) {
-	    my $repl = __locale( almanac => $event->{body}->get( 'name' ) );
-	    $repl
-		or next;
-	    $event->{almanac}{description} =
-		$repl->{$event->{almanac}{event}}[$event->{almanac}{detail}];
+	    $event->{almanac}{description} = __localize( almanac =>
+		$event->{body}->get( 'name' ),
+		$event->{almanac}{event},
+		$event->{almanac}{detail},
+		$event->{almanac}{description}
+	    );
 	}
 
 	# Sort and display the quarter-phase information.

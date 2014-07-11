@@ -12,27 +12,67 @@ use I18N::LangTags::Detect ();
 
 our $VERSION = '0.020_001';
 
-our @EXPORT_OK = qw{ __locale __preferred };
+our @EXPORT_OK = qw{ __localize __preferred };
 
 my @lang;
 my $locale;
 
-sub __locale {
-    my ( $sect, $item, @extra ) = @_;
-    @extra = grep { 'HASH' eq ref $_ } @extra;
-    $locale ||= _load();
-    foreach my $lc ( @lang ) {
-	foreach my $source ( @{ $locale }, @extra ) {
-	    my $data = $source->{$lc}
-		or next;
-	    $data = $data->{$sect}
-		or next;
-	    exists $data->{$item}
-		or next;
-	    return $data->{$item};
+{
+
+    my %deref = (
+	ARRAY	=> sub {
+	    my ( $data, $inx ) = @_;
+	    defined $inx
+		and exists $data->[$inx]
+		and return $data->[$inx];
+	    no warnings qw{ exiting };
+	    next SOURCE_LOOP;
+	},
+	HASH	=> sub {
+	    my ( $data, $key ) = @_;
+	    defined $key
+		and exists $data->{$key}
+		and return $data->{$key};
+	    no warnings qw{ exiting };
+	    next SOURCE_LOOP;
+	},
+	''		=> sub {
+	    no warnings qw{ exiting };
+	    next SOURCE_LOOP;
+	},
+    );
+
+    sub __localize {
+	my @extra = @_;
+	$locale ||= _load();
+	my $dflt = pop @extra;
+	my @keys;
+	while ( @extra && defined $extra[0] && ! ref $extra[0] ) {
+	    push @keys, shift @extra;
 	}
+	@extra = grep { $_ } @extra;
+	foreach my $lc ( @lang ) {
+	    SOURCE_LOOP:
+	    foreach my $source ( @{ $locale }, @extra ) {
+		my $data = $source->{$lc}
+		    or next;
+		foreach my $key ( @keys ) {
+		    my $code = $deref{ ref $data }
+			or do {
+			require Carp;
+			Carp::confess(
+			    'Programming error - Locale systen can ',
+			    'not handle ', ref $data, ' as a container'
+			);
+		    };
+		    $data = $code->( $data, $key );
+		}
+		return $data;
+	    }
+	}
+	return $dflt;
     }
-    return;
+
 }
 
 sub __preferred {
@@ -98,9 +138,9 @@ Astro::App::Satpass2::Locale - Handle locale-dependant data.
 
 =head1 SYNOPSIS
 
- use Astro::App::Satpass2::Locale qw{ __locale };
+ use Astro::App::Satpass2::Locale qw{ __localize };
  
- say __locale( 'foo', 'bar' );
+ say __localize( 'foo', 'bar', 'default text' );
 
 =head1 DESCRIPTION
 
@@ -144,38 +184,36 @@ via C<do()>.
 
 This class supports the following exportable public subroutines:
 
-=head2 __locale
+=head2 __localize
 
- say __locale( 'foo', 'bar' );
+ say __localize( foo => 'bar', 'default value' );
 
-This is the interface to the locale system. The arguments are the
-section and item name, and the specified item is returned. If the
-specified item is not found, nothing is returned.
+This subroutine is the interface used to localize values. The last
+(rightmost) argument is the default, to be returned if no localization
+can be found.  All leading (leftmost) arguments that are defined and are
+not references are keys (or indices) used to traverse the locale data
+structure. Any remaining arguments are either hash references (which
+represent last-chance locale definitions) or ignored.
 
-Optional arguments after the second may also be passed. These are hash
-references to extra locale data to be considered, keyed by locale code.
-These will be considered only if the section and item can not be found
-in user or global files.
+To extend the above example, assuming neither the system-wide or
+locale-specific locale information defines the keys C<{fu}{bar}>,
 
-To continue the above example:
-
- say __locale( 'foo', 'bar', {
+ say __localize( foo => 'bar', {
      C => {
-         foo => {
-             bar => 'Gronk!',
-         },
+	 foo => {
+	     bar => 'Gronk!',
+	 },
      },
      fr => {
-         foo => {
-             bar => 'Gronkez!',
-         },
+	 foo => {
+	     bar => 'Gronkez!',
+	 },
      },
- );
+ }, 'Greeble' );
 
-If section C<'foo'> and item C<'bar'> can not be found in either the
-user's or global locale definitions, this will print C<'Gronkez!'> if
-the user's locale is C<'fr'> (or C<'fr_FR'>, or ... ) and print
-C<'Gronk!'> otherwise.
+will print C<'Gronkez!'> in a French locale, and C<'Gronk!'> in any
+other locale (since the C<'C'> locale is always consulted). If
+C<'Greeble'> is printed, it indicates that the locale system is buggy.
 
 =head2 __preferred
 

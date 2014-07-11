@@ -7,7 +7,7 @@ use base qw{ Astro::App::Satpass2::Copier };
 
 use Astro::App::Satpass2::FormatTime;
 use Astro::App::Satpass2::FormatValue::Formatter;
-use Astro::App::Satpass2::Locale qw{ __locale };
+use Astro::App::Satpass2::Locale qw{ __localize };
 use Astro::App::Satpass2::Utils qw{ has_method instance merge_hashes };
 use Astro::App::Satpass2::Warner;
 use Astro::Coord::ECI::Sun 0.059;
@@ -24,24 +24,6 @@ our $VERSION = '0.020_001';
 use constant NONE => undef;
 use constant TITLE_GRAVITY_BOTTOM	=> 'bottom';
 use constant TITLE_GRAVITY_TOP		=> 'top';
-
-# The @event_names table is used in two distinct ways. First, it is the
-# default localization of the event names. Second it is a
-# locale-independant stringification of the event ID. So we define it
-# all here. The array gets shallow-cloned into the %locale hash below,
-# and used verbatim in _format_event() much further below.
-my @event_names;
-$event_names[PASS_EVENT_NONE]		= '';
-$event_names[PASS_EVENT_SHADOWED]	= 'shdw';
-$event_names[PASS_EVENT_LIT]		= 'lit';
-$event_names[PASS_EVENT_DAY]		= 'day';
-$event_names[PASS_EVENT_RISE]		= 'rise';
-$event_names[PASS_EVENT_MAX]		= 'max';
-$event_names[PASS_EVENT_SET]		= 'set';
-$event_names[PASS_EVENT_APPULSE]	= 'apls';
-$event_names[PASS_EVENT_START]		= 'strt';
-$event_names[PASS_EVENT_END]		= 'end';
-$event_names[PASS_EVENT_BRIGHTEST]	= 'brgt';
 
 #	Instantiator
 
@@ -69,14 +51,6 @@ $event_names[PASS_EVENT_BRIGHTEST]	= 'brgt';
 	$self->{fixed_width} = exists $args{fixed_width} ?
 	    $args{fixed_width} :
 	    1;
-
-=begin comment
-
-	$self->{locale} = merge_hashes( \%locale, $args{locale} );
-
-=end comment
-
-=cut
 
 	$self->{overflow} = $args{overflow} || 0;
 
@@ -127,6 +101,8 @@ $event_names[PASS_EVENT_BRIGHTEST]	= 'brgt';
 	} else {
 	    $self->{round_time} = $self->{time_formatter}->ROUND_TIME();
 	}
+
+	$self->{report} = $args{report};
 
 	return $self;
     }
@@ -1723,8 +1699,8 @@ sub reset_title_lines {
 		    and next APPLY_DEFAULT_LOOP;
 	    }
 
-            defined( $arg->{$key} = __locale( $fmtr_name, $key,
-		    $fmtr->{locale} ) )
+            defined( $arg->{$key} = __localize( $fmtr_name, $key,
+		    $fmtr->{locale}, undef ) )
 		and next;
 
 	    my $default = $dflt->{$key};
@@ -1737,6 +1713,17 @@ sub reset_title_lines {
 	    or $arg->{width} = '';
 	$arg->{width} =~ m/ \D /sxm
 	    and $arg->{width} = '';
+
+	if ( $self->{report} ) {
+	    my $report = "-$self->{report}";
+	    foreach my $key ( qw{ literal missing title } ) {
+		defined $arg->{$key}
+		    or next;
+		$arg->{$key} = __localize( $report, 'string',
+		    $arg->{$key}, $fmtr->{locale}, $arg->{$key} );
+	    }
+
+	}
 
 	return;
     }
@@ -1794,11 +1781,8 @@ sub _apply_dimension {
 
     $arg->{units} = $unit_name;
 
-    if ( my $localize_value = __locale( $fmtr_name, 'localize_value' ) ) {
-	my $localized;
-	$localized = $localize_value->{$value}
-	    and $value = $localized;
-    }
+    $value = __localize( $fmtr_name, 'localize_value', $value, $fmtr->{locale},
+	$value );
 
     defined( my $formatter = _dor( $unit->{formatter},
 	    $fmtr->{dimension}{formatter},
@@ -2045,7 +2029,7 @@ sub _format_bearing {
 	    and last;
     }
 
-    $table ||= __locale( bearing => 'table', $fmtr->{locale} );
+    $table ||= __localize( bearing => 'table', $fmtr->{locale}, [] );
 
     $arg->{bearing}
 	or $arg->{bearing} = ( $arg->{width} || 2 );
@@ -2114,7 +2098,7 @@ sub _format_event {
 		and last;
 	}
     }
-    $table ||= __locale( event => 'table' ) || \@event_names;
+    $table ||= __localize( event => 'table', [] );
 
     return $self->_format_string( $table->[$value] || '', $arg, $fmtr );
 }
@@ -2223,7 +2207,7 @@ sub _format_phase {
 	$table = $self->_get( $source => phase => 'table' )
 	    and last;
     }
-    $table ||= __locale( phase => 'table', $fmtr->{locale} );
+    $table ||= __localize( phase => 'table', $fmtr->{locale}, [] );
     foreach my $entry ( @{ $table } ) {
 	$entry->[0] > $angle or next;
 	return $self->_format_string( $entry->[1], $arg, $fmtr );
@@ -2556,6 +2540,17 @@ If this optional argument is true (in the Perl sense, i.e. anything but
 C<undef>, C<0>, or C<''>) fields will be allowed to overflow their
 widths. If false (the default) too-long strings will be truncated on the
 right, and too-long numeric fields will generally be C<*>-filled.
+
+=item report
+
+This optional argument is the name of the report being produced (e.g.
+C<'pass'>, C<'flare'>, or whatever). If specified, format effectors will
+use this for report-specific localization of titles, missing data text,
+and literals.
+
+The localization will come from key C<{"-$report"}{string}{$string}>,
+where C<$report> is the value of this argument, and C<$string> is the
+string being localized.
 
 =item time_format
 
