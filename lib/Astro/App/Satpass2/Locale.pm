@@ -77,7 +77,7 @@ my $locale;
 
 sub __preferred {
     $locale ||= _load();
-    return $lang[0];
+    return wantarray ? @lang : $lang[0];
 }
 
 sub _load {
@@ -219,11 +219,12 @@ C<'Greeble'> is printed, it indicates that the locale system is buggy.
 
  say __preferred()
 
-This subroutine returns the user's preferred locale.
+This subroutine returns the user's preferred locale in scalar mode, or
+all acceptable locales in descending order of preference in list mode.
 
 =head1 SEE ALSO
 
-<<< replace or remove boilerplate >>>
+L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
 
 =head1 SUPPORT
 

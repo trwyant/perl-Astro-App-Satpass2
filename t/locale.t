@@ -63,7 +63,10 @@ use Test::More 0.88;	# Because of done_testing();
 	],
 	q{phase => 'table' returns the correct array reference};
 
-    is __preferred(), 'fu_BAR', 'Preferred locale';
+    is scalar __preferred(), 'fu_BAR', 'Preferred locale';
+
+    is_deeply [ __preferred() ], [ qw{ fu_BAR fu C } ],
+	'Preferred locales';
 }
 
 done_testing;
