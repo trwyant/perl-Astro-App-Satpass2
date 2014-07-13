@@ -47,6 +47,21 @@ my $ft = Astro::App::Satpass2::Format::Template->new()->gmt( 1 );
 
 ok $ft, 'Instantiate Astro::App::Satpass2::Format::Template';
 
+ok $ft->template( fubar => <<'EOD' ), 'Can set custom template';
+Able was [% arg.0 %] ere [% arg.0 %] saw Elba
+EOD
+
+is $ft->template( 'fubar' ), <<'EOD', 'Can get same template back';
+Able was [% arg.0 %] ere [% arg.0 %] saw Elba
+EOD
+
+is $ft->format(
+    template	=> 'fubar',
+    arg		=> [ 'I' ],
+), <<'EOD', 'Can use custom template';
+Able was I ere I saw Elba
+EOD
+
 is $ft->format(
     template	=> 'almanac',
     data	=> [ {

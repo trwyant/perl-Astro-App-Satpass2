@@ -6,7 +6,6 @@ use warnings;
 use base qw{ Astro::App::Satpass2::Format };
 
 use Astro::App::Satpass2::Locale qw{ __localize };
-use Astro::App::Satpass2::Format::Template::Provider;
 # use Astro::App::Satpass2::FormatValue;
 use Astro::App::Satpass2::FormatValue::Formatter;
 use Astro::App::Satpass2::Utils qw{ instance };
@@ -328,15 +327,9 @@ sub new {
     my ($class, @args) = @_;
     my $self = $class->SUPER::new( @args );
 
-    $self->{template} =
-	Astro::App::Satpass2::Format::Template::Provider->new()
-	or $self->warner()->weep( 'Failed to instantiate provider' );
+    $self->{canned_template} = { %template_definitions };
 
     $self->_new_tt( $self->permissive() );
-
-    foreach my $name ( keys %template_definitions ) {
-	$self->template( $name => $template_definitions{ $name } );
-    }
 
     $self->{default} = {};
     $self->{formatter_method} = {};
@@ -347,9 +340,9 @@ sub new {
 sub _new_tt {
     my ( $self, $permissive ) = @_;
 
-    $self->{tt} = Template->new( {
+    $self->{tt} = Template->new(
+	{
 	    LOAD_TEMPLATES => [
-		$self->{template},
 		Template::Provider->new(
 		    ABSOLUTE	=> $permissive,
 		    RELATIVE	=> $permissive,
@@ -391,11 +384,11 @@ sub config {
 
     # TODO support for the {default} key.
 
-    foreach my $name ( sort
-	$self->{template}->__satpass2_defined_templates() ) {
-	my $template = $self->{template}->__satpass2_template( $name );
+    foreach my $name ( sort keys %{ $self->{canned_template} } ) {
+	my $template = $self->{canned_template}{$name};
 	$args{changes}
 	    and defined $template
+	    and defined $template_definitions{$name}
 	    and $template eq $template_definitions{$name}
 	    and next;
 	push @data, [ template => $name, $template ];
@@ -516,16 +509,17 @@ sub local_coord {
     my ( $self, @args ) = @_;
     if ( @args ) {
 	my $val = $args[0];
-	defined $val or $val = $self->DEFAULT_LOCAL_COORD;
-	# Chicken-and-egg problem: we have to get an object from
-	# SUPER::new before we can add the template provider, but
-	# SUPER::new sets the local coordinates. So if there is no
-	# provider we check the hash it is initialized from.
-	$self->{template} ?
-	    $self->{template}->__satpass2_template( $val ) :
-	    $template_definitions{$val}
+	defined $val
+	    or $val = $self->DEFAULT_LOCAL_COORD;
+
+	# TODO this is equivalent to what was in place before I changed
+	# the template logic, but it is not strict enough. It simply
+	# refuses to create a new template, but it will accept, e.g.,
+	# 'flare' as locale coordinates.
+	$self->{canned_template}{$val}
 	    or $self->warner()->wail(
 		"Unknown local coordinate specification '$val'" );
+
 	return $self->SUPER::local_coord( @args );
     } else {
 	return $self->SUPER::local_coord();
@@ -551,10 +545,10 @@ sub template {
 	or $self->warner()->wail( 'Template name not specified' );
 
     if ( @value ) {
-	$self->{template}->__satpass2_template( $name, $value[0] );
+	$self->{canned_template}{$name} = $value[0];
 	return $self;
     } else {
-        return scalar $self->{template}->__satpass2_template( $name );
+	return $self->{canned_template}{$name};
     }
 }
 
@@ -615,6 +609,8 @@ sub _process {
 	$arg{arg} );
     my $output;
     my $tt = $self->{tt};
+    defined $self->{canned_template}{$tplt}
+	and $tplt = \( $self->{canned_template}{$tplt} );
     $tt->process( $tplt, \%arg, \$output )
 	or $self->warner()->wail( $tt->error() );
     return $output;
