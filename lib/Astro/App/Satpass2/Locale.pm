@@ -25,20 +25,17 @@ my $locale;
 	    defined $inx
 		and exists $data->[$inx]
 		and return $data->[$inx];
-	    no warnings qw{ exiting };
-	    next SOURCE_LOOP;
+	    return;
 	},
 	HASH	=> sub {
 	    my ( $data, $key ) = @_;
 	    defined $key
 		and exists $data->{$key}
 		and return $data->{$key};
-	    no warnings qw{ exiting };
-	    next SOURCE_LOOP;
+	    return;
 	},
 	''		=> sub {
-	    no warnings qw{ exiting };
-	    next SOURCE_LOOP;
+	    return;
 	},
     );
 
@@ -65,7 +62,8 @@ my $locale;
 			    'not handle ', ref $data, ' as a container'
 			);
 		    };
-		    $data = $code->( $data, $key );
+		    ( $data ) = $code->( $data, $key )
+			or next SOURCE_LOOP;
 		}
 		return $data;
 	    }
