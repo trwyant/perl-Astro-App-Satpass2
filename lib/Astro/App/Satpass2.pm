@@ -2735,8 +2735,8 @@ sub _attribute_exists {
 			return $context->{id} == $s;
 		    };
 		}
-		return @rslt;
 	    }
+	    return @rslt;
 	},
 	CODE	=> sub {
 	    my ( $sel ) = @_;
