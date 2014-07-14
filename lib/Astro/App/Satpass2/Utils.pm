@@ -52,9 +52,16 @@ BEGIN {
 	my $code = \&{$data[3]};
 
 	local @ARGV = @args;
+	my ( $err, %opt );
 	my $lgl = $self->_get_attr($code, 'Verb') || [];
-	my %opt;
-	my $err;
+	if ( @{ $lgl } && ':compute' eq $lgl->[0] ) {
+	    my $method = $lgl->[1];
+	    unless ( defined $method ) {
+		( $method = $data[3] ) =~ s/ .* :: //smx;
+		$method = "_${method}_options";
+	    }
+	    $lgl = $self->$method( \%opt, $lgl );
+	}
 	local $SIG{__WARN__} = sub {$err = $_[0]};
 	my $config = 
 	    $self->_get_attr($code, 'Configure') || \@default_config;

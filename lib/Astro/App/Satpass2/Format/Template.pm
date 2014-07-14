@@ -397,6 +397,13 @@ sub config {
     return wantarray ? @data : \@data;
 }
 
+# Return the names of all known templates, in no particular order. No
+# arguments other than the invocant.
+sub __list_templates {
+    my ( $self ) = @_;
+    return keys %{ $self->{canned_template} };
+}
+
 sub __default {
     my ( $self, @arg ) = @_;
     @arg or return $self->{default};

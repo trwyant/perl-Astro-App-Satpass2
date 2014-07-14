@@ -988,6 +988,9 @@ sub _init_file_01 {
 sub list : Verb( choose=s@ ) {
     my ( $self, $opt, @args ) = __arguments( @_ );
 
+    @args
+	and not $opt->{choose}
+	and $opt->{choose} = \@args;
     my @bodies = $self->__choose( $opt->{choose}, $self->{bodies} );
 
     @bodies
@@ -2568,13 +2571,35 @@ sub time_parser : Verb() {
     goto &_helper_handler;
 }
 
-sub tle : Verb( verbose! ) {
+sub tle : Verb( :compute ) {
     my ( $self, $opt, @args ) = __arguments( @_ );
+    @args
+	and not $opt->{choose}
+	and $opt->{choose} = \@args;
 
-    my $bodies = $self->__choose( \@args, $self->{bodies} );
-    my $method = $opt->{verbose} ? 'tle_verbose' : 'tle';
-    return $self->__format_data(
-	$method => $bodies, $opt );
+    my $bodies = $self->__choose( $opt->{choose}, $self->{bodies} );
+    my $tplt_name = delete $opt->{_template};
+    return $self->__format_data( $tplt_name => $bodies, $opt );
+}
+
+sub _tle_options {
+    my ( $self, $opt ) = @_;
+    my @lgl = qw{ choose=s@ };
+    $opt->{_template} = 'tle';
+    my $code = sub {
+	my ( $name, $value ) = @_;
+	$opt->{_template} = $value ? "tle_$name" : 'tle';
+	return;
+    };
+    my $fmtr = $self->get( 'formatter' );
+    if ( $fmtr->can( '__list_templates' ) ) {
+	foreach ( $fmtr->__list_templates() ) {
+	    m/ \A tle_ ( \w+ ) \z /smx
+		or next;
+	    push @lgl, "$1!", $code;
+	}
+    }
+    return \@lgl;
 }
 
 
@@ -5459,6 +5484,21 @@ but the observing list is unaffected. To choose multiple bodies, either
 specify the option multiple times, separate the choices with commas, or
 both.
 
+If the C<-choose> option is not present but arguments are given, they
+are made into a C<-choose> specification. Thus,
+
+ satpass2> list hst
+
+is equivalent to
+
+ satpass2> list -choose hst
+
+but
+
+ satpass2> list -choose hst iss
+
+will only list C<'hst'>.
+
 =head2 load
 
  $satpass2->load( $filename, ... );
@@ -6234,9 +6274,29 @@ list. If any arguments are passed, they select the items to be
 displayed, in the same way that L</choose> does, though in this case the
 contents of the observing list are unaffected.
 
-The following option is allowed:
+The following options are allowed:
 
+ -choose explicitly chooses the bodies to display. The
+     contents of the observing list are unaffected, and
+     arguments are ignored.
  -verbose produces an expanded list, with data labeled.
+
+Actually, the presence of any template whose name begins with C<'tle_'>
+causes the trailing part of the name to be valid as an option selecting
+that template. For example, loading F<eg/tle_json.tt> as template
+C<'tle_json'> makes C<-json> a valid option that uses template
+C<'tle_json'> to format the TLE.
+
+The template selector options can be negated by prefixing C<'no'> to the
+option name (e.g. C<-noverbose>). Negating the option specifies template
+C<'tle'>, the default.
+
+If more than one template selector option is specified, the rightmost
+one riles. For example, given template C<'tle_json'>,
+
+ satpass2> tle -verbose -json
+
+uses template C<'tle_json'> to display the output.
 
 =head2 unexport
 
