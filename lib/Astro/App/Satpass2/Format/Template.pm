@@ -23,311 +23,13 @@ use Text::Wrap qw{ wrap };
 
 our $VERSION = '0.020_001';
 
-my %template_definitions = (
-
-    # Local coordinates
-
-    az_rng	=> <<'EOD',
-[% data.azimuth( arg, bearing = 2 ) %]
-    [%= data.range( arg ) -%]
-EOD
-
-    azel	=> <<'EOD',
-[% data.elevation( arg ) %]
-    [%= data.azimuth( arg, bearing = 2 ) -%]
-EOD
-
-    azel_rng	=> <<'EOD',
-[% data.elevation( arg ) %]
-    [%= data.azimuth( arg, bearing = 2 ) %]
-    [%= data.range( arg ) -%]
-EOD
-
-    equatorial	=> <<'EOD',
-[% data.right_ascension( arg ) %]
-    [%= data.declination( arg ) -%]
-EOD
-
-    equatorial_rng	=> <<'EOD',
-[% data.right_ascension( arg ) %]
-    [%= data.declination( arg ) %]
-    [%= data.range( arg ) -%]
-EOD
-
-    # Main templates
-
-    almanac	=> <<'EOD',
-[% UNLESS data %]
-    [%- SET data = sp.almanac( arg ) %]
-[%- END %]
-[%- FOREACH item IN data %]
-    [%- item.date %] [% item.time %]
-        [%= item.almanac( units = 'description' ) %]
-[% END -%]
-EOD
-
-    flare	=> <<'EOD',
-[% UNLESS data %]
-    [%- SET data = sp.flare( arg ) %]
-[%- END %]
-[%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
-[%- WHILE title.more_title_lines %]
-    [%- title.time %]
-        [%= title.name( width = 12 ) %]
-        [%= title.local_coord %]
-        [%= title.magnitude %]
-        [%= title.angle( 'Degrees From Sun' ) %]
-        [%= title.azimuth( 'Center Azimuth', bearing = 2 ) %]
-        [%= title.range( 'Center Range', width = 6 ) %]
-
-[%- END %]
-[%- prior_date = '' -%]
-[% FOR item IN data %]
-    [%- center = item.center %]
-    [%- current_date = item.date %]
-    [%- IF prior_date != current_date %]
-        [%- prior_date = current_date %]
-        [%- current_date %]
-
-    [%- END %]
-    [%- item.time %]
-        [%= item.name( units = 'title_case', width = 12 ) %]
-        [%= item.local_coord %]
-        [%= item.magnitude %]
-        [%= IF 'day' == item.type( width = '' ) %]
-            [%- item.appulse.angle %]
-        [%- ELSE %]
-            [%- item.appulse.angle( literal = 'night' ) %]
-        [%- END %]
-        [%= center.azimuth( bearing = 2 ) %]
-        [%= center.range( width = 6 ) %]
-[% END -%]
-EOD
-
-    list => <<'EOD',
-[% UNLESS data %]
-    [%- SET data = sp.list( arg ) %]
-[%- END %]
-[%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
-[%- WHILE title.more_title_lines %]
-    [%- title.list %]
-[% END %]
-[%- FOR item IN data %]
-    [%- item.list( arg ) %]
-[% END -%]
-EOD
-
-    list_inertial => <<'EOD',
-[% data.oid( align_left = 0, arg ) %] [% data.name( arg ) %]
-    [%= data.epoch( arg ) %]
-    [%= data.period( arg, align_left = 1 ) -%]
-EOD
-
-    list_fixed	=> <<'EOD',
-[% data.oid( align_left = 0, arg ) %] [% data.name( arg ) %]
-    [%= data.latitude( arg ) %]
-    [%= data.longitude( arg ) %] [% data.altitude( arg ) -%]
-EOD
-
-
-    location	=> <<'EOD',
-[% UNLESS data %]
-    [%- SET data = sp.location( arg ) %]
-[%- END -%]
-[% localize( 'Location' ) %]: [% data.name( width = '' ) %]
-          [% localize( 'Latitude' ) %] [% data.latitude( places = 4,
-                width = '' ) %], [% localize( 'longitude' ) %]
-            [%= data.longitude( places = 4, width = '' )
-                %], [% localize( 'height' ) %]
-            [%= data.altitude( units = 'meters', places = 0,
-                width = '' ) %] m
-EOD
-
-    pass	=> <<'EOD',
-[% UNLESS data %]
-    [%- SET data = sp.pass( arg ) %]
-[%- END %]
-[%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
-[%- SET do_mag = sp.want_pass_variant( 'brightest' ) %]
-[%- WHILE title.more_title_lines %]
-    [%- title.time( align_left = 0 ) %]
-        [%= title.local_coord %]
-        [%= title.latitude %]
-        [%= title.longitude %]
-        [%= title.altitude %]
-        [%= title.illumination %]
-	[%- IF do_mag %]
-	    [%= title.magnitude %]
-	[%- END %]
-        [%= title.event( width = '' ) %]
-
-[%- END %]
-[%- FOR pass IN data %]
-    [%- events = pass.events %]
-    [%- evt = events.first %]
-
-    [%- evt.date %]    [% evt.oid %] - [% evt.name( width = '' ) %]
-
-    [%- FOREACH evt IN events %]
-        [%- evt.time %]
-            [%= evt.local_coord %]
-            [%= evt.latitude %]
-            [%= evt.longitude %]
-            [%= evt.altitude %]
-            [%= evt.illumination %]
-	    [%- IF do_mag %]
-		[%= evt.magnitude %]
-	    [%- END %]
-            [%= evt.event( width = '' ) %]
-        [%- IF 'apls' == evt.event( units = 'string', width = '' ) %]
-            [%- apls = evt.appulse %]
-
-            [%- title.time( '' ) %]
-                [%= apls.local_coord %]
-                [%= apls.angle %] degrees from [% apls.name( width = '' ) %]
-        [%- END %]
-
-    [%- END %]
-[%- END -%]
-EOD
-
-    pass_events	=> <<'EOD',
-[% UNLESS data %]
-    [%- SET data = sp.pass( arg ) %]
-[%- END %]
-[%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
-[%- WHILE title.more_title_lines %]
-    [%- title.date %] [% title.time %]
-        [%= title.oid %] [% title.event %]
-        [%= title.illumination %] [% title.local_coord %]
-
-[%- END %]
-[%- FOREACH evt IN data.events %]
-    [%- evt.date %] [% evt.time %]
-        [%= evt.oid %] [% evt.event %]
-        [%= evt.illumination %] [% evt.local_coord %]
-[% END -%]
-EOD
-
-    phase	=> <<'EOD',
-[% UNLESS data %]
-    [%- SET data = sp.phase( arg ) %]
-[%- END %]
-[%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
-[%- WHILE title.more_title_lines %]
-    [%- title.date( align_left = 0 ) %]
-        [%= title.time( align_left = 0 ) %]
-        [%= title.name( width = 8, align_left = 0 ) %]
-        [%= title.phase( places = 0, width = 4 ) %]
-        [%= title.phase( width = 16, units = 'phase',
-            align_left = 1 ) %]
-        [%= title.fraction_lit( title = 'Lit', places = 0, width = 4,
-            units = 'percent', align_left = 0 ) %]
-
-[%- END %]
-[%- FOR item IN data %]
-    [%- item.date %] [% item.time %]
-        [%= item.name( width = 8, align_left = 0 ) %]
-        [%= item.phase( places = 0, width = 4 ) %]
-        [%= item.phase( width = 16, units = 'phase',
-            align_left = 1 ) %]
-        [%= item.fraction_lit( places = 0, width = 4,
-            units = 'percent' ) %]%
-[% END -%]
-EOD
-
-    position	=> <<'EOD',
-[% UNLESS data %]
-    [%- SET data = sp.position( arg ) %]
-[%- END %]
-[%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
-[%- data.date %] [% data.time %]
-[%- WHILE title.more_title_lines %]
-    [%- title.name( align_left = 0, width = 16 ) %]
-        [%= title.local_coord %]
-        [%= title.epoch( align_left = 0 ) %]
-        [%= title.illumination %]
-
-[%- END %]
-[%- FOR item IN data.bodies() %]
-    [%- item.name( width = 16, missing = 'oid', align_left = 0 ) %]
-        [%= item.local_coord %]
-        [%= item.epoch( align_left = 0 ) %]
-        [%= item.illumination %]
-
-    [%- FOR refl IN item.reflections() %]
-        [%- item.name( literal = '', width = 16 ) %]
-            [%= item.local_coord( literal = '' ) %] MMA
-        [%- IF refl.status( width = '' ) %]
-            [%= refl.mma( width = '' ) %] [% refl.status( width = '' ) %]
-        [%- ELSE %]
-            [%= refl.mma( width = '' ) %] mirror angle [%
-                refl.angle( width = '' ) %] magnitude [%
-                refl.magnitude( width = '' ) %]
-        [%- END %]
-
-    [%- END -%]
-[% END -%]
-EOD
-
-    tle		=> <<'EOD',
-[% UNLESS data %]
-    [%- SET data = sp.tle( arg ) %]
-[%- END %]
-[%- FOR item IN data %]
-    [%- item.tle -%]
-[% END -%]
-EOD
-
-    tle_verbose	=> <<'EOD',
-[% UNLESS data %]
-    [%- SET data = sp.tle( arg ) %]
-[%- END %]
-[%- CALL title.fixed_width( 0 ) -%]
-[% FOR item IN data -%]
-[% CALL item.fixed_width( 0 ) -%]
-[% title.oid %]: [% item.oid %]
-    [% title.name %]: [% item.name %]
-    [% title.international %]: [% item.international %]
-    [% title.epoch %]: [% item.epoch( units = 'zulu' ) %] GMT
-    [% title.effective_date %]: [%
-        item.effective_date( units = 'zulu',
-        missing = '<none>' ) %] GMT
-    [% title.classification %]: [% item.classification %]
-    [% title.mean_motion %]: [% item.mean_motion( places = 8 )
-        %] degrees/minute
-    [% title.first_derivative %]: [%
-        item.first_derivative( places = 8 ) %] degrees/minute squared
-    [% title.second_derivative %]: [%
-        item.second_derivative( places = 5 ) %] degrees/minute cubed
-    [% title.b_star_drag %]: [% item.b_star_drag( places = 5 ) %]
-    [% title.ephemeris_type %]: [% item.ephemeris_type %]
-    [% title.inclination %]: [% item.inclination( places = 4 ) %] degrees
-    [% title.ascending_node %]: [% item.ascending_node(
-        places = 0 ) %] in right ascension
-    [% title.eccentricity %]: [% item.eccentricity( places = 7 ) %]
-    [% title.argument_of_perigee %]: [%
-        item.argument_of_perigee( places = 4 )
-        %] degrees from ascending node
-    [% title.mean_anomaly %]: [%
-        item.mean_anomaly( places = 4 ) %] degrees
-    [% title.element_number %]: [% item.element_number %]
-    [% title.revolutions_at_epoch %]: [% item.revolutions_at_epoch %]
-    [% title.period %]: [% item.period %]
-    [% title.semimajor %]: [% item.semimajor( places = 1 ) %] kilometers
-    [% title.perigee %]: [% item.perigee( places = 1 ) %] kilometers
-    [% title.apogee %]: [% item.apogee( places = 1 ) %] kilometers
-[% END -%]
-EOD
-
-);
-
-
 sub new {
     my ($class, @args) = @_;
     my $self = $class->SUPER::new( @args );
 
-    $self->{canned_template} = { %template_definitions };
+    # As of [%% next_version %%] the template definitions are in the
+    # locale system. The attribute simply holds modifications.
+    $self->{canned_template} = {};
 
     $self->_new_tt( $self->permissive() );
 
@@ -384,14 +86,13 @@ sub config {
 
     # TODO support for the {default} key.
 
-    foreach my $name ( sort keys %{ $self->{canned_template} } ) {
-	my $template = $self->{canned_template}{$name};
-	$args{changes}
-	    and defined $template
-	    and defined $template_definitions{$name}
-	    and $template eq $template_definitions{$name}
-	    and next;
-	push @data, [ template => $name, $template ];
+    foreach my $name (
+	sort $args{changes} ?
+	    keys %{ $self->{canned_template} } :
+	    $self->__list_templates()
+    ) {
+	push @data, [ template => $name,
+	    $self->{canned_template}{$name} ];
     }
 
     return wantarray ? @data : \@data;
@@ -401,7 +102,8 @@ sub config {
 # arguments other than the invocant.
 sub __list_templates {
     my ( $self ) = @_;
-    return keys %{ $self->{canned_template} };
+    return ( _uniq( map { keys %{ $_ } } $self->{canned_template},
+	    __localize( '+template', {} ) ) );
 }
 
 sub __default {
@@ -431,8 +133,10 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
 
     _is_format() and return $data{data};
 
-    my $template = delete $data{template}
+    my $tplt = delete $data{template}
 	or $self->warner()->wail( 'template argument is required' );
+
+    my $tplt_name = 'SCALAR' eq ref $tplt ? ${ $tplt } : $tplt;
 
     $data{default} ||= $self->__default();
 
@@ -448,12 +152,12 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
 	ref $data{time}
 	    or $data{time} = $self->_wrap(
 		data => { time => $data{time} },
-		report	=> $template,
+		report	=> $tplt_name,
 	    );
     } else {
 	$data{time} = $self->_wrap(
 	    data	=> { time => time },
-	    report	=> $template,
+	    report	=> $tplt_name,
 	);
     }
 
@@ -461,7 +165,7 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
 
     $data{title} = $self->_wrap(
 	default	=> $data{default},
-	report	=> $template,
+	report	=> $tplt_name,
     );
     $data{TITLE_GRAVITY_BOTTOM} =
 	$value_formatter->TITLE_GRAVITY_BOTTOM;
@@ -489,10 +193,10 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
     };
 
     $data{localize} = sub {
-	return _localize( $template, @_ );
+	return _localize( $tplt_name, @_ );
     };
 
-    my $output = $self->_process( $template, %data );
+    my $output = $self->_process( $tplt, %data );
 
     # TODO would love to use \h here, but that needs 5.10.
     $output =~ s/ [ \t]+ (?= \n ) //sxmg;
@@ -519,13 +223,9 @@ sub local_coord {
 	defined $val
 	    or $val = $self->DEFAULT_LOCAL_COORD;
 
-	# TODO this is equivalent to what was in place before I changed
-	# the template logic, but it is not strict enough. It simply
-	# refuses to create a new template, but it will accept, e.g.,
-	# 'flare' as locale coordinates.
-	$self->{canned_template}{$val}
+	defined $self->template( $val )
 	    or $self->warner()->wail(
-		"Unknown local coordinate specification '$val'" );
+		'Unknown local coordinate specification', $val );
 
 	return $self->SUPER::local_coord( @args );
     } else {
@@ -552,10 +252,22 @@ sub template {
 	or $self->warner()->wail( 'Template name not specified' );
 
     if ( @value ) {
-	$self->{canned_template}{$name} = $value[0];
+	my $tplt_text;
+	if ( ! defined $value[0]
+	    || defined( $tplt_text = __localize( '+template',
+		$value[0] ) )
+	    && $value[0] eq $tplt_text
+	) {
+	    delete $self->{canned_template}{$name};
+	} else {
+	    $self->{canned_template}{$name} = $value[0];
+	}
+
 	return $self;
     } else {
-	return $self->{canned_template}{$name};
+	defined $self->{canned_template}{$name}
+	    and return $self->{canned_template}{$name};
+	return __localize( '+template', $name, undef );
     }
 }
 
@@ -616,11 +328,23 @@ sub _process {
 	$arg{arg} );
     my $output;
     my $tt = $self->{tt};
-    defined $self->{canned_template}{$tplt}
-	and $tplt = \( $self->{canned_template}{$tplt} );
+
+    my $tplt_text;
+    not ref $tplt
+	and defined( $tplt_text = $self->template( $tplt ) )
+	and $tplt = \$tplt_text;
+
     $tt->process( $tplt, \%arg, \$output )
 	or $self->warner()->wail( $tt->error() );
     return $output;
+}
+
+# Cribbed shamelessly from List::MoreUtils. The author reserves the
+# right to relocate, rename or otherwise mung with this without notice
+# to anyone. Caveat user.
+sub _uniq {
+    my %found;
+    return ( grep { ! $found{$_}++ } @_ );
 }
 
 sub _wrap {

@@ -45,6 +45,15 @@ $sat->rebless( 'iridium' );
 
 my $ft = Astro::App::Satpass2::Format::Template->new()->gmt( 1 );
 
+# Encapsulation violation. The _uniq() subroutine may be moved or
+# retracted without notice of any kind.
+
+is_deeply
+    [ Astro::App::Satpass2::Format::Template::_uniq(
+	    qw{ Able was I ere I saw Elba } ) ],
+    [ qw{ Able was I ere saw Elba } ],
+    'Check our implementation of uniq()';
+
 ok $ft, 'Instantiate Astro::App::Satpass2::Format::Template';
 
 ok $ft->template( fubar => <<'EOD' ), 'Can set custom template';
