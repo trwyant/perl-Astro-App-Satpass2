@@ -5,6 +5,8 @@ use 5.008;
 use strict;
 use warnings;
 
+use Astro::App::Satpass2::Locale qw{ __message };
+
 our @CARP_NOT = ( qw{
     Astro::App::Satpass2
     Astro::App::Satpass2::Copier
@@ -54,7 +56,7 @@ sub new {
 
 sub wail {
     my ($self, @args) = @_;
-    my $msg = join '', @args;
+    my $msg = __message( @args );
     chomp $msg;
     if ($self->warning()) {
 	$msg =~ m/[.?!]\z/msx or $msg .= '.';
@@ -78,7 +80,7 @@ sub warning {
 
 sub weep {
     my ( $self, @args ) = @_;
-    my $msg = join '', 'Programming Error - ', @args;
+    my $msg = join ' ', __message( 'Programming Error -' ), __message( @args );
     chomp $msg;
     require Carp;
     Carp::confess( $msg );
@@ -86,7 +88,7 @@ sub weep {
 
 sub whinge {
     my ($self, @args) = @_;
-    my $msg = join '', @args;
+    my $msg = __message( @args );
     chomp $msg;
     if ($self->warning()) {
 	$msg =~ m/ [.?!] \z /msx or $msg .= '.';

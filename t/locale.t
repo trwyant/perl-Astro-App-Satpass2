@@ -12,13 +12,13 @@ use Test::More 0.88;	# Because of done_testing();
     local $ENV{ASTRO_APP_SATPASS2_CONFIG_DIR} = 't';
     local $ENV{LC_ALL} = 'fu_BAR';
 
-    is __localize( almanac => 'title', 'name' ),
+    is scalar __localize( almanac => 'title', 'name' ),
 	'Almanac', q{almanac => 'title'};
 
     ok ! defined scalar __localize( fu => 'bar', undef ),
 	q{fu => 'bar' returns nothing};
 
-    is __localize( fu => 'bar', {
+    is scalar __localize( fu => 'bar', {
 	    fu_BAR	=> {
 		fu	=> {
 		    bar	=> 'bazzle',
@@ -28,10 +28,14 @@ use Test::More 0.88;	# Because of done_testing();
 	'whee',
     ), 'bazzle', q{fu => 'bar' works with manual data};
 
-    is __localize( altitude => 'title', 'Robin' ), 'Batman',
+    is scalar __localize( altitude => 'title', 'Robin' ), 'Batman',
 	q{altitude => 'title' from user-specific locale file};
 
-    is_deeply __localize( bearing => 'table', [] ),
+    is_deeply [ __localize( altitude => 'title', 'Robin' ) ],
+	[ 'Batman', 'Altitude', 'Robin' ],
+	q{altitude => 'title' in list context};
+
+    is_deeply scalar __localize( bearing => 'table', [] ),
 	[
 	    [ qw{ N E S W } ],
 	    [ qw{ N NE E SE S SW W NW } ],
@@ -40,17 +44,17 @@ use Test::More 0.88;	# Because of done_testing();
 	],
 	q{bearing => 'table' returns the correct array reference};
 
-    is __localize( event => 'title', undef ), 'Event',
+    is scalar __localize( event => 'title', undef ), 'Event',
 	q{event => 'title' returns C value};
 
-    is_deeply __localize( event => 'table', [] ), [
+    is_deeply scalar __localize( event => 'table', [] ), [
 	qw{ Larry Moe Shemp Curley } ],
 	q{event => 'table' returns fu_BAR data};
 
-    is __localize( event => table => 2, 'Zeppo' ), 'Shemp',
+    is scalar __localize( event => table => 2, 'Zeppo' ), 'Shemp',
 	q{event => table => 2 returns correct array element};
 
-    is_deeply __localize( phase => 'table', [] ),
+    is_deeply scalar __localize( phase => 'table', [] ),
 	[
 	    [ 6.1	=> 'new' ],
 	    [ 83.9	=> 'waxing crescent' ],

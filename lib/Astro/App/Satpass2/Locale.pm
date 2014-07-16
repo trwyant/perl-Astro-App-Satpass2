@@ -12,7 +12,7 @@ use I18N::LangTags::Detect ();
 
 our $VERSION = '0.020_001';
 
-our @EXPORT_OK = qw{ __localize __preferred };
+our @EXPORT_OK = qw{ __localize __message __preferred };
 
 my @lang;
 my $locale;
@@ -48,9 +48,14 @@ my $locale;
 	    push @keys, shift @extra;
 	}
 	@extra = grep { $_ } @extra;
+	my @rslt;
 	foreach my $lc ( @lang ) {
 	    SOURCE_LOOP:
 	    foreach my $source ( @{ $locale }, @extra ) {
+		unless ( 'HASH' eq ref $source ) {
+		    require Carp;
+		    Carp::confess( "\$source is '$source'" );
+		}
 		my $data = $source->{$lc}
 		    or next;
 		foreach my $key ( @keys ) {
@@ -65,12 +70,36 @@ my $locale;
 		    ( $data ) = $code->( $data, $key )
 			or next SOURCE_LOOP;
 		}
-		return $data;
+		wantarray
+		    or return $data;
+		push @rslt, $data;
 	    }
 	}
-	return $dflt;
+	wantarray
+	    or return $dflt;
+	return ( @rslt, $dflt );
     }
 
+}
+
+sub __message {
+    my ( $msg, @arg ) = @_;
+    my $lcl = __localize( '+message', $msg, $msg );
+
+    'CODE' eq ref $lcl
+	and return $lcl->( $msg, @arg );
+
+    $lcl =~ m/ \[ % /smx
+	or return join ' ', $lcl, @arg;
+
+    my $tt = Template->new();
+
+    my $output;
+    $tt->process( \$lcl, {
+	    arg	=> \@arg,
+	}, \$output );
+
+    return $output;
 }
 
 sub __preferred {
@@ -138,7 +167,13 @@ Astro::App::Satpass2::Locale - Handle locale-dependant data.
 
  use Astro::App::Satpass2::Locale qw{ __localize };
  
- say __localize( 'foo', 'bar', 'default text' );
+ # The best localization
+ say scalar __localize( 'foo', 'bar', 'default text' );
+ 
+ # All localizations, in decreasing order of goodness
+ for ( __localize( 'foo', 'bar', 'default text' ) ) {
+     say;
+ }
 
 =head1 DESCRIPTION
 
@@ -184,7 +219,13 @@ This class supports the following exportable public subroutines:
 
 =head2 __localize
 
- say __localize( foo => 'bar', 'default value' );
+ # The best localization
+ say scalar __localize( 'foo', 'bar', 'default text' );
+ 
+ # All localizations, in decreasing order of goodness
+ for ( __localize( 'foo', 'bar', 'default text' ) ) {
+     say;
+ }
 
 This subroutine is the interface used to localize values. The last
 (rightmost) argument is the default, to be returned if no localization
@@ -193,10 +234,15 @@ not references are keys (or indices) used to traverse the locale data
 structure. Any remaining arguments are either hash references (which
 represent last-chance locale definitions) or ignored.
 
+If called in scalar context, the best available localization is
+returned. If called in list context, all available localizations
+will be returned, with the best first and the worst (which will be the
+default) last.
+
 To extend the above example, assuming neither the system-wide or
 locale-specific locale information defines the keys C<{fu}{bar}>,
 
- say __localize( foo => 'bar', {
+ say scalar __localize( foo => 'bar', {
      C => {
 	 foo => {
 	     bar => 'Gronk!',
@@ -212,6 +258,32 @@ locale-specific locale information defines the keys C<{fu}{bar}>,
 will print C<'Gronkez!'> in a French locale, and C<'Gronk!'> in any
 other locale (since the C<'C'> locale is always consulted). If
 C<'Greeble'> is printed, it indicates that the locale system is buggy.
+
+=head2 __message
+
+ say __message( 'Fee fi foe foo!' ); # Fee fi foe foo
+ say __message( 'A', 'B', 'C' );     # A B C
+ say __message( 'Hello [% arg.0 %]!', 'sailor' );
+                                     # Hello sailor!
+
+This subroutine is a wrapper for C<__localize()> designed to make
+message localization easier.
+
+The first argument is localized by looking it up under the
+C<{'+message'}> key in the localization data. If no localization is
+found, the first argument is its own localization. In other words, if
+the first argument is C<$message>, its localization is
+C<__localize( '+message', $message, $message )>.
+
+If the localization contains C<Template-Toolkit> interpolations
+(specifically, C<'[%'>) it and the arguments are fed to that system,
+with the arguments being available to the template as variable C<arg>.
+The result is returned.
+
+If the localization of the first argument does not contain any
+C<Template-Toolkit> interpolations, it is simply joined to the
+arguments, with single space characters in between, and the result of
+the join is returned.
 
 =head2 __preferred
 

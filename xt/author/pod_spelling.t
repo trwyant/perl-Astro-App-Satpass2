@@ -103,6 +103,8 @@ JSON
 jul
 julian
 kluged
+localization
+localizations
 lookup
 Lookup
 lookups

@@ -606,7 +606,7 @@ sub _localize {
     defined $report
 	or return defined $source ? $source : $default;
 
-    return __localize( "-$report", 'string', $source, $source );
+    return scalar __localize( "-$report", 'string', $source, $source );
 }
 
 sub _process {

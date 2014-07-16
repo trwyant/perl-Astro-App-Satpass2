@@ -27,6 +27,10 @@ $event_names[PASS_EVENT_BRIGHTEST]	= 'brgt';
 # this.
 
 {	## no critic (Modules::RequireEndWithOne)
+    '+message'	=> {
+    },
+    '+template'	=> {
+    },
     '-flare'	=> {
 	string	=> {
 	    'Degrees From Sun'	=> 'Degrees From Sun',
@@ -254,6 +258,65 @@ locale hash.
 =head1 SUBROUTINES
 
 None.
+
+=head1 THE LOCALE DATA
+
+The locale data are stored in a hash. The top-level key is always locale
+code. This is either a two-character language code, lower-case (e.g.
+C<'en'>, a language code and upper-case country code delimited by an
+underscore (e.g. C<'en_US'>, or C<'C'> for the default locale.
+
+The data for each locale key are a reference to a hash. The keys of this
+hash are the names of
+L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
+formats (e.g. C<{azimuth}>), the names of top-level reporting templates
+preceded by a dash (e.g. C<{'-flare'}>, or the special keys
+C<'{+message}'> (error messages) or C<'{+template}'> (templates).
+
+The content of these second level hashes varies with its type, as
+follows:
+
+=head2 Format Effectors (e.g. C<{azimuth}>)
+
+These are hashes containing data relevant to that format effector. The
+C<{title}> key contains the title for that format effector. Other keys
+relevant to the specific formatter may also appear, such as the
+C<{table}> key in C<{phase}>, which defines the names of phases in terms
+of phase angle. These extra keys are pretty much ad-hoc as required by
+the individual format effector.
+
+=head2 Top-level reporting (e.g. C<{'-flare'}>
+
+The only key defined at the moment is C<{string}>, whose content is a
+hash reference. This hash is keyed by text appearing as the values in
+L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
+C<literal>, C<missing>, and C<title> arguments, and the corresponding
+values are the translations of that text into the relevant locale.
+
+For example, a Spanish localization for C<{'-flare'}> might be something
+like
+
+ {
+   es => {
+     string => {
+       night => 'noche',
+       ...
+     }
+   }
+ }
+
+=head2 C<{'+message'}>
+
+The value of this key is a hash whose keys are message text as coded in
+this program, and whose values are the message text as it should appear
+in the relevant locale. These are typically to be consumed by the locale
+system's C<__message()> subroutine.
+
+=head2 C<{'+template'}>
+
+The value of this key is a hash whose keys are template names used by
+L<Astro::App::Satpass2::Format::Template|Astro::App::Satpass2::Format::Template>,
+and whose values are the templates themselves in the relevant locale.
 
 =head1 SEE ALSO
 
