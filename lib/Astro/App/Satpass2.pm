@@ -380,7 +380,7 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter
     my $almanac_end = $self->__parse_time (shift @args || '+1');
 
     $almanac_start >= $almanac_end
-	and $self->wail("End time must be after start time");
+	and $self->wail( 'End time must be after start time' );
 
 #	Build an object representing our ground location.
 
@@ -538,7 +538,7 @@ sub end : Verb() {
     my ( $self, $opt, @args ) = __arguments( @_ );
 
     $self->{frame}[-1]{type} eq 'begin'
-	or $self->wail("End without begin");
+	or $self->wail( 'End without begin' );
     $self->_frame_pop();
     return;
 }
@@ -677,7 +677,7 @@ sub export : Verb() {
 	@args and $self->set ($name, shift @args);
 	$self->{exported}{$name} = 1;
     } else {
-	@args or $self->wail("You must specify a value");
+	@args or $self->wail( 'You must specify a value' );
 	$self->{exported}{$name} = shift @args;
     }
     return;
@@ -692,7 +692,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! q
 	shift @args, $self->_get_today_noon());
     my $pass_end = $self->__parse_time (shift @args || '+7');
     $pass_start >= $pass_end
-	and $self->wail("End time must be after start time");
+	and $self->wail( 'End time must be after start time' );
     my $sta = $self->station();
 
     my $max_mirror_angle = deg2rad( $self->{max_mirror_angle} );
@@ -717,7 +717,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! q
 	    scalar $self->__choose( $opt->{choose}, $self->{bodies} )
 	) )
     {
-	$tle->can_flare ($opt->{questionable}) or next;
+	$tle->can_flare( $opt->{questionable} ) or next;
 	$tle->set (
 	    algorithm	=> $opt->{algorithm} || 'fixed',
 	    backdate	=> $self->{backdate},
@@ -735,7 +735,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! q
 	);
 	push @active, $tle;
     }
-    @active or $self->wail("No bodies capable of flaring");
+    @active or $self->wail( 'No bodies capable of flaring' );
 
     my @flares;
     foreach my $tle (@active) {
@@ -799,7 +799,7 @@ sub geocode : Verb( debug! ) {
 
 sub geodetic : Verb() {
     my ( $self, $opt, $name, $lat, $lon, $alt ) = __arguments( @_ );
-    @_ == 5 or $self->wail( "Want exactly four arguments" );
+    @_ == 5 or $self->wail( 'Want exactly four arguments' );
     my $body = Astro::Coord::ECI::TLE->new(
 	name => $name,
 	id => '',
@@ -998,7 +998,7 @@ sub list : Verb( choose=s@ ) {
 	    list => \@bodies, $opt );
 
     $self->{warn_on_empty}
-	and $self->whinge("The observing list is empty");
+	and $self->whinge( 'The observing list is empty' );
 
     return;
 }
@@ -1279,11 +1279,11 @@ sub pass : Verb( choose=s@ appulse! brightest|magnitude! chronological! dump! ev
 	shift @args, $self->_get_today_noon());
     my $pass_end = $self->__parse_time (shift @args || '+7');
     $pass_start >= $pass_end
-	and $self->wail("End time must be after start time");
+	and $self->wail( 'End time must be after start time' );
 
     my $sta = $self->station();
     my @bodies = $self->__choose( $opt->{choose}, $self->{bodies} )
-	or $self->wail("No bodies selected");
+	or $self->wail( 'No bodies selected' );
     my $pass_step = shift @args || 60;
 
 #	Decide which model to use.
@@ -1613,7 +1613,7 @@ sub pwd : Verb() {
 		level1! version
 	    },
 	)
-	    or $self->wail( "See the help method for valid options" );
+	    or $self->wail( 'See the help method for valid options' );
 
 	# If -version, do it and return.
 	if ( $opt{version} ) {
@@ -2017,7 +2017,7 @@ sub _set_twilight {
     } else {
 	my $angle = $self->__parse_angle( { accept => 1 }, $val );
 	looks_like_number( $angle )
-	    or $self->wail("Twilight must be number or known keyword" );
+	    or $self->wail( 'Twilight must be number or known keyword' );
 	$self->{$name} = $val;
 	$self->{_twilight} = deg2rad ($angle);
     }
@@ -2150,20 +2150,20 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 			quoter ($body->get ('name')), _rad2hms ($ra),
 			rad2deg ($dec), $rng, $pmra, $pmdec, $vr);
 		} else {
-		    $output .= "sky add " . quoter (
+		    $output .= 'sky add ' . quoter (
 			$body->get ('name')) . "\n";
 		}
 	    }
 	    unless (@{$self->{sky}}) {
 		$self->{warn_on_empty}
-		    and $self->whinge("The sky is empty");
+		    and $self->whinge( 'The sky is empty' );
 	    }
 	    return $output;
 	},
 	add	=> sub {
 	    my ( $self, @args ) = @_;
 	    my $name = shift @args
-		or $self->wail("You did not specify what to add");
+		or $self->wail( 'You did not specify what to add' );
 	    my $fcn = fold_case( $name );
 	    if ( my $class = $planet_class{$fcn} ) {
 		foreach my $body ( @{ $self->{sky} } ) {
@@ -2211,7 +2211,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	drop	=> sub {
 	    my ( $self, @args ) = @_;
 	    @args or $self->wail(
-		"You must specify at least one name to drop");
+		'You must specify at least one name to drop' );
 	    my $match = qr< @{[ join '|', map {quotemeta $_} @args ]} >smxi;
 	    @{$self->{sky}} = grep {
 		$_->get ('name') !~ m/ $match /smx } @{$self->{sky}};
@@ -2245,7 +2245,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    my ($ra, $dec, $rng, $pmra, $pmdec, $pmrec) =
 		$self->_simbad4 ($name);
 	    $rng = sprintf '%.2f', $rng;
-	    $output .= "sky add " . quoter ($name) .
+	    $output .= 'sky add ' . quoter ($name) .
 		" $ra $dec $rng $pmra $pmdec $pmrec\n";
 	    $ra = deg2rad ($self->__parse_angle ($ra));
 	    my $body = Astro::Coord::ECI::Star->new (name => $name);
@@ -2620,10 +2620,10 @@ sub validate : Verb( quiet! ) {
 	shift @args, $self->_get_today_noon());
     my $pass_end = $self->__parse_time (shift @args || '+7');
     $pass_start >= $pass_end
-	and $self->wail("End time must be after start time");
+	and $self->wail( 'End time must be after start time' );
 
     @{ $self->{bodies} }
-	or $self->wail("No bodies selected");
+	or $self->wail( 'No bodies selected' );
 
 #	Validate each body.
 
@@ -3099,7 +3099,7 @@ sub _frame_push {
 		and $self->_get_spacetrack()->set(%{$frame->{spacetrack}});
 	}
 	if (delete $self->{pending}) {
-	    $self->wail("Input ended on continued line");
+	    $self->wail('Input ended on continued line');
 	}
 	return;
     }
@@ -3246,7 +3246,7 @@ sub _get_interactive {
 		eval {
 		    load_package( 'Term::ReadLine' )
 			or return;
-		    $rl ||= Term::ReadLine->new("satpass2");
+		    $rl ||= Term::ReadLine->new('satpass2');
 		    sub {
 			defined $buffer or return $buffer;
 			return ( $buffer = $rl->readline($_[0]) );
@@ -4245,7 +4245,7 @@ sub _unescape {
 			$name .= $char;
 		    }
 		    $char eq '}'
-			or $self->wail("Missing right curly bracket");
+			or $self->wail('Missing right curly bracket');
 		
 		# If the name begins with an alpha or an underscore, we
 		# simply append any word ('\w') characters to it and
@@ -4326,11 +4326,11 @@ sub _unescape {
 			    }
 			    @pos > 2
 				and $self->wail(
-				"Substring expansion has extra arguments" );
+				'Substring expansion has extra arguments' );
 			    foreach ( @pos ) {
 				m/ \A [-+]? \d+ \z /smx
 				    or $self->wail(
-				    "Substring expansion argument non-numeric"
+				    'Substring expansion argument non-numeric'
 				);
 			    }
 			    if (ref $value) {
@@ -4494,14 +4494,14 @@ sub _unescape {
 		    my $terminator = $rslt[-1]{token};
 		    my $look_for = $terminator . "\n";
 		    $rslt[-1]{token} = '';
-		    $rslt[-1]{expand} = $quote ne "'";
+		    $rslt[-1]{expand} = $quote ne q<'>;
 		    while ( 1 ) {
 			my $buffer = $self->_read_continuation( $in,
 			    "Here doc terminator $terminator not found" );
 			$buffer eq $look_for and last;
 			$rslt[-1]{token} .= $buffer;
 		    }
-		    if ( $quote ne "'" ) {
+		    if ( $quote ne q<'> ) {
 			$rslt[-1]{token} = _tokenize(
 			    $self,
 			    { single => 1, noredirect => 1, in => $in },

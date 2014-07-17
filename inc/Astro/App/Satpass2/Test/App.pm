@@ -59,10 +59,10 @@ sub check_access ($) {
     eval {
 	require LWP::UserAgent;
 	1;
-    } or return "Can not load LWP::UserAgent";
+    } or return 'Can not load LWP::UserAgent';
 
     my $ua = LWP::UserAgent->new()
-	or return "Can not instantiate LWP::UserAgent";
+	or return 'Can not instantiate LWP::UserAgent';
 
     my $rslt = $ua->get( $url )
 	or return "Can not get $url";

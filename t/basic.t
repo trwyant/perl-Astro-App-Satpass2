@@ -291,7 +291,7 @@ SKIP: {
     my $tests = 1;
 
     $date_manip_delegate
-	or skip "Unable to load Date::Manip", $tests;
+	or skip 'Unable to load Date::Manip', $tests;
 
     instantiate 'Astro::App::Satpass2::ParseTime',
 	class => 'Astro::App::Satpass2::ParseTime::Date::Manip',

@@ -280,7 +280,7 @@ sub _quoter {
     my ( $string ) = @_;
     return 'undef' unless defined $string;
     return $string if looks_like_number ($string);
-    return "''" unless $string;
+    return q{''} unless $string;
     return $string unless $string =~ m/ [\s'"\$] /smx;
     $string =~ s/ ( [\\'] ) /\\$1/smxg;
     return qq{'$string'};

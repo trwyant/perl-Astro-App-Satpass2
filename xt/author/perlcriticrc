@@ -69,6 +69,13 @@ allow	= exiting once substr uninitialized
 
 severity	= cruel
 
+[Perl::Critic::Policy::ValuesAndExpressions::ProhibitInterpolationOfLiterals]
+
+# This policy is severity 1 by default, but because of the desire to
+# localize messages I want it severe enough that I get output.
+
+severity	= gentle
+
 [Perl::Critic::Policy::Variables::ProhibitUnusedVarsStricter]
 
 add_themes	= core

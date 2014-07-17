@@ -61,7 +61,7 @@ sub add_formatter_method {
     my ( $self, $fmtr ) = @_;
     defined( my $fmtr_name = $fmtr->{name} )
 	or $self->warner()->wail(
-	    "Formatter definition must have {name} defined" );
+	    'Formatter definition must have {name} defined' );
     $self->{formatter_method}{$fmtr_name}
 	and $self->{warner}->wail(
 	"Formatter method $fmtr_name already exists" );

@@ -1938,7 +1938,7 @@ sub _get {
     foreach my $key ( @arg ) {
 	ref $hash or return NONE;
 	defined $key
-	    or $self->warner()->weep( "Undefined key" );
+	    or $self->warner()->weep( 'Undefined key' );
 	my $ref = reftype( $hash );
 	if ( 'HASH' eq $ref ) {
 	    $hash = $hash->{$key};
@@ -2271,7 +2271,7 @@ sub _format_time {
     $time_fmtr->round_time( $arg->{round_time} );
     my $fmt = $arg->{format};
     defined $fmt
-	or $self->warner()->weep( "No time format" );
+	or $self->warner()->weep( 'No time format' );
 
     my $buffer = $time_fmtr->format_datetime(
 	$fmt, $value, $arg->{gmt} );
