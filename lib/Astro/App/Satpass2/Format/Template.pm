@@ -58,7 +58,15 @@ sub _new_tt {
 }
 
 sub add_formatter_method {
-    my ( $self, $fmtr ) = @_;
+    # TODO I want the arguments to be ( $self, $fmtr ), but for the
+    # moment I have to live with an unreleased version that passed the
+    # name as the first argument. I will go to the desired signature as
+    # soon as I get this version installed on my own machine.
+    my ( $self, @arg ) = @_;
+    my $fmtr = 'HASH' eq ref $arg[0] ? $arg[0] : $arg[1];
+    'HASH' eq ref $fmtr
+	or $self->warner()->wail(
+	'Formatter definition must be a HASH reference' );
     defined( my $fmtr_name = $fmtr->{name} )
 	or $self->warner()->wail(
 	    'Formatter definition must have {name} defined' );
