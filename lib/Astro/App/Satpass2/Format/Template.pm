@@ -21,13 +21,13 @@ use Template::Provider;
 use Text::Abbrev;
 use Text::Wrap qw{ wrap };
 
-our $VERSION = '0.020_001';
+our $VERSION = '0.020_002';
 
 sub new {
     my ($class, @args) = @_;
     my $self = $class->SUPER::new( @args );
 
-    # As of [%% next_version %%] the template definitions are in the
+    # As of 0.020_002 the template definitions are in the
     # locale system. The attribute simply holds modifications.
     $self->{canned_template} = {};
 

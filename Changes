@@ -1,3 +1,16 @@
+0.020_002	2014-07-17	T. R. Wyant
+  This version not released to CPAN.
+  Fix bug in -choose foo,bar which caused only 'foo' to be chosen.
+  Add real localization support. This addresses almost all text seen by
+    the user, though I have not done a lot on error messages other than
+    put in the calls. A very rough Spanish localization is provided in
+    eg/.
+  Generate format selection options for tle() based on available
+    templates. Basically, if you load template eg/tle_json.tt as
+    'tle_json', the -json option will cause that template to be used.
+  Drop Astro::App::Satpass2::Format::Template::Provider.
+  Refactor and rationalize formatter code.
+
 0.020_001	2014-07-03	T. R. Wyant
   This version not released to CPAN.
   Add Astro::App::Satpass2::FormatValue::Formatter to implement custom
