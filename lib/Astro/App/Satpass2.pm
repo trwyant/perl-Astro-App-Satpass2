@@ -1449,7 +1449,9 @@ sub perl : Verb( eval! ) {
     my $rslt = do $path;
     $@ and $self->wail( "Failed to run $path: $@" );
     $! and $self->wail( "Failed to run $path: $!" );
-    return $rslt;
+    instance( $rslt, 'Astro::App::Satpass2' )
+	or return $rslt;
+    return;
 }
 
 sub phase : Verb( choose=s@ ) {
@@ -5735,7 +5737,9 @@ revoked when support for the F<satpass> script is dropped.
 This interactive method runs the given Perl file using the C<do>
 built-in. The file is entered with C<$ARGV[0]> set to a reference to the
 invocant, and subsequent C<@ARGV> entries set to the arguments, if any.
-The return is the result of the last statement in the file.
+The return is the result of the last statement in the file unless the
+file returns an instance of C<Astro::App::Satpass2>, in which case
+nothing is returned.
 
 If you provide the option C<-eval>, the argument is passed to the
 C<eval> built-in instead.
