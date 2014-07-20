@@ -44,7 +44,7 @@ severity	= stern
 
 [Perl::Critic::Policy::Subroutines::RequireArgUnpacking]
 
-allow_delegation_to	= __arguments _arguments grep
+allow_delegation_to	= __arguments _arguments grep map
 short_subroutine_statements	= 3
 
 [Perl::Critic::Policy::Subroutines::RequireFinalReturn]

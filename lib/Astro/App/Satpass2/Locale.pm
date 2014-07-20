@@ -82,24 +82,35 @@ my $locale;
 
 }
 
-sub __message {
-    my ( $msg, @arg ) = @_;
-    my $lcl = __localize( '+message', $msg, $msg );
+{
+    my %stringify_ref = map { $_ => 1 } qw{ Template::Exception };
 
-    'CODE' eq ref $lcl
-	and return $lcl->( $msg, @arg );
+    # I feel like Perl::Critic OUGHT to accept map() if I tell it to,
+    # but it seems not to.
+    sub __message {	## no critic (RequireArgUnpacking)
+	# My OpenBSD 5.5 system seems not to stringify the arguments in
+	# the normal course of events, though my Mac OS 10.9 system
+	# does. The OpenBSD system gives instead a stringified hash
+	# reference (i.e. "HASH{0x....}").
+	my ( $msg, @arg ) =
+	    map { $stringify_ref{ ref $_ } ? '' . $_ : $_ } @_;
+	my $lcl = __localize( '+message', $msg, $msg );
 
-    $lcl =~ m/ \[ % /smx
-	or return join ' ', $lcl, @arg;
+	'CODE' eq ref $lcl
+	    and return $lcl->( $msg, @arg );
 
-    my $tt = Template->new();
+	$lcl =~ m/ \[ % /smx
+	    or return join ' ', $lcl, @arg;
 
-    my $output;
-    $tt->process( \$lcl, {
-	    arg	=> \@arg,
-	}, \$output );
+	my $tt = Template->new();
 
-    return $output;
+	my $output;
+	$tt->process( \$lcl, {
+		arg	=> \@arg,
+	    }, \$output );
+
+	return $output;
+    }
 }
 
 sub __preferred {
