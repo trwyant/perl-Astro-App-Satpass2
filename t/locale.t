@@ -10,7 +10,8 @@ use Test::More 0.88;	# Because of done_testing();
 
 {
     local $ENV{ASTRO_APP_SATPASS2_CONFIG_DIR} = 't';
-    local $ENV{LC_ALL} = 'fu_BAR';
+    my @lang_env = qw{ LC_ALL LC_MESSAGE LANG LANGUAGE };
+    local @ENV{ @lang_env } = ( 'fu_BAR' ) x scalar @lang_env;
 
     is scalar __localize( almanac => 'title', 'name' ),
 	'Almanac', q{almanac => 'title'};
