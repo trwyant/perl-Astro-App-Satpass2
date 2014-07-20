@@ -1,3 +1,8 @@
+0.020_003	2014-07-20	T. R. Wyant
+  This version not released to CPAN.
+  Force stringification of Template::Exception.
+  Have the tle_verbose template ignore non-TLE data.
+
 0.020_002	2014-07-17	T. R. Wyant
   This version not released to CPAN.
   Fix bug in -choose foo,bar which caused only 'foo' to be chosen.
