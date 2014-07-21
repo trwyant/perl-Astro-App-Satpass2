@@ -196,20 +196,6 @@ instantiate 'Astro::App::Satpass2::Wrap::Array', [],
     'Astro::App::Satpass2::Wrap::Array'
     or BAIL_OUT;
 
-require_ok 'Astro::App::Satpass2::Format::Template::Provider'
-    or BAIL_OUT;
-
-isa_ok 'Astro::App::Satpass2::Format::Template::Provider',
-    'Template::Provider'
-    or BAIL_OUT;
-
-can_ok 'Astro::App::Satpass2::Format::Template::Provider',
-    qw{ fetch load }
-    or BAIL_OUT;
-
-instantiate 'Astro::App::Satpass2::Format::Template::Provider'
-    or BAIL_OUT;
-
 require_ok 'Astro::App::Satpass2::Format::Template'
     or BAIL_OUT;
 
