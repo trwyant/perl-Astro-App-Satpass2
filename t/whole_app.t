@@ -7,6 +7,8 @@ use lib qw{ inc };
 
 use Test::More 0.88;
 use Astro::App::Satpass2::Test::App;
+use Astro::Coord::ECI::TLE;
+use Astro::Coord::ECI::Utils qw{ deg2rad };
 use Cwd qw{ cwd };
 use File::HomeDir;
 use Scalar::Util 1.26 qw{ blessed };
@@ -1004,6 +1006,23 @@ EOD
 	method get => 'longitude', -77.037684,
 	    'Geocode of White House returned expected longitude';
     }
+}
+
+method clear => undef, 'Clear the observing list';
+
+{
+    my $tle = Astro::Coord::ECI::TLE->new(
+	name	=> 'Dummy',
+	id	=> 666,
+    )->geodetic( deg2rad( 40 ), deg2rad( -75 ), 200 );
+
+    method add => $tle, TRUE, 'Add a TLE';
+
+    method list => <<'EOD', 'Our object is in the list';
+   OID Name                     Epoch               Period
+   666 Dummy                     40.0000  -75.0000   200.0
+EOD
+
 }
 
 execute 'perl -eval Fubar', '"Fubar"', 'perl -eval';

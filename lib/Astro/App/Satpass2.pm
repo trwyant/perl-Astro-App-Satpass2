@@ -352,6 +352,17 @@ sub new {
     return $self;
 }
 
+sub add {
+    my ( $self, @bodies ) = @_;
+    foreach my $body ( @bodies ) {
+	embodies( $body, 'Astro::Coord::ECI::TLE' )
+	    or $self->wail(
+	    'Arguments must represent Astro::Coord::ECI::TLE objects' );
+    }
+    push @{ $self->{bodies} }, @bodies;
+    return $self;
+}
+
 sub alias : Verb() {
     my ( $self, $opt, @args ) = __arguments( @_ );
 
@@ -4943,6 +4954,16 @@ returns C<undef> in scalar context, and an empty list in list context.
 
 This non-interactive method instantiates a new Astro::Satpass2 object.
 Any arguments are passed to the L<set()|/set> method.
+
+=head2 add
+
+ $satpass2->add( @bodies );
+
+This non-interactive method adds its arguments to the observing list.
+An exception is raised if any argument does not represent an
+L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE> object.
+
+The invocant is returned.
 
 =head2 alias
 
