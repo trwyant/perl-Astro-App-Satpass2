@@ -7,7 +7,6 @@ use warnings;
 
 use base qw{ Exporter };
 
-use Astro::Coord::ECI::Utils ();
 use Cwd ();
 use File::HomeDir;
 use File::Spec;
@@ -17,23 +16,16 @@ use Scalar::Util 1.26 qw{ blessed looks_like_number };
 our $VERSION = '0.020_004';
 
 our @EXPORT_OK = qw{
-    __arguments expand_tilde fold_case
+    __arguments expand_tilde
     has_method instance load_package merge_hashes my_dist_config quoter
     __date_manip_backend
 };
-
-BEGIN {
-    *fold_case = Astro::Coord::ECI::Utils->can( 'fold_case' ) ||
-	CORE->can( 'fc' ) ||		# Perl 5.16 amd up
-	sub ($) { return lc $_[0] };
-}
 
 # Documented in POD
 
 {
 
     my @default_config = qw{default pass_through};
-####    my @default_config = qw{default};
 
     sub __arguments {
 	my ( $self, @args ) = @_;
@@ -331,27 +323,6 @@ exception if the configuration directory does not exist.
 
 All that is required of the invocant is that it support the package's
 suite of error-reporting methods C<whinge()>, C<wail()>, and C<weep()>.
-
-=head2 fold_case
-
- my $folded = fold_case( $text );
-
-THIS SUBROUTINE IS DEPRECATED IN FAVOR OF THE SAME-NAMED SUBROUTINE IN
-L<Astro::Coord::ECI::Utils|Astro::Coord::ECI::Utils>. Because this
-module is documented as being B<private> to the C<Astro::App::Satpass2>
-package, I feel justified in using an accelerated deprecation schedule,
-and removing it completely the first release after June 30 2014. In the
-meantime it is equated to C<Astro::Coord::ECI::Utils::fold_case()>
-provided the latter exists.
-
-This subroutine performs best-effort case folding of data for case-blind
-operations. Under Perl 5.16 or higher, it is an alias for the C<fc()>
-built-in. Otherwise it is an alias for the C<lc()> built-in if that can
-be aliased. As a last resort under older Perls, it is a subroutine that
-calls C<lc()> on its argument. The exact output should not be relied on,
-and in particular the author may make unannounced twiddles to the
-pre-5.16 case if a strong case for something more sophisticated than a
-simple C<lc()> manifests itself.
 
 =head2 has_method
 
