@@ -1,3 +1,10 @@
+0.020_02	2014-07-31	T. R. Wyant
+  Rewrite object-specific formatter code to place dispatchers in the
+    Astro::App::Satpass2::FormatValue name space rather than use
+    AUTOLOAD().  The AUTOLOAD() implementation caused all sorts of
+    smoker errors that I was unable to reproduce, and I was averse to
+    blindly writing stubs for Perl-defined subroutines.
+
 0.020_01	2014-07-29	T. R. Wyant
   Remove subroutine Astro::App::Satpass2::Utils::fold_case(). This is
     documented as private, but since is _was_ documented I decided to
