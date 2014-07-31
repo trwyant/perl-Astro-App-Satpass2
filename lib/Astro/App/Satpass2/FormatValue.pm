@@ -1505,24 +1505,17 @@ sub _confess {
     Carp::confess( @arg );
 }
 
-our $AUTOLOAD;
-sub AUTOLOAD {
-    my ( $self, @arg ) = @_;
-    ( my $method = $AUTOLOAD ) =~ s/ .* :: //smx;
-    $method =~ m/ \A [[:upper:]_]+ \z /smx	# Upper-case subs
-	and return;				# reserved to Perl.
-    ref $self
-	or do {
-	my ( undef, $filename, $line ) = caller;
-	_confess( "Undefined subroutine $AUTOLOAD called at $filename line $line" );
-    };
-    my $fmtr_obj = $self->{formatter_method}{$method}
-	or $self->{warner}->wail( "No such formatter as '$method'" );
-    return $fmtr_obj->code()->( $self, @arg );
-}
-
+# Note that this implementation of add_formatter_method() modifies our
+# name space by adding a stub method that dispatches to the
+# object-specific code, or throws an error if there is none. The
+# previous implementation used AUTOLOAD, but this had problems on most
+# smokers involving calls to DESTROY(). I was never able to duplicate
+# these, and rather than try to figure out how to handle any and all
+# Perl-reserved subs, I decided to switch to an implementation which,
+# while still fairly grody, did not use AUTOLOAD.
 {
     my $fmtr_class = 'Astro::App::Satpass2::FormatValue::Formatter';
+    my %defined_here;
     sub add_formatter_method {
 	my ( $self, @formatters ) = @_;
 	foreach my $fmtr_obj ( @formatters ) {
@@ -1531,12 +1524,23 @@ sub AUTOLOAD {
 		"Formatters must be instances of $fmtr_class" );
 	    my $name = $fmtr_obj->name();
 	    $self->can( $name )
+		and not $defined_here{$name}
 		and $self->{warner}->wail(
 		"Formatter $name can not override built-in format" );
 	    $self->{formatter_method}{$name}
 		and $self->{warner}->wail(
 		"Formatter $name can not replace previously-set formatter of same name" );
 	    $self->{formatter_method}{$name} = $fmtr_obj;
+	    unless ( $defined_here{$name} ) {
+		$defined_here{$name} = 1;
+		no strict qw{ refs };
+		*$name = sub {
+		    my ( $self ) = @_;
+		    my $obj = $self->{formatter_method}{$name}
+			or $self->{warner}->wail( "No such formatter as '$name'" );
+		    goto &{ $obj->code() };
+		};
+	    }
 	}
 	return $self;
     }
