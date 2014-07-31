@@ -1508,12 +1508,14 @@ sub _confess {
 our $AUTOLOAD;
 sub AUTOLOAD {
     my ( $self, @arg ) = @_;
+    ( my $method = $AUTOLOAD ) =~ s/ .* :: //smx;
+    $method =~ m/ \A [[:upper:]_]+ \z /smx	# Upper-case subs
+	and return;				# reserved to Perl.
     ref $self
 	or do {
 	my ( undef, $filename, $line ) = caller;
 	_confess( "Undefined subroutine $AUTOLOAD called at $filename line $line" );
     };
-    ( my $method = $AUTOLOAD ) =~ s/ .* :: //smx;
     my $fmtr_obj = $self->{formatter_method}{$method}
 	or $self->{warner}->wail( "No such formatter as '$method'" );
     return $fmtr_obj->code()->( $self, @arg );
