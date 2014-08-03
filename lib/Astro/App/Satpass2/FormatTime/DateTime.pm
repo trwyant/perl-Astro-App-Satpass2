@@ -48,7 +48,7 @@ sub format_datetime {
 		    my $zed = uc $zone;
 		    DateTime::TimeZone->is_valid_name( $zed )
 			or $self->warner()->wail(
-			    'The tz value must be a valid zone name' );
+			    "'$zone' is not a valid time zone name" );
 		    $zone = $zed;
 		}
 		$self->{_tz_obj} = DateTime::TimeZone->new(
