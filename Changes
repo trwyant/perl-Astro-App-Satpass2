@@ -1,3 +1,6 @@
+0.020_03	2014-08-03	T. R. Wyant
+  More informative DateTime time zone error message.
+
 0.020_02	2014-07-31	T. R. Wyant
   Rewrite object-specific formatter code to place dispatchers in the
     Astro::App::Satpass2::FormatValue name space rather than use
