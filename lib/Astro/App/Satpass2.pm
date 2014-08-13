@@ -115,6 +115,18 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 #	command you would specify:
 #	    sub foo : Configure(pass_through) Verb
 #
+#	Tokenize(options)
+#
+#	The 'Tokenize' attribute specifies tokenizatino options. These
+#	can not take effect until fairly late in the parse when the
+#	tokens are known. These options are parsed by Getopt::Long, and
+#	the value of the attribute is a reference to the options hash
+#	thus generated. Possible options are:
+#	  -expand_tilde - Expand tildes in the tokens. For historical
+#		reasons this is the default, but it can be negated by
+#		specifying -noexpand_tilde. Tildes in redirect
+#		specifications are always expanded.
+#
 #	Verb(options)
 #
 #	The 'Verb' attribute identifies the subroutine as representing a
@@ -128,7 +140,30 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 {
     my (%attr, %want);
     BEGIN {
-	%want = map {$_ => 1} qw{Configure Verb};
+	my $list = sub {
+	    return [ split qr{ \s+ }smx, $_[0] ];
+	};
+	%want = (
+	    Configure	=> $list,
+	    Tokenize	=> sub {
+		my ( $arg ) = @_;
+		my $gol = Getopt::Long::Parser->new();
+		my %opt;
+		$gol->getoptionsfromarray(
+		    [ split qr{ \s+ }smx, $arg ],
+		    \%opt,
+		    qw{ expand_tilde! },
+		) or do {
+		    require Carp;
+		    Carp::croak( 'Bad Tokenize option' );
+		};
+		exists $opt{expand_tilde}
+		    or $opt{expand_tilde} = 1;
+		return \%opt;
+	    },
+	    Verb	=> $list,
+	);
+##	%want = map {$_ => 1} qw{Configure Verb};
     }
 
     sub FETCH_CODE_ATTRIBUTES {
@@ -143,10 +178,8 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 		push @rslt, $_;
 		next;
 	    };
-	    if ($want{$1}) {
-		$attr{$code}{$1} = defined $2 ?
-		    [ split qr{ \s+ }smx, $2 ] :
-		    [];
+	    if ( my $hdlr = $want{$1} ) {
+		$attr{$code}{$1} = $hdlr->( defined $2 ? $2 : '' );
 	    } else {
 		push @rslt, $_;
 	    }
@@ -1444,24 +1477,22 @@ sub pass : Verb( choose=s@ appulse! brightest|magnitude! chronological! dump! ev
     }
 }
 
-sub perl : Verb( eval! setup! ) {
+sub perl : Tokenize( -noexpand_tilde ) : Verb( eval! setup! ) {
     my ( $self, $opt, $file, @args ) = __arguments( @_ );
     defined $file
 	or $self->wail( 'At least one argument is required' );
-    my $path = $self->expand_tilde( $file );
     $opt->{setup}
 	and push @{ $self->{_perl} ||= [] }, [ $opt, $file, @args ];
-    local @ARGV = ( $self, @args );
-    local $0 = $path;
-    if ( $opt->{eval} ) {
-	my $rslt = eval $file;	## no critic (BuiltinFunctions::ProhibitStringyEval)
-	$@
-	    and $self->wail( "Failed to eval '$file': $@" );
-	return $rslt;
-    }
-    my $rslt = do $path;
-    $@ and $self->wail( "Failed to run $path: $@" );
-    $! and $self->wail( "Failed to run $path: $!" );
+    local @ARGV = ( $self, map { $self->expand_tilde( $_ ) } @args );
+    $opt->{eval}
+	or local $0 = $self->expand_tilde( $file );
+
+    my $data = $opt->{eval} ?
+	$file :
+	$self->_file_reader( $file, { glob => 1 } );
+    my $rslt = eval $data; ## no critic (BuiltinFunctions::ProhibitStringyEval)
+    $@
+	and $self->wail( "Failed to eval '$file': $@" );
     instance( $rslt, 'Astro::App::Satpass2' )
 	or return $rslt;
     return;
@@ -4585,11 +4616,36 @@ sub _unescape {
 	$absquote and $self->wail( 'Unclosed terminal single quote' );
 	$relquote and $self->wail( 'Unclosed terminal double quote' );
 
+	# Replace leading punctuation with the corresponding method.
+
+	shift @rslt
+	    while @rslt && ! defined $rslt[0]{token};
+	if ( defined $rslt[0]{token} and
+		$rslt[0]{token} =~ s/ \A ( $command_equiv_re ) //smx ) {
+	    if ( $rslt[0]{token} eq '' ) {
+		$rslt[0]{token} = $command_equivalent{$1};
+	    } elsif ( $opt->{single} ) {
+		$rslt[0]{token} = join ' ', $command_equivalent{$1},
+		    $rslt[0]{token};
+	    } else {
+		unshift @rslt, {
+		    token	=> $command_equivalent{$1},
+		};
+	    }
+	}
+
 	# Go through our prospective tokens, keeping only those that
 	# were actually defined, and shuffling the redirects off into
 	# the redirect hash.
 
 	my (@tokens, %redir);
+	my $expand_tildes = 1;
+	if ( defined $rslt[0]{token}
+		and my $kode = $self->can( $rslt[0]{token} ) ) {
+	    if ( my $hash = $self->_get_attr( $kode, 'Tokenize' ) ) {
+		$expand_tildes = $hash->{expand_tilde};
+	    }
+	}
 	foreach (@rslt) {
 	    exists $_->{token} or next;
 	    if ($_->{redirect}) {
@@ -4605,23 +4661,10 @@ sub _unescape {
 			    $_->{token}),
 		    };
 		}
+	    } elsif ( $expand_tildes && $_->{tilde} ) {
+		push @tokens, $self->expand_tilde( $_->{token} );
 	    } else {
-		push @tokens, $_->{tilde} ? $self->expand_tilde($_->{token}) :
-		    $_->{token};
-	    }
-	}
-
-	# Replace leading punctuation with the corresponding method.
-
-	if ( defined $tokens[0] and
-		$tokens[0] =~ s/ \A ( $command_equiv_re ) //smx ) {
-	    if ( $tokens[0] eq '' ) {
-		$tokens[0] = $command_equivalent{$1};
-	    } elsif ( $opt->{single} ) {
-		$tokens[0] = join ' ', $command_equivalent{$1},
-		    $tokens[0];
-	    } else {
-		unshift @tokens, $command_equivalent{$1};
+		push @tokens, $_->{token};
 	    }
 	}
 
@@ -5785,7 +5828,9 @@ C<eval> built-in instead.
 If you provide the option C<-setup>, you are identifying the Perl as
 containing set-up code. This does not cause the method to function any
 differently, but it does cause it to record the arguments so that the
-L<save()|/save> method will emit the invocation into a setup file.
+L<save()|/save> method will emit the invocation into a setup file. Both
+the file name and the arguments will be preserved without tilde
+expansion.
 
 =head2 phase
 
