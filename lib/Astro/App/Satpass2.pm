@@ -1444,19 +1444,21 @@ sub pass : Verb( choose=s@ appulse! brightest|magnitude! chronological! dump! ev
     }
 }
 
-sub perl : Verb( eval! ) {
+sub perl : Verb( eval! setup! ) {
     my ( $self, $opt, $file, @args ) = __arguments( @_ );
     defined $file
 	or $self->wail( 'At least one argument is required' );
+    my $path = $self->expand_tilde( $file );
+    $opt->{setup}
+	and push @{ $self->{_perl} ||= [] }, [ $opt, $file, @args ];
     local @ARGV = ( $self, @args );
+    local $0 = $path;
     if ( $opt->{eval} ) {
 	my $rslt = eval $file;	## no critic (BuiltinFunctions::ProhibitStringyEval)
 	$@
 	    and $self->wail( "Failed to eval '$file': $@" );
 	return $rslt;
     }
-    my $path = $self->expand_tilde( $file );
-    local $0 = $path;
     my $rslt = do $path;
     $@ and $self->wail( "Failed to run $path: $@" );
     $! and $self->wail( "Failed to run $path: $!" );
@@ -1712,6 +1714,21 @@ EOD
 # Astro::App::Satpass2 macros
 
 EOD
+
+    if ( $self->{_perl} ) {
+	$output .= <<'EOD';
+
+# Astro::App::Satpass2 setup
+
+EOD
+	foreach my $item ( @{ $self->{_perl} } ) {
+	    my ( $opt, @arg ) = @{ $item };
+	    my @cmd = ( 'perl' );
+	    push @cmd, map { "-$_" } grep { $opt->{$_} } sort keys %{ $opt };
+	    $output .= join ' ', quoter( @cmd, @arg );
+	    $output .= "\n";
+	}
+    }
 
     foreach my $attribute ( qw{ formatter spacetrack time_parser } ) {
 	my $obj = $self->get( $attribute ) or next;
@@ -5764,6 +5781,11 @@ nothing is returned.
 
 If you provide the option C<-eval>, the argument is passed to the
 C<eval> built-in instead.
+
+If you provide the option C<-setup>, you are identifying the Perl as
+containing set-up code. This does not cause the method to function any
+differently, but it does cause it to record the arguments so that the
+L<save()|/save> method will emit the invocation into a setup file.
 
 =head2 phase
 
