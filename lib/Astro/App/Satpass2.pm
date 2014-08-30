@@ -2453,6 +2453,8 @@ sub source : Verb( optional! ) {
 	exists $opt->{raw}
 	    or $opt->{raw} = ( ! _is_interactive() );
 
+	my $verbose = delete $opt->{verbose};
+
 	my $object = $self->_helper_get_object( 'spacetrack' );
 	$method !~ m/ \A _ /smx and $object->can( $method )
 	    or $handler{$method}
@@ -2484,14 +2486,16 @@ sub source : Verb( optional! ) {
 
 	    push @{$self->{bodies}},
 		Astro::Coord::ECI::TLE->parse ($rslt->content);
-	    $opt->{verbose} and $output .= $rslt->content;
+	    $verbose
+		and $output .= $rslt->content;
 
 	} elsif ($content_type eq 'iridium-status') {
 
 	    $self->_iridium_status( @rest );
-	    $opt->{verbose} and $output .= $rslt->content;
+	    $verbose
+		and $output .= $rslt->content;
 
-	} elsif ( ! $suppress_output{$content_type} || $opt->{verbose}) {
+	} elsif ( ! $suppress_output{$content_type} || $verbose ) {
 
 	    $output .= $rslt->content;
 
