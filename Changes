@@ -1,3 +1,10 @@
+0.020_04	2014-09-07	T. R. Wyant
+  Correctly handle tz attribute when the DateTime date formatter is in
+    use.
+  Fix bug in spacetrack -verbose search_oid and friends.
+  Add -setup option to perl() method. This causes the arguments to be
+    recorded and emitted by the save() method.
+
 0.020_03	2014-08-03	T. R. Wyant
   More informative DateTime time zone error message.
 
