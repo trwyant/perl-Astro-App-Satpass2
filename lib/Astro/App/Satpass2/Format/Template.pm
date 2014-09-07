@@ -282,8 +282,14 @@ sub template {
 sub tz {
     my ( $self, @args ) = @_;
     if ( @args ) {
-	$self->time_formatter()->tz( @args );
-	return $self->SUPER::tz( @args );
+	my $tf = $self->time_formatter();
+	# We go through the following because the time formatter may
+	# modify the zone (e.g. if it's using DateTime, zones are
+	# case-sensitive so we may have done case conversion before
+	# storing). We want this object to have the time formatter's
+	# version of the zone.
+	$tf->tz( @args );
+	return $self->SUPER::tz( $tf->tz() );
     } else {
 	return $self->SUPER::tz();
     }

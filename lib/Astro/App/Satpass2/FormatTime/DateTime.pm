@@ -57,7 +57,7 @@ sub format_datetime {
 		$self->{_tz_obj} = $zone_local ||=
 		    DateTime::TimeZone->new( name => 'local' );
 	    }
-	    return $self->SUPER::tz( $args[0] );
+	    return $self->SUPER::tz( $zone );
 
 	} else {
 	    return $self->SUPER::tz();
