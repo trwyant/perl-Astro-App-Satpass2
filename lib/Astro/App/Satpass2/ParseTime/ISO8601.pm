@@ -8,7 +8,7 @@ use Time::Local;
 
 use base qw{ Astro::App::Satpass2::ParseTime };
 
-our $VERSION = '0.020_04';
+our $VERSION = '0.021';
 
 my $zone_re = qr{ (?i: ( Z | UT | GMT ) |
     ( [+-] ) ( \d{1,2} ) :? ( \d{1,2} )? ) }smx;
