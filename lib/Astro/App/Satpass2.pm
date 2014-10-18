@@ -2593,7 +2593,8 @@ sub station {
 	    }
 
 	} else {
-	    Astro::Coord::ECI::TLE->status ($verb, @args);
+	    $output .= '';	# Don't want it to be undef.
+	    $output .= Astro::Coord::ECI::TLE->status ($verb, @args);
 	}
 
 	return $output;
