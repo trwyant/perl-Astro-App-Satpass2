@@ -4931,6 +4931,13 @@ This module is used by the Tom Tom geocoder for the
 C<geocode()|/geocode> method.  If you are not interested in using the
 L<geocode()|/geocode> method you do not need this module.
 
+B<NOTE> that as of November 8 2014 it appears that TomTom has retracted
+the underlying service. Under the circumstances I am suspending support
+for TomTom geocoding effective with the release of version [%% next_version %%].
+If the situation is not resolved favorably by May 1 2015 I will retract
+support for this module. If it is resolved unfavorably I will retract
+support as soon as I become aware of the fact.
+
 =item L<Geo::WebService::Elevation::USGS|Geo::WebService::Elevation::USGS>
 
 This module is only used by the L<height()|/height> method, or

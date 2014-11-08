@@ -123,6 +123,14 @@ sub _recommend_geo_coder {
 
       Geo::Coder::TomTom has the best coverage, but uses an undocumented
           and unsupported interface.
+
+	  B<NOTE> that as of November 8 2014 it appears that TomTom has
+	  retracted the underlying service. Under the circumstances I am
+	  suspending support for TomTom geocoding effective with the
+	  release of version [%% next_version %%].  If the situation is
+	  not resolved favorably by May 1 2015 I will retract support
+	  for this module. If it is resolved unfavorably I will retract
+	  support as soon as I become aware of the fact.
 EOD
     return;
 }

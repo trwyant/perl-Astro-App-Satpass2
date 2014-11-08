@@ -12,7 +12,8 @@ use Astro::App::Satpass2::Test::Geocode;
 
 setup	'Astro::App::Satpass2::Geocode::TomTom';
 
-SKIP: {
+TODO: {
+    local $TODO = 'Think TomTom retracted the underlying service';
     geocode '1600 Pennsylvania Ave, Washington DC', 1;
 }
 
