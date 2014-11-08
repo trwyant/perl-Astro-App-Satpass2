@@ -51,7 +51,7 @@ BEGIN {
 	};
 }
 
-our $VERSION = '0.021';
+our $VERSION = '0.022';
 
 # The following 'cute' code is so that we do not determine whether we
 # actually have optional modules until we really need them, and yet do
@@ -4924,7 +4924,7 @@ L<geocode()|/geocode> method you do not need this module.
 
 B<NOTE> that as of November 8 2014 it appears that TomTom has retracted
 the underlying service. Under the circumstances I am suspending support
-for TomTom geocoding effective with the release of version [%% next_version %%].
+for TomTom geocoding effective with the release of version 0.022.
 If the situation is not resolved favorably by May 1 2015 I will retract
 support for this module. If it is resolved unfavorably I will retract
 support as soon as I become aware of the fact.

@@ -8,7 +8,7 @@ use warnings;
 use utf8;	# Not actually needed for C locale, but maybe for others
 
 use Astro::Coord::ECI::TLE 0.059 qw{ :constants };
-our $VERSION = '0.021';
+our $VERSION = '0.022';
 
 my @event_names;
 $event_names[PASS_EVENT_NONE]		= '';

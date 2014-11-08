@@ -127,7 +127,7 @@ sub _recommend_geo_coder {
 	  B<NOTE> that as of November 8 2014 it appears that TomTom has
 	  retracted the underlying service. Under the circumstances I am
 	  suspending support for TomTom geocoding effective with the
-	  release of version [%% next_version %%].  If the situation is
+	  release of version 0.022.  If the situation is
 	  not resolved favorably by May 1 2015 I will retract support
 	  for this module. If it is resolved unfavorably I will retract
 	  support as soon as I become aware of the fact.
