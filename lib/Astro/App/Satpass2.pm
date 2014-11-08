@@ -223,11 +223,6 @@ my %mutator = (
     height => \&_set_distance_meters,
     horizon => \&_set_angle,
     latitude => \&_set_angle,
-    lit => sub {
-	my ( $self, $name, $val ) = @_;
-	$self->{$name} = $val ? 1 : 0;
-	return $val;
-    },
     local_coord => \&_set_formatter_attribute,
     location => \&_set_unmodified,
     longitude => \&_set_angle,
@@ -265,9 +260,6 @@ my %accessor = (
     desired_equinox_dynamical => \&_get_formatter_attribute,
     geocoder => \&_get_geocoder,
     gmt => \&_get_formatter_attribute,
-    lit => sub {
-	return $_[0]->get( 'edge_of_earths_shadow' ) ? 1 : 0;
-    },
     local_coord => \&_get_formatter_attribute,
     perltime => \&_get_time_parser_attribute,
     spacetrack => \&_get_spacetrack,
@@ -2893,7 +2885,6 @@ sub _attribute_exists {
 	    desired_equinox_dynamical	=> 0,
 	    explicit_macro_delete	=> 0,
 	    gmt		=> 0,
-	    lit		=> 3,
 	    local_coord	=> 0,
 	    perltime	=> 0,
 	    time_format	=> 0,
@@ -7006,13 +6997,6 @@ See L</SPECIFYING ANGLES> for ways to specify an angle. This attribute
 is returned in decimal degrees.
 
 There is no default; you must specify a value.
-
-=head2 lit
-
-This Boolean attribute is deprecated, and produces an exception on
-access. On the first release after October 1 2014 it will be removed
-completely. You should use the
-L<edge_of_earths_shadow|/edge_of_earths_shadow> attribute instead.
 
 =head2 local_coord
 
