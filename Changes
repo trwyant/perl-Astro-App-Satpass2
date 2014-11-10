@@ -1,3 +1,6 @@
+0.022_01	2014-11-10	T. R. Wyant
+  Address CPAN Testers failures in t/locale.t under the combination of Perl 5.20.1 and MSWin32.
+
 0.022		2014-11-08	T. R. Wyant
   Remove all reference to the 'lit' attribute. This has been removed in
     favor of 'edge_of_earths_shadow'.
@@ -456,3 +459,5 @@
 
 0.000_30	2011-12-05	T. R. Wyant
   Initial release to CPAN.
+
+# ex: set textwidth=72 autoindent :
