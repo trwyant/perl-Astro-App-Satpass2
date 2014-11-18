@@ -9,7 +9,7 @@ use POSIX ();
 
 use base qw{ Astro::App::Satpass2::Copier };
 
-our $VERSION = '0.022_01';
+our $VERSION = '0.023';
 
 use constant ROUND_TIME => 1;
 

@@ -1,3 +1,6 @@
+0.023		2014-11-17	T. R. Wyant
+  No changes since 0.022_01.
+
 0.022_01	2014-11-10	T. R. Wyant
   Address CPAN Testers failures in t/locale.t under the combination of Perl 5.20.1 and MSWin32.
 
