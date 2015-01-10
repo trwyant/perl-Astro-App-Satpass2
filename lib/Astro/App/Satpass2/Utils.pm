@@ -13,7 +13,7 @@ use File::Spec;
 use Getopt::Long 2.33;
 use Scalar::Util 1.26 qw{ blessed looks_like_number };
 
-our $VERSION = '0.023';
+our $VERSION = '0.024';
 
 our @EXPORT_OK = qw{
     __arguments expand_tilde

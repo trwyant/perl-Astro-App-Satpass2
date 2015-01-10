@@ -7,7 +7,7 @@ use warnings;
 
 use Carp;
 
-our $VERSION = '0.023';
+our $VERSION = '0.024';
 
 our $MOCK_FILE_HOMEDIR_MY_DIST_CONFIG;
 our $MOCK_FILE_HOMEDIR_MY_HOME;

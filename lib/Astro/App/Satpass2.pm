@@ -51,7 +51,7 @@ BEGIN {
 	};
 }
 
-our $VERSION = '0.023';
+our $VERSION = '0.024';
 
 # The following 'cute' code is so that we do not determine whether we
 # actually have optional modules until we really need them, and yet do
@@ -4811,7 +4811,7 @@ last case, the user will be prompted for commands once the commands in
 
 =head1 NOTICE
 
-Geocoding using TomTom has been dropped as of version [%% next_version %%].
+Geocoding using TomTom has been dropped as of version 0.024.
 The old, undocumented interface has been dropped, and the new one
 requires an API key.
 
