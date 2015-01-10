@@ -107,7 +107,7 @@ The following subroutines are both prototyped and exported by default.
 
 =head2 setup
 
- setup 'Astro::App::Satpass2::Geocoder::TomTom';
+ setup 'Astro::App::Satpass2::Geocoder::OSM';
 
 This subroutine loads both the specified class and the class
 it wraps. Then it probes the web site that provides the geocoding

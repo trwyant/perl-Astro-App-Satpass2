@@ -100,13 +100,13 @@ Astro::App::Satpass2::Geocode - Abstract geocoding wrapper class.
 
 =head1 SYNOPSIS
 
- # Assuming Astro::App::Satpass2::Geocode::TomTom is a
+ # Assuming Astro::App::Satpass2::Geocode::OSM is a
  # subclass of this class,
  
- use Astro::App::Satpass2::Geocode::TomTom;
+ use Astro::App::Satpass2::Geocode::OSM;
  use YAML;
  
- my $geocoder = Astro::App::Satpass2::Geocode::TomTom->new();
+ my $geocoder = Astro::App::Satpass2::Geocode::OSM->new();
  print Dump( $geocoder->geocode(
      '1600 Pennsylvania Ave, Washington DC'
  ) );
@@ -129,9 +129,9 @@ provided by its superclass:
 
 =head2 new
 
- # Assuming Astro::App::Satpass2::Geocode::TomTom is a subclass
+ # Assuming Astro::App::Satpass2::Geocode::OSM is a subclass
  # of this class,
- my $geocoder = Astro::App::Satpass2::Geocode::TomTom->new();
+ my $geocoder = Astro::App::Satpass2::Geocode::OSM->new();
 
 This static method instantiates a new geocoder object. It may not be
 called on this class.
@@ -176,7 +176,7 @@ negative.
 =head2 geocoder
 
  $geocoder->geocoder(
-     Geo::Coder::TomTom->new(),
+     Geo::Coder::OSM->new(),
  );
  my $gc = $geocoder->geocoder();
 

@@ -78,8 +78,7 @@ my $default_geocoder;
 $default_geocoder = sub {
     my $value =
 	_can_use_geocoder( 'Astro::App::Satpass2::Geocode::Geocoder::US' ) ||
-	_can_use_geocoder( 'Astro::App::Satpass2::Geocode::OSM' ) ||
-	_can_use_geocoder( 'Astro::App::Satpass2::Geocode::TomTom' );
+	_can_use_geocoder( 'Astro::App::Satpass2::Geocode::OSM' );
     $default_geocoder = sub { return $value };
     return $value;
 };
@@ -4812,6 +4811,10 @@ last case, the user will be prompted for commands once the commands in
 
 =head1 NOTICE
 
+Geocoding using TomTom has been dropped as of version [%% next_version %%].
+The old, undocumented interface has been dropped, and the new one
+requires an API key.
+
 This is alpha code. It has been tested on my box, but has limited
 exposure to the wild. Also, the public interface may not be completely
 stable, though I will try to call attention to any incompatible changes.
@@ -4915,19 +4918,6 @@ L<geocode()|/geocode> method you do not need this module.
 This module is used by the Open Street Map geocoder for the
 L<geocode()|/geocode> method.  If you are not interested in using the
 L<geocode()|/geocode> method you do not need this module.
-
-=item L<Geo::Coder::TomTom|Geo::Coder::TomTom>
-
-This module is used by the Tom Tom geocoder for the
-C<geocode()|/geocode> method.  If you are not interested in using the
-L<geocode()|/geocode> method you do not need this module.
-
-B<NOTE> that as of November 8 2014 it appears that TomTom has retracted
-the underlying service. Under the circumstances I am suspending support
-for TomTom geocoding effective with the release of version 0.022.
-If the situation is not resolved favorably by May 1 2015 I will retract
-support for this module. If it is resolved unfavorably I will retract
-support as soon as I become aware of the fact.
 
 =item L<Geo::WebService::Elevation::USGS|Geo::WebService::Elevation::USGS>
 
@@ -6923,9 +6913,7 @@ omitted.
 
 The default is the first of
 L<Astro::App::Satpass2::Geocode::Geocoder::US|Astro::App::Satpass2::Geocode::Geocoder::US>,
-L<Astro::App::Satpass2::Geocode::OSM|Astro::App::Satpass2::Geocode::OSM>,
-or
-L<Astro::App::Satpass2::Geocode::TomTom|Astro::App::Satpass2::Geocode::TomTom>
+or L<Astro::App::Satpass2::Geocode::OSM|Astro::App::Satpass2::Geocode::OSM>
 that can be loaded. See the documentation for details of these, but
 basically each C<Astro::App::Satpass2::Geocode::*> class wraps a
 correspondingly-named C<Geo::Coder::*> class, which must be installed.
@@ -7737,11 +7725,10 @@ the same reason.
 
 Instead, geocoding is handled by external modules, typically those that
 B<do not> require the registration of an application key. Wrapper
-classes have been provided for three of these:
-L<Geo::Coder::Geocoder::US|Geo::Coder::Geocoder::US>,
-L<Geo::Coder::OSM|Geo::Coder::OSM>, and
-L<Geo::Coder::TomTom|Geo::Coder::TomTom>. The names of the wrapper
-classes are (so far) derived from the names of the wrapped classes by
+classes have been provided for two of these:
+L<Geo::Coder::Geocoder::US|Geo::Coder::Geocoder::US> and
+L<Geo::Coder::OSM|Geo::Coder::OSM>. The names of the wrapper classes
+are (so far) derived from the names of the wrapped classes by
 C<s/\AGeo::Coder::/Astro::App::Satpass2::Geocode::/>, and the constant
 prefix on the wrapper name may be omitted when setting the geocoder.
 

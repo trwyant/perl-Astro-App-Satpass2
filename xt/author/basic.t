@@ -16,7 +16,6 @@ ok eval {
 }, 'Installed Date::Manip is v6 or above';
 require_ok 'DateTime';
 require_ok 'DateTime::TimeZone';
-require_ok 'Geo::Coder::TomTom';
 require_ok 'Geo::WebService::Elevation::USGS';
 require_ok 'Test::CPAN::Changes';
 require_ok 'Test::Kwalitee';

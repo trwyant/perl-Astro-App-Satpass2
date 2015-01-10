@@ -323,7 +323,7 @@ can_ok 'Astro::App::Satpass2::Geocode', @geocode_methods
     or BAIL_OUT;
 
 SKIP: {
-    my $tests = 2;
+    my $tests = 3;
 
     eval {
 	require Geo::Coder::Geocoder::US;
@@ -341,7 +341,7 @@ SKIP: {
 }
 
 SKIP: {
-    my $tests = 2;
+    my $tests = 3;
 
     eval {
 	require Geo::Coder::OSM;
@@ -355,24 +355,6 @@ SKIP: {
 	or BAIL_OUT;
 
     instantiate 'Astro::App::Satpass2::Geocode::OSM'
-	or BAIL_OUT;
-}
-
-SKIP: {
-    my $tests = 2;
-
-    eval {
-	require Geo::Coder::TomTom;
-	1;
-    } or skip 'Unable to load Geo::Coder::TomTom', $tests;
-
-    require_ok 'Astro::App::Satpass2::Geocode::TomTom'
-	or BAIL_OUT;
-
-    can_ok 'Astro::App::Satpass2::Geocode::TomTom', @geocode_methods
-	or BAIL_OUT;
-
-    instantiate 'Astro::App::Satpass2::Geocode::TomTom'
 	or BAIL_OUT;
 }
 

@@ -12,7 +12,7 @@ my @optionals_dir = qw{ xt author optionals };
 my @hide = qw{
     Astro::SIMBAD::Client Astro::SpaceTrack
     Date::Manip DateTime DateTime::TimeZone
-    Geo::Coder::Geocoder::US Geo::Coder::OSM Geo::Coder::TomTom
+    Geo::Coder::Geocoder::US Geo::Coder::OSM
     Geo::WebService::Elevation::USGS
     LWP::UserAgent
     LWP::Protocol

@@ -106,10 +106,8 @@ sub _recommend_geo_coder {
     local $@ = undef;
     eval { require Geo::Coder::Geocoder::US; 1 }
 	or eval { require Geo::Coder::OSM; 1 }
-	or eval { require Geo::Coder::TomTom; 1 }
 	or return <<'EOD';
-    * None of Geo::Coder::Geocoder::US, Geo::Coder::OSM, or
-      Geo::Coder::TomTom is installed.
+    * None of Geo::Coder::Geocoder::US or Geo::Coder::OSM is installed.
       One of these modules is required by the Astro::App::Satpass2
       geocode() method, but they are otherwise unused by this package.
       If you do not intend to use this functionality, these modules are
@@ -120,17 +118,6 @@ sub _recommend_geo_coder {
 
       Geo::Coder::OSM uses Open Street Map, whose coverage is better in
           Europe than the USA;
-
-      Geo::Coder::TomTom has the best coverage, but uses an undocumented
-          and unsupported interface.
-
-	  B<NOTE> that as of November 8 2014 it appears that TomTom has
-	  retracted the underlying service. Under the circumstances I am
-	  suspending support for TomTom geocoding effective with the
-	  release of version 0.022.  If the situation is
-	  not resolved favorably by May 1 2015 I will retract support
-	  for this module. If it is resolved unfavorably I will retract
-	  support as soon as I become aware of the fact.
 EOD
     return;
 }
