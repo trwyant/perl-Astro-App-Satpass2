@@ -2701,7 +2701,7 @@ sub version : Verb() {
 
 @{[__PACKAGE__]} $VERSION - Satellite pass predictor
 based on Astro::Coord::ECI @{[Astro::Coord::ECI->VERSION]}
-Copyright (C) 2009-2014 by Thomas R. Wyant, III
+Copyright (C) 2009-2015 by Thomas R. Wyant, III
 
 EOD
 }
@@ -7867,7 +7867,7 @@ Thomas R. Wyant, III (F<wyant at cpan dot org>)
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2009-2014 by Thomas R. Wyant, III
+Copyright (C) 2009-2015 by Thomas R. Wyant, III
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl 5.10.0. For more details, see the full text
