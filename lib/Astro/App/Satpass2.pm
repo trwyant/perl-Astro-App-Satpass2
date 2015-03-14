@@ -786,7 +786,8 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! q
     return $self->__format_data(
 	flare => [
 	    sort { $a->{time} <=> $b->{time} }
-	    grep { $_->{magnitude} <= $flare_mag['day' eq $_->{type}] }
+	    grep { $_->{magnitude} <= $flare_mag[
+	    ( $_->{type} eq 'day' ? 1 : 0 ) ] }
 	    @flares
 	], $opt );
 
