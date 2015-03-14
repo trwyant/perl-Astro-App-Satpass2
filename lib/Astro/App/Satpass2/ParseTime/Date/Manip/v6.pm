@@ -14,6 +14,7 @@ our $VERSION = '0.024';
 
 my $invalid;
 
+
 BEGIN {
     eval {
 	load_package( 'Date::Manip' )
@@ -30,8 +31,14 @@ BEGIN {
 	    or $invalid = sprintf
 		'%s assumes a Date::Manip version >= 6. You have %s',
 		__PACKAGE__, Date::Manip->VERSION();
+	$ver >= 6.49
+	    and *_normalize_zone = sub {
+		$_[0] =~ s/ \A (?: gmt | ut ) \z /UT/smxi;
+	    };
 	1;
     } or $invalid = ( $@ || 'Unable to load Date::Manip' );
+    __PACKAGE__->can( '_normalize_zone' )
+	or *_normalize_zone = sub{};
 }
 
 my $epoch_offset = timegm( 0, 0, 0, 1, 0, 70 );
@@ -70,6 +77,7 @@ sub tz {
 	my $dm = $self->_get_dm_field( 'object' );
 	defined $zone and '' ne $zone
 	    or $zone = $self->_get_dm_field( 'default_zone' );
+	_normalize_zone( $zone ); 
 	$dm->config( setdate => "zone,$zone" );
     }
     return $self->SUPER::tz( @args );
