@@ -1,3 +1,8 @@
+0.024_01	2015-03-14	T. R. Wyant
+  Track interface change to Date::Manip >= 6.49. This involves using the
+    SetDate configuration variable instead of TZ, and silently making
+    'gmt' (any case) into 'UT'.
+
 0.024		2015-01-10	T. R. Wyant
   Remove TomTom support.
     As of January 5 2015, Geo::Coder::TomTom requires an API key. Since
