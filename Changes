@@ -1,3 +1,6 @@
+0.025		2015-03-29	T. R. Wyant
+  No changes since 0.024_01.
+
 0.024_01	2015-03-14	T. R. Wyant
   Track interface change to Date::Manip >= 6.49. This involves using the
     SetDate configuration variable instead of TZ, and silently making
