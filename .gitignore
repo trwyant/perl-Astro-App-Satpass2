@@ -3,8 +3,10 @@
 /Build
 /cover_db
 /Debian_CPANTS.txt
+/foo
 /iridium.dat
 /Makefile
+/meta
 /META.json
 /META.yml
 /MYMETA.json
@@ -13,6 +15,7 @@
 /nytprof.out
 /pm_to_blib
 /ref
+/TODO
 /tplt
 /usual.dat
 /xt/author/optionals/
