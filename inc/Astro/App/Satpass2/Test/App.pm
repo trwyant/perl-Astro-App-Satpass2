@@ -10,6 +10,7 @@ use base qw{ Exporter };
 use Carp;
 
 use Cwd qw{ abs_path };
+use POSIX qw{ strftime };
 use Scalar::Util 1.26 qw{ blessed };
 use Test::More 0.52;
 
@@ -82,6 +83,7 @@ sub class ($) {
     my $dumped;
 
     sub dump_date_manip {
+	my ( $time_tested ) = @_;
 	$dumped++
 	    and return;
 
@@ -113,7 +115,11 @@ sub class ($) {
 	if ( $app->isa( 'Astro::App::Satpass2::ParseTime' ) ) {
 	    $app->can( 'dmd_zone' )
 		and diag 'dmd_zone = ', $app->dmd_zone();
-	} 
+	}
+
+	defined $time_tested
+	    and diag strftime(
+		q<POSIX zone: %z ('%Z')>, localtime $time_tested );
 
 	diag q<$ENV{TZ} = >, defined $ENV{TZ} ? "'$ENV{TZ}'" : 'undef';
 
