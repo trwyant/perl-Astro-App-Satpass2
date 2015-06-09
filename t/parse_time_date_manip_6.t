@@ -49,6 +49,18 @@ BEGIN {
 	exit;
     };
 
+    {
+	my ( $dm_zone, $dt_zone );
+	eval {
+	    $dm_zone = Date::Manip::Date_TimeZone();
+	    require DateTime::TimeZone;
+	    $dt_zone = DateTime::TimeZone->new( name => 'local')->name();
+	    1;
+	} and lc $dm_zone ne lc $dt_zone
+	    and plan skip_all =>
+	    "Date::Manip zone is '$dm_zone' but DateTime zone is '$dt_zone'";
+    }
+
 }
 
 dump_date_manip_init();
@@ -121,37 +133,44 @@ method parse => '-0 12', $base - HALF_DAY,
 
 method perltime => 1, TRUE, 'Set perltime true';
 
+my $time_local = timelocal( 0, 0, 0, 1, 0, 109 );
 method parse => '20090101T000000',
+    $time_local,
     timelocal( 0, 0, 0, 1, 0, 109 ),
     'Parse ISO-8601 20090101T000000'
-    or dump_date_manip();
+    or dump_date_manip( $time_local );
 
+$time_local = timelocal( 0, 0, 0, 1, 6, 109 );
 method parse => '20090701T000000',
-    timelocal( 0, 0, 0, 1, 6, 109 ),
+    $time_local,
     'Parse ISO-8601 20090701T000000'
-    or dump_date_manip();
+    or dump_date_manip( $time_local );
 
 method perltime => 0, TRUE, 'Set perltime false';
 
+$time_local = timelocal( 0, 0, 0, 1, 0, 109 );
 method parse => '20090101T000000',
-    timelocal( 0, 0, 0, 1, 0, 109 ),
+    $time_local,
     'Parse ISO-8601 20090101T000000, no help from perltime'
-    or dump_date_manip();
+    or dump_date_manip( $time_local );
 
+$time_local = timelocal( 0, 0, 0, 1, 6, 109 );
 method parse => '20090701T000000',
-    timelocal( 0, 0, 0, 1, 6, 109 ),
+    $time_local,
     'Parse ISO-8601 20090701T000000, no help from perltime'
-    or dump_date_manip();
+    or dump_date_manip( $time_local );
 
+my $time_gm = timegm( 0, 0, 0, 1, 0, 109 );
 method parse => '20090101T000000Z',
-    timegm( 0, 0, 0, 1, 0, 109 ),
+    $time_gm,
     'Parse ISO-8601 20090101T000000Z'
-    or dump_date_manip();
+    or dump_date_manip( $time_gm );
 
+$time_gm = timegm( 0, 0, 0, 1, 6, 109 );
 method parse => '20090701T000000Z',
-    timegm( 0, 0, 0, 1, 6, 109 ),
+    $time_gm,
     'Parse ISO-8601 20090701T000000Z'
-    or dump_date_manip();
+    or dump_date_manip( $time_gm );
 
 done_testing;
 
