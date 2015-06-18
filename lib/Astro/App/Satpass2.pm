@@ -2984,8 +2984,10 @@ sub _file_reader_ {
 	$opt->{glob} and return $resp->content();
 	return $self->_file_reader( \( scalar $resp->content() ), $opt );
     } else {
-	my $fh = IO::File->new( $self->expand_tilde( $file ), '<' )
-	    or do {
+	my $fh = IO::File->new(
+	    $self->expand_tilde( $file ),
+	    '<:encoding(utf-8)',
+	) or do {
 	    $opt->{optional} and return;
 	    $self->wail( "Failed to open $file: $!" );
 	};
