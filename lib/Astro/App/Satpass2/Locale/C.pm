@@ -8,6 +8,7 @@ use warnings;
 use utf8;	# Not actually needed for C locale, but maybe for others
 
 use Astro::Coord::ECI::TLE 0.059 qw{ :constants };
+use Scalar::Util ();
 our $VERSION = '0.025';
 
 my @event_names;
@@ -22,6 +23,13 @@ $event_names[PASS_EVENT_APPULSE]	= 'apls';
 $event_names[PASS_EVENT_START]		= 'strt';
 $event_names[PASS_EVENT_END]		= 'end';
 $event_names[PASS_EVENT_BRIGHTEST]	= 'brgt';
+
+my @sun_quarters = (
+    'Spring equinox',
+    'Summer solstice',
+    'Autumn equinox',
+    'Winter solstice',
+);
 
 # Any hash reference is a true value, but perlcritic seems not to know
 # this.
@@ -359,12 +367,13 @@ EOD
 	},
 	Sun	=> {
 	    horizon	=> [ 'Sunset', 'Sunrise' ],
-	    quarter	=> [
-			    'Spring equinox',
-			    'Summer solstice',
-			    'Fall equinox',
-			    'Winter solstice',
-	    ],
+	    quarter	=> sub {
+		my ( $key, $arg ) = @_;
+		Scalar::Util::blessed( $arg )
+		    and return $arg->__quarter_name( $key,
+		    \@sun_quarters );
+		return $sun_quarters[$key];
+	    },
 	    transit	=> [ 'local midnight', 'local noon' ],
 	    twilight	=> [ 'end twilight', 'begin twilight' ],
 	},
@@ -581,7 +590,13 @@ C<{title}> key contains the title for that format effector. Other keys
 relevant to the specific formatter may also appear, such as the
 C<{table}> key in C<{phase}>, which defines the names of phases in terms
 of phase angle. These extra keys are pretty much ad-hoc as required by
-the individual format effector.
+the individual format effector. In general they are cascades of C<HASH>
+and/or C<ARRAY> references, though the last can be a C<CODE> reference.
+The C<HASH> and C<ARRAY> references are resolved one at a time using
+successive C<__localize()> arguments. A C<CODE> reference is resolved by
+calling it passing the current C<__locale()> argument, and the original
+C<__locale()> call's invocant argument (or C<undef> if none). See the
+C<almanac> definition above for an example.
 
 =head2 Top-level reporting (e.g. C<{'-flare'}>
 

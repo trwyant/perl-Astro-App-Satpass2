@@ -27,6 +27,11 @@ my $locale;
 		and return $data->[$inx];
 	    return;
 	},
+	CODE	=> sub {
+	    my ( $code, $key, $arg ) = @_;
+	    my $rslt = $code->( $key, $arg );
+	    return $rslt;
+	},
 	HASH	=> sub {
 	    my ( $data, $key ) = @_;
 	    defined $key
@@ -43,6 +48,9 @@ my $locale;
 	my @extra = @_;
 	$locale ||= _load();
 	my $dflt = pop @extra;
+	my $invocant;
+	ref $extra[0]
+	    and $invocant = shift @extra;
 	my @keys;
 	while ( @extra && defined $extra[0] && ! ref $extra[0] ) {
 	    push @keys, shift @extra;
@@ -67,7 +75,7 @@ my $locale;
 			    'not handle ', ref $data, ' as a container'
 			);
 		    };
-		    ( $data ) = $code->( $data, $key )
+		    ( $data ) = $code->( $data, $key, $invocant )
 			or next SOURCE_LOOP;
 		}
 		wantarray
@@ -238,10 +246,17 @@ This class supports the following exportable public subroutines:
      say;
  }
 
-This subroutine is the interface used to localize values. The last
-(rightmost) argument is the default, to be returned if no localization
-can be found.  All leading (leftmost) arguments that are defined and are
-not references are keys (or indices) used to traverse the locale data
+This subroutine is the interface used to localize values.
+
+The last (rightmost) argument is the default, to be returned if no
+localization can be found.
+
+An optional leading (leftmost) reference is assumed to be blessed. This
+is made available to any C<CODE> items in the locale definition;
+otherwise it is ignored.
+
+All other leading (leftmost) arguments that are defined and are not
+references are keys (or indices) used to traverse the locale data
 structure. Any remaining arguments are either hash references (which
 represent last-chance locale definitions) or ignored.
 
