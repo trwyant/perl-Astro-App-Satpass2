@@ -111,7 +111,10 @@ sub config {
 sub __list_templates {
     my ( $self ) = @_;
     return ( _uniq( map { keys %{ $_ } } $self->{canned_template},
-	    __localize( '+template', {} ) ) );
+	    __localize(
+		text	=> '+template',
+		default	=> {},
+	    ) ) );
 }
 
 sub __default {
@@ -262,8 +265,10 @@ sub template {
     if ( @value ) {
 	my $tplt_text;
 	if ( ! defined $value[0]
-	    || defined( $tplt_text = __localize( '+template',
-		$value[0] ) )
+	    || defined( $tplt_text = __localize(
+		    text	=> '+template',
+		    default	=> $value[0] )
+	    )
 	    && $value[0] eq $tplt_text
 	) {
 	    delete $self->{canned_template}{$name};
@@ -275,7 +280,9 @@ sub template {
     } else {
 	defined $self->{canned_template}{$name}
 	    and return $self->{canned_template}{$name};
-	return __localize( '+template', $name, undef );
+	return __localize(
+	    text	=> [ '+template', $name ],
+	);
     }
 }
 
@@ -332,7 +339,10 @@ sub _localize {
     defined $report
 	or return defined $source ? $source : $default;
 
-    return scalar __localize( "-$report", 'string', $source, $source );
+    return scalar __localize(
+	text	=> [ "-$report", 'string', $source ],
+	default	=> $source,
+    );
 }
 
 sub _process {

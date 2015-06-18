@@ -1705,8 +1705,10 @@ sub reset_title_lines {
 		    and next APPLY_DEFAULT_LOOP;
 	    }
 
-            defined( $arg->{$key} = __localize( $fmtr_name, $key,
-		    $fmtr->{locale}, undef ) )
+            defined( $arg->{$key} = __localize(
+		    text	=> [ $fmtr_name, $key ],
+		    locale	=> $fmtr->{locale},
+		) )
 		and next;
 
 	    my $default = $dflt->{$key};
@@ -1725,8 +1727,11 @@ sub reset_title_lines {
 	    foreach my $key ( qw{ literal missing title } ) {
 		defined $arg->{$key}
 		    or next;
-		$arg->{$key} = __localize( $report, 'string',
-		    $arg->{$key}, $fmtr->{locale}, $arg->{$key} );
+		$arg->{$key} = __localize(
+		    text	=> [ $report, 'string', $arg->{$key} ],
+		    default	=> $arg->{$key},
+		    locale	=> $fmtr->{locale},
+		);
 	    }
 
 	}
@@ -1787,8 +1792,11 @@ sub _apply_dimension {
 
     $arg->{units} = $unit_name;
 
-    $value = __localize( $fmtr_name, 'localize_value', $value, $fmtr->{locale},
-	$value );
+    $value = __localize(
+	text	=> [ $fmtr_name, 'localize_value', $value ],
+	default	=> $value,
+	locale	=> $fmtr->{locale},
+    );
 
     defined( my $formatter = _dor( $unit->{formatter},
 	    $fmtr->{dimension}{formatter},
@@ -2035,7 +2043,11 @@ sub _format_bearing {
 	    and last;
     }
 
-    $table ||= __localize( bearing => 'table', $fmtr->{locale}, [] );
+    $table ||= __localize(
+	text	=> [ bearing => 'table' ],
+	default	=> [],
+	locale	=> $fmtr->{locale},
+    );
 
     $arg->{bearing}
 	or $arg->{bearing} = ( $arg->{width} || 2 );
@@ -2104,7 +2116,10 @@ sub _format_event {
 		and last;
 	}
     }
-    $table ||= __localize( event => 'table', [] );
+    $table ||= __localize(
+	text	=> [ event => 'table' ],
+	default	=> [],
+    );
 
     return $self->_format_string( $table->[$value] || '', $arg, $fmtr );
 }
@@ -2213,7 +2228,11 @@ sub _format_phase {
 	$table = $self->_get( $source => phase => 'table' )
 	    and last;
     }
-    $table ||= __localize( phase => 'table', $fmtr->{locale}, [] );
+    $table ||= __localize(
+	text	=> [ phase => 'table' ],
+	default	=> [],
+	locale	=> $fmtr->{locale},
+    );
     foreach my $entry ( @{ $table } ) {
 	$entry->[0] > $angle or next;
 	return $self->_format_string( $entry->[1], $arg, $fmtr );

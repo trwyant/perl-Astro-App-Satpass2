@@ -448,12 +448,10 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter
 
     foreach my $event ( @almanac ) {
 	$event->{almanac}{description} = __localize(
-	    $event->{body},
-	    almanac =>
-	    $event->{body}->get( 'name' ),
-	    $event->{almanac}{event},
-	    $event->{almanac}{detail},
-	    $event->{almanac}{description}
+	    text	=> [ almanac => $event->{body}->get( 'name' ),
+		$event->{almanac}{event}, $event->{almanac}{detail} ],
+	    default	=> $event->{almanac}{description},
+	    argument	=> $event->{body},
 	);
     }
 
@@ -1605,12 +1603,11 @@ sub pwd : Verb() {
 
 	foreach my $event ( @almanac ) {
 	    $event->{almanac}{description} = __localize(
-		$event->{body},
-		almanac =>
-		$event->{body}->get( 'name' ),
-		$event->{almanac}{event},
-		$event->{almanac}{detail},
-		$event->{almanac}{description}
+		text	=> [ almanac => $event->{body}->get( 'name' ),
+		    $event->{almanac}{event}, $event->{almanac}{detail}
+		],
+		default	=> $event->{almanac}{description},
+		argument	=> $event->{body},
 	    );
 	}
 

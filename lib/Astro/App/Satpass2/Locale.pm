@@ -45,28 +45,36 @@ my $locale;
     );
 
     sub __localize {
-	my @extra = @_;
-	$locale ||= _load();
-	my $dflt = pop @extra;
-	my $invocant;
-	ref $extra[0]
-	    and $invocant = shift @extra;
-	my @keys;
-	while ( @extra && defined $extra[0] && ! ref $extra[0] ) {
-	    push @keys, shift @extra;
+
+# Keys used:
+# {argument} = argument for code reference
+# {default} = the default value
+# {text} = the text to localize, as scalar or array ref. REQUIRED.
+# {locale} = fallback locales, as hash ref or ref to array of hash refs.
+
+	my %arg = @_;
+	unless ( $arg{text} ) {
+	    require Carp;
+	    Carp::confess( q<Argument 'text' is required> );
 	}
-	@extra = grep { $_ } @extra;
+	ref $arg{text}
+	    or $arg{text} = [ $arg{text} ];
+	$arg{locale} ||= [];
+	'HASH' eq ref $arg{locale}
+	    and $arg{locale} = [ $arg{locale} ];
+	$locale ||= _load();
+
 	my @rslt;
 	foreach my $lc ( @lang ) {
 	    SOURCE_LOOP:
-	    foreach my $source ( @{ $locale }, @extra ) {
+	    foreach my $source ( @{ $locale }, @{ $arg{locale} } ) {
 		unless ( 'HASH' eq ref $source ) {
 		    require Carp;
 		    Carp::confess( "\$source is '$source'" );
 		}
 		my $data = $source->{$lc}
 		    or next;
-		foreach my $key ( @keys ) {
+		foreach my $key ( @{ $arg{text} } ) {
 		    my $code = $deref{ ref $data }
 			or do {
 			require Carp;
@@ -75,7 +83,7 @@ my $locale;
 			    'not handle ', ref $data, ' as a container'
 			);
 		    };
-		    ( $data ) = $code->( $data, $key, $invocant )
+		    ( $data ) = $code->( $data, $key, $arg{argument} )
 			or next SOURCE_LOOP;
 		}
 		wantarray
@@ -84,8 +92,9 @@ my $locale;
 	    }
 	}
 	wantarray
-	    or return $dflt;
-	return ( @rslt, $dflt );
+	    or return $arg{default};
+	return ( @rslt, $arg{default} );
+
     }
 
 }
@@ -102,7 +111,10 @@ my $locale;
 	# reference (i.e. "HASH{0x....}").
 	my ( $msg, @arg ) =
 	    map { $stringify_ref{ ref $_ } ? '' . $_ : $_ } @_;
-	my $lcl = __localize( '+message', $msg, $msg );
+	my $lcl = __localize(
+	    text	=> [ '+message', $msg ],
+	    default	=> $msg,
+	);
 
 	'CODE' eq ref $lcl
 	    and return $lcl->( $msg, @arg );
@@ -187,10 +199,16 @@ Astro::App::Satpass2::Locale - Handle locale-dependant data.
  use Astro::App::Satpass2::Locale qw{ __localize };
  
  # The best localization
- say scalar __localize( 'foo', 'bar', 'default text' );
+ say scalar __localize(
+     text    => [ 'foo', 'bar' ],
+     default => 'default text',
+ );
  
  # All localizations, in decreasing order of goodness
- for ( __localize( 'foo', 'bar', 'default text' ) ) {
+ for ( __localize(
+     text    => [ 'foo', 'bar' ],
+     default => 'default text',
+ ) ) {
      say;
  }
 
@@ -237,49 +255,85 @@ via C<do()>.
 This class supports the following exportable public subroutines:
 
 =head2 __localize
-
+ 
  # The best localization
- say scalar __localize( 'foo', 'bar', 'default text' );
+ say scalar __localize(
+     text    => [ 'foo', 'bar' ],
+     default => 'default text',
+ );
  
  # All localizations, in decreasing order of goodness
- for ( __localize( 'foo', 'bar', 'default text' ) ) {
+ for ( __localize(
+     text    => [ 'foo', 'bar' ],
+     default => 'default text',
+ ) ) {
      say;
  }
 
 This subroutine is the interface used to localize values.
 
-The last (rightmost) argument is the default, to be returned if no
-localization can be found.
+The arguments are name/value pairs, with the following names being the
+only ones supported.
 
-An optional leading (leftmost) reference is assumed to be blessed. This
-is made available to any C<CODE> items in the locale definition;
-otherwise it is ignored.
+=over
 
-All other leading (leftmost) arguments that are defined and are not
-references are keys (or indices) used to traverse the locale data
-structure. Any remaining arguments are either hash references (which
-represent last-chance locale definitions) or ignored.
+=item text
 
-If called in scalar context, the best available localization is
-returned. If called in list context, all available localizations
-will be returned, with the best first and the worst (which will be the
-default) last.
+This argument is required, and passes the text to be localized. This can
+be either a scalar, or a reference to an array of keys (or indices) used
+to traverse the locale data structure.
+
+=item default
+
+This argument specifies the default value to be returned if no
+localization is available. If it is not specified, C<undef> is returned
+if no localization is available.
+
+=item locale
+
+This argument specifies either a hash reference that is consulted for
+locale information if all other available locales provide no
+localization, or a reference to an array of such hashes. The default is
+C<[]>.
+
+=item argument
+
+This argument specifies the value of the second argument passed to a
+code reference which is being used for localization. See
+L<Astro::App::Satpass2::Locale::C|Astro::App::Satpass2::Locale::C> for
+an example of how this can be used.
+
+=back
+
+All other keys are unsupported in the sense that the author makes no
+representation what will happen if you specify them, and makes no
+commitment that whatever you observe to happen will not change without
+notice.
+
+If this subroutine is called in scalar context, the best available
+localization is returned. If it is called in list context, all available
+localizations will be returned, with the best first and the worst (which
+will be the default) last.
 
 To extend the above example, assuming neither the system-wide or
 locale-specific locale information defines the keys C<{fu}{bar}>,
 
- say scalar __localize( foo => 'bar', {
-     C => {
-	 foo => {
-	     bar => 'Gronk!',
-	 },
+ say scalar __localize(
+     text    => [ foo => 'bar' ],
+     default => 'Greeble',
+     locale  => {
+         C => {
+	     foo => {
+	         bar => 'Gronk!',
+	     },
+         },
+         fr => {
+	     foo => {
+	         bar => 'Gronkez!',
+	     },
+         },
      },
-     fr => {
-	 foo => {
-	     bar => 'Gronkez!',
-	 },
-     },
- }, 'Greeble' );
+ );
 
 will print C<'Gronkez!'> in a French locale, and C<'Gronk!'> in any
 other locale (since the C<'C'> locale is always consulted). If
