@@ -23,6 +23,13 @@ $event_names[PASS_EVENT_START]		= 'inic';
 $event_names[PASS_EVENT_END]		= 'term';
 $event_names[PASS_EVENT_BRIGHTEST]	= 'bril';
 
+my @sun_quarters = (
+    'Equinoccio de primavera',
+    'Solsticio de verano',
+    'Equinoccio de otoño',
+    'Solsticio de invierno',
+);
+
 # Any hash reference is a true value, but perlcritic seems not to know
 # this.
 
@@ -57,12 +64,13 @@ $event_names[PASS_EVENT_BRIGHTEST]	= 'bril';
 	},
 	Sun	=> {
 	    horizon	=> [ 'Puesta del sol', 'Salida del sol' ],
-	    quarter	=> [
-			    'Equinoccio de primavera',
-			    'Solsticio de verano',
-			    'Equinoccio de otoño',
-			    'Solsticio de invierno',
-	    ],
+	    quarter	=> sub {
+		my ( $key, $arg ) = @_;
+		Scalar::Util::blessed( $arg )
+		    and return $arg->__quarter_name( $key,
+		    \@sun_quarters );
+		return $sun_quarters[$key];
+	    },
 	    transit	=> [ 'La medianoche local', 'La mediodía local' ],
 	    twilight	=> [ 'El fin del crepúsculo', 'El comienzo del crepúsculo' ],
 	},
