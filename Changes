@@ -1,3 +1,14 @@
+0.025_01	2015-06-18	T. R. Wyant
+  Change localization of equinoxes and solstices to take advantage of
+    the Astro::Coord::ECI southern hemisphere functionality. This
+    includes not only the default C locale but eg/es.pm.
+  Specify encoding UTF-8 for source files. This was always intended, but
+    never actually done.
+  Skip t/parse_time_date_manip_6.t if Date::Manip and DateTimeTimeZone
+    come up with different zones. This is because Date::Manip may not
+    default to the right zone under at least some BSD variants,
+    resulting in failing tests.
+
 0.025		2015-03-29	T. R. Wyant
   No changes since 0.024_01.
 
