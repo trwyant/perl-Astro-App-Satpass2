@@ -1,3 +1,6 @@
+0.026		2015-06-26	T. R. Wyant
+  No changes since 0.025_01.
+
 0.025_01	2015-06-18	T. R. Wyant
   Change localization of equinoxes and solstices to take advantage of
     the Astro::Coord::ECI southern hemisphere functionality. This
