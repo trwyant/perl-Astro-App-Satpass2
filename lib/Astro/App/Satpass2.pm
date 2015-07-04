@@ -1779,8 +1779,6 @@ EOD
 sub set : Verb() {
     my ( $self, $opt, @args ) = __arguments( @_ );
 
-    my $cwd = Cwd::cwd();
-
     while (@args) {
 	my ( $name, $value ) = splice @args, 0, 2;
 	$self->_attribute_exists( $name );
@@ -1796,10 +1794,6 @@ sub set : Verb() {
 	    $mutator{$name}->($self, $name, $value);
 	} else {
 	    $self->wail("Read-only attribute '$name'");
-	}
-	if ( $cwd ne Cwd::cwd() ) {
-	    warn "Debug - Setting $name to '$value' changed cwd to ", Cwd::cwd();
-	    chdir $cwd;
 	}
     }
     return;
@@ -2086,12 +2080,8 @@ sub _set_twilight {
 
 sub _set_tz {
     my ( $self, $name, $val ) = @_;
-    # The following rigamarole is because some versions of Date::Manip,
-    # under some operating systems, change the working directory.
-    my $cwd = Cwd::cwd();
     $self->_set_formatter_attribute( $name, $val );
     $self->_set_time_parser_attribute( $name, $val );
-    chdir $cwd;
     return $val;
 }
 

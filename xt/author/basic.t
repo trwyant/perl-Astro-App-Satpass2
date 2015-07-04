@@ -3,20 +3,13 @@ package main;
 use strict;
 use warnings;
 
-use Cwd();
 use Test::More 0.88;
 
 diag 'Things needed for authortest';
 
 require_ok 'Astro::SIMBAD::Client';
 require_ok 'Astro::SpaceTrack';
-{
-    # The following rigamarole is because some versions of Date::Manip,
-    # under some operating systems, change the working directory.
-    my $cwd = Cwd::cwd();
-    require_ok 'Date::Manip';
-    chdir $cwd;
-}
+require_ok 'Date::Manip';
 ok eval {
     Date::Manip->VERSION( 6 );
     1;
