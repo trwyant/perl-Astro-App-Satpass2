@@ -1,3 +1,8 @@
+0.026_02	2015-07-04	T. R. Wyant
+  Reverted 0.026_01. The problem turned out to be in a patch I developed
+    for Date::Manip. So the patch got corrected, and the kluge goes
+    away. What a fiasco on my part.
+
 0.026_01	2015-07-03	T. R. Wyant
   Protect against Date::Manip calling chdir()
     Under FreeBSD, under at least some circumstances, Date::Manip calls
