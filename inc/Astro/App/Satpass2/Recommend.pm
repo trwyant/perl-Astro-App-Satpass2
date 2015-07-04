@@ -5,6 +5,7 @@ use warnings;
 
 use Carp;
 use Config;
+use Cwd ();
 
 my ( $is_5_010, $is_5_012 );
 
@@ -68,7 +69,15 @@ EOD
 
 sub _recommend_date_manip {
     local $@ = undef;
-    eval { require Date::Manip; 1 } and return;
+    eval {
+	# The following rigamarole is because some versions of
+	# Date::Manip, under some operating systems, change the working
+	# directory.
+	my $cwd = Cwd::cwd();
+	require Date::Manip;
+	chdir $cwd;
+	1;
+    } and return;
     my $recommendation = <<'EOD';
     * Date::Manip is not installed.
       This module is not required, but the alternative to installing it

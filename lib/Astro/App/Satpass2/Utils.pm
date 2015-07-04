@@ -208,7 +208,15 @@ sub instance {
 		and next;
 	    ( my $fn = $package ) =~ s{ :: }{/}smxg;
 	    eval {
+		# The following rigamarole is because some versions of
+		# Date::Manip, under some operating systems, change the
+		# working directory.
+		my $cwd = Cwd::cwd();
 		require "$fn.pm";	## no critic (RequireBarewordIncludes)
+		if ( $cwd ne Cwd::cwd() ) {
+		    chdir $cwd;
+#		    warn "Debug - $package does a chdir()";
+		}
 		1;
 	    } or next;
 	    return ( $loaded{$key} = $package );
