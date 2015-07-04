@@ -1,3 +1,11 @@
+0.026_01	2015-07-03	T. R. Wyant
+  Protect against Date::Manip calling chdir()
+    Under FreeBSD, under at least some circumstances, Date::Manip calls
+    chdir() when determining the default time zone. In order to protect
+    against this we save and restore the working directory around module
+    loads (which is overkill) and around time zone setting (since setting
+    the zone to '' triggers this behavior). Yes, this is a kluge.
+
 0.026		2015-06-26	T. R. Wyant
   No changes since 0.025_01.
 
