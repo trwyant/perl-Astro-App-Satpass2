@@ -1,3 +1,8 @@
+0.027		2015-07-11	T. R. Wyant
+  No changes since 0.026_02. This release should be functionally
+    identical to 0.026, but was made because I wanted a production
+    release that superseded 0.026_01.
+
 0.026_02	2015-07-04	T. R. Wyant
   Reverted 0.026_01. The problem turned out to be in a patch I developed
     for Date::Manip. So the patch got corrected, and the kluge goes
