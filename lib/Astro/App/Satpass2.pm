@@ -865,7 +865,6 @@ sub _height_us {
     $self->_load_module ('Geo::WebService::Elevation::USGS');
     my $eq = Geo::WebService::Elevation::USGS->new(
 	places => 2,	# Service returns unreasonable precision
-	source => undef,	# 'best' data set
 	units => 'METERS',	# default for service is 'FEET'
 	croak	=> 0,		# Handle our own errors
     );
