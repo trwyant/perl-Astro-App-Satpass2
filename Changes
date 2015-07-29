@@ -1,3 +1,7 @@
+0.027_01	2015-07-28	T. R. Wyant
+  Eliminate use of deprecated Geo::WebService::Elevation::USGS 'source'
+    attr
+
 0.027		2015-07-11	T. R. Wyant
   No changes since 0.026_02. This release should be functionally
     identical to 0.026, but was made because I wanted a production
