@@ -1,6 +1,9 @@
+0.027_02	2015-08-02	T. R. Wyant
+  Sanitize TZ before using it in tests.
+
 0.027_01	2015-07-28	T. R. Wyant
   Eliminate use of deprecated Geo::WebService::Elevation::USGS 'source'
-    attr
+    attribute.
 
 0.027		2015-07-11	T. R. Wyant
   No changes since 0.026_02. This release should be functionally
