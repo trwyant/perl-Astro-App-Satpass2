@@ -4,9 +4,9 @@ use strict;
 use warnings;
 
 use lib qw{ inc };
+use Astro::App::Satpass2::Test::App;
 
 use Test::More 0.88;
-use Astro::App::Satpass2::Test::App;
 use Astro::Coord::ECI::TLE;
 use Astro::Coord::ECI::Utils qw{ deg2rad };
 use Cwd qw{ cwd };

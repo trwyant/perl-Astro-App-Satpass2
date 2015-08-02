@@ -7,6 +7,8 @@ use Test::More 0.88;
 
 sub instantiate (@);
 
+delete $ENV{TZ};
+
 my @copier_methods =
     qw{ attribute_names clone copy create_attribute_methods init warner };
 

@@ -7,7 +7,8 @@ use Test::More 0.88;
 
 use Cwd qw{ cwd };
 
-use lib qw{ inc/mock };
+use lib qw{ inc/mock inc };
+use Astro::App::Satpass2::Test::App;	# for environment clean-up.
 
 use File::HomeDir;	# Mocked
 

@@ -14,8 +14,6 @@ use POSIX qw{ strftime };
 use Scalar::Util 1.26 qw{ blessed };
 use Test::More 0.52;
 
-use Astro::App::Satpass2;
-
 our @EXPORT = qw{
     application
     check_access
@@ -30,6 +28,19 @@ our @EXPORT = qw{
     INSTANTIATE
     TRUE
 };
+
+BEGIN {
+    # If I should need to write a test that uses a dirty environment (or
+    # at least wants something in $ENV{TZ}) the plan is to handle it via
+    # the import mechanism. See @EXPORT_FAIL, which is good back to at
+    # least 5.12.
+    delete $ENV{TZ};
+
+    # Note that we have to load Astro::App::Satpass2 this way because we
+    # need to clean up the environment before we do the load.
+    require Astro::App::Satpass2;
+    Astro::App::Satpass2->import();
+}
 
 my $app = 'Astro::App::Satpass2';
 
