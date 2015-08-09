@@ -37,7 +37,7 @@ our @CARP_NOT = ( qw{
     Astro::App::Satpass2::Wrap::Array
 } );
 
-our $VERSION = '0.027_02';
+our $VERSION = '0.027_03';
 
 sub new {
     my ( $class, @arg ) = @_;

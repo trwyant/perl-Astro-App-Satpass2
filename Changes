@@ -1,3 +1,10 @@
+0.027_03	2015-08-09	T. R. Wyant
+  Try to quash errors under Cygwin using DateTime. The problem is that
+    we think we can use it, but we get failures when initializing
+    because DateTime::TimeZone can not determine the local zone. We
+    handle this by checking for it and falling back to POSIX formatting
+    if needed.
+
 0.027_02	2015-08-02	T. R. Wyant
   Sanitize TZ before using it in tests.
 
