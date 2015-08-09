@@ -15,6 +15,8 @@ use constant ROUND_TIME => 1;
 
 my $delegate = eval {
     require Astro::App::Satpass2::FormatTime::DateTime::Strftime;
+    require DateTime::TimeZone;
+    DateTime::TimeZone->new( name => 'local' );
     'Astro::App::Satpass2::FormatTime::DateTime::Strftime';
 } || do {
     require Astro::App::Satpass2::FormatTime::POSIX::Strftime;
