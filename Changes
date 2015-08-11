@@ -1,3 +1,7 @@
+0.027_04	2015-08-11	T. R. Wyant
+  Properly check which time formatter in t/format.t. This is fallout
+    from 0.027_03.
+
 0.027_03	2015-08-09	T. R. Wyant
   Try to quash errors under Cygwin using DateTime. The problem is that
     we think we can use it, but we get failures when initializing
