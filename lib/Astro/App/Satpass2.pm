@@ -4818,10 +4818,6 @@ Geocoding using TomTom has been dropped as of version 0.024.
 The old, undocumented interface has been dropped, and the new one
 requires an API key.
 
-This is alpha code. It has been tested on my box, but has limited
-exposure to the wild. Also, the public interface may not be completely
-stable, though I will try to call attention to any incompatible changes.
-
 The eventual plan is to retire the F<satpass> script in favor of this
 package, and to rename the satpass-less F<Astro-satpass> distribution to
 F<Astro-Coord-ECI>.

@@ -2455,14 +2455,6 @@ Astro::App::Satpass2::FormatValue - Format Astro::App::Satpass2 output as text.
 	 $fmt->elevation() ), "\n";
  }
 
-=head1 NOTICE
-
-This is alpha code. It has been tested on my box, but has limited
-exposure to the wild. Also, the public interface may not be completely
-stable, and may change if needed to support
-L<Astro::App::Satpass2|Astro::App::Satpass2>. I will try to document any
-incompatible changes.
-
 =head1 DETAILS
 
 This class is intended to take care of the details of performing field
