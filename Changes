@@ -1,3 +1,6 @@
+0.028		2015-08-29	T. R. Wyant
+  Remove notices saying this is alpha code.
+
 0.027_04	2015-08-11	T. R. Wyant
   Properly check which time formatter in t/format.t. This is fallout
     from 0.027_03.
