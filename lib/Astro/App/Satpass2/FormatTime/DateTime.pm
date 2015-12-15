@@ -14,7 +14,7 @@ use Astro::App::Satpass2::Locale qw{ __preferred };
 use DateTime;
 use DateTime::TimeZone;
 
-our $VERSION = '0.028';
+our $VERSION = '0.028_01';
 
 sub format_datetime {
     my ( $self, $tplt, $time, $gmt ) = @_;

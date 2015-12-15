@@ -51,7 +51,7 @@ BEGIN {
 	};
 }
 
-our $VERSION = '0.028';
+our $VERSION = '0.028_01';
 
 # The following 'cute' code is so that we do not determine whether we
 # actually have optional modules until we really need them, and yet do
@@ -6912,7 +6912,7 @@ an actual instantiated object or a class name. If the class name is
 specified, the leading C<Astro::App::Satpass2::Geocode::> can be
 omitted.
 
-As of version [%% next_version %%], the default is the first of
+As of version 0.028_01, the default is the first of
 L<Astro::App::Satpass2::Geocode::OSM|Astro::App::Satpass2::Geocode::OSM>
 or
 L<Astro::App::Satpass2::Geocode::Geocoder::US|Astro::App::Satpass2::Geocode::Geocoder::US>,
@@ -6920,7 +6920,7 @@ that can be loaded. See the documentation for details of these, but
 basically each C<Astro::App::Satpass2::Geocode::*> class wraps a
 correspondingly-named C<Geo::Coder::*> class, which must be installed.
 
-Previous to version [%% next_version %%], C<Geocoder::US> was preferred,
+Previous to version 0.028_01, C<Geocoder::US> was preferred,
 but since that has been out of service for a while, it seemed better to
 provide a default that actually worked.
 

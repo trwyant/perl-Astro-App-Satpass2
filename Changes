@@ -1,3 +1,9 @@
+0.028_01	2015-12-15	T. R. Wyant
+  Make OSM the default geocoder.
+    The problem is that geocoder.us (the originial geocoder) has been
+    offline for a couple weeks, and it makes no sense to have a broken
+    default.
+
 0.028		2015-08-29	T. R. Wyant
   Remove notices saying this is alpha code.
 
