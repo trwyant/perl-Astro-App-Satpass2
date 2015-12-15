@@ -77,8 +77,10 @@ $have_astro_spacetrack = sub {
 my $default_geocoder;
 $default_geocoder = sub {
     my $value =
-	_can_use_geocoder( 'Astro::App::Satpass2::Geocode::Geocoder::US' ) ||
-	_can_use_geocoder( 'Astro::App::Satpass2::Geocode::OSM' );
+	_can_use_geocoder( 'Astro::App::Satpass2::Geocode::OSM'
+	||
+	_can_use_geocoder( 'Astro::App::Satpass2::Geocode::Geocoder::US' )
+	);
     $default_geocoder = sub { return $value };
     return $value;
 };
@@ -4908,14 +4910,14 @@ like, instead of C<strftime> formats.
 
 =item L<Geo::Coder::Geocoder::US|Geo::Coder::Geocoder::US>
 
-This module is used by the default geocoder for the
-L<geocode()|/geocode> method.  If you are not interested in using the
+This module is used by the Geocoder.us geocoder for the
+L<geocode()|/geocode> method. If you are not interested in using the
 L<geocode()|/geocode> method you do not need this module.
 
 =item L<Geo::Coder::OSM|Geo::Coder::OSM>
 
 This module is used by the Open Street Map geocoder for the
-L<geocode()|/geocode> method.  If you are not interested in using the
+L<geocode()|/geocode> method. If you are not interested in using the
 L<geocode()|/geocode> method you do not need this module.
 
 =item L<Geo::WebService::Elevation::USGS|Geo::WebService::Elevation::USGS>
@@ -6910,12 +6912,17 @@ an actual instantiated object or a class name. If the class name is
 specified, the leading C<Astro::App::Satpass2::Geocode::> can be
 omitted.
 
-The default is the first of
+As of version [%% next_version %%], the default is the first of
+L<Astro::App::Satpass2::Geocode::OSM|Astro::App::Satpass2::Geocode::OSM>
+or
 L<Astro::App::Satpass2::Geocode::Geocoder::US|Astro::App::Satpass2::Geocode::Geocoder::US>,
-or L<Astro::App::Satpass2::Geocode::OSM|Astro::App::Satpass2::Geocode::OSM>
 that can be loaded. See the documentation for details of these, but
 basically each C<Astro::App::Satpass2::Geocode::*> class wraps a
 correspondingly-named C<Geo::Coder::*> class, which must be installed.
+
+Previous to version [%% next_version %%], C<Geocoder::US> was preferred,
+but since that has been out of service for a while, it seemed better to
+provide a default that actually worked.
 
 =head2 geometric
 
