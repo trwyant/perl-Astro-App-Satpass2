@@ -8,7 +8,7 @@ use warnings;
 use Astro::App::Satpass2::FormatValue;
 use Astro::App::Satpass2::Utils qw{ has_method };
 
-our $VERSION = '0.028_01';
+our $VERSION = '0.029';
 
 sub new {
     my ( $class, $info ) = @_;

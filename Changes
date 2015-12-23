@@ -1,3 +1,6 @@
+0.029		2015-12-23	T. R. Wyant
+  No changes since 0.028_01.
+
 0.028_01	2015-12-15	T. R. Wyant
   Make OSM the default geocoder.
     The problem is that geocoder.us (the originial geocoder) has been
