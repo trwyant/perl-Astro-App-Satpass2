@@ -27,18 +27,7 @@ my %attr = (
 $mmv >= 6.31 and $attr{LICENSE} = 'perl';
 
 if ( $mmv >= 6.4501 ) {
-    $attr{META_ADD} = {
-	no_index => {
-	    directory => [ qw{ inc t xt } ],
-	},
-    };
-    $attr{META_MERGE} = {
-	dynamic_config => 1,
-	resources => {
-	    bugtracker => 'https://rt.cpan.org/Public/Dist/Display.html?Name=Astro-App-Satpass2',
-	    license => 'http://dev.perl.org/licenses/',
-	},
-    };
+    $attr{META_MERGE} = $meta->meta_merge();
 } else {
     $attr{PREREQ_PM}{'Test::More'} = 0.40;
 }

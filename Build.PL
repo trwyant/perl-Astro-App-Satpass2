@@ -25,17 +25,10 @@ my %attr = (
     build_requires => $meta->build_requires(),
     script_files => [ qw{bin/satpass2} ],
     add_to_cleanup => [ qw{ xt/author/optionals } ],
-    dynamic_config => 1,
 );
 
-$mbv >= 0.28 and $attr{meta_merge} = {
-    no_index => {
-	directory => [qw{ inc t xt }],
-    },
-    resources => {
-	bugtracker => 'https://rt.cpan.org/Public/Dist/Display.html?Name=Astro-App-Satpass2',
-    },
-};
+$mbv >= 0.28
+    and $attr{meta_merge} = $meta->meta_merge();
 
 # Don't require Module::Build if we're making a distribution, since the
 # the user may simply prefer ExtUtils::MakeMaker.
