@@ -8,7 +8,7 @@ use warnings;
 use Test::More 0.88;
 
 use lib qw{ inc };
-use Astro::App::Satpass2::Test::App;	# For environment clean-up.
+use My::Module::Test::App;	# For environment clean-up.
 
 use Astro::App::Satpass2::Format::Template;
 

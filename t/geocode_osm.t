@@ -8,7 +8,7 @@ use warnings;
 use lib qw{ inc };
 
 use Test::More 0.88;	# Because of done_testing();
-use Astro::App::Satpass2::Test::Geocode;
+use My::Module::Test::Geocode;
 
 setup	'Astro::App::Satpass2::Geocode::OSM';
 

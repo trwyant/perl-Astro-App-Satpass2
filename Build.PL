@@ -5,12 +5,12 @@ use warnings;
 
 use lib qw{ inc };
 
-use Astro::App::Satpass2::Build;
-use Astro::App::Satpass2::Meta;
-use Astro::App::Satpass2::Recommend;
+use My::Module::Build;
+use My::Module::Meta;
+use My::Module::Recommend;
 use Module::Build;
 
-my $meta = Astro::App::Satpass2::Meta->new();
+my $meta = My::Module::Meta->new();
 
 (my $mbv = Module::Build->VERSION) =~ s/_//g;
 
@@ -36,10 +36,10 @@ $mbv >= 0.28
 $mbv >= 0.34
     and $attr{auto_configure_requires} = !$meta->distribution();
 
-Astro::App::Satpass2::Recommend->recommend();
+My::Module::Recommend->recommend();
 
 #	Generate a builder object.
 
-my $bldr = Astro::App::Satpass2::Build->new (%attr);
+my $bldr = My::Module::Build->new (%attr);
 
 $bldr->create_build_script ();

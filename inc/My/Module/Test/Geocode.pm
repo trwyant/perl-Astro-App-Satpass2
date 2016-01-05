@@ -1,4 +1,4 @@
-package Astro::App::Satpass2::Test::Geocode;
+package My::Module::Test::Geocode;
 
 use 5.008;
 
@@ -83,13 +83,13 @@ __END__
 
 =head1 NAME
 
-Astro::App::Satpass2::Test::Geocode - Tests for geocode wrappers
+My::Module::Test::Geocode - Tests for geocode wrappers
 
 =head1 SYNOPSIS
 
  use lib qw{ inc };
  use Test::More 0.88;
- use Astro::App::Satpass2::Test::Geocode;
+ use My::Module::Test::Geocode;
  setup 'Astro::App::Satpass2::Geocode::Geocoder::US';
  SKIP: {
      geocode '1600 Pennsylvania Ave, Washington DC', 1;

@@ -14,7 +14,7 @@ our $VERSION = '0.029';
 use constant DEFAULT_LOCAL_COORD => 'azel_rng';
 
 # Note that the fact that new() works when called from
-# Astro::App::Satpass2::Test::App is unsupported and undocumented, and
+# My::Module::Test::App is unsupported and undocumented, and
 # the functionality may be revoked or changed without warning.
 
 my %static = (
@@ -35,7 +35,7 @@ sub new {
     $self->warner( delete $args{warner} );
 
     $class eq __PACKAGE__
-	and 'Astro::App::Satpass2::Test::App' ne caller
+	and 'My::Module::Test::App' ne caller
 	and $self->warner()->wail( __PACKAGE__,
 	    ' may not be instantiated. Use a subclass' );
 

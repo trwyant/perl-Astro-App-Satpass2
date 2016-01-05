@@ -1,4 +1,4 @@
-package Astro::App::Satpass2::Build;
+package My::Module::Build;
 
 use strict;
 use warnings;
@@ -156,7 +156,7 @@ __END__
 
 =head1 NAME
 
-Astro::App::Satpass2::Build - Extend Module::Build for Astro::App::Satpass2
+My::Module::Build - Extend Module::Build for My::Module
 
 =head1 SYNOPSIS
 

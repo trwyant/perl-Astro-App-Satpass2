@@ -1,4 +1,4 @@
-package Astro::App::Satpass2::Recommend;
+package My::Module::Recommend;
 
 use strict;
 use warnings;
@@ -45,7 +45,7 @@ sub _recommend_astro_simbad_client {
     return <<'EOD';
     * Astro::SIMBAD::Client is not installed.
       This module is required for the 'lookup' subcommand of the
-      Astro::App::Satpass2 sky() method, but is otherwise unused by this
+      My::Module sky() method, but is otherwise unused by this
       package. If you do not intend to use this functionality,
       Astro::SIMBAD::Client is not needed.
 EOD
@@ -60,7 +60,7 @@ sub _recommend_astro_spacetrack {
     } and return;
     return <<'EOD';
     * Astro::SpaceTrack version 0.074 or higher is not installed. This
-      module is required for the Astro::App::Satpass2 st() method, but is
+      module is required for the My::Module st() method, but is
       otherwise unused by this package. If you do not intend to use this
       functionality, Astro::SpaceTrack is not needed.
 EOD
@@ -73,7 +73,7 @@ sub _recommend_date_manip {
     * Date::Manip is not installed.
       This module is not required, but the alternative to installing it
       is to specify times in ISO 8601 format.  See 'SPECIFYING TIMES' in
-      the 'Astro::App::Satpass2' documentation for the details.
+      the 'My::Module' documentation for the details.
 EOD
     $is_5_010 or $recommendation .= <<'EOD';
 
@@ -108,7 +108,7 @@ sub _recommend_geo_coder {
 	or eval { require Geo::Coder::OSM; 1 }
 	or return <<'EOD';
     * None of Geo::Coder::Geocoder::US or Geo::Coder::OSM is installed.
-      One of these modules is required by the Astro::App::Satpass2
+      One of these modules is required by the My::Module
       geocode() method, but they are otherwise unused by this package.
       If you do not intend to use this functionality, these modules are
       not needed. Basically:
@@ -127,7 +127,7 @@ sub _recommend_geo_webservice_elevation_usgs {
     eval { require Geo::WebService::Elevation::USGS; 1 } and return;
     return <<'EOD';
     * Geo::WebService::Elevation::USGS is not installed.
-      This module is required for the Astro::App::Satpass2 height()
+      This module is required for the My::Module height()
       method, but is otherwise unused by this package. If you do not
       intend to use this functionality, Geo::WebService::Elevation::USGS
       is not needed.
@@ -158,7 +158,7 @@ sub _recommend_time_hires {
     eval { require Time::HiRes; 1 } and return;
     return <<'EOD';
     * Time::HiRes is not installed.
-      This module is required for the Astro::App::Satpass2 time()
+      This module is required for the My::Module time()
       method, but is otherwise unused by this package. If you do not
       intend to use this functionality, Time::HiRes is not needed.
 EOD

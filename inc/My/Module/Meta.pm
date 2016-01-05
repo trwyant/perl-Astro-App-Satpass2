@@ -1,4 +1,4 @@
-package Astro::App::Satpass2::Meta;
+package My::Module::Meta;
 
 use 5.008;
 
@@ -105,21 +105,21 @@ __END__
 
 =head1 NAME
 
-Astro::App::Satpass2::Meta - Information needed to build Astro::App::Satpass2
+My::Module::Meta - Information needed to build My::Module
 
 =head1 SYNOPSIS
 
  use lib qw{ inc };
- use Astro::App::Satpass2::Meta;
- my $meta = Astro::App::Satpass2::Meta->new();
+ use My::Module::Meta;
+ my $meta = My::Module::Meta->new();
  use YAML;
  print "Required modules:\n", Dump(
      $meta->requires() );
 
 =head1 DETAILS
 
-This module centralizes information needed to build C<Astro::App::Satpass2>. It
-is private to the C<Astro::App::Satpass2> package, and may be changed or
+This module centralizes information needed to build C<My::Module>. It
+is private to the C<My::Module> package, and may be changed or
 retracted without notice.
 
 =head1 METHODS
@@ -129,7 +129,7 @@ This class supports the following public methods:
 =head2 new
 
  use lib qw{ inc };
- my $meta = Astro::App::Satpass2::Meta->new();
+ my $meta = My::Module::Meta->new();
 
 This method instantiates the class.
 
@@ -170,7 +170,7 @@ C<resources> data.
  print Dump( $meta->requires() );
 
 This method computes and returns a reference to a hash describing
-the modules required to run the C<Astro::App::Satpass2> package, suitable for
+the modules required to run the C<My::Module> package, suitable for
 use in a F<Build.PL> C<requires> key, or a F<Makefile.PL> C<PREREQ_PM>
 key. Any additional arguments will be appended to the generated hash. In
 addition, unless L<distribution()|/distribution> is true,

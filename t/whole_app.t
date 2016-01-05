@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use lib qw{ inc };
-use Astro::App::Satpass2::Test::App;
+use My::Module::Test::App;
 
 use Test::More 0.88;
 use Astro::Coord::ECI::TLE;

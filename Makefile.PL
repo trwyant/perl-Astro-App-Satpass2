@@ -4,12 +4,13 @@ use strict;
 use warnings;
 
 use lib qw{ inc };
-use Astro::App::Satpass2::Meta;
-use Astro::App::Satpass2::Recommend;
+
+use My::Module::Meta;
+use My::Module::Recommend;
 
 use ExtUtils::MakeMaker qw{WriteMakefile};
 
-my $meta = Astro::App::Satpass2::Meta->new();
+my $meta = My::Module::Meta->new();
 
 (my $mmv = ExtUtils::MakeMaker->VERSION) =~ s/_//g;
 
@@ -39,6 +40,6 @@ $mmv >= 6.5501
     or $mmv >= 6.4501
     and $attr{META_MERGE}{build_requires} = $meta->build_requires();
 
-Astro::App::Satpass2::Recommend->recommend();
+My::Module::Recommend->recommend();
 
 WriteMakefile (%attr);

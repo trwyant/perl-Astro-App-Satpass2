@@ -16,13 +16,13 @@ BEGIN {
     } or plan skip_all => 'Can not "use lib qw{ inc };"';
 
     eval {
-	require Astro::App::Satpass2::Meta;
+	require My::Module::Meta;
 	1;
-    } or plan skip_all => 'Can not load Astro::App::Satpass2::Meta';
+    } or plan skip_all => 'Can not load My::Module::Meta';
 
 }
 
-my $meta = Astro::App::Satpass2::Meta->new();
+my $meta = My::Module::Meta->new();
 
 foreach my $method ( qw{ requires build_requires } ) {
     my %mod = %{ $meta->$method() };

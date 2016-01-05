@@ -1,4 +1,4 @@
-package Astro::App::Satpass2::Test::App;
+package My::Module::Test::App;
 
 use 5.008;
 
@@ -251,12 +251,12 @@ __END__
 
 =head1 NAME
 
-Astro::App::Satpass2::Test::App - Help test Astro::App::Satpass2;
+My::Module::Test::App - Help test Astro::App::Satpass2;
 
 =head1 SYNOPSIS
 
  use lib qw{ inc };
- use Astro::App::Satpass2::Test::App;
+ use My::Module::Test::App;
  
  ... set location ...
  
