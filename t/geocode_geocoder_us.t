@@ -10,6 +10,9 @@ use lib qw{ inc };
 use Test::More 0.88;	# Because of done_testing();
 use My::Module::Test::Geocode;
 
+$ENV{AUTHOR_TESTING}
+    or plan skip_all => 'geocoder.us temporarily (I hope!) out of action';
+
 setup	'Astro::App::Satpass2::Geocode::Geocoder::US';
 
 TODO: {
