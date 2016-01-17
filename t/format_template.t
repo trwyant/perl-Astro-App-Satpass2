@@ -482,7 +482,8 @@ eval {
 		dimension	=> 'string_pseudo_units',
 	    },
 	    fetch	=> sub {
-		my ( $self, $name, $arg ) = @_;
+##		my ( $self, $name, $arg ) = @_;
+		my ( $self ) = @_;	# Arguments unused
 		return qq["$self->{data}{magic_word}"];
 	    },
 	    name	=> 'magic_word',

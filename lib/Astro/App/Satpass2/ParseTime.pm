@@ -180,7 +180,8 @@ sub delegate {	## no critic (RequireFinalReturn)
 }
 
 sub parse_time_absolute {	## no critic (RequireFinalReturn)
-    my ( $self, $string ) = @_;
+##  my ( $self, $string ) = @_;
+    my ( $self ) = @_;		# $string unused
     $self->warner()->weep(
 	'parse_time_absolute() must be overridden' );
     # Weep throws an exception, but there is no way to tell perlcritic

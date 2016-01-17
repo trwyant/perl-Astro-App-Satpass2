@@ -40,7 +40,7 @@ method  formatter => gmt => 0, TRUE, q{Set formatter gmt false};
 # YOU HAVE BEEN WARNED.
 
 method  set => execute_filter => sub {
-	my ( $self, $args ) = @_;
+	my ( undef, $args ) = @_;	# Invocant unused
 	@{ $args } > 2
 	    and $args->[0] eq 'formatter'
 	    and $args->[1] eq 'gmt'

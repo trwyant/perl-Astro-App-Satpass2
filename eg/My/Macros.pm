@@ -36,7 +36,7 @@ our $VERSION = '0.030';
 }
 
 sub after_load : Verb() {
-    my ( $self, $opt, @args ) = @_;
+    my ( undef, $opt, @args ) = @_;	# Invocant unused
     my $rslt;
     foreach my $key ( keys %{ $opt } ) {
 	$rslt .= "-$key $opt->{$key}\n";
@@ -87,7 +87,7 @@ sub hi : Verb() {
 {
     my %operator = (
 	and		=> sub : Operands(2) {
-	    my ( $self, $stack ) = @_;
+	    my ( undef, $stack ) = @_;	# Invocant unused
 	    push @{ $stack }, pop @{ $stack } && pop @{ $stack };
 	    return;
 	},
@@ -106,18 +106,18 @@ sub hi : Verb() {
 	    return;
 	},
 	else		=> sub : Operands(1) {
-	    my ( undef, $stack ) = @_;
+	    my ( undef, $stack ) = @_;	# Invocant unused
 	    $stack->[-1] = ! $stack->[-1];
 	    no warnings qw{ exiting };
 	    last TEST_LOOP;
 	},
 	not		=> sub : Operands(1) {
-	    my ( $self, $stack ) = @_;
+	    my ( undef, $stack ) = @_;	# Invocant unused
 	    $stack->[-1] = ! $stack->[-1];
 	    return;
 	},
 	or		=> sub : Operands(2) {
-	    my ( $self, $stack ) = @_;
+	    my ( undef, $stack ) = @_;	# Invocant unused
 	    push @{ $stack }, pop @{ $stack } || pop @{ $stack };
 	    return;
 	},

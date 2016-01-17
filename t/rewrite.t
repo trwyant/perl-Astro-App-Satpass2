@@ -19,7 +19,7 @@ method  new => INSTANTIATE, 'Instantiate';
 my @commands;
 
 method  set => execute_filter => sub {
-    my ( $self, $args ) = @_;
+    my ( undef, $args ) = @_;		# Invocant unused
     push @commands, $args;
     return 0;
 }, undef, 'Disable execution and capture tokenized command';

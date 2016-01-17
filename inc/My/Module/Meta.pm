@@ -29,7 +29,7 @@ sub distribution {
 }
 
 sub requires {
-    my ( $self, @extra ) = @_;
+    my ( undef, @extra ) = @_;		# Invocant unused
     return {
 	'Astro::Coord::ECI'		=> 0.064,
 	'Astro::Coord::ECI::Moon'	=> 0.064,

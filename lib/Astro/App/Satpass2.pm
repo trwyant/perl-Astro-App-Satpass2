@@ -172,7 +172,7 @@ my %twilight_abbr = abbrev (keys %twilight_def);
     }
 
     sub MODIFY_CODE_ATTRIBUTES {
-	my ($pkg, $code, @args) = @_;
+	my ( undef, $code, @args ) = @_;	# $pkg unused
 	my @rslt;
 	foreach (@args) {
 	    m{ ( [^(]* ) (?: [(] \s* (.*?) \s* [)] )? \z }smx or do {
@@ -189,7 +189,7 @@ my %twilight_abbr = abbrev (keys %twilight_def);
     }
 
     sub _get_attr {
-	my ( $pkg, $code, $name ) = @_;
+	my ( undef, $code, $name ) = @_;	# $pkg unused
 	defined $name or return $attr{$code};
 	return $attr{$code}{$name};
     }
@@ -390,7 +390,7 @@ sub add {
 }
 
 sub alias : Verb() {
-    my ( $self, $opt, @args ) = __arguments( @_ );
+    my ( undef, undef, @args ) = __arguments( @_ );	# Invocant, $opt unused
 
     if ( @args ) {
 	Astro::Coord::ECI::TLE->alias( @args );
@@ -469,14 +469,14 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter
 }
 
 sub begin : Verb() {
-    my ( $self, $opt, @args ) = __arguments( @_ );
+    my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
     $self->_frame_push(
 	begin => @args ? \@args : $self->{frame}[-1]{args});
     return;
 }
 
 sub cd : Verb() {
-    my ( $self, $opt, $dir ) = __arguments( @_ );
+    my ( $self, undef, $dir ) = __arguments( @_ );	# $opt unused
     if (defined($dir)) {
 	chdir $dir or $self->wail("Can not cd to $dir: $!");
     } else {
@@ -507,7 +507,7 @@ sub choose : Verb( epoch=s ) {
 }
 
 sub clear : Verb() {
-    my ( $self, $opt, @args ) = __arguments( @_ );
+    my ( $self ) = __arguments( @_ );	# $opt, @args unused
     @{$self->{bodies}} = ();
     return;
 }
@@ -534,7 +534,7 @@ sub dispatch {
 }
 
 sub drop : Verb() {
-    my ( $self, $opt, @args ) = __arguments( @_ );
+    my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
 
     @args
 	or return;
@@ -549,7 +549,7 @@ sub drop : Verb() {
 }
 
 sub dump : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
-    my ( $self, $opt, $arg ) = __arguments( @_ );
+    my ( $self, undef, $arg ) = __arguments( @_ );	# $opt unused
     if ( defined $arg && 'twilight' eq $arg ) {
 	return <<"EOD";
 twilight => @{[ $self->{twilight} ]}
@@ -565,14 +565,14 @@ EOD
 }
 
 sub echo : Verb( n! ) {
-    my ( $self, $opt, @args ) = __arguments( @_ );
+    my ( undef, $opt, @args ) = __arguments( @_ );	# Invocant unused
     my $output = join( ' ', @args );
     $opt->{n} or $output .= "\n";
     return $output;
 }
 
 sub end : Verb() {
-    my ( $self, $opt, @args ) = __arguments( @_ );
+    my ( $self ) = __arguments( @_ );	# $opt, @args unused
 
     $self->{frame}[-1]{type} eq 'begin'
 	or $self->wail( 'End without begin' );
@@ -677,7 +677,7 @@ sub _execute {
 #	If $output is defined, sends it to $stdout.
 
 sub _execute_output {
-    my ( $self, $output, $stdout ) = @_;
+    my ( undef, $output, $stdout ) = @_;	# Invocant unused
     defined $output or return;
     my $ref = ref $stdout;
     if ( !defined $stdout ) {
@@ -695,7 +695,7 @@ sub _execute_output {
 }
 
 sub exit : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
-    my ( $self, $opt, @args ) = __arguments( @_ );
+    my ( $self ) = __arguments( @_ );	# $opt, @args unused
 
     $self->_frame_pop(1);	# Leave only the inital frame.
 
@@ -709,7 +709,7 @@ sub exit : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
 }
 
 sub export : Verb() {
-    my ( $self, $opt, $name, @args ) = __arguments( @_ );
+    my ( $self, undef, $name, @args ) = __arguments( @_ );	# $opt unused
     if ($mutator{$name}) {
 	@args and $self->set ($name, shift @args);
 	$self->{exported}{$name} = 1;
@@ -836,7 +836,7 @@ sub geocode : Verb( debug! ) {
 }
 
 sub geodetic : Verb() {
-    my ( $self, $opt, $name, $lat, $lon, $alt ) = __arguments( @_ );
+    my ( $self, undef, $name, $lat, $lon, $alt ) = __arguments( @_ ); # $opt unused
     @_ == 5 or $self->wail( 'Want exactly four arguments' );
     my $body = Astro::Coord::ECI::TLE->new(
 	name => $name,
@@ -899,7 +899,7 @@ sub _height_us {
 	utils => 'Astro::Coord::ECI::Utils',
     );
     sub help : Verb() {
-	my ( $self, $opt, $arg ) = __arguments( @_ );
+	my ( $self, undef, $arg ) = __arguments( @_ );	# $opt unused
 	if ( my $cmd = $self->get( 'webcmd' ) ) {
 	    $self->system( $cmd,
 		"http://search.cpan.org/~wyant/Astro-App-Satpass2-$VERSION/");
@@ -987,7 +987,7 @@ sub init {
 
 
 sub initfile : Verb( create-directory! quiet! ) {
-    my ( $self, $opt, @args ) = __arguments( @_ );
+    my ( $self, $opt ) = __arguments( @_ );	# @args unused
 
     my $init_dir = my_dist_config(
 	{ create => $opt->{'create-directory'} } );
@@ -1156,7 +1156,7 @@ sub location : Verb( dump! ) {
     # individual _macro_* methods. Or at least we must not define any
     # command options here that get passed to the _macro_* methods.
     sub macro : Verb() {
-	my ( $self, $opt, @args ) = __arguments( @_ );
+	my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
 	my $cmd;
 	if (!@args) {
 	    $cmd = 'brief';
@@ -1279,7 +1279,7 @@ sub _macro_load_generator {
 }
 
 sub magnitude_table : Verb( name! reload! ) {
-    my ( $self, $opt, @args ) = __arguments( @_ );
+    my ( undef, undef, @args ) = __arguments( @_ );	# Invocant, $opt unused
 
     @args or @args = qw{show};
 
@@ -1427,7 +1427,7 @@ sub pass : Verb( choose=s@ appulse! brightest|magnitude! chronological! dump! ev
     # things) specifies the desired events, and the passes, each pass
     # being an argument. The modified passes are returned.
     sub _pass_select_event {
-	my ( $self, $opt, @passes ) = @_;
+	my ( undef, $opt, @passes ) = @_;	# Invocant unused
 	my @rslt;
 	foreach my $pass ( @passes ) {
 
@@ -1778,7 +1778,7 @@ EOD
 }
 
 sub set : Verb() {
-    my ( $self, $opt, @args ) = __arguments( @_ );
+    my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
 
     while (@args) {
 	my ( $name, $value ) = splice @args, 0, 2;
@@ -2184,7 +2184,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 
     my %handler = (
 	list	=> sub {
-	    my ( $self, @args ) = @_;
+	    my ( $self ) = @_;		# Arguments unused
 	    my $output;
 	    foreach my $body (
 		map { $_->[1] }
@@ -2259,7 +2259,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    return;
 	},
 	clear	=> sub {
-	    my ( $self, @args ) = @_;
+	    my ( $self ) = @_;		# Arguments unused
 	    @{ $self->{sky} } = ();
 	    return;
 	},
@@ -2317,7 +2317,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
     );
 
     sub sky : Verb() {
-	my ( $self, $opt, @args ) = __arguments( @_ );
+	my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
 
 	my $verb = lc ( shift @args || 'list' );
 
@@ -2391,7 +2391,7 @@ sub source : Verb( optional! ) {
 
     my %handler = (
 	config	=> sub {
-	    my ( $self, $obj, $method, $opt, @args ) = @_;
+	    my ( $self, $obj, undef, $opt, @args ) = @_;	# $method unused
 	    @args or @args = $obj->attribute_names();
 	    my ( $rslt, @values, $virgin );
 	    $opt->{changes}
@@ -2420,7 +2420,7 @@ sub source : Verb( optional! ) {
 	    return $rslt;
 	},
 	get	=> sub {
-	    my ( $self, $obj, $method, $opt, @args ) = @_;
+	    my ( undef, $obj, undef, $opt, @args ) = @_;	# Invocant, $method unused
 	    my $rslt = $obj->get( @args );
 	    $rslt->is_success
 		and not $opt->{raw}
@@ -2429,7 +2429,7 @@ sub source : Verb( optional! ) {
 	    return $rslt;
 	},
 	set	=> sub {
-	    my ( $self, $obj, $method, $opt, @args ) = @_;
+	    my ( undef, $obj, $method, undef, @args ) = @_;	# Invocant, $opt unused
 	    return $obj->$method( @args );
 	},
     );
@@ -2503,7 +2503,7 @@ sub source : Verb( optional! ) {
 }
 
 sub st : Verb() {
-    my ( $self, $opt, $func, @args ) = __arguments( @_ );
+    my ( $self, undef, $func, @args ) = __arguments( @_ );	# $opt unused
 
     $self->_deprecation_notice( method => 'st' );
     if ( 'localize' eq $func ) {
@@ -2597,7 +2597,7 @@ sub station {
 }
 
 sub system : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
-    my ( $self, $opt, $verb, @args ) = __arguments( @_ );
+    my ( $self, undef, $verb, @args ) = __arguments( @_ );	# $opt unused
 
     @args = map {
 	bsd_glob( $_, GLOB_NOCHECK | GLOB_BRACE | GLOB_QUOTE )
@@ -2664,7 +2664,7 @@ sub _tle_options {
 
 
 sub unexport : Verb() {
-    my ( $self, $opt, @args ) = __arguments( @_ );
+    my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
 
     foreach my $name ( @args ) {
 	delete $self->{exported}{$name};
@@ -2918,7 +2918,7 @@ sub _attribute_exists {
     }
 
     sub _deprecation_in_progress {
-	my ( $self, $type, $name ) = @_;
+	my ( undef, $type, $name ) = @_;	# Invocant unused
 	$deprecate{$type} or return;
 	return $deprecate{$type}{$name};
     }
@@ -3000,7 +3000,7 @@ sub _file_reader_ {
 }
 
 sub _file_reader__validate_url {
-    my ( $self, $url ) = @_;
+    my ( undef, $url ) = @_;		# Invocant unused
 
     load_package( 'LWP::UserAgent' )
 	or return;
@@ -3025,7 +3025,7 @@ sub _file_reader__validate_url {
 }
 
 sub _file_reader_ARRAY {
-    my ( $self, $file, $opt ) = @_;
+    my ( undef, $file, $opt ) = @_;	# Invocant unused
 
     my $inx = 0;
     $opt->{glob}
@@ -3040,7 +3040,7 @@ sub _file_reader_ARRAY {
 }
 
 sub _file_reader_CODE {
-    my ( $self, $file, $opt ) = @_;
+    my ( undef, $file, $opt ) = @_;	# Invocant unused
     $opt->{glob}
 	or return $file;
     my $buffer;
@@ -3399,7 +3399,7 @@ sub _helper_get_object {
     my %parse_input = (
 	formatter	=> {
 	    desired_equinox_dynamical => sub {
-		my ( $self, $opt, @args ) = @_;
+		my ( $self, undef, @args ) = @_;	# $opt unused
 		if ( $args[0] ) {
 		    $args[0] = $self->__parse_time( $args[0], 0 );
 		}
@@ -3417,7 +3417,7 @@ sub _helper_get_object {
 	},
 	time_parser	=> {
 	    base	=> sub {
-		my ( $self, $opt, @args ) = @_;
+		my ( $self, undef, @args ) = @_;	# $opt unused
 		if ( @args && defined $args[0] ) {
 		    $args[0] = $self->__parse_time( $args[0], time );
 		}
@@ -3823,7 +3823,7 @@ sub _read_continuation {
     );
 
     sub _rewrite_level1_command {
-	my ( $self, $buffer, $context ) = @_;
+	my ( undef, $buffer, $context ) = @_;	# Invocant unused
 
 	my $command = delete $context->{command};
 
@@ -3911,16 +3911,16 @@ sub _read_continuation {
 
     my %filter = (
 	almanac	=> sub {
-	    my ( $verb, $line ) = @_;
+	    my ( undef, $line ) = @_;		# $verb unused
 	    return ( 'location', $line );
 	},
 	flare	=> sub {
-	    my ( $verb, $line ) = @_;
+	    my ( undef, $line ) = @_;		# $verb unused
 	    $line =~ s/ (?<= \s ) - (am|day|pm) \b /-no$1/smx;
 	    return $line;
 	},
 	localize	=> sub {
-	    my ( $verb, $line ) = @_;
+	    my ( undef, $line ) = @_;		# $verb unused
 	    my @things = split qr{ \s+ }smx, $line;
 	    my @output;
 	    my %duplicate;
@@ -3932,11 +3932,11 @@ sub _read_continuation {
 	    return join ' ', @output;
 	},
 	pass	=> sub {
-	    my ( $verb, $line ) = @_;
+	    my ( undef, $line ) = @_;		# $verb unused
 	    return ( 'location', $line );
 	},
 	set	=> sub {
-	    my ( $verb, $line ) = @_;
+	    my ( undef, $line ) = @_;		# $verb unused
 	    my @output = [ 'fubar' ];	# Prime the pump.
 	    my @input = Text::ParseWords::quotewords( qr{ \s+ }smx, 1,
 		$line );
@@ -3960,14 +3960,14 @@ sub _read_continuation {
 	    return ( map { join ' ', @{ $_ } } @output );
 	},
 	st	=> sub {
-	    my ( $verb, $line ) = @_;
+	    my ( undef, $line ) = @_;		# $verb unused
 	    m/ \A \s* st \s+ localize \b /smx
 		and return $line;
 	    $line =~ s/ \b st \b /spacetrack/smx;
 	    return $line;
 	},
 	show	=> sub {
-	    my ( $verb, $line ) = @_;
+	    my ( undef, $line ) = @_;		# $verb unused
 	    my @output = [ 'fubar' ];
 	    my @input = split qr{ \s+ }smx, $line;
 	    shift @input;

@@ -698,7 +698,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'almanac_pseudo_units',
 	},
 	fetch		=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self, undef, $arg ) = @_;	# $name unused
 	    my $field = $arg->{units} ||= 'description';
 	    return $self->_get( data => almanac => $field );
 	},
@@ -713,7 +713,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'length',
 	},
 	fetch		=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    my $value;
 	    if ( my $body = $self->_get_eci( 'body' ) ) {
 		$value = ( $body->geodetic() )[2];
@@ -731,7 +731,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'angle_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get( data => 'angle' );
 	},
     },
@@ -776,7 +776,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'angle_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get_tle_attr( body => 'argumentofperigee' );
 	},
     },
@@ -791,7 +791,7 @@ my %formatter_data = (	# For generating formatters
 	    units	=> 'right_ascension',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get_tle_attr( body => 'ascendingnode' );
 	},
     },
@@ -807,7 +807,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'angle_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
 	    my $station = $self->_get_eci( 'station' )
@@ -825,7 +825,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'scientific',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get_tle_attr( body => 'bstardrag' );
 	},
     },
@@ -838,7 +838,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'string_pseudo_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get_tle_attr( body => 'classification' );
 	},
     },
@@ -857,7 +857,7 @@ my %formatter_data = (	# For generating formatters
 	    format	=> [ 'date_format' ],
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self, undef, $arg ) = @_;	# $name not used
 	    defined( my $value = $self->_get( data => 'time' ) )
 		or return NONE;
 	    return $value + $arg->{delta};
@@ -873,7 +873,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'angle_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
 	    my $station = $self->_get_eci( 'station' )
@@ -892,7 +892,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'dimensionless',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get_tle_attr( body => 'eccentricity' );
 	},
     },
@@ -910,7 +910,7 @@ my %formatter_data = (	# For generating formatters
 	    format	=> [ 'date_format', 'time_format' ],
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get_tle_attr( body => 'effective' );
 	},
     },
@@ -924,7 +924,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'string',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    my $value = $self->_get_tle_attr( body => 'elementnumber' );
 	    defined $value and $value =~ s/ \A \s+ //sxm;
 	    return $value;
@@ -940,7 +940,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'angle_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
 	    my $station = $self->_get_eci( 'station' )
@@ -957,7 +957,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'string_pseudo_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get_tle_attr( body => 'ephemeristype' );
 	},
     },
@@ -975,7 +975,7 @@ my %formatter_data = (	# For generating formatters
 	    format	=> [ 'date_format', 'time_format' ],
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get_tle_attr( body => 'epoch' );
 	},
     },
@@ -988,7 +988,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'event_pseudo_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self, $name ) = @_;	# $arg unused
 	    defined( my $value = $self->_get( data => $name ) )
 		or return NONE;
 	    return $value;
@@ -1005,7 +1005,7 @@ my %formatter_data = (	# For generating formatters
 	    formatter	=> '_format_number_scientific',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get_tle_attr( body => 'firstderivative' );
 	},
     },
@@ -1019,7 +1019,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'dimensionless',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
 	    $body->can( 'phase' )
@@ -1036,7 +1036,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'event_pseudo_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self, $name ) = @_;	# $arg unused
 	    my $value;
 	    defined( $value = $self->_get( data => $name ) )
 		and $value ne ''
@@ -1054,7 +1054,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'angle_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get_tle_attr( body => 'inclination' );
 	},
     },
@@ -1067,7 +1067,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'integer_pseudo_units',
 	},
 	fetch		=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
 	    return $body->get( 'inertial' ) ? 1 : 0;
@@ -1083,7 +1083,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'string_pseudo_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get_tle_attr( body => 'international' );
 	},
     },
@@ -1097,7 +1097,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'angle_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
 	    return ( $body->geodetic() )[0];
@@ -1113,7 +1113,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'angle_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
 	    return ( $body->geodetic() )[1];
@@ -1130,8 +1130,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'number',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
-
+	    my ( $self ) = @_;		# $name, $arg unused
 	    my $mag;
 	    defined( $mag = $self->_get( data => 'magnitude' ) )
 		and return $mag;
@@ -1159,7 +1158,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'string_pseudo_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self, undef, $arg ) = @_;	# $name unused
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
 	    my $places = defined $arg->{places} ?
@@ -1180,7 +1179,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'angle_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get_tle_attr( body => 'meananomaly' );
 	},
     },
@@ -1194,7 +1193,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'angle_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get_tle_attr( body => 'meanmotion' );
 	},
     },
@@ -1207,7 +1206,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'string_pseudo_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get( data => 'mma' );
 	},
     },
@@ -1220,7 +1219,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'string_pseudo_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self, undef, $arg ) = @_;	# $name unused
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
 	    my $value;
@@ -1241,7 +1240,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'string_pseudo_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self, undef, $arg ) = @_;	# $name unused
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
 	    defined( my $value = $body->get( 'id' ) )
@@ -1260,7 +1259,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'string_pseudo_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $nane, $arg unused
 	    return $self->_get_tle_attr( body => 'status' );
 	},
     },
@@ -1278,7 +1277,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension => 'duration',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
 	    $body->can( 'period' )
@@ -1296,7 +1295,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'angle_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
 	    $body->can( 'phase' )
@@ -1314,7 +1313,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'length',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
 	    my $station = $self->_get_eci( 'station' )
@@ -1332,7 +1331,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'string',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    my $value = $self->_get_tle_attr( body => 'revolutionsatepoch' );
 	    defined $value and $value =~ s/ \A \s+ //sxm;
 	    return $value;
@@ -1349,7 +1348,7 @@ my %formatter_data = (	# For generating formatters
 	    units	=> 'right_ascension',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
 	    my $station = $self->_get_eci( 'station' )
@@ -1369,7 +1368,7 @@ my %formatter_data = (	# For generating formatters
 	    formatter	=> '_format_number_scientific',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get_tle_attr( body => 'secondderivative' );
 	},
     },
@@ -1383,7 +1382,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'length',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self, $name ) = @_;	# $arg unused
 	    my $body = $self->_get_eci( 'body' )
 		or return NONE;
 	    $body->can( $name )
@@ -1402,7 +1401,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'string_pseudo_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;		# $name, $arg unused
 	    return $self->_get( data => 'status' );
 	},
     },
@@ -1421,7 +1420,7 @@ my %formatter_data = (	# For generating formatters
 	    format	=> [ 'time_format' ],
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self, undef, $arg ) = @_;	# $name unused
 	    defined( my $value = $self->_get( data => 'time' ) )
 		or return NONE;
 	    return $value + $arg->{delta};
@@ -1434,7 +1433,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'string',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;	# $name, $arg unused
 	    return $self->_get_tle_attr( body => 'tle' );
 	},
     },
@@ -1448,7 +1447,7 @@ my %formatter_data = (	# For generating formatters
 	    dimension	=> 'string_pseudo_units',
 	},
 	fetch	=> sub {
-	    my ( $self, $name, $arg ) = @_;
+	    my ( $self ) = @_;	# $name, $arg unused
 	    return $self->_get( data => 'type' );
 	},
     },
@@ -1492,7 +1491,7 @@ sub __list_formatter_names {
 }
 
 sub __get_formatter_data {
-    my ( $class, $name ) = @_;
+    my ( undef, $name ) = @_;		# Invocant unused
     defined $name
 	or return ( values %formatter_data );
     return $formatter_data{$name};
@@ -1920,7 +1919,7 @@ sub _do_title_wrap {
 }
 
 sub __chain_bearing {
-    my ( $self, $name, $value, $arg ) = @_;
+    my ( undef, undef, $value, $arg ) = @_;	# Invocant, $name unused
     $arg->{bearing}
 	and $arg->{bearing} =~ m/ \A \d+ \z /sxm
 	or $arg->{bearing} = 0;
@@ -2125,7 +2124,7 @@ sub _format_event {
 }
 
 sub _format_integer {
-    my ( $self, $value, $arg, $fmtr ) = @_;
+    my ( $self, $value, $arg ) = @_;	# $fmtr unused
     defined $value
 	or goto &_format_undef;
 
@@ -2188,7 +2187,7 @@ sub _format_number {
 }
 
 sub _format_number_scientific {
-    my ( $self, $value, $arg, $fmtr ) = @_;
+    my ( $self, $value, $arg ) = @_;	# $fmtr unused
     defined $value
 	and $value ne ''
 	or goto &_format_undef;
@@ -2266,7 +2265,7 @@ sub _format_right_ascension {
 }
 
 sub _format_string {
-    my ( $self, $value, $arg, $fmtr ) = @_;
+    my ( $self, $value, $arg ) = @_;	# $fmtr unused
 
     defined $value
 	or goto &_format_undef;
@@ -2316,7 +2315,7 @@ sub _format_title_case {
 }
 
 sub _format_undef {
-    my ( $self, $value, $arg, $fmtr ) = @_;
+    my ( $self, undef, $arg, $fmtr ) = @_;	# $value unused
 
     $self->{title}
 	and defined $arg->{title}
@@ -2342,7 +2341,7 @@ sub _format_upper_case {
 }
 
 sub _julian_day {
-    my ( $self, $value ) = @_;
+    my ( undef, $value ) = @_;		# Invocant unused
     return julianday( $value );
 }
 
@@ -2354,7 +2353,7 @@ sub _get_date_format_data {
 }
 
 sub _manufacture_date_format {
-    my ( $self, $name, $info ) = @_;
+    my ( $self, undef, $info ) = @_;	# $name unused
     my $fmt = join ' ', grep { defined $_ && '' ne $_ }
 	map { $self->{$_} } @{ $info->{dimension}{format} };
     my $wid =

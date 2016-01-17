@@ -80,5 +80,5 @@ severity	= gentle
 
 add_themes	= core
 allow_if_computed_by	= __arguments _arguments
-allow_unused_subroutine_arguments	= 1
+allow_unused_subroutine_arguments	= 0
 severity	= stern

@@ -42,7 +42,7 @@ sub format_datetime {
     );
 
     sub __format_datetime_width_adjust_object {
-	my ( $self, $obj, $name, $val ) = @_;
+	my ( undef, $obj, $name, $val ) = @_;	# Invocant unused
 	$obj or $obj = [ 0, 0, 0, 1, 0, 200 ];
 	$adjuster{$name}->( $obj, $val );
 	return $obj;

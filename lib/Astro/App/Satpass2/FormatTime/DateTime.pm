@@ -87,7 +87,7 @@ sub format_datetime {
 }
 
 sub __format_datetime_width_adjust_object {
-    my ( $self, $obj, $name, $val ) = @_;
+    my ( undef, $obj, $name, $val ) = @_;	# Invocant unused
     $obj or $obj = DateTime->new( year => 2100 );
     $obj->set( $name => $val );
     return $obj;

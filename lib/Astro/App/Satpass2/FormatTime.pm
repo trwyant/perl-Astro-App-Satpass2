@@ -24,7 +24,7 @@ my $delegate = eval {
 };
 
 sub new {
-    my ( $class, @args ) = @_;
+    my ( $class ) = @_;		# Arguments unused
     ref $class and $class = ref $class;
 
     __PACKAGE__ eq $class and $class = $delegate;

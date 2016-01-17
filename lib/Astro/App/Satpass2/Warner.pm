@@ -78,7 +78,7 @@ sub warning {
 }
 
 sub weep {
-    my ( $self, @args ) = @_;
+    my ( undef, @args ) = @_;		# Invocant unused
     my $msg = join ' ', __message( 'Programming Error -' ), __message( @args );
     chomp $msg;
     require Carp;

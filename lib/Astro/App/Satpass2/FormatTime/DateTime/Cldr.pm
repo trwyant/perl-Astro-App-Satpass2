@@ -15,7 +15,7 @@ use POSIX ();
 our $VERSION = '0.030';
 
 sub __format_datetime {
-    my ( $self, $object, $tplt ) = @_;
+    my ( undef, $object, $tplt ) = @_;		# Invocant unused
     return $object->format_cldr( $tplt );
 }
 
