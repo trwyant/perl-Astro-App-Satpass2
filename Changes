@@ -1,3 +1,13 @@
+0.030_01	2016-02-17	T. R. Wyant
+  Document anticipated retraction of Geo::Coder::Geocoder::US geocoding
+    support. Skip t/geocode_geocoder_us.t unless author testing
+
+  Add Makefile targets authortest, testcover
+
+  Straighten out recommendation text scrambled by global
+    search-and-replace when I moved the installation support modules
+    from inc/Astro/App/Satpass2/ to inc/My/Module/
+
 0.030		2016-01-05	T. R. Wyant
   Add GitHub repository to metadata.
 
