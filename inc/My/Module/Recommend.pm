@@ -16,6 +16,25 @@ eval {
     $is_5_010 = 1;
 };
 
+my %condition = (
+    '&&'	=> sub {
+	my ( @mods ) = @_;
+	foreach my $m ( @mods ) {
+	    eval "require $m; 1"
+		or return 0;
+	}
+	return 1;
+    },
+    '||'	=> sub {
+	my ( @mods ) = @_;
+	foreach my $m ( @mods ) {
+	    eval "require $m; 1"
+		and return 1;
+	}
+	return 0;
+    },
+);
+
 my %misbehaving_os = map { $_ => 1 } qw{ MSWin32 cygwin };
 
 my @optionals = (
@@ -43,7 +62,7 @@ EOD
       Perl 5.10. This version of Date::Manip does not understand summer
       time (a.k.a. daylight saving time).
 EOD
-    [ [ qw{ DateTime DateTime::TimeZone } ] => <<'EOD' ],
+    [ [ qw{ DateTime DateTime::TimeZone } ] => <<'EOD', '&&' ],
       These modules are used to format times, and provide full time zone
       support. If they are not installed, POSIX::strftime() will be
       used, and you may find that you can not display correct local
@@ -60,7 +79,7 @@ EOD
       intend to use this functionality, Geo::WebService::Elevation::USGS
       is not needed.
 EOD
-    [ [ qw{ LWP::UserAgent LWP::Protocol URI } ] => <<'EOD' ],
+    [ [ qw{ LWP::UserAgent LWP::Protocol URI } ] => <<'EOD', '&&' ],
       These modules are required if you want to use URLs in the init(),
       load(), or source() methods. If you do not intend to use URLs
       there, you do not need these packages. All three packages are
@@ -151,7 +170,7 @@ sub optionals {
     foreach my $spec ( @optionals ) {
 	my $module = $spec->[0];
 	if ( 'ARRAY' eq ref $module ) {
-	    push @rslt, @{ $module };
+	    push @rslt, grep { !$condition{$_} } @{ $module };
 	} elsif ( ref $module ) {
 	    confess 'Module spec may not be a ', ref $module, ' reference';
 	} else {
@@ -163,19 +182,18 @@ sub optionals {
 
 sub recommend {
     my $need_some;
-    SPEC_LOOP:
     foreach my $spec ( @optionals ) {
-	my ( $module, $message ) = @{ $spec };
-	foreach my $mod ( ref $module ? @{ $module } : $module ) {
-	    eval "require $mod; 1"
-		and next SPEC_LOOP;
-	}
+	my ( $module, $message, $cond ) = @{ $spec };
+	my @mods = ref $module ? @{ $module } : ( $module );
+	$cond = $condition{ $cond || '||' } || $condition{ '||' };
+	$cond->( @mods )
+	    and next;
 	$need_some++
 	    or warn <<'EOD';
 
 The following optional modules were not found:
 EOD
-	warn format_module_line( $module ), $message;
+	warn format_module_line( $module, $spec->[2] ), $message;
     }
     $need_some
 	and warn <<'EOD';
@@ -189,11 +207,12 @@ EOD
 }
 
 sub format_module_line {
-    my ( $module ) = @_;
+    my ( $module, $cond ) = @_;
     ref $module
 	or return "\n    * $module is not installed.\n";
-    return "\n    * None of " . join( ', ', @{ $module } ) .
-	" is installed.\n";
+    my $amount = ( $cond || '||' ) eq '&&' ? 'Not all' : 'None';
+    return "\n    * $amount of " . join( ', ', @{ $module } ) .
+	" can be loaded.\n";
 }
 
 1;
