@@ -16,66 +16,26 @@ eval {
     $is_5_010 = 1;
 };
 
-sub recommend {
-    my @recommend;
-    my $pkg_hash = __PACKAGE__ . '::';
-    no strict qw{ refs };
-    foreach my $subroutine ( sort keys %$pkg_hash ) {
-	$subroutine =~ m/ \A _recommend_ \w+ \z /smx or next;
-	my $code = __PACKAGE__->can( $subroutine ) or next;
-	defined( my $recommendation = $code->() ) or next;
-	push @recommend, "\n" . $recommendation;
-    }
-    @recommend and warn <<'EOD', @recommend,
+my %misbehaving_os = map { $_ => 1 } qw{ MSWin32 cygwin };
 
-The following optional modules were not found:
-EOD
-    <<'EOD';
-
-It is not necessary to install these now. If you decide to install them
-later, this software will make use of them when it finds them.
-
-EOD
-    return;
-}
-
-sub _recommend_astro_simbad_client {
-    local $@ = undef;
-    eval { require Astro::SIMBAD::Client; 1 } and return;
-    return <<'EOD';
-    * Astro::SIMBAD::Client is not installed.
+my @optionals = (
+    [ 'Astro::SIMBAD::Client'	=> <<'EOD' ],
       This module is required for the 'lookup' subcommand of the
-      My::Module sky() method, but is otherwise unused by this
+      Astro::App::Satpass2 sky() method, but is otherwise unused by this
       package. If you do not intend to use this functionality,
       Astro::SIMBAD::Client is not needed.
 EOD
-}
-
-sub _recommend_astro_spacetrack {
-    local $@ = undef;
-    eval {
-	require Astro::SpaceTrack;
-	Astro::SpaceTrack->VERSION( 0.074 );
-	1;
-    } and return;
-    return <<'EOD';
-    * Astro::SpaceTrack version 0.074 or higher is not installed. This
-      module is required for the My::Module st() method, but is
-      otherwise unused by this package. If you do not intend to use this
-      functionality, Astro::SpaceTrack is not needed.
+    [ 'Astro::SpaceTrack'	=> <<'EOD' ],
+      This module is required for the Astro::App::Satpass2 st() method,
+      but is otherwise unused by this package. If you do not intend to
+      use this functionality, Astro::SpaceTrack is not needed.
 EOD
-}
-
-sub _recommend_date_manip {
-    local $@ = undef;
-    eval { require Date::Manip; 1 } and return;
-    my $recommendation = <<'EOD';
-    * Date::Manip is not installed.
+    [ 'Date::Manip'		=> <<'EOD' .
       This module is not required, but the alternative to installing it
       is to specify times in ISO 8601 format.  See 'SPECIFYING TIMES' in
-      the 'My::Module' documentation for the details.
+      the 'Astro::App::Satpass2' documentation for the details.
 EOD
-    $is_5_010 or $recommendation .= <<'EOD';
+	( $is_5_010 ? '' : <<'EOD' ) ],
 
       Unfortunately, the current Date::Manip requires Perl 5.10. Since
       you are running an earlier Perl, you can try installing Date-Manip
@@ -83,67 +43,24 @@ EOD
       Perl 5.10. This version of Date::Manip does not understand summer
       time (a.k.a. daylight saving time).
 EOD
-    return $recommendation;
-}
-
-sub _recommend_datetime {
-    local $@ = undef;
-    eval {
-	require DateTime;
-	require DateTime::TimeZone;
-	1;
-    } and return;
-    return <<'EOD';
-    * DateTime and/or DateTime::TimeZone are not installed.
+    [ [ qw{ DateTime DateTime::TimeZone } ] => <<'EOD' ],
       These modules are used to format times, and provide full time zone
       support. If they are not installed, POSIX::strftime() will be
       used, and you may find that you can not display correct local
       times for zones other than your system's default zone.
 EOD
-}
-
-sub _recommend_geo_coder {
-    local $@ = undef;
-    eval { require Geo::Coder::Geocoder::US; 1 }
-	or eval { require Geo::Coder::OSM; 1 }
-	or return <<'EOD';
-    * None of Geo::Coder::Geocoder::US or Geo::Coder::OSM is installed.
-      One of these modules is required by the My::Module
-      geocode() method, but they are otherwise unused by this package.
-      If you do not intend to use this functionality, these modules are
-      not needed. Basically:
-
-      Geo::Coder::Geocoder::US uses http://geocoder.us/, covers only the
-          USA, and can only be queried once every 15 seconds;
-
-      Geo::Coder::OSM uses Open Street Map, whose coverage is better in
-          Europe than the USA;
+    [ 'Geo::Coder::OSM'		=> <<'EOD' ],
+      This module is required for the Astro::App::Satpass2 geocode()
+      method. If you do not intend to use this functionality, this
+      module is not needed.
 EOD
-    return;
-}
-
-sub _recommend_geo_webservice_elevation_usgs {
-    local $@ = undef;
-    eval { require Geo::WebService::Elevation::USGS; 1 } and return;
-    return <<'EOD';
-    * Geo::WebService::Elevation::USGS is not installed.
-      This module is required for the My::Module height()
+    [ 'Geo::WebService::Elevation::USGS'	=> <<'EOD' ],
+      This module is required for the Astro::App::Satpass2 height()
       method, but is otherwise unused by this package. If you do not
       intend to use this functionality, Geo::WebService::Elevation::USGS
       is not needed.
 EOD
-}
-
-sub _recommend_lwp_useragent {
-    local $@ = undef;
-    eval {
-	require LWP::UserAgent;
-	require LWP::Protocol;
-	require URI;
-	1;
-    } and return;
-    return <<'EOD';
-    * LWP::UserAgent, LWP::Protocol and/or URI are not installed.
+    [ [ qw{ LWP::UserAgent LWP::Protocol URI } ] => <<'EOD' ],
       These modules are required if you want to use URLs in the init(),
       load(), or source() methods. If you do not intend to use URLs
       there, you do not need these packages. All three packages are
@@ -151,55 +68,137 @@ sub _recommend_lwp_useragent {
       so you may get them implicitly if you install some of the other
       optional modules.
 EOD
-}
-
-sub _recommend_time_hires {
-    local $@ = undef;
-    eval { require Time::HiRes; 1 } and return;
-    return <<'EOD';
-    * Time::HiRes is not installed.
-      This module is required for the My::Module time()
-      method, but is otherwise unused by this package. If you do not
-      intend to use this functionality, Time::HiRes is not needed.
-EOD
-}
-
-{
-
-    my %misbehaving_os = map { $_ => 1 } qw{ MSWin32 cygwin };
-
-    # NOTE WELL
-    #
-    # The description here must match the actual time module loading and
-    # exporting logic in Astro::Coord::ECI::Utils.
-
-    sub _recommend_time_y2038 {
-	eval { require Time::y2038; 1 } and return;
-	$is_5_012 and return;	# Perl 5.12 is Y2038-compliant.
-	my $recommendation = <<'EOD';
-    * Time::y2038 is not installed.
+	$is_5_012 ? () : [ 'Time::y2038' => <<'EOD' .
       This module is not required, but if installed allows you to do
       computations for times outside the usual range of system epoch to
       system epoch + 0x7FFFFFFF seconds.
 EOD
-	$misbehaving_os{$^O} and $recommendation .= <<"EOD";
+	( $misbehaving_os{$^O} ? <<"EOD" : '' ) .
+
       Unfortunately, Time::y2038 has been known to misbehave when
       running under $^O, so you may be better off just accepting the
       restricted time range.
 EOD
-	( $Config{use64bitint} || $Config{use64bitall} )
-	    and $recommendation .= <<'EOD';
+	( ( $Config{use64bitint} || $Config{use64bitall} ) ? <<'EOD' : '' )
+
       Since your Perl appears to support 64-bit integers, you may well
       not need Time::y2038 to do computations for times outside the
       so-called 'usual range.' Time::y2038 will be used, though, if it
       is available.
 EOD
-	return $recommendation;
-    }
+    ],
+);
 
+sub make_optional_modules_tests {
+    eval {
+	require Test::Without::Module;
+	1;
+    } or return;
+    my $dir = 'xt/author/optionals';
+    -d $dir
+	or mkdir $dir
+	or die "Can not create $dir: $!\n";
+    opendir my $dh, 't'
+	or die "Can not access t/: $!\n";
+    while ( readdir $dh ) {
+	m/ \A [.] /smx
+	    and next;
+	m/ [.] t \z /smx
+	    or next;
+	my $fn = "$dir/$_";
+	-e $fn
+	    and next;
+	print "Creating $fn\n";
+	open my $fh, '>:encoding(utf-8)', $fn
+	    or die "Can not create $fn: $!\n";
+	print { $fh } <<"EOD";
+package main;
+
+use strict;
+use warnings;
+
+use Test::More 0.88;
+
+use lib qw{ inc };
+
+use My::Module::Recommend;
+
+BEGIN {
+    eval {
+	require Test::Without::Module;
+	Test::Without::Module->import(
+	    My::Module::Recommend->optionals() );
+	1;
+    } or plan skip_all => 'Test::Without::Module not available';
+}
+
+do 't/$_';
+
+1;
+
+__END__
+
+# ex: set textwidth=72 :
+EOD
+    }
+    closedir $dh;
+
+    return $dir;
+}
+
+sub optionals {
+    my @rslt;
+    foreach my $spec ( @optionals ) {
+	my $module = $spec->[0];
+	if ( 'ARRAY' eq ref $module ) {
+	    push @rslt, @{ $module };
+	} elsif ( ref $module ) {
+	    confess 'Module spec may not be a ', ref $module, ' reference';
+	} else {
+	    push @rslt, $module;
+	}
+    }
+    return @rslt;
+}
+
+sub recommend {
+    my $need_some;
+    SPEC_LOOP:
+    foreach my $spec ( @optionals ) {
+	my ( $module, $message ) = @{ $spec };
+	foreach my $mod ( ref $module ? @{ $module } : $module ) {
+	    eval "require $mod; 1"
+		and next SPEC_LOOP;
+	}
+	$need_some++
+	    or warn <<'EOD';
+
+The following optional modules were not found:
+EOD
+	warn format_module_line( $module ), $message;
+    }
+    $need_some
+	and warn <<'EOD';
+
+It is not necessary to install these now. If you decide to install them
+later, this software will make use of them when it finds them.
+
+EOD
+
+    return;
+}
+
+sub format_module_line {
+    my ( $module ) = @_;
+    ref $module
+	or return "\n    * $module is not installed.\n";
+    return "\n    * None of " . join( ', ', @{ $module } ) .
+	" is installed.\n";
 }
 
 1;
+
+__END__
 
 =head1 NAME
 
@@ -220,6 +219,30 @@ mechanism is not used because we find its output on the Draconian side.
 =head1 METHODS
 
 This class supports the following public methods:
+
+=head2 make_optional_modules_tests
+
+ My::Module::Recommend->make_optional_modules_tests()
+
+This static method creates the optional module tests. These are stub
+files in F<xt/author/optionals/> that use C<Test::Without::Module> to
+hide all the optional modules and then invoke the normal tests in F<t/>.
+The aim of these tests is to ensure that we get no test failures if the
+optional modules are missing.
+
+This method is idempotent; that is, it only creates the directory and
+the individual stub files if they are missing.
+
+On success this method returns the name of the optional tests directory.
+If C<Test::Without::Module> can not be loaded this method returns
+nothing. If the directory or any file can not be created, an exception
+is thrown.
+
+=head2 optionals
+
+ say for My::Module::Recommend->optionals();
+
+This static method simply returns the names of the optional modules.
 
 =head2 recommend
 
@@ -252,7 +275,5 @@ without any warranty; without even the implied warranty of
 merchantability or fitness for a particular purpose.
 
 =cut
-
-__END__
 
 # ex: set textwidth=72 :

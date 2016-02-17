@@ -23,8 +23,8 @@ my %attr = (
         'perl'	=> $meta->requires_perl(),
     ),
     build_requires => $meta->build_requires(),
-    script_files => [ qw{bin/satpass2} ],
-    add_to_cleanup => [ qw{ xt/author/optionals } ],
+    script_files => [ qw{ bin/satpass2 } ],
+    add_to_cleanup => [ qw{ cover_db xt/author/optionals } ],
 );
 
 $mbv >= 0.28
@@ -43,3 +43,5 @@ My::Module::Recommend->recommend();
 my $bldr = My::Module::Build->new (%attr);
 
 $bldr->create_build_script ();
+
+# ex: set textwidth=72 :

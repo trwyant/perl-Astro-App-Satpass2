@@ -6,148 +6,36 @@ use warnings;
 use base qw{ Module::Build };
 
 use Carp;
-use File::Spec;
-
-my @optionals_dir = qw{ xt author optionals };
-my @hide = qw{
-    Astro::SIMBAD::Client Astro::SpaceTrack
-    Date::Manip DateTime DateTime::TimeZone
-    Geo::Coder::Geocoder::US Geo::Coder::OSM
-    Geo::WebService::Elevation::USGS
-    LWP::UserAgent
-    LWP::Protocol
-    Time::HiRes Time::y2038
-    URI
-};
-
-{
-    my $done;
-    my $hider;
-
-    sub _get_hider {
-	$done and return $hider;
-	$done = 1;
-	# Not using Devel::Hide any more because it does not have a
-	# public interface to say if a module is hidden.
-	foreach my $module (
-		'Test::Without::Module',
-#		'Devel::Hide',
-	    ) {
-	    eval "require $module; 1"
-		and return ( $hider = $module );
-	}
-	return $hider;
-    }
-}
-
-sub _get_tests_without_optional_modules {
-    my @args = @_;
-    _get_hider() or return;
-    my @cleanup;
-    @args or @args = _get_general_tests();
-    foreach my $path ( @args ) {
-	push @cleanup, File::Spec->catfile( @optionals_dir,
-	    ( File::Spec->splitpath( $path ) )[2] );
-    }
-    return @cleanup;
-}
-
-{
-
-    my @general_tests;
-
-    sub _get_general_tests {
-	@general_tests and return @general_tests;
-	my $th;
-	opendir $th, 't'
-	    or die "Unable to open directory t: $!\n";
-	while ( defined( my $fn = readdir $th ) ) {
-	    '.' eq substr $fn, 0, 1 and next;
-	    $fn =~ m/ [.] t \z /smx or next;
-	    my $path = File::Spec->catfile( 't', $fn );
-	    -f $path or next;
-	    push @general_tests, $path;
-	}
-	closedir $th;
-	return @general_tests;
-    }
-}
-
-
-sub ACTION_make_optional_modules_tests {
-##  my ( $self, @args ) = @_;	# Invocant, arguments unused
-
-    my $hider = _get_hider() or do {
-#	warn "Neither Devel::Hide nor Test::Without::Module available\n";
-	return;
-    };
-
-    my $gendir = File::Spec->catdir( @optionals_dir );
-
-    -d $gendir
-	or mkdir $gendir
-	or die "Unable to create $gendir: $!\n";
-
-    foreach my $ip ( _get_general_tests() ) {
-	my ( $op ) = _get_tests_without_optional_modules( $ip );
-	-f $op and next;
-	print "Creating $op\n";
-	open my $oh, '>', $op or die "Unable to open $op: $!\n";
-	print { $oh } <<"EOD";
-package main;
-
-use strict;
-use warnings;
-
-use $hider qw{
-@{[ my_wrap( @hide ) ]}
-};
-
-do '$ip';
-
-1;
-
-__END__
-
-# ex: set textwidth=72 :
-EOD
-	close $oh;
-    }
-}
+# use lib 'inc';	# Already done because this module is running.
+use My::Module::Recommend;
 
 sub ACTION_authortest {
-    my ( $self ) = @_;		# Arguments unused
+##  my ( $self, @args ) = @_;	# Arguments unused
+    my ( $self ) = @_;
 
     local $ENV{AUTHOR_TESTING} = 1;
 
-    my @depends_on = ( qw{ build make_optional_modules_tests } );
-    -e 'META.yml' or push @depends_on, 'distmeta';
+    my @depends_on = ( qw{ build } );
+    -e 'META.json' or push @depends_on, 'distmeta';
     $self->depends_on( @depends_on );
-    my @test_files = qw{ t xt/author };
-    my $optdir = File::Spec->catdir( @optionals_dir );
-    -d $optdir and push @test_files, $optdir;
-    $self->test_files( @test_files );
+
+    $self->test_files( qw{ t xt/author },
+	My::Module::Recommend->make_optional_modules_tests() );
+
     $self->depends_on( 'test' );
 
     return;
 }
 
-sub my_wrap {
-    my ( @args ) = @_;
-    my @rslt;
-    my $left_margin = ' ' x 3;
-    my $line;
-    foreach my $item ( @args ) {
-	defined $line or $line = $left_margin;
-	if ( length( $line ) + length( $item ) > 71 ) {
-	    push @rslt, $line . "\n";
-	    $line = $left_margin;
-	}
-	$line .= ' ' . $item;
+sub harness_switches {
+    my ( $self ) = @_;
+    my @res = $self->SUPER::harness_switches();
+    foreach ( @res ) {
+	'-MDevel::Cover' eq $_
+	    or next;
+	$_ .= '=-db,cover_db,-ignore,inc/,-ignore,eg/';
     }
-    defined $line and push @rslt, $line;
-    @rslt and chomp $rslt[-1];
-    return join '', @rslt;
+    return @res;
 }
 
 1;
