@@ -14,6 +14,8 @@ eg/tle_stellarium.tt
 inc/My/Module/Build.pm
 inc/My/Module/Meta.pm
 inc/My/Module/Recommend.pm
+inc/My/Module/Recommend/All.pm
+inc/My/Module/Recommend/Any.pm
 inc/My/Module/Test/App.pm
 inc/My/Module/Test/Geocode.pm
 inc/mock/File/HomeDir.pm

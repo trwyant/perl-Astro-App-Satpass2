@@ -6,6 +6,9 @@ use warnings;
 use Carp;
 use Config;
 
+use My::Module::Recommend::Any qw{ __any };
+use My::Module::Recommend::All qw{ __all };
+
 my ( $is_5_010, $is_5_012 );
 
 eval {
@@ -38,23 +41,23 @@ my %condition = (
 my %misbehaving_os = map { $_ => 1 } qw{ MSWin32 cygwin };
 
 my @optionals = (
-    [ 'Astro::SIMBAD::Client'	=> <<'EOD' ],
+    __any( 'Astro::SIMBAD::Client'	=> <<'EOD' ),
       This module is required for the 'lookup' subcommand of the
       Astro::App::Satpass2 sky() method, but is otherwise unused by this
       package. If you do not intend to use this functionality,
       Astro::SIMBAD::Client is not needed.
 EOD
-    [ 'Astro::SpaceTrack'	=> <<'EOD' ],
+    __any( 'Astro::SpaceTrack'	=> <<'EOD' ),
       This module is required for the Astro::App::Satpass2 st() method,
       but is otherwise unused by this package. If you do not intend to
       use this functionality, Astro::SpaceTrack is not needed.
 EOD
-    [ 'Date::Manip'		=> <<'EOD' .
+    __any( 'Date::Manip'		=> <<'EOD' .
       This module is not required, but the alternative to installing it
       is to specify times in ISO 8601 format.  See 'SPECIFYING TIMES' in
       the 'Astro::App::Satpass2' documentation for the details.
 EOD
-	( $is_5_010 ? '' : <<'EOD' ) ],
+	( $is_5_010 ? '' : <<'EOD' ) ),
 
       Unfortunately, the current Date::Manip requires Perl 5.10. Since
       you are running an earlier Perl, you can try installing Date-Manip
@@ -62,24 +65,24 @@ EOD
       Perl 5.10. This version of Date::Manip does not understand summer
       time (a.k.a. daylight saving time).
 EOD
-    [ [ qw{ DateTime DateTime::TimeZone } ] => <<'EOD', '&&' ],
+    __all( qw{ DateTime DateTime::TimeZone }	=> <<'EOD' ),
       These modules are used to format times, and provide full time zone
       support. If they are not installed, POSIX::strftime() will be
       used, and you may find that you can not display correct local
       times for zones other than your system's default zone.
 EOD
-    [ 'Geo::Coder::OSM'		=> <<'EOD' ],
+    __any( 'Geo::Coder::OSM'		=> <<'EOD' ),
       This module is required for the Astro::App::Satpass2 geocode()
       method. If you do not intend to use this functionality, this
       module is not needed.
 EOD
-    [ 'Geo::WebService::Elevation::USGS'	=> <<'EOD' ],
+    __any( 'Geo::WebService::Elevation::USGS'	=> <<'EOD' ),
       This module is required for the Astro::App::Satpass2 height()
       method, but is otherwise unused by this package. If you do not
       intend to use this functionality, Geo::WebService::Elevation::USGS
       is not needed.
 EOD
-    [ [ qw{ LWP::UserAgent LWP::Protocol URI } ] => <<'EOD', '&&' ],
+    __all( qw{ LWP::UserAgent LWP::Protocol URI } => <<'EOD' ),
       These modules are required if you want to use URLs in the init(),
       load(), or source() methods. If you do not intend to use URLs
       there, you do not need these packages. All three packages are
@@ -87,7 +90,7 @@ EOD
       so you may get them implicitly if you install some of the other
       optional modules.
 EOD
-	$is_5_012 ? () : [ 'Time::y2038' => <<'EOD' .
+	$is_5_012 ? () : __any( 'Time::y2038' => <<'EOD' .
       This module is not required, but if installed allows you to do
       computations for times outside the usual range of system epoch to
       system epoch + 0x7FFFFFFF seconds.
@@ -105,7 +108,7 @@ EOD
       so-called 'usual range.' Time::y2038 will be used, though, if it
       is available.
 EOD
-    ],
+    ),
 );
 
 sub make_optional_modules_tests {
@@ -166,34 +169,20 @@ EOD
 }
 
 sub optionals {
-    my @rslt;
-    foreach my $spec ( @optionals ) {
-	my $module = $spec->[0];
-	if ( 'ARRAY' eq ref $module ) {
-	    push @rslt, grep { !$condition{$_} } @{ $module };
-	} elsif ( ref $module ) {
-	    confess 'Module spec may not be a ', ref $module, ' reference';
-	} else {
-	    push @rslt, $module;
-	}
-    }
-    return @rslt;
+    return ( map { $_->modules() } @optionals );
 }
 
 sub recommend {
     my $need_some;
-    foreach my $spec ( @optionals ) {
-	my ( $module, $message, $cond ) = @{ $spec };
-	my @mods = ref $module ? @{ $module } : ( $module );
-	$cond = $condition{ $cond || '||' } || $condition{ '||' };
-	$cond->( @mods )
-	    and next;
+    foreach my $mod ( @optionals ) {
+	defined( my $msg = $mod->recommend() )
+	    or next;
 	$need_some++
 	    or warn <<'EOD';
 
-The following optional modules were not found:
+The following optional modules were not available:
 EOD
-	warn format_module_line( $module, $spec->[2] ), $message;
+	warn "\n$msg";
     }
     $need_some
 	and warn <<'EOD';
@@ -204,15 +193,6 @@ later, this software will make use of them when it finds them.
 EOD
 
     return;
-}
-
-sub format_module_line {
-    my ( $module, $cond ) = @_;
-    ref $module
-	or return "\n    * $module is not installed.\n";
-    my $amount = ( $cond || '||' ) eq '&&' ? 'Not all' : 'None';
-    return "\n    * $amount of " . join( ', ', @{ $module } ) .
-	" can be loaded.\n";
 }
 
 1;
