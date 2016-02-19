@@ -19,25 +19,6 @@ eval {
     $is_5_010 = 1;
 };
 
-my %condition = (
-    '&&'	=> sub {
-	my ( @mods ) = @_;
-	foreach my $m ( @mods ) {
-	    eval "require $m; 1"
-		or return 0;
-	}
-	return 1;
-    },
-    '||'	=> sub {
-	my ( @mods ) = @_;
-	foreach my $m ( @mods ) {
-	    eval "require $m; 1"
-		and return 1;
-	}
-	return 0;
-    },
-);
-
 my %misbehaving_os = map { $_ => 1 } qw{ MSWin32 cygwin };
 
 my @optionals = (
@@ -204,13 +185,13 @@ __END__
 
 =head1 NAME
 
-Astro::Coord::ECI::Recommend - Recommend modules to install. 
+My::Module::Recommend - Recommend modules to install. 
 
 =head1 SYNOPSIS
 
  use lib qw{ inc };
- use Astro::Coord::ECI::Recommend;
- Astro::Coord::ECI::Recommend->recommend();
+ use My::Module::Recommend;
+ My::Module::Recommend->recommend();
 
 =head1 DETAILS
 
@@ -248,7 +229,7 @@ This static method simply returns the names of the optional modules.
 
 =head2 recommend
 
- Astro::Coord::ECI::Recommend->recommend();
+ My::Module::Recommend->recommend();
 
 This static method examines the current Perl to see which optional
 modules are installed. If any are not installed, a message is printed to
