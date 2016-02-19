@@ -1,3 +1,6 @@
+0.030_02	2016-02-18	T. R. Wyant
+  Correct and clean up recommended-module code.
+
 0.030_01	2016-02-17	T. R. Wyant
   Document anticipated retraction of Geo::Coder::Geocoder::US geocoding
     support. Skip t/geocode_geocoder_us.t unless author testing
