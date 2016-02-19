@@ -43,14 +43,16 @@ my %misbehaving_os = map { $_ => 1 } qw{ MSWin32 cygwin };
 my @optionals = (
     __any( 'Astro::SIMBAD::Client'	=> <<'EOD' ),
       This module is required for the 'lookup' subcommand of the
-      Astro::App::Satpass2 sky() method, but is otherwise unused by this
-      package. If you do not intend to use this functionality,
-      Astro::SIMBAD::Client is not needed.
+      Astro::App::Satpass2 sky() method, which retrieves astronomical
+      objects from the SIMBAD database. If you do not intend to use
+      this functionality, Astro::SIMBAD::Client is not needed.
 EOD
     __any( 'Astro::SpaceTrack'	=> <<'EOD' ),
-      This module is required for the Astro::App::Satpass2 st() method,
-      but is otherwise unused by this package. If you do not intend to
-      use this functionality, Astro::SpaceTrack is not needed.
+      This module is required for the Astro::App::Satpass2 spacetrack()
+      method, which retrieves satellite TLE data from Space Track and
+      other web sites.  If you intend to get your TLEs externally to
+      this package (say, with a web browser or curl), Astro::SpaceTrack
+      is not needed.
 EOD
     __any( 'Date::Manip'		=> <<'EOD' .
       This module is not required, but the alternative to installing it
@@ -69,18 +71,19 @@ EOD
       These modules are used to format times, and provide full time zone
       support. If they are not installed, POSIX::strftime() will be
       used, and you may find that you can not display correct local
-      times for zones other than your system's default zone.
+      times for zones other than your system's default zone or GMT.
 EOD
     __any( 'Geo::Coder::OSM'		=> <<'EOD' ),
       This module is required for the Astro::App::Satpass2 geocode()
-      method. If you do not intend to use this functionality, this
-      module is not needed.
+      method, which computes latitude and longitude based on street
+      address. If you do not intend to determine your observing
+      locations this way, this module is not needed.
 EOD
     __any( 'Geo::WebService::Elevation::USGS'	=> <<'EOD' ),
       This module is required for the Astro::App::Satpass2 height()
-      method, but is otherwise unused by this package. If you do not
-      intend to use this functionality, Geo::WebService::Elevation::USGS
-      is not needed.
+      method, which determines height above the reference ellipsoid for
+      a given latitude and longitude.  If you do not intend to determine
+      your observing locations this way, this module is not needed.
 EOD
     __all( qw{ LWP::UserAgent LWP::Protocol URI } => <<'EOD' ),
       These modules are required if you want to use URLs in the init(),
