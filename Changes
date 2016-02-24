@@ -1,23 +1,18 @@
-0.030_02	2016-02-18	T. R. Wyant
+0.031		2016-02-24	T. R. Wyant
+  Consolidate development changes into next production release.
+
   Correct and clean up recommended-module code.
 
-0.030_01	2016-02-17	T. R. Wyant
   Document anticipated retraction of Geo::Coder::Geocoder::US geocoding
     support. Skip t/geocode_geocoder_us.t unless author testing
 
   Add Makefile targets authortest, testcover
 
-  Straighten out recommendation text scrambled by global
-    search-and-replace when I moved the installation support modules
-    from inc/Astro/App/Satpass2/ to inc/My/Module/
-
 0.030		2016-01-05	T. R. Wyant
   Add GitHub repository to metadata.
 
 0.029		2015-12-23	T. R. Wyant
-  No changes since 0.028_01.
 
-0.028_01	2015-12-15	T. R. Wyant
   Make OSM the default geocoder.
     The problem is that geocoder.us (the originial geocoder) has been
     offline for a couple weeks, and it makes no sense to have a broken
@@ -26,21 +21,17 @@
 0.028		2015-08-29	T. R. Wyant
   Remove notices saying this is alpha code.
 
-0.027_04	2015-08-11	T. R. Wyant
   Properly check which time formatter in t/format.t. This is fallout
     from 0.027_03.
 
-0.027_03	2015-08-09	T. R. Wyant
   Try to quash errors under Cygwin using DateTime. The problem is that
     we think we can use it, but we get failures when initializing
     because DateTime::TimeZone can not determine the local zone. We
     handle this by checking for it and falling back to POSIX formatting
     if needed.
 
-0.027_02	2015-08-02	T. R. Wyant
   Sanitize TZ before using it in tests.
 
-0.027_01	2015-07-28	T. R. Wyant
   Eliminate use of deprecated Geo::WebService::Elevation::USGS 'source'
     attribute.
 
@@ -63,23 +54,19 @@
     the zone to '' triggers this behavior). Yes, this is a kluge.
 
 0.026		2015-06-26	T. R. Wyant
-  No changes since 0.025_01.
-
-0.025_01	2015-06-18	T. R. Wyant
   Change localization of equinoxes and solstices to take advantage of
     the Astro::Coord::ECI southern hemisphere functionality. This
     includes not only the default C locale but eg/es.pm.
+
   Specify encoding UTF-8 for source files. This was always intended, but
     never actually done.
+
   Skip t/parse_time_date_manip_6.t if Date::Manip and DateTimeTimeZone
     come up with different zones. This is because Date::Manip may not
     default to the right zone under at least some BSD variants,
     resulting in failing tests.
 
 0.025		2015-03-29	T. R. Wyant
-  No changes since 0.024_01.
-
-0.024_01	2015-03-14	T. R. Wyant
   Track interface change to Date::Manip >= 6.49. This involves using the
     SetDate configuration variable instead of TZ, and silently making
     'gmt' (any case) into 'UT'.
@@ -92,15 +79,13 @@
     anyway.
 
 0.023		2014-11-17	T. R. Wyant
-  No changes since 0.022_01.
-
-0.022_01	2014-11-10	T. R. Wyant
   Address CPAN Testers failures in t/locale.t under the combination of
     Perl 5.20.1 and MSWin32.
 
 0.022		2014-11-08	T. R. Wyant
   Remove all reference to the 'lit' attribute. This has been removed in
     favor of 'edge_of_earths_shadow'.
+
   Suspend support for geocoding via TomTom. It appears that TomTom has
     retracted the undelying web service. Support in this package will be
     retracted May 1 2015 unless the situation is resolved favorably
@@ -108,199 +93,213 @@
     support will be retracted when I become aware of the fact.
 
 0.021		2014-09-17	T. R. Wyant
-  No changes since 0.020_04.
-
-0.020_04	2014-09-07	T. R. Wyant
   Correctly handle tz attribute when the DateTime date formatter is in
     use.
+
   Fix bug in spacetrack -verbose search_oid and friends.
+
   Add -setup option to perl() method. This causes the arguments to be
     recorded and emitted by the save() method.
 
-0.020_03	2014-08-03	T. R. Wyant
   More informative DateTime time zone error message.
 
-0.020_02	2014-07-31	T. R. Wyant
   Rewrite object-specific formatter code to place dispatchers in the
     Astro::App::Satpass2::FormatValue name space rather than use
     AUTOLOAD().  The AUTOLOAD() implementation caused all sorts of
     smoker errors that I was unable to reproduce, and I was averse to
     blindly writing stubs for Perl-defined subroutines.
 
-0.020_01	2014-07-29	T. R. Wyant
   Remove subroutine Astro::App::Satpass2::Utils::fold_case(). This is
     documented as private, but since is _was_ documented I decided to
     put it through an abbreviated deprecation cycle.
 
-0.020_004	2014-07-21	T. R. Wyant
-  This version not released to CPAN.
   Add add() method to Astro::App::Satpass2. This validates and adds TLE
     objects.
+
   Remove ::Format::Template::Provider from t/basic.t
+
   Fix test failures in t/locale.t
 
-0.020_003	2014-07-20	T. R. Wyant
-  This version not released to CPAN.
   Force stringification of Template::Exception.
+
   Have the tle_verbose template ignore non-TLE data.
 
-0.020_002	2014-07-17	T. R. Wyant
-  This version not released to CPAN.
   Fix bug in -choose foo,bar which caused only 'foo' to be chosen.
+
   Add real localization support. This addresses almost all text seen by
     the user, though I have not done a lot on error messages other than
     put in the calls. A very rough Spanish localization is provided in
     eg/.
+
   Generate format selection options for tle() based on available
     templates. Basically, if you load template eg/tle_json.tt as
     'tle_json', the -json option will cause that template to be used.
+
   Drop Astro::App::Satpass2::Format::Template::Provider.
+
   Refactor and rationalize formatter code.
 
-0.020_001	2014-07-03	T. R. Wyant
-  This version not released to CPAN.
   Add Astro::App::Satpass2::FormatValue::Formatter to implement custom
     formatters without subclassing. THIS IS EXPERIMENTAL.
+
   Add Satpass2 interactive method perl(). This executes some Perl,
     either from a file or via an eval. The invocant comes in in
     $ARGV[0].
 
 0.020		2014-06-12	T. R. Wyant
-  No changes since 0.019_01.
-
-0.019_01	2014-06-03	T. R. Wyant
   Make use of the TLE illuminated() method To calculate illumination for
     the position() method. This requires Astro::Coord::ECI::TLE 0.064.
 
 0.019		2014-05-14	T. R. Wyant
-  No changes since 0.018_01.
-
-0.018_01	2014-05-02	T. R. Wyant
   Require Astro::Coord::ECI (etc) 0.063.
+
   Drop default template documentation, which was only intended for
     informational purposes. Instead, we document how to extract the
     default templates.
+
   Add support for magnitudes. This involves:
+
     * Add a pass_variant attribute so we can ask for the brightest
       moment in the pass.
+
     * Add a -brightest option to pass() to override pass_variant, so
       that the interface is at least semi-consistent.
+
     * Modify the value formatter's magnitude() formatter so that, if
       there is no {magnitude} key in the thing being formatted, but
       there is a magnitude() method on the body, that method is called
       and the result formatted.
+
     * Modify the template for pass() to check to see whether
       PASS_VARIANT_BRIGHTEST is set, and if so add a magnitude column to
       the report.
+
     The last point above required a number of supporting changes:
+
     - Add a want_pass_variant() convenience method to return true if the
       specific variant is wanted.
+
     - Pass the Astro::App::Satpass object as the sp variable to Template
       Toolkit from the pass() method (and other non- formatter()
       methods) so that the template can see if the brightest moment is
       being requested.
+
     - use [% UNLESS data %] instead of [% DEFAULT data = ... %] in all
       templates, since it appears that the latter evaluates the
       right-hand side of the expression even if it does not use the
       value. This essentially causes each template to do a default
       calculation (with possible errors) whose result is thrown away.
+
   Permit initialization with special files. The idea is to allow /dev/null.
+
   Document the pass_threshold attribute, which was introduced in version
     0.000_38 (2012-01-19!) but somehow not documented then.
+
   Use of the Astro::App::Satpass2 'lit' attribute now produces an error.
+
   Suppress errors on pass events which have a numeric value but no
     defined selector. The event is not reported.
 
 0.018		2014-04-13	T. R. Wyant
   Eliminate use of each() built-in.
 
-0.017_01	2014-04-05	T. R. Wyant
   Have 'magnitude' format effector call the magnitude() method if the
     body supports it and there is no {magnitude} item in the data.
+
   Add support for Astro::Coord::ECI::TLE static method
     magnitude_table().
+
   Bump Astro::Coord::ECI requirement to 0.062.
 
 0.017		2014-02-03	T. R. Wyant
-  No changes since 0.016_02.
-
-0.016_02	2014-01-26	T. R. Wyant
   Require Scalar::Util version 1.25, since that is the version that
     supports dualvar(), which is needed for the body-specific pass
     events added in 0.016.
 
-0.016_01	2014-01-24	T. R. Wyant
   Try to get better diagnostics for the occasional load failures
     reported by CPAN testers.
 
 0.016		2014-01-20	T. R. Wyant
   Make the rounding of time for display configurable. The default is to
     round to the nearest second.
+
   Support body-specific pass events. This is really in support of a
     project to predict sounding rocket visibility based on published KMZ
     files for the launch.
+
   Add options to the quarters() method to select which are displayed.
+
   Add eg/quarters_vcalendar.
+
   In Astro::App::Satpass2::FormatValue:
-    Add formatter method list() to handle TLE output. Handle individual
+
+  * Add formatter method list() to handle TLE output. Handle individual
       lines of the list with sub-templates.
-    Build time formats when used. This to allow subclasses to add time
+
+  * Build time formats when used. This to allow subclasses to add time
       formatters.
+
   "Code macro" support tweaks. This is all still experimental:
-    Add method Astro::App::Satpass2->__add_to_observing_list().
-    Call code macro after_load() (if it exists) after loading the
+
+  * Add method Astro::App::Satpass2->__add_to_observing_list().
+
+  * Call code macro after_load() (if it exists) after loading the
       macros.
-    If a code macro is loaded using the -lib option, record the absolute
+
+  * If a code macro is loaded using the -lib option, record the absolute
       path to the directory unless -relative also asserted.
+
   Fix Astro::App::Satpass2::Format::Dump. No telling how long it was
     broken.
 
 0.015		2013-11-17	T. R. Wyant
-  No changes from 0.014_02.
-
-0.014_02	2013-11-08	T. R. Wyant
   Require Getopt::Long 2.39 (up from 2.33) because I am using
     getoptionsfromarray().
 
-0.014_01	2013-10-31	T. R. Wyant
   Use O-O version of Getopt::Long everywhere, to prevent leakage of
     configuration in (or out).
+
   Clean up options hash passed to external methods.
 
 0.014		2013-10-14	T. R. Wyant
-  No changes since 0.013_03
-
-0.013_03	2013-10-08	T. R. Wyant
   Use a mock File::HomeDir object for testing.
 
-0.013_02	2013-10-07	T. R. Wyant
   Have the expansion of ~~ throw an exception if the configuration
     directory does not exist. Skip test of ~~ expansion in this case.
+
   Improve tests that compare path to expected, to handle better the case
     where the path contains a symbolic link.
 
-0.013_01	2013-10-06	T. R. Wyant
   Fixed failure in Astro::App::Satpass2::Format->decode(
     'desired_equinox_dynamical' ) when the value was not 0.
+
   In file name expansion, made ~~/... expand to configuration directory.
+
   Added the ability to implement a macro as Perl code. These are handled
     by Astro::App::Satpass2::Macro::Code. The corresponding satpass2
     syntax is 'macro load Module_name'. Document this in TUTORIAL.
+
   Updated required version of Astro::SpaceTrack to one that supports the
     REST interface.
+
   Require Astro::Coord::ECI 0.57 because of the international launch
     designator problems introduced in 0.051_01.
+
   Make load_package() optionally callable as a method so it can use the
     same error reporting mechanism as everyone else if it is available.
+
   Add options to the load_package() calling sequence: lib (which
     directory to add to @INC), complain (how to report validation
     failures), and fatal (whether and how to report failures to load the
     module). A true value of 'fatal' causes the failure not to be cached
     so that another load of the module will produce the same failure.
+
   Made $satpass2->time_parser( base => ... ) both parse an input time
     and return a formatted time.
+
   Made time parsing conform to the documentation in that if the time was
     defaulted, the default sets the base time for the parser.
+
   Implement Astro::App::Satpass2 method sky( lookup => ... ) in terms of
     the Astro::SIMBAD::Client script method rather than the query()
     method, since the former does not use SOAP::Lite.
@@ -309,44 +308,43 @@
   On failures in t/parse_time_date_manip_*.t, dump the zone of the
     parser object, if any.
 
-0.012_06	2013-02-06	T. R. Wyant
   Require File::HomeDir 0.93, since we are using my_dist_config().
 
-0.012_05	2013-02-03	T. R. Wyant
   Further tweak dumping of Date::Manip info in tests, in the hope of
     getting enough information to actually diagnose test failures.
   Eliminate warnings in t/parse_time_date_manip_5.t if Date::Manip v5 is
     being used (rather than Date::Manip 6's DM5 back end).
 
-0.012_04	2013-01-30	T. R. Wyant
   Bypass Date::Manip::DM5 testing under MSWin32, since it fails and I
     can't figure out why.
 
-0.012_03	2013-01-25	T. R. Wyant
   Put traps in t/parse_time_date_manip_5.t to try to figure out where
     the DM5 errors are coming from.
+
   Fix warning thrown when there is no configuration directory.
 
-0.012_02	2013-01-20	T. R. Wyant
   Correct problem with configuring (and dumping the configuration of)
     the time parser. The formatter object was being accessed instead.
     This has apparantly been present since pretty much the beginning.
+
   Make the time_parser class of record
     Astro::App::Satpass2::ParseTime::Date::Manip rather than ::v5 or
     ::v6, since we have no control over the environment variables in
     effect when we are launched, and thus, if Date::Manip 6 is
     installed, which back end is in use.
+
   Redo Astro::App::Satpass2::ParseTime::Date::Manip logic so that if
     Date::Manip 6 is initialized in DM5 mode calls to it get routed
     through Astro::App::Satpass2::ParseTime::Date::Manip::v5. This was
     causing failures under Perl 5.8.
 
-0.012_01	2013-01-13	T. R. Wyant
   Make 'input redirection' (<file) work, but more like `file`; that is,
     the contents of the file become a token at that point in the
     command.
+
   Make Astro::App::Satpass2::FormatValue more amenable to subclassing,
     though subclassing is still unsupported.
+
   Give Astro::App::Satpass2::Format a 'value_formatter' attribute to
     control what class (or object) is used for formatting values.
 
@@ -357,22 +355,21 @@
 0.011		2012-12-24	T. R. Wyant
   Adjust tests for the fact that geocoder.us is (temporarily, I hope!)
     not honoring the requests generated by Geo::Coder::Geocoder::US.
+
   Add an extra notification to the events generated by
     eg/{pass,flare}_vcalendar, at a minute before the nominal event.
 
-0.010_03	2012-12-08	T. R. Wyant
   Another crack at properly testing if two files are in fact the same.
+
   Tweak eg/pass_vcalendar to work with Mac OS 10.8 calendar.
+
   Add attribute 'permissive' (and associated accessor/mutator
     permissive()) to Astro::App::Satpass2::Format::Template. This
     defaults to false, If set true, Template-Toolkit is configured to
     accept absolute path names for templates.
+
   Correct Astro::App::Satpass2::FormatTime::DateTime documentation.
 
-0.010_02	2012-11-29	T. R. Wyant
-  Another crack at the DragonFly test failure.
-
-0.010_01	2012-11-23	T. R. Wyant
   Try to fix test failure under DragonFly BSD 3.1.0. I believe the
     failure is cosmetic, but ...
 
@@ -385,23 +382,18 @@
     options hash to Astro::SpaceTrack method spacetrack_query_v2().
 
 0.008		2012-09-28	T. R. Wyant
-  No changes since 0.007_04.
-
-0.007_04	2012-09-21	T. R. Wyant
   Fix MSWin32 test failures due to equivocation on which slash is used
     for a path delimiter.
+
   Skip output redirection test under MSWin32. I think the failure is a
     testing problem, but am not sure, so a note was added to the docs on
     this.
 
-0.007_03	2012-09-19	T. R. Wyant
   Another fix to floating-point formatting normalization.
 
-0.007_02	2012-09-18	T. R. Wyant
   Correct typo in core dependencies. Add author test to try to prevent
     this from happening again.
 
-0.007_01	2012-09-18	T. R. Wyant
   Try to address CPAN testers failures (unable to load 'strict'), by
     including all core dependencies, and by removing pragmas from a
     helper script.
@@ -413,12 +405,16 @@
 0.006		2012-09-05	T. R. Wyant
   Warn on every use of the 'lit' attribute. This should have been
     warning on first use before, but was not.
+
   Fix uninitialized value error in Astro::App::Satpass2 when running
     choose() on bodies that do not have a name.
+
   Add support for displaying TLEs in JSON format. See eg/tle_json.tt for
     an example.
+
   Add Astro::App::Satpass2 attribute almanac_horizon, which corresponds
     to the same-named Astro::Coord::ECI attribute.
+
   Track effect of change in the way Astro::Coord::ECI::TLE formats the
     effective date on the tests in t/format_value.t.
 
@@ -426,135 +422,39 @@
   Have the Astro::App::Satpass2 init() method only throw an exception if
     the file name was explicitly specified.
 
-0.004_01	2012-06-10	T. R. Wyant
   The Astro::App::Satpass2 spacetrack() method was not reporting failure
     if the request failed.
+
   Try to address test failures in t/whole_app.t under freebsd.
 
 0.004		2012-06-02	T. R. Wyant
   Replace YAML::Any with just YAML. They come in the same distro, and
     just plain YAML does not suffer from deprecation warnings.
+
   Don't use URI::URL to validate urls for Astro::App::Satpass2 init(),
     load(), and source() methods. Instead, use URI and
     LWP::Protocol::implementor().
+
   Documentation review - Astrp::App::Satpass2,
     Astro::App::Satpass2::FormatTime::DateTime::Cldr, and the TUTORIAL.
 
 0.003		2012-05-04	T. R. Wyant
-  In Astro::App::Satpass2:
-  * Remove the status() method's 'iridium' subcommand, to remain
-    compatible with the 'satpass' script in Astro-satpass.
+  In Astro::App::Satpass2, Remove the status() method's 'iridium'
+    subcommand, to remain compatible with the 'satpass' script in
+    Astro-satpass.
 
 0.002		2012-03-15	T. R. Wyant
   In Astro::App::Satpass2:
+
   * Add method station() to return an object representing the current
     observer.
+
   * Have the choose() and drop() methods throw an exception if they
     would leave the observing list empty.
+
   * Convert to use the new Astro::Coord::ECI 'station' attribute.
 
 0.001		2012-02-05	T. R. Wyant
-  Add interactive method pwd() to Astro::App::Satpass2.
-  Make the test skip messages for missing geocoder modules like all the
-    other skip messages for missing modules.
-
-0.000_39	2012-01-24	T. R. Wyant
-  Make Astro::App::Satpass2::ParseTime::ISO8601 less permissive in
-    allowing deviations from strict ISO-8601 format. Specifically, allow
-    a maximum of 1 non-digit character separating the date and the time.
-  Fix failure of Astro::App::Satpass2 to propagate its 'warning'
-    attribute to helper classes.
-  Allow the Astro::App::Satpass2 time_parser attribute to be set to
-    'Date::Manip'. This selects either 'Date::Manip::v5' or
-    'Date::Manip::v6' depending on what is installed.
-  In testing, treat a 500 error from a geocode server as a 'skip' rather
-    than a failure, since I have no control over whether the server is
-    up.
-  Add explicit test for DateTime in t/format_value.t. Some Perl 5.8.8s
-    were, for reasons not understood by me, running the time zone test
-    even when DateTime was not present.
-
-0.000_38	2012-01-19	T. R. Wyant
-  Add attribute pass_threshold to Astro::App::Satpass2. The pass()
-    method passes this attribute through to the same-named attribute of
-    the relevant Astro::Coord::ECI::TLE objects.
-  Fixed bug with the manipulation of Astro::App::Satpass2 helper objects
-    which was introduced in version 0.000_36. The only known
-    manifestation of this bug was in failure of the Astro::App::Satpass2
-    save() method.
-
-0.000_37	2012-01-16	T. R. Wyant
-  Have the tests of the geocoder wrapper classes simply test for success
-    rather than actual location returned (which is the wrapped class'
-    job). This to eliminate test failures when the service changes its
-    database.
-
-0.000_36	2012-01-14	T. R. Wyant
-  Reformat subroutine attributes for older Perls, which seem to get
-    confused if they are not all on one line.
-  Require IO::File 1.14, since it appears that 1.13 does not understand
-    opening a scalar reference.
-  Correct the code that loads either Time::y2038 or Time::Local, which
-    was loading both under some circumstances.
-  Implement the Astro::App::Satpass zero-argument cd() via
-    File::HomeDir->my_home(), for repeatability in testing.
-  Some older Perls complain about explicitly assigning undef to a
-    variable under 'use warnings', so apply 'no warnings qw{ undef }' as
-    needed.
-  In code that optionally uses YAML, just use YAML::Any instead of
-    feeling around for a usable version.
-  Astro::App::Satpass2 startup time optimizations, typically by
-    deferring the loading of modules until they are needed.
-  Make Changes file comply with Test::CPAN::Changes, and add author test
-    xt/author/changes.t to ensure it remains so.
-
-0.000_35	2011-12-30	T. R. Wyant
-  Double quote arguments in eg/pass_vcalendar and eg/flare_vcalendar, to
-    go along with the tokenizer change in 0.000_31.
-
-0.000_34	2011-12-28	T. R. Wyant
-  Add title_gravity mutator to Astro::App::Satpass2::FormatValue. This
-    controls whether multiline titles are aligned to the top or bottom
-    of their space.
-  Add 'literal' formatter argument to Astro::App::Satpass2::FormatValue.
-    This gives a way to get a literal string inserted and made the same
-    width as the underlying datum would be. Previously, this was done
-    using the 'title' object, but that is no longer useful if the
-    title_gravity is set to 'bottom'.
-  Require Perl 5.8 or higher. The code would never actually run under
-    5.6, since it uses the 'open scalar reference' functionality
-    introduced in Perl 5.8.
-  Normalize Astro::App::Satpass2 file input. The init(), load(), and
-    source() methods now all take a file name, a URL (disambiguated from
-    a file name using URI::URL), a scalar reference, an array reference,
-    or a code reference (that returns one line each time it is called).
-    URLs do not work unless LWP::UserAgent and URI::URL are installed.
-  Add missing version number to Astro::App::Satpass2::FormatValue.
-
-0.000_33	2011-12-23	T. R. Wyant
-  Add options -exclude and -status to Astro::App::Satpass2 spacetrack()
-    method, so they get passed through to the Astro::SpaceTrack object.
-
-0.000_32	2011-12-07	T. R. Wyant
-  Correct t/whole_app.t to use File::HomeDir->my_home() rather than
-    getpwuid in the tilde expansion tests.
-
-0.000_31	2011-12-06	T. R. Wyant
-  Have Astro::App::Satpass2::ParseTime::ISO8601->tz() regard an invalid
-    time zone as a warning rather than an error, and equivalent to the
-    system's local time zone (i.e. $ENV{TZ} = undef).
-  Make expansion of parameters re-tokenize more like Bash.
-  Correct t/tokenize.t to use File::HomeDir->my_home() rather than
-    getpwuid in the tilde expansion tests.
-  Have Astro::App::Satpass2::Warner ignore the Astro::App::Satpass2
-    modules when carping or croaking.
-  Override the system's $ENV{TZ} in t/format.t, since the tests
-    explicitly require this to be undefined.
-  Have t/basic.t display $ENV{TZ} for future reference.
-  Correct Astro::App::Satpass2 optional module documentation to reflect
-    the current state of the code.
-
-0.000_30	2011-12-05	T. R. Wyant
   Initial release to CPAN.
 
 # ex: set textwidth=72 autoindent :
