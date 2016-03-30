@@ -1826,6 +1826,13 @@ sub _arguments {
     return ( $obj, %{ $hash }, @clean, @append );
 }
 
+=begin comment
+
+# TODO remove this after October 1 2016
+# It's only still here because, although I can't find a call for it, and
+# testcover shows it is not called, I'm paranoid that I did something
+# tricky that I can not now remember and is not covered by the tests.
+
 sub _attrib_hash {
     my ( $self, $name, @arg ) = @_;
     if ( @arg ) {
@@ -1840,6 +1847,10 @@ sub _attrib_hash {
 	return $self->{$name};
     }
 }
+
+=end comment
+
+=cut
 
 {
 
@@ -2030,7 +2041,8 @@ sub _get_tle_attr {
 #	    {width} => field width, ignored if not a non-negative
 #		number;
 
-sub _format_bearing {
+# Called as $self->$method()
+sub _format_bearing {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $value, $arg, $fmtr ) = @_;
     defined $value
 	or goto &_format_undef;
@@ -2061,7 +2073,8 @@ sub _format_bearing {
     return $self->_format_string( $tags->[$inx], $arg, $fmtr );
 }
 
-sub _format_duration {
+# Called as $self->$method()
+sub _format_duration {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $value, $arg, $fmtr ) = @_;
 
     defined $arg->{align_left}
@@ -2098,7 +2111,8 @@ sub _format_duration {
     return $self->_format_string( $buffer, $arg, $fmtr );
 }
 
-sub _format_event {
+# Called as $self->$method()
+sub _format_event {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $value, $arg, $fmtr ) = @_;
 
     defined $value
@@ -2123,7 +2137,8 @@ sub _format_event {
     return $self->_format_string( $table->[$value] || '', $arg, $fmtr );
 }
 
-sub _format_integer {
+# Called as $self->$method()
+sub _format_integer {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $value, $arg ) = @_;	# $fmtr unused
     defined $value
 	or goto &_format_undef;
@@ -2141,7 +2156,8 @@ sub _format_integer {
     return $buffer;
 }
 
-sub _format_lower_case {
+# Called as $self->$method()
+sub _format_lower_case {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $value, $arg, $fmtr ) = @_;
     defined $value
 	or goto &_format_undef;
@@ -2149,7 +2165,8 @@ sub _format_lower_case {
     return $self->_format_string( lc $value, $arg, $fmtr );
 }
 
-sub _format_number {
+# Called as $self->$method()
+sub _format_number {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $value, $arg, $fmtr ) = @_;
     defined $value
 	and $value ne ''
@@ -2216,7 +2233,8 @@ sub _format_number_scientific {
     return $buffer;
 }
 
-sub _format_phase {
+# Called as $self->$method()
+sub _format_phase {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $value, $arg, $fmtr ) = @_;
     defined $value
 	or goto &_format_undef;
@@ -2239,7 +2257,8 @@ sub _format_phase {
     return $self->_format_string( $table->[0][1], $arg, $fmtr );
 }
 
-sub _format_right_ascension {
+# Called as $self->$method()
+sub _format_right_ascension {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $value, $arg, $fmtr ) = @_;
     defined $value
 	or goto &_format_undef;
@@ -2286,7 +2305,8 @@ sub _format_string {
     return $buffer;
 }
 
-sub _format_time {
+# Called as $self->$method()
+sub _format_time {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $value, $arg, $fmtr ) = @_;
     defined $value
 	or goto &_format_undef;
@@ -2302,7 +2322,8 @@ sub _format_time {
     return $self->_format_string( $buffer, $arg, $fmtr );
 }
 
-sub _format_title_case {
+# Called as $self->$method()
+sub _format_title_case {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $value, $arg, $fmtr ) = @_;
     defined $value
 	or goto &_format_undef;
@@ -2332,7 +2353,8 @@ sub _format_undef {
     return ' ' x $arg->{width};
 }
 
-sub _format_upper_case {
+# Called as $self->$method()
+sub _format_upper_case {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $value, $arg, $fmtr ) = @_;
     defined $value
 	or goto &_format_undef;
@@ -2340,7 +2362,8 @@ sub _format_upper_case {
     return $self->_format_string( uc $value, $arg, $fmtr );
 }
 
-sub _julian_day {
+# Called as $self->$method()
+sub _julian_day {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( undef, $value ) = @_;		# Invocant unused
     return julianday( $value );
 }
@@ -2375,6 +2398,13 @@ sub _manufacture_date_format {
     }
 }
 
+=begin comment
+
+# TODO remove this after October 1 2016
+# It's only still here because, although I can't find a call for it, and
+# testcover shows it is not called, I'm paranoid that I did something
+# tricky that I can not now remember and is not covered by the tests.
+
 sub _set_time_format {
     my ($self, $name, $data) = @_;
     $self->_valid_time_format( $name )
@@ -2386,7 +2416,12 @@ sub _set_time_format {
     return $self;
 }
 
-sub _subtract_epoch {
+=end comment
+
+=cut
+
+# Called as $self->$method()
+sub _subtract_epoch {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $value ) = @_;
     my $epoch = $self->_get_tle_attr( body => 'epoch' );
     defined $epoch

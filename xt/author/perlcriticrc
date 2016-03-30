@@ -42,6 +42,11 @@ severity	= gentle
 
 severity	= stern
 
+[Perl::Critic::Policy::Subroutines::ProhibitUnusedPrivateSubroutines]
+
+severity	= stern
+private_name_regex	= _(?!_)\w+
+
 [Perl::Critic::Policy::Subroutines::RequireArgUnpacking]
 
 allow_delegation_to	= __arguments _arguments grep map

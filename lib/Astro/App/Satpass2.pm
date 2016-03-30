@@ -934,7 +934,9 @@ EOD
     }
 }
 
-sub _help_MacOS {
+# The call to this is generated dynamically above, and there is no way
+# Perl::Critic can find it.
+sub _help_MacOS {	## no critic (ProhibitUnusedPrivateSubroutines)
     return <<'EOD';
 
 Normally, we would display the documentation for the satpass2
@@ -1040,6 +1042,8 @@ sub list : Verb( choose=s@ ) {
     return;
 }
 
+=begin comment
+
 sub _glob_files {
     my @arg = @_;
     my @rslt;
@@ -1053,6 +1057,10 @@ sub _glob_files {
     }
     return @rslt;
 }
+
+=end comment
+
+=cut
 
 sub load : Verb( verbose! ) {
     my ( $self, $opt, @names ) = __arguments( @_ );
@@ -1175,7 +1183,9 @@ sub location : Verb( dump! ) {
 
 }
 
-sub _macro_brief : Verb() {
+# Calls to the following _macro_... methods are generated dynamically
+# above, so there is no way Perl::Critic can find them.
+sub _macro_brief : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, undef, @args ) = __arguments( @_ );
     my $output;
     foreach my $name (sort @args ? @args : keys %{$self->{macro}}) {
@@ -1184,7 +1194,7 @@ sub _macro_brief : Verb() {
     return $output;
 }
 
-sub _macro_define : Verb() {
+sub _macro_define : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, undef, $name, @args ) = __arguments( @_ );
     my $output;
     defined $name
@@ -1218,7 +1228,7 @@ sub _macro_define_generator {
     return $output;
 }
 
-sub _macro_delete : Verb() {
+sub _macro_delete : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, undef, @args ) = __arguments( @_ );
     my $output;
     foreach my $name (@args ? @args : keys %{$self->{macro}}) {
@@ -1227,7 +1237,7 @@ sub _macro_delete : Verb() {
     return $output;
 }
 
-sub _macro_list : Verb() {
+sub _macro_list : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, undef, @args ) = __arguments( @_ );
     my $output;
     foreach my $name (sort @args ? @args : keys %{$self->{macro}}) {
@@ -1238,7 +1248,7 @@ sub _macro_list : Verb() {
     return $output;
 }
 
-sub _macro_load : Verb( lib=s ) {
+sub _macro_load : Verb( lib=s ) {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $opt, $name, @args ) = __arguments( @_ );
     my $output;
     defined $name
@@ -2642,7 +2652,7 @@ sub tle : Verb( :compute ) {
     return $self->__format_data( $tplt_name => $bodies, $opt );
 }
 
-sub _tle_options {
+sub __tle_options {
     my ( $self, $opt ) = @_;
     my @lgl = qw{ choose=s@ };
     $opt->{_template} = 'tle';
@@ -2962,7 +2972,11 @@ sub _file_reader {
     goto &$code;
 }
 
-sub _file_reader_ {
+# Most of the following are called using '$self->can(
+# "_file_reader_$ref" )', and there is no way a static analysis tool can
+# find such calls. So we just have to exempt them from Perl::Critic
+
+sub _file_reader_ {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $file, $opt ) = @_;
 
     defined $file
@@ -3024,7 +3038,7 @@ sub _file_reader__validate_url {
     return 1;
 }
 
-sub _file_reader_ARRAY {
+sub _file_reader_ARRAY {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( undef, $file, $opt ) = @_;	# Invocant unused
 
     my $inx = 0;
@@ -3039,7 +3053,7 @@ sub _file_reader_ARRAY {
     return $buffer;
 }
 
-sub _file_reader_CODE {
+sub _file_reader_CODE {		## no critic (ProhibitUnusedPrivateSubroutines)
     my ( undef, $file, $opt ) = @_;	# Invocant unused
     $opt->{glob}
 	or return $file;
@@ -3053,7 +3067,7 @@ sub _file_reader_CODE {
     return $buffer;
 }
 
-sub _file_reader_SCALAR {
+sub _file_reader_SCALAR {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $file, $opt ) = @_;
 
     $opt->{glob}

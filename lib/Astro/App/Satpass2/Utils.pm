@@ -50,7 +50,7 @@ our @EXPORT_OK = qw{
 	    my $method = $lgl->[1];
 	    unless ( defined $method ) {
 		( $method = $data[3] ) =~ s/ .* :: //smx;
-		$method = "_${method}_options";
+		$method = "__${method}_options";
 	    }
 	    $lgl = $self->$method( \%opt, $lgl );
 	}
