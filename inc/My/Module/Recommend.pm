@@ -11,11 +11,9 @@ use My::Module::Recommend::All qw{ __all };
 
 my ( $is_5_010, $is_5_012 );
 
-eval {
-    require 5.012;
+if ( $] ge '5.012' ) {
     $is_5_012 = $is_5_010 = 1;
-} or eval {
-    require 5.010;
+} elsif ( $] ge '5.010' ) {
     $is_5_010 = 1;
 };
 

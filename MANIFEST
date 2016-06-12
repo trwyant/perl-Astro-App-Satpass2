@@ -91,6 +91,7 @@ xt/author/dependencies.t
 xt/author/executable.t
 xt/author/kwalitee.t
 xt/author/manifest.t
+xt/author/minimum_perl.t
 xt/author/parse_time_date_manip_5_really.t
 xt/author/perlcriticrc
 xt/author/pod.t

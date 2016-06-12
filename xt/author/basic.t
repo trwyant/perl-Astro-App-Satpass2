@@ -17,6 +17,7 @@ ok eval {
 require_ok 'DateTime';
 require_ok 'DateTime::TimeZone';
 require_ok 'Geo::WebService::Elevation::USGS';
+require_ok 'Perl::MinimumVersion';
 require_ok 'Test::CPAN::Changes';
 require_ok 'Test::Kwalitee';
 require_ok 'Test::MockTime';
