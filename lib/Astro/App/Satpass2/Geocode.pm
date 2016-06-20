@@ -48,8 +48,7 @@ sub attribute_names {
 sub geocode {
     my ( $self ) = @_;
     $self->warner()->wail(
-	"The @{[ ref $self ]} class does not support geocoding. Use a
-	subclass"
+	"The @{[ ref $self ]} class does not support geocoding. Use a subclass"
     );
     return;	# wail() does not return, but Perl::Critic does not
 		# know this.
