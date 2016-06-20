@@ -78,8 +78,6 @@ my $default_geocoder;
 $default_geocoder = sub {
     my $value =
 	_can_use_geocoder( 'Astro::App::Satpass2::Geocode::OSM'
-	||
-	_can_use_geocoder( 'Astro::App::Satpass2::Geocode::Geocoder::US' )
 	);
     $default_geocoder = sub { return $value };
     return $value;
@@ -4922,16 +4920,6 @@ L<DateTime::TimeZone|DateTime::TimeZone> installed,
 C<Astro::App::Satpass2> will let you use C<Cldr> time formats if you
 like, instead of C<strftime> formats.
 
-=item L<Geo::Coder::Geocoder::US|Geo::Coder::Geocoder::US>
-
-This module is used by the Geocoder.us geocoder for the
-L<geocode()|/geocode> method. If you are not interested in using the
-L<geocode()|/geocode> method you do not need this module.
-
-Note that the web site that serves the data for this module has been out
-of action for some time, and this module itself is scheduled for
-retraction mid-2016 unless the web site comes back from the dead.
-
 =item L<Geo::Coder::OSM|Geo::Coder::OSM>
 
 This module is used by the Open Street Map geocoder for the
@@ -6930,21 +6918,11 @@ an actual instantiated object or a class name. If the class name is
 specified, the leading C<Astro::App::Satpass2::Geocode::> can be
 omitted.
 
-As of version 0.028_01, the default is the first of
-L<Astro::App::Satpass2::Geocode::OSM|Astro::App::Satpass2::Geocode::OSM>
-or
-L<Astro::App::Satpass2::Geocode::Geocoder::US|Astro::App::Satpass2::Geocode::Geocoder::US>,
-that can be loaded. See the documentation for details of these, but
-basically each C<Astro::App::Satpass2::Geocode::*> class wraps a
-correspondingly-named C<Geo::Coder::*> class, which must be installed.
-
-Previous to version 0.028_01, C<Geocoder::US> was preferred,
-but since that has been out of service for a while, it seemed better to
-provide a default that actually worked. The underlying module,
-C<Geo::Coder::Geocoder::US|Geo::Coder::Geocoder::US> is scheduled for
-retraction mid-2016 unless the web site it uses comes back from the
-dead. If and when that module is retracted, support will be removed from
-this code.
+As of version [%% next_version %%], support for
+C<Geo::Coder::Geocoder::US> has been retracted, so the default is
+L<Astro::App::Satpass2::Geocode::OSM|Astro::App::Satpass2::Geocode::OSM>.
+The problem with C<Geo::Coder::Geocoder::US> was the disappearance of
+the underlying web side, leading to the retraction of that module.
 
 =head2 geometric
 
@@ -7746,20 +7724,13 @@ when support for F<satpass> is dropped.
 
 =item geocode
 
-Geocoding is handled by external modules, typically those that
-B<do not> require the registration of an application key. Wrapper
-classes have been provided for two of these:
-L<Geo::Coder::Geocoder::US|Geo::Coder::Geocoder::US> and
-L<Geo::Coder::OSM|Geo::Coder::OSM>. The names of the wrapper classes
-are (so far) derived from the names of the wrapped classes by
-C<s/\AGeo::Coder::/Astro::App::Satpass2::Geocode::/>, and the constant
-prefix on the wrapper name may be omitted when setting the geocoder.
-
-B<Note> that the web site that serves the data for 
-L<Geo::Coder::Geocoder::US|Geo::Coder::Geocoder::US> has been out of
-action for some time now, and that
-L<Geo::Coder::Geocoder::US|Geo::Coder::Geocoder::US> itself is scheduled
-for retraction mid-2016 unless the web site returns from the dead.
+Geocoding is handled by external modules, typically those that B<do not>
+require the registration of an application key. A wrapper class has been
+provided for L<Geo::Coder::OSM|Geo::Coder::OSM>. The names of the
+wrapper classes are (so far) derived from the names of the wrapped
+classes by C<s/\AGeo::Coder::/Astro::App::Satpass2::Geocode::/>, and the
+constant prefix on the wrapper name may be omitted when setting the
+geocoder.
 
 =item pass
 

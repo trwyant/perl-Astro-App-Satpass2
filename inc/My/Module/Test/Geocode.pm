@@ -90,7 +90,7 @@ My::Module::Test::Geocode - Tests for geocode wrappers
  use lib qw{ inc };
  use Test::More 0.88;
  use My::Module::Test::Geocode;
- setup 'Astro::App::Satpass2::Geocode::Geocoder::US';
+ setup 'Astro::App::Satpass2::Geocode::OSM';
  SKIP: {
      geocode '1600 Pennsylvania Ave, Washington DC', 1;
  }

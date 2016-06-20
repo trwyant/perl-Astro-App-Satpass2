@@ -23,7 +23,6 @@ our @CARP_NOT = ( qw{
     Astro::App::Satpass2::FormatTime::Strftime
     Astro::App::Satpass2::FormatValue
     Astro::App::Satpass2::Geocode
-    Astro::App::Satpass2::Geocode::Geocoder::US
     Astro::App::Satpass2::Geocode::OSM
     Astro::App::Satpass2::Macro
     Astro::App::Satpass2::Macro::Code

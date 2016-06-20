@@ -170,11 +170,11 @@ and then query the U. S. Geological Survey for your height above sea
 level.
 
 This requires two more optional modules:
-L<Geo::Coder::Geocoder::US|Geo::Coder::Geocoder::US> and
+L<Geo::Coder::OSM|Geo::Coder::OSM> and
 L<Geo::WebService::Elevation::USGS|Geo::WebService::Elevation::USGS>.
 With these installed, the address entry in the previous example becomes
 
- satpass2> geocode '1600 Pennsylvania Ave, Washington DC'
+ satpass2> geocode '1600 Pennsylvania Ave NW, Washington DC'
 
 When you issue this command, the geocoded location is displayed,
 formatted as C<set> commands:

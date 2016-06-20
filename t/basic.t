@@ -328,24 +328,6 @@ SKIP: {
     my $tests = 3;
 
     eval {
-	require Geo::Coder::Geocoder::US;
-	1;
-    } or skip 'Unable to load Geo::Coder::Geocoder::US', $tests;
-
-    require_ok 'Astro::App::Satpass2::Geocode::Geocoder::US'
-	or BAIL_OUT;
-
-    can_ok 'Astro::App::Satpass2::Geocode::Geocoder::US', @geocode_methods
-	or BAIL_OUT;
-
-    instantiate 'Astro::App::Satpass2::Geocode::Geocoder::US'
-	or BAIL_OUT;
-}
-
-SKIP: {
-    my $tests = 3;
-
-    eval {
 	require Geo::Coder::OSM;
 	1;
     } or skip 'Unable to load Geo::Coder::OSM', $tests;
