@@ -174,15 +174,19 @@ L<Geo::Coder::OSM|Geo::Coder::OSM> and
 L<Geo::WebService::Elevation::USGS|Geo::WebService::Elevation::USGS>.
 With these installed, the address entry in the previous example becomes
 
- satpass2> geocode '1600 Pennsylvania Ave NW, Washington DC'
+ satpass2> geocode '1600 Pennsylvania Ave NW, Washington DC USA'
 
 When you issue this command, the geocoded location is displayed,
 formatted as C<set> commands:
 
- set location '1600 Pennsylvania Ave NW, Washington DC 20502'
- set latitude 38.898748
- set longitude -77.037684
- set height 17.38
+ set location '1600 Pennsylvania Avenue Northwest,
+   Washington, District of Columbia USA'
+ set latitude 38.8976989
+ set longitude -77.036553192281
+ set height 18.81
+
+If more than one result is returned, all are displayed but no location
+is set. If no result is returned, an exception is raised.
 
 =head1 PREDICTING PASSES
 

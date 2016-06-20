@@ -828,6 +828,7 @@ sub geocode : Verb( debug! ) {
 	foreach my $poi ( @rslt ) {
 	    $output .= join ' ', map { $poi->{$_} } qw{ latitude
 	    longitude description };
+	    $output =~ s/ (?: \A | (?<! \n ) ) \z /\n/smx;
 	}
     }
     return $output;

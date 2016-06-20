@@ -8,6 +8,7 @@ use warnings;
 use base qw{ Astro::App::Satpass2::Geocode };
 
 use Astro::App::Satpass2::Utils qw{ instance };
+use List::Util ();
 
 our $VERSION = '0.031';
 
@@ -21,6 +22,12 @@ sub geocode {
     my $geocoder = $self->geocoder();
 
     if ( my @rslt = $geocoder->geocode( location => $loc ) ) {
+	# Heuristic to prevent cruft being returned.
+	if ( @rslt > 1 ) {
+	    my $cutoff = List::Util::max( map { $_->{importance} }
+		@rslt ) - 0.3;
+	    @rslt = grep { $_->{importance} > $cutoff } @rslt;
+	}
 	return (
 	    map {
 		{
@@ -36,12 +43,28 @@ sub geocode {
 
 }
 
-sub _description {
-    my ( $info ) = @_;
-    my $desc = $info->{display_name};
-    $desc =~ s/ [^,]+ , \s* //smx;
-    $desc =~ s/ \A ( \d+ ) , /$1/smx;	# Oh, for 5.10 and \K
-    return $desc;
+{
+    my $desc = {
+	us	=> sub {
+	    my ( $info ) = @_;
+	    my $addr = $info->{address};
+	    return sprintf '%s %s, %s, %s USA', map { $addr->{$_} }
+		qw{ house_number pedestrian city state };
+	},
+    };
+
+    sub _description {
+	my ( $info ) = @_;
+	my $country = lc $info->{address}{country_code};
+	if ( my $code = $desc->{$country} ) {
+	    return $code->( $info );
+	} else {
+	    my $desc = $info->{display_name};
+	    $desc =~ s/ [^,]+ , \s* //smx;
+	    $desc =~ s/ \A ( \d+ ) , /$1/smx;	# Oh, for 5.10 and \K
+	    return $desc;
+	}
+    }
 }
 
 1;
