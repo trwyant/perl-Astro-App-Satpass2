@@ -16,14 +16,19 @@ use DateTime::TimeZone;
 
 our $VERSION = '0.031';
 
+use constant DATETIME_CLASS => 'DateTime';
+
 sub format_datetime {
     my ( $self, $tplt, $time, $gmt ) = @_;
     $time = $self->__round_time_value( $time );
-    if ( instance( $time, 'DateTime' ) ) {
+    my $class = $self->DATETIME_CLASS();
+    if ( instance( $time, $class ) ) {
 	return $self->__format_datetime( $time, $tplt );
     } else {
+	ref $time
+	    and $self->warner()->wail( 'Unsupported time specification' );
 	# Oh, for 5.010 and the // operator.
-	my $dt = DateTime->from_epoch(
+	my $dt = $class->from_epoch(
 	    epoch	=> $time,
 	    time_zone	=> $self->_get_zone( defined $gmt ? $gmt :
 		$self->gmt() ),
@@ -86,9 +91,14 @@ sub format_datetime {
 
 }
 
+sub __calendar_name {
+    return 'Gregorian';
+}
+
 sub __format_datetime_width_adjust_object {
-    my ( undef, $obj, $name, $val ) = @_;	# Invocant unused
-    $obj or $obj = DateTime->new( year => 2100 );
+    my ( $self, $obj, $name, $val ) = @_;
+    my $class = $self->DATETIME_CLASS();
+    $obj or $obj = $class->new( year => 2100 );
     $obj->set( $name => $val );
     return $obj;
 }

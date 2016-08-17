@@ -11,6 +11,8 @@ use Astro::App::Satpass2::FormatTime;
 use Astro::App::Satpass2::Utils qw{ load_package };
 use Astro::Coord::ECI::Utils 0.059 qw{ looks_like_number };
 
+use constant SCALAR	=> ref \1;
+
 our $VERSION = '0.031';
 
 my %static = (
@@ -132,6 +134,12 @@ sub delegate {	## no critic (RequireFinalReturn)
 
     sub parse {
 	my ( $self, $string, $default ) = @_;
+
+	if ( SCALAR eq ref $string ) {
+	    my $time = ${ $string };
+	    $self->base( $self->{absolute} = $time );
+	    return $time;
+	}
 
 	if ( ! defined $string || '' eq $string ) {
 	    defined $default
@@ -287,6 +295,8 @@ Epoch times are composed of the string 'epoch ' followed by a number,
 and represent that time relative to Perl's epoch. It would have been
 nice to just accept a number here, but it was impossible to disambiguate
 a Perl epoch from an ISO-8601 time without punctuation.
+
+Scalar references are also interpreted as epoch times.
 
 Absolute times are anything not corresponding to the above. These are
 the only times actually passed to L</parse_time_absolute>.

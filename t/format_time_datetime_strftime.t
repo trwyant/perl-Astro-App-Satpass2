@@ -58,6 +58,9 @@ method round_time => 60, TRUE, 'Round to nearest minute';
 method format_datetime => DATE_TIME_FORMAT, $time, 1,
     '2011/04/01 00:01:00', 'Explicit GMT time, rounded to minute';
 
+method format_datetime => '%{year_with_christian_era} %{calendar_name}',
+    $time, 1, '2011AD Gregorian', 'Explicit GMT year, with calendar';
+
 done_testing;
 
 1;

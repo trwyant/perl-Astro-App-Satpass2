@@ -6633,6 +6633,9 @@ an offset in C<days hours:minutes:seconds> from the last
 explicitly-specified time. Otherwise it is handed to C<Date::Manip> for
 parsing. Invalid times result in an exception.
 
+Epoch times can be specified either by prefixing C<'epoch '> or by
+passing a reference to the value.
+
 =head1 ATTRIBUTES
 
 The Astro::App::Satpass2 object has a number of attributes to configure its
@@ -7409,6 +7412,15 @@ L<Date::Manip|Date::Manip> has at least some support for locales, so
 check the L<Date::Manip|Date::Manip> documentation before you assume you
 must enter dates in English. The ISO 8601 format is all-numeric.
 
+=head2 Epoch time
+
+Epoch time can be specified directly, bypassing the time parser. There
+are two ways to do this:
+
+* Prefix the string C<'epoch '> to the epoch time;
+
+* Pass a reference to the epoch time.
+
 =head2 Relative time
 
 A relative time is specified by '+' or '-' and an integer number of
@@ -7423,10 +7435,10 @@ same applies if you choose not to specify minutes. For example:
 '+7 12' specifies 7 days and 12 hours after the last-specified time.
 
 If a relative time is specified as the first time argument to a method,
-it is relative to the most-recently-specified absolute time, even if
-that absolute time was specified by default. Relative times in
-subsequent arguments to the same method are relative to the
-previously-specified time, whether absolute or relative. For example:
+it is relative to the most-recently-specified absolute or epoch time,
+even if that time was specified by default. Relative times in subsequent
+arguments to the same method are relative to the previously-specified
+time, whether absolute, epoch or relative. For example:
 
  $satpass2->almanac( '', '+5' );
 

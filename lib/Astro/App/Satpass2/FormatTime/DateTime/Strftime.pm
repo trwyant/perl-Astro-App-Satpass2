@@ -17,8 +17,11 @@ use POSIX ();
 our $VERSION = '0.031';
 
 sub __format_datetime {
-    my ( undef, $object, $tplt ) = @_;	# Invocant unused
-    return $object->strftime( $tplt );
+    my ( $self, $date_time, $tplt ) = @_;
+    my $calendar;
+    $tplt =~ s/ %\{calendar_name\} / $calendar ||=
+	$self->__calendar_name( $date_time ) /smxge;
+    return $date_time->strftime( $tplt );
 }
 
 1;
