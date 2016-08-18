@@ -25,6 +25,19 @@ sub delegate {
 	tomorrow => SECSPERDAY(),
     );
 
+    my $era_ad = sub { return $_[0] };
+    my $era_bc = sub { return 1 - $_[0] };
+    my %era_cvt = (
+	AD	=> $era_ad,
+	BC	=> $era_bc,
+	BCE	=> $era_bc,
+	CE	=> $era_ad,
+    );
+
+    my $era_re = qr< (?: @{[
+	join ' | ', sort keys %era_cvt
+    ]} ) >smxi;
+
     sub parse_time_absolute {
 	my ( $self, $string ) = @_;
 
@@ -38,13 +51,18 @@ sub delegate {
 
 	# ISO 8601 date
 	if ( $string =~ m< \A
-		( \d{4} \D? | \d{2} \D )			# year: $1
-		(?: ( \d{1,2} ) \D?				# month: $2
-		    (?: ( \d{1,2} ) \D?				# day: $3
+		( [0-9]+ $era_re [^0-9]* |		# year $1
+		    [0-9]{4} [^0-9]? |
+		    [0-9]+ [^0-9] )
+		(?: ( [0-9]{1,2} ) [^0-9]?		# month: $2
+		    (?: ( [0-9]{1,2} ) [^0-9]?		# day: $3
 		    )?
 		)?
 	    >smxg ) {
 	    @date = ( 0, $1, $2, $3 );
+
+	    $date[1] =~ s/ \A ( [0-9]+ ) ( $era_re ) [^0-9]? \z /
+		$era_cvt{ uc $2 }->( $1 + 0 ) /smxe;
 
 	# special-case 'yesterday', 'today', and 'tomorrow'.
 	} elsif ( $string =~ m{ \A
@@ -61,10 +79,10 @@ sub delegate {
 	}
 
 	$string =~ m< \G
-	    (?: ( \d{1,2} ) \D?			# hour: $1
-		(?: ( \d{1,2} ) \D?		# minute: $2
-		    (?: ( \d{1,2} ) \D?		# second: $3
-			( \d* )			# fract: $4
+	    (?: ( [0-9]{1,2} ) [^0-9]?			# hour: $1
+		(?: ( [0-9]{1,2} ) [^0-9]?		# minute: $2
+		    (?: ( [0-9]{1,2} ) [^0-9]?		# second: $3
+			( [0-9]* )			# fract: $4
 		    )?
 		)?
 	    )?
@@ -78,14 +96,10 @@ sub delegate {
 	}
 
 	foreach ( @date ) {
-	    defined $_ and s/ \D+ //smxg;
+	    defined $_ and s/ [^0-9] \z //smxg;
 	}
 
-	if ( $date[0] < 70 ) {
-	    $date[0] += 100;
-	} elsif ( $date[0] >= 100 ) {
-	    $date[0] -= 1900;
-	}
+#	$date[0] -= 1900;
 	$date[1] = defined $date[1] ? $date[1] - 1 : 0;
 	defined $date[2] or $date[2] = 1;
 	my $frc = pop @date;
