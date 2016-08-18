@@ -1003,9 +1003,7 @@ sub initfile : Verb( create-directory! quiet! ) {
 	    'Init file directory not found' );
     };
 
-    # The "\n" is for display purposes, and gets chomp-ed before
-    # use.
-    return File::Spec->catfile( $init_dir, "satpass2rc\n" );
+    return File::Spec->catfile( $init_dir, 'satpass2rc' );
 }
 
 #	$file_name = _init_file_01()
