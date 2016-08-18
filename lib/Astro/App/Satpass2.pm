@@ -236,6 +236,7 @@ my %mutator = (
     spacetrack => \&_set_spacetrack,
     stdout => \&_set_stdout,
     time_format => \&_set_formatter_attribute,
+    time_formatter => \&_set_formatter_attribute,
     time_parser => \&_set_time_parser,
 ##    timing => \&_set_unmodified,
     twilight => \&_set_twilight,  # 'civil', 'nautical', 'astronomical'
@@ -263,6 +264,7 @@ my %accessor = (
     perltime => \&_get_time_parser_attribute,
     spacetrack => \&_get_spacetrack,
     time_format => \&_get_formatter_attribute,
+    time_formatter	=> \&_get_formatter_attribute,
     tz => \&_get_time_parser_attribute,
     warning => \&_get_warner_attribute,
 );
@@ -281,6 +283,7 @@ my %shower = (
     pass_variant	=> \&_show_pass_variant,
     time_parser => \&_show_copyable,
     time_format => \&_show_formatter_attribute,
+    time_formatter	=> \&_show_formatter_attribute,
 );
 foreach ( keys %accessor ) { $shower{$_} ||= \&_show_unmodified }
 
