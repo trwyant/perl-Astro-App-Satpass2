@@ -1851,6 +1851,8 @@ sub _set_code_ref {
 #        object's attributes not to be copied to the new object;
 #    {message} is an optional message to emit if the object can not be
 #	instantiated;
+#    {prefix} is an optional reference to an array of name prefixes to
+#	try if the named module does not load.
 
 sub _set_copyable {
     my ( $self, %arg ) = @_;
