@@ -38,6 +38,35 @@ sub delegate {
 	join ' | ', sort keys %era_cvt
     ]} ) >smxi;
 
+    my $make_epoch;
+    {
+	local $@ = @_;
+
+	$make_epoch = eval {
+	    require DateTime;
+	    1;
+	} ? sub {
+	    my ( $y, $mo, $d, $h, $m, $s, $f, $z ) = @_;
+	    return DateTime->new(
+		year	=> $y,
+		month	=> $mo,
+		day	=> $d,
+		hour	=> $h,
+		minute	=> $m,
+		second	=> $s,
+		nanosecond	=> $f * 1_000_000_000,
+		time_zone	=> $z ? 'UTC' : 'local',
+	    )->epoch();
+	} : sub {
+	    my @date = @_;
+	    my ( $frc, $z ) = splice @date, -2, 2;
+	    --$date[1];
+	    return $frc + $z ?
+		timegm( reverse @date ) :
+		timelocal( reverse @date );
+	};
+    }
+
     sub parse_time_absolute {
 	my ( $self, $string ) = @_;
 
@@ -51,7 +80,7 @@ sub delegate {
 
 	# ISO 8601 date
 	if ( $string =~ m< \A
-		( [0-9]+ $era_re [^0-9]* |		# year $1
+		( [0-9]+ \s* $era_re [^0-9]* |		# year $1
 		    [0-9]{4} [^0-9]? |
 		    [0-9]+ [^0-9] )
 		(?: ( [0-9]{1,2} ) [^0-9]?		# month: $2
@@ -61,8 +90,14 @@ sub delegate {
 	    >smxg ) {
 	    @date = ( 0, $1, $2, $3 );
 
-	    $date[1] =~ s/ \A ( [0-9]+ ) ( $era_re ) [^0-9]? \z /
-		$era_cvt{ uc $2 }->( $1 + 0 ) /smxe;
+	    unless ( $date[1] =~ s/ \A ( [0-9]+ ) \s* ( $era_re ) [^0-9]? \z /
+		$era_cvt{ uc $2 }->( $1 + 0 ) /smxe ) {
+		$date[1] =~ s/ [^0-9] \z //smx;
+		$date[1] < 70
+		    and $date[1] += 2000;
+		$date[1] < 100
+		    and $date[1] += 1900;
+	    }
 
 	# special-case 'yesterday', 'today', and 'tomorrow'.
 	} elsif ( $string =~ m{ \A
@@ -100,24 +135,21 @@ sub delegate {
 	}
 
 #	$date[0] -= 1900;
-	$date[1] = defined $date[1] ? $date[1] - 1 : 0;
+	defined $date[1] or $date[1] = 1;
 	defined $date[2] or $date[2] = 1;
 	my $frc = pop @date;
+	if ( $frc ) {
+	    my $denom = '1' . ( '0' x length $frc );
+	    $frc /= $denom;
+	} else {
+	    $frc = 0;
+	}
 
 	foreach ( @date ) {
 	    defined $_ or $_ = 0;
 	}
 
-	my $time = @zone ?
-	    timegm( reverse @date ) :
-	    timelocal( reverse @date );
-
-	if ( defined $frc  && $frc ne '') {
-	    my $denom = '1' . ( '0' x length $frc );
-	    $time += $frc / $denom;
-	}
-
-	return $time + $offset;
+	return $make_epoch->( @date, $frc, scalar @zone ) + $offset;
     }
 
 }
@@ -161,6 +193,21 @@ This class understands ISO-8601 time zone specifications of the form
 shifts for summer time. So C<2009/7/1 12:00:00 -5> is 5:00 PM GMT, not
 4:00 PM. An attempt to set any other time zone will result in a warning,
 and the system default zone being used.
+
+As an extension to the ISO-8601 standard, years can be followed by an
+era specification, which is one of C<'AD'>, C<'BC'>, C<'BCE'>, or
+C<'CE'> without regard to case. The era indicator may be separated from
+the year by white space, and be followed by a non-digit separator
+character.
+
+Unless the era is specified, years less than C<70> will have C<2000>
+added, and years at least equal to C<70> but less than C<100> will have
+C<1900> added.
+
+If L<DateTime|DateTime> can be loaded, it will be used to get an epoch
+from the parsed date. Otherwise L<Time::Local|Time::Local> will be used.
+L<Time::Local|Time::Local> has its own quirks when it sees a year in the
+distant past. See its documentation for more information.
 
 =head1 METHODS
 

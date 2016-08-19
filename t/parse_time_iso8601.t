@@ -390,6 +390,62 @@ SKIP: {
 
 }
 
+SKIP: {
+    my $tests = 5;
+
+    eval {
+	require DateTime;
+	1;
+    } or skip 'Unable to load DateTime', $tests;
+
+    note <<'EOD';
+
+We only do the following if DateTime can be loaded, because Time::Local
+does strange things with long-past dates.
+
+Yes, we're using the Gregorian calendar for dates that really should be
+Julian, but for the moment we're stuck with that.
+
+EOD
+
+    my $dt = DateTime->new(	# Battle of Hastings
+	year	=> 1066,
+	month	=> 10,
+	day	=> 14,
+	time_zone	=> 'UTC',
+    );
+
+    method parse => '10661014Z', $dt->epoch(),
+	q{Parse ISO-8601 '10661014Z'};
+
+    method parse => '1066ad1014Z', $dt->epoch(),
+	q{Parse ISO-8601-ish '1066ad1014Z'};
+
+    $dt = DateTime->new(	# Great fire of Rome
+	year	=> 64,
+	month	=> 7,
+	day	=> 19,
+	time_zone	=> 'UTC',
+    );
+
+    method parse => '64CE-7-19 Z', $dt->epoch(),
+	q{Parse ISO-8601-ish '64CE-7-19 Z'};
+
+    $dt = DateTime->new(	# Asassination of J. Caesar
+	year	=> -43,
+	month	=> 3,
+	day	=> 15,
+	time_zone	=> 'UTC',
+    );
+
+    method parse => '44BC/3/15 ut', $dt->epoch(),
+	q{Parse ISO-8601-ish '44BC/3/15 ut'};
+
+    method parse => '44bce 3 15 gmt', $dt->epoch(),
+	q{Parse ISO-8601-ish '44bce 3 15 gmt'};
+
+}
+
 done_testing;
 
 1;
