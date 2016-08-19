@@ -19,10 +19,14 @@ our @EXPORT_OK = qw{
     __arguments expand_tilde
     has_method instance load_package merge_hashes my_dist_config quoter
     __date_manip_backend
-    ARRAY
+    ARRAY CODE HASH Regexp SCALAR
 };
 
 use constant ARRAY	=> ref [];
+use constant CODE	=> ref sub {};
+use constant HASH	=> ref {};
+use constant Regexp	=> ref qr{};
+use constant SCALAR	=> ref \1;
 
 # Documented in POD
 
@@ -40,7 +44,7 @@ use constant ARRAY	=> ref [];
 	    has_method( $_, 'dereference' ) ?  $_->dereference() : $_
 	} @args;
 
-	'HASH' eq ref $args[0]
+	HASH eq ref $args[0]
 	    and return ( $self, @args );
 
 	my @data = caller(1);
@@ -167,7 +171,7 @@ sub instance {
 	my $self;
 	blessed( $prefix[0] )
 	    and $self = shift @prefix;
-	my $opt = 'HASH' eq ref $prefix[0] ? shift @prefix : {};
+	my $opt = HASH eq ref $prefix[0] ? shift @prefix : {};
 	my $module = shift @prefix;
 
 	local @INC = @INC;
@@ -241,7 +245,7 @@ sub instance {
 # understand the unpacking to be subject to the configuration
 #     allow_arg_unpacking = grep
 sub merge_hashes {	## no critic (RequireArgUnpacking)
-    my @args = grep { 'HASH' eq ref $_ } @_;
+    my @args = grep { HASH eq ref $_ } @_;
     @args == 1
 	and return $args[0];
     my %rslt;
@@ -493,6 +497,30 @@ populated by L<Getopt::Long>, and all remaining arguments. If
 L<Getopt::Long|Getopt::Long> encounters an error an exception is thrown.
 This is done using the invocant's C<wail()> method if it has one,
 otherwise C<Carp> is loaded and C<Carp::croak()> is called.
+
+=head2 CONSTANTS
+
+This module supports the following exportable constants:
+
+=head2 ARRAY
+
+This constant is simply C<ref []>, i.e. C<'ARRAY'>.
+
+=head2 CODE
+
+This constant is simply C<ref sub {}>, i.e. C<'CODE'>.
+
+=head2 HASH
+
+This constant is simply C<ref {}>, i.e. C<'HASH'>.
+
+=head2 Regexp
+
+This constant is simply C<ref qr{}>, i.e. C<'Regexp'>.
+
+=head2 SCALAR
+
+This constant is simply C<ref \1>, i.e. C<'SCALAR'>.
 
 =head1 SUPPORT
 

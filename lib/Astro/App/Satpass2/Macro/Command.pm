@@ -7,7 +7,7 @@ use warnings;
 
 use base qw{ Astro::App::Satpass2::Macro };
 
-use Astro::App::Satpass2::Utils qw{ quoter };
+use Astro::App::Satpass2::Utils qw{ quoter ARRAY };
 
 our $VERSION = '0.031';
 
@@ -34,7 +34,7 @@ sub def {
 sub init {
     my ( $self ) = @_;
     $self->SUPER::init();
-    'ARRAY' eq ref $self->{def}
+    ARRAY eq ref $self->{def}
 	or $self->wail( q{Attribute 'def' must be an array reference} );
     $self->{implements} = { map { $_ => 1 } $self->name() };
     return;

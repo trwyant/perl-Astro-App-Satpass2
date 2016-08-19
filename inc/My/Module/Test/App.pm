@@ -14,6 +14,8 @@ use POSIX qw{ strftime };
 use Scalar::Util 1.26 qw{ blessed };
 use Test::More 0.52;
 
+use constant CODE	=> ref sub {};
+
 our @EXPORT = qw{
     application
     check_access
@@ -154,7 +156,7 @@ sub method (@) {	## no critic (RequireArgUnpacking)
     my $got;
     if ( eval { $got = $app->$method( @args ); 1 } ) {
 
-	if ( 'CODE' eq ref $want ) {
+	if ( CODE eq ref $want ) {
 	    @_ = ( $want, $got, $title );
 	    goto &$want;
 	}

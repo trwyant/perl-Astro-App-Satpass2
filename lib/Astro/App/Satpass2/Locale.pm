@@ -5,7 +5,7 @@ use 5.008;
 use strict;
 use warnings;
 
-use Astro::App::Satpass2::Utils qw{ expand_tilde };
+use Astro::App::Satpass2::Utils qw{ expand_tilde ARRAY CODE HASH };
 use Exporter qw{ import };
 use I18N::LangTags ();
 use I18N::LangTags::Detect ();
@@ -20,19 +20,19 @@ my $locale;
 {
 
     my %deref = (
-	ARRAY	=> sub {
+	ARRAY()	=> sub {
 	    my ( $data, $inx ) = @_;
 	    defined $inx
 		and exists $data->[$inx]
 		and return $data->[$inx];
 	    return;
 	},
-	CODE	=> sub {
+	CODE()	=> sub {
 	    my ( $code, $key, $arg ) = @_;
 	    my $rslt = $code->( $key, $arg );
 	    return $rslt;
 	},
-	HASH	=> sub {
+	HASH()	=> sub {
 	    my ( $data, $key ) = @_;
 	    defined $key
 		and exists $data->{$key}
@@ -60,7 +60,7 @@ my $locale;
 	ref $arg{text}
 	    or $arg{text} = [ $arg{text} ];
 	$arg{locale} ||= [];
-	'HASH' eq ref $arg{locale}
+	HASH eq ref $arg{locale}
 	    and $arg{locale} = [ $arg{locale} ];
 	$locale ||= _load();
 
@@ -68,7 +68,7 @@ my $locale;
 	foreach my $lc ( @lang ) {
 	    SOURCE_LOOP:
 	    foreach my $source ( @{ $locale }, @{ $arg{locale} } ) {
-		unless ( 'HASH' eq ref $source ) {
+		unless ( HASH eq ref $source ) {
 		    require Carp;
 		    Carp::confess( "\$source is '$source'" );
 		}
@@ -116,7 +116,7 @@ my $locale;
 	    default	=> $msg,
 	);
 
-	'CODE' eq ref $lcl
+	CODE eq ref $lcl
 	    and return $lcl->( $msg, @arg );
 
 	$lcl =~ m/ \[ % /smx
@@ -167,7 +167,7 @@ sub _load {
 		or return;
 	    my $data;
 	    $data = do $path
-		and 'HASH' eq ref $data
+		and HASH eq ref $data
 		and $locales[-1]{$lc} = $data;
 	};
     }
@@ -178,7 +178,7 @@ sub _load {
 	my $mod_name = __PACKAGE__ . "::$lc";
 	my $data;
 	$data = eval "require $mod_name"
-	    and 'HASH' eq ref $data
+	    and HASH eq ref $data
 	    and $locales[-1]{$lc} = $data;
     }
 

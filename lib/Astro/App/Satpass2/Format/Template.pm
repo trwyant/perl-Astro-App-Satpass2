@@ -8,7 +8,7 @@ use base qw{ Astro::App::Satpass2::Format };
 use Astro::App::Satpass2::Locale qw{ __localize };
 # use Astro::App::Satpass2::FormatValue;
 use Astro::App::Satpass2::FormatValue::Formatter;
-use Astro::App::Satpass2::Utils qw{ instance };
+use Astro::App::Satpass2::Utils qw{ instance ARRAY HASH SCALAR };
 use Astro::App::Satpass2::Wrap::Array;
 use Astro::Coord::ECI::TLE 0.059 qw{ :constants };
 use Astro::Coord::ECI::Utils 0.059 qw{
@@ -63,8 +63,8 @@ sub add_formatter_method {
     # name as the first argument. I will go to the desired signature as
     # soon as I get this version installed on my own machine.
     my ( $self, @arg ) = @_;
-    my $fmtr = 'HASH' eq ref $arg[0] ? $arg[0] : $arg[1];
-    'HASH' eq ref $fmtr
+    my $fmtr = HASH eq ref $arg[0] ? $arg[0] : $arg[1];
+    HASH eq ref $fmtr
 	or $self->warner()->wail(
 	'Formatter definition must be a HASH reference' );
     defined( my $fmtr_name = $fmtr->{name} )
@@ -147,7 +147,7 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
     my $tplt = delete $data{template}
 	or $self->warner()->wail( 'template argument is required' );
 
-    my $tplt_name = 'SCALAR' eq ref $tplt ? ${ $tplt } : $tplt;
+    my $tplt_name = SCALAR eq ref $tplt ? ${ $tplt } : $tplt;
 
     $data{default} ||= $self->__default();
 
@@ -304,7 +304,7 @@ sub tz {
 
 sub _all_events {
     my ( $self, $data ) = @_;
-    'ARRAY' eq ref $data or return;
+    ARRAY eq ref $data or return;
 
     my @events;
     foreach my $pass ( @{ $data } ) {
@@ -347,7 +347,7 @@ sub _localize {
 
 sub _process {
     my ( $self, $tplt, %arg ) = @_;
-    'ARRAY' eq ref $arg{arg}
+    ARRAY eq ref $arg{arg}
 	and $arg{arg} = Astro::App::Satpass2::Wrap::Array->new(
 	$arg{arg} );
     my $output;
@@ -384,7 +384,7 @@ sub _wrap {
 
     if ( instance( $data, 'Astro::App::Satpass2::FormatValue' ) ) {
 	# Do nothing
-    } elsif ( ! defined $data || 'HASH' eq ref $data ) {
+    } elsif ( ! defined $data || HASH eq ref $data ) {
 	my $value_formatter = $self->value_formatter();
 	$data = $value_formatter->new(
 	    data	=> $data,
@@ -428,7 +428,7 @@ sub _wrap {
 	    warner	=> $self->warner(),
 	);
 	$data->add_formatter_method( values %{ $self->{formatter_method} } );
-    } elsif ( 'ARRAY' eq ref $data ) {
+    } elsif ( ARRAY eq ref $data ) {
 	$data = [ map { $self->_wrap( data => $_, report => $report ) } @{ $data } ];
     } elsif ( embodies( $data, 'Astro::Coord::ECI' ) ) {
 	$data = $self->_wrap(

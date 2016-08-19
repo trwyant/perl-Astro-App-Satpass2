@@ -5,7 +5,7 @@ use 5.008;
 use strict;
 use warnings;
 
-use Astro::App::Satpass2::Utils qw{ instance };
+use Astro::App::Satpass2::Utils qw{ instance CODE };
 use Astro::App::Satpass2::Warner;
 use Scalar::Util 1.26 qw{ weaken };
 
@@ -50,7 +50,7 @@ sub init {
     $self->{warner} ||= Astro::App::Satpass2::Warner->new();
 
     defined $self->{generate}
-	and 'CODE' ne ref $self->{generate}
+	and CODE ne ref $self->{generate}
         and $self->wail( q{If specified, 'generate' must be a code ref} );
 
     defined $self->{name}

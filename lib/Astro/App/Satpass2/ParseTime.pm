@@ -8,10 +8,8 @@ use warnings;
 use base qw{ Astro::App::Satpass2::Copier };
 
 use Astro::App::Satpass2::FormatTime;
-use Astro::App::Satpass2::Utils qw{ load_package ARRAY };
+use Astro::App::Satpass2::Utils qw{ load_package ARRAY CODE SCALAR };
 use Astro::Coord::ECI::Utils 0.059 qw{ looks_like_number };
-
-use constant SCALAR	=> ref \1;
 
 our $VERSION = '0.031';
 
@@ -123,7 +121,7 @@ sub delegate {	## no critic (RequireFinalReturn)
 	    or return $self->$method( @args );
 	my $type = ref $dcdr
 	    or $self->warner()->weep( "Decoder for $method is scalar" );
-	'CODE' eq $type
+	CODE eq $type
 	    or $self->warner()->weep(
 	    "Decoder for $method is $type reference" );
 	return $dcdr->( $self, $method, @args );

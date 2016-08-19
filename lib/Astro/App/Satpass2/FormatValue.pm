@@ -8,7 +8,10 @@ use base qw{ Astro::App::Satpass2::Copier };
 use Astro::App::Satpass2::FormatTime;
 use Astro::App::Satpass2::FormatValue::Formatter;
 use Astro::App::Satpass2::Locale qw{ __localize };
-use Astro::App::Satpass2::Utils qw{ has_method instance merge_hashes };
+use Astro::App::Satpass2::Utils qw{
+    has_method instance merge_hashes
+    ARRAY CODE HASH
+};
 use Astro::App::Satpass2::Warner;
 use Astro::Coord::ECI::Sun 0.059;
 use Astro::Coord::ECI::TLE 0.059 qw{ :constants };
@@ -40,7 +43,7 @@ use constant TITLE_GRAVITY_TOP		=> 'top';
 	foreach my $name ( qw{ data default } ) {
 	    $self->{$name} = $args{$name} || {};
 	    ref $self->{$name}
-		and 'HASH' eq reftype( $self->{$name} )
+		and HASH eq reftype( $self->{$name} )
 		or $self->{warner}->wail(
 		"Argument '$name' must be a hash reference" );
 	}
@@ -61,7 +64,7 @@ use constant TITLE_GRAVITY_TOP		=> 'top';
 		"__local_coord_$self->{local_coordinates}" )
 	    or $self->{warner}->wail(
 		"Unknown local_coordinates $self->{local_coordinates}" );
-	'CODE' eq ref $self->{local_coordinates}
+	CODE eq ref $self->{local_coordinates}
 	    or $self->{warner}->wail(
 		'Argument local_coordinates must be a code reference ',
 		'or the name of a known coordinate system'
@@ -69,7 +72,7 @@ use constant TITLE_GRAVITY_TOP		=> 'top';
 
 	defined( $self->{list_formatter} = $args{list_formatter} )
 	    or $self->{list_formatter} = $self->can( '__list_formatter' );
-	'CODE' eq ref $self->{list_formatter}
+	CODE eq ref $self->{list_formatter}
 	    or $self->{warner}->wail(
 		'Argument list_formatter must be a code reference ',
 		'or the name of a known coordinate system'
@@ -114,7 +117,7 @@ use constant TITLE_GRAVITY_TOP		=> 'top';
 sub clone {
     my ( $self, @args ) = @_;
     my %arg;
-    if ( @args == 1 && ref $args[0] eq 'HASH' ) {
+    if ( @args == 1 && ref $args[0] eq HASH ) {
 	%arg = %{ $args[0] };
     } else {
 	%arg = @args;
@@ -268,7 +271,7 @@ sub __raw_events {
     my $events = $self->_get( data => 'events' )
 	or return;
 
-    'ARRAY' eq ref $events
+    ARRAY eq ref $events
 	or return;
 
     return @{ $events };
@@ -1548,11 +1551,11 @@ sub _confess {
 sub __make_formatter_code {
     my ( $class, $fmtr ) = @_;
 
-    'HASH' eq ref $fmtr
+    HASH eq ref $fmtr
 	or _confess( 'The argument must be a hash reference' );
     defined( my $fmtr_name = $fmtr->{name} )
 	or _confess( 'The {name} must be defined' );
-    'HASH' eq ref $fmtr
+    HASH eq ref $fmtr
 	or _confess( 'The info argument must be a HASH reference' );
 
     # Validate the dimension information
@@ -1572,7 +1575,7 @@ sub __make_formatter_code {
     # If the dimension is 'time_units' we need to validate that the
     # format key is defined and valid
     if ( 'time_units' eq $dim_name ) {
-	if ( 'ARRAY' eq ref $fmtr->{dimension}{format} ) {
+	if ( ARRAY eq ref $fmtr->{dimension}{format} ) {
 	    foreach my $entry ( @{ $fmtr->{dimension}{format} } ) {
 		$class->_valid_time_format_name( $entry )
 		    or _confess(
@@ -1597,7 +1600,7 @@ sub __make_formatter_code {
     }
 
     # Validate the fetch information
-    'CODE' eq ref $fmtr->{fetch}
+    CODE eq ref $fmtr->{fetch}
 	or _confess(
 	"In '$fmtr_name', {fetch} is not a code reference" );
 
@@ -1711,7 +1714,7 @@ sub reset_title_lines {
 		and next;
 
 	    my $default = $dflt->{$key};
-	    $arg->{$key} = 'CODE' eq ref $default ?
+	    $arg->{$key} = CODE eq ref $default ?
 		$default->( $self, $fmtr_name, $arg ) : $default
 
 	}
@@ -1810,7 +1813,7 @@ sub _arguments {
     my @arg = @_;
 
     my $obj = shift @arg;
-    my $hash = 'HASH' eq ref $arg[-1] ? pop @arg : {};
+    my $hash = HASH eq ref $arg[-1] ? pop @arg : {};
 
     my ( @clean, @append );
     foreach my $item ( @arg ) {
@@ -1838,7 +1841,7 @@ sub _attrib_hash {
     if ( @arg ) {
 	my $value = shift @arg;
 	ref $value
-	    and 'HASH' eq reftype( $value )
+	    and HASH eq reftype( $value )
 	    or $self->{warner}->wail(
 	    "Attribute $name must be a hash reference" );
 	$self->{$name} = $value;
@@ -1964,11 +1967,11 @@ sub _get {
 	defined $key
 	    or $self->warner()->weep( 'Undefined key' );
 	my $ref = reftype( $hash );
-	if ( 'HASH' eq $ref ) {
+	if ( HASH eq $ref ) {
 	    $hash = $hash->{$key};
-	} elsif ( 'ARRAY' eq $ref ) {
+	} elsif ( ARRAY eq $ref ) {
 	    $hash = $hash->[$key];
-	} elsif ( 'CODE' eq $ref ) {
+	} elsif ( CODE eq $ref ) {
 	    $hash = $hash->( $self, $key );
 	} else {
 	    return NONE;
@@ -2434,7 +2437,7 @@ sub _variant {
 
     my $data;
     if ( defined $variant ) {
-	$data = 'HASH' eq ref $variant ? $variant : {	# Shallow clone
+	$data = HASH eq ref $variant ? $variant : {	# Shallow clone
 	    %{ $self->_get( data => $variant ) || {} }
 	};
 	foreach my $key ( qw{ station time } ) {
