@@ -8,7 +8,7 @@ use warnings;
 use base qw{ Astro::App::Satpass2::Copier };
 
 use Astro::App::Satpass2::FormatTime;
-use Astro::App::Satpass2::Utils qw{ load_package };
+use Astro::App::Satpass2::Utils qw{ load_package ARRAY };
 use Astro::Coord::ECI::Utils 0.059 qw{ looks_like_number };
 
 use constant SCALAR	=> ref \1;
@@ -31,8 +31,10 @@ sub new {
 
     if ( __PACKAGE__ eq $class ) {
 
-	my @classes = split qr{ \s* , \s* }smx, defined $args{class} ?
-	$args{class} : 'Date::Manip,ISO8601';
+	$args{class} ||= [ qw{ Date::Manip ISO8601 } ];
+
+	my @classes = ARRAY eq ref $args{class} ? @{ $args{class} } :
+	    split qr{ \s* , \s* }smx, $args{class};
 
 	$class = _try ( @classes )
 	    or return;
@@ -211,6 +213,7 @@ sub use_perltime {
     # %trial is indexed by class name. The value is the class to
     # delegate to (which can be the same as the class itself), or undef
     # if the class can not be loaded, or has no delegate.
+
     my %trial;
 
     sub _try {
@@ -317,16 +320,23 @@ the first that can be instantiated in the list
 L<Astro::App::Satpass2::ParseTime::Date::Manip|Astro::App::Satpass2::ParseTime::Date::Manip>,
 L<Astro::App::Satpass2::ParseTime::ISO8601|Astro::App::Satpass2::ParseTime::ISO8601>.
 
-You can specify the list of parsers explicitly to C<new()> by passing
-the parser short names (without the 'Astro::App::Satpass2::ParseTime::') as
-arguments to C<new()>, either as a list or as a white-space-delimited
-string. The default behavior is equivalent to
+You can specify optional arguments to C<new()> as name/value pairs. The
+following name/value pairs are implemented:
 
- my $pt = Astro::App::Satpass2::ParseTime->new( qw{ Date::Manip ISO8601 } );
+=over
 
-or to
+=item class
 
- my $pt = Astro::App::Satpass2::ParseTime->new( 'Date::Manip ISO8601' );
+This argument specifies the short name of the class to instantiate (i.e.
+the part of the name after C<'Astro::App::Satpass2::ParseTime::'>. You
+can specify multiple values, either by separating them with commas or as
+an array reference. If multiple values are specified, you get the first
+that can actually be instantiated.
+
+The default is C<'Date::Manip,ISO8601'> (or, equivalently,
+C<[ qw{ Date::Manip ISO8601 ]>).
+
+=back
 
 =head2 base
 

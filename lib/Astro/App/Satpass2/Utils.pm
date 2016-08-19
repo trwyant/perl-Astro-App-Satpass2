@@ -19,7 +19,10 @@ our @EXPORT_OK = qw{
     __arguments expand_tilde
     has_method instance load_package merge_hashes my_dist_config quoter
     __date_manip_backend
+    ARRAY
 };
+
+use constant ARRAY	=> ref [];
 
 # Documented in POD
 
