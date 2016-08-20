@@ -56,7 +56,8 @@ sub new {
 
 sub attribute_names {
     my ( $self ) = @_;
-    return ( $self->SUPER::attribute_names(), qw{ base perltime tz } );
+    return ( $self->SUPER::attribute_names(), qw{
+	base perltime reform_date tz } );
 }
 
 sub base {
@@ -66,6 +67,23 @@ sub base {
 	return $self;
     }
     return $self->{base};
+}
+
+sub class_name_of_record {
+    my ( $self ) = @_;
+    my $rslt = substr $self->__class_name(), 2 + length __PACKAGE__;
+    if ( my $rd = $self->reform_date() ) {
+	$rslt .= ",reform_date=$rd";
+    }
+    return $rslt;
+}
+
+# For the use of class_name_of_record(). It exists so that
+# Astro::App::Satpass2::ParseTime::Date::Manip can override it, so that
+# we do not get the trailing '::v5' or '::v6';
+sub __class_name {
+    my ( $self ) = @_;
+    return ref $self;
 }
 
 {
@@ -429,8 +447,8 @@ This method B<must> be overridden by any subclass.
  $perltime = $pt->perltime();	# Find out whether the hack is on
 
 This method is both accessor and mutator for the object's perltime flag.
-This is boolean flag which the subclass may (or may not!) use to get the
-summer time straight when parsing time. If the flag is on (and the
+This is a Boolean flag which the subclass may (or may not!) use to get
+the summer time straight when parsing time. If the flag is on (and the
 subclass supports it) the tz setting is ignored, and an attempt to
 specify a time zone in a time to be parsed will produce undefined
 results.
@@ -456,6 +474,62 @@ This method parses a time, returning the resultant Perl time. If
 C<$string> is C<undef> or C<''>, $default is returned, or C<undef> if
 C<$default> is not specified. If C<$string> fails to parse, C<undef> is
 returned.
+
+=head2 reform_date
+
+ $pt->reform_date( 'dflt' );
+ $date_time = $pt->reform_date();
+
+This method is both accessor and mutator for the object's C<reform_date>
+attribute. Subclasses B<may (but need not)> use this attribute to
+determine whether to parse a given time as Julian or Gregorian.
+
+When called without arguments, it behaves as an accessor, and returns
+the current C<reform_date> setting. This is an opaque value which, if
+true, says that at least some dates are to be parsed as Julian.
+
+When called with an argument, it behaves as a mutator. If the argument
+is C<undef>, no dates are to be parsed as Julian. If the argument is
+defined but false, dates before October 15 1582 Gregorian are to be
+parsed as Julian. If the argument is a true value, it must be acceptable
+as a specification of when the reform was made. The invocant is returned
+to allow call chaining.
+
+This specific method simply records the C<reform_date> setting.
+
+Subclasses B<may> override this method, but if they do so they B<must>
+call C<SUPER::> with the same arguments they themselves were called
+with, and return whatever C<SUPER::> returns. Overrides may throw
+exceptions when needed, such as if called as a mutator and the new value
+is not acceptable. Mutators overrides are required to interpret their
+arguments as follows:
+
+=over
+
+=item Any false value
+
+This specifies that all dates are to be interpreted as Gregorian.
+
+=item C<'dflt'> (case-insensitive)
+
+This explicitly asks for the default reform date, which is October 15
+1582 Gregorian, at midnight in the local time zone.
+
+=item An ISO-8601 date, with separators
+
+This specifies midnight on the given date. Nothing fancy is done on the
+interpretation of this; it is simply split on the separators.
+
+=item An ISO-8601 date and time, with separators
+
+This specifies the given date and time. Nothing fancy is done on the
+interpretation of this; it is simply split on the separators.
+
+=back
+
+The mutator is free to accept other specifications, but is not required
+to. The mutator is also allowed to fail on the absence of optional
+modules, but only if the value being set is true.
 
 =head2 reset
 

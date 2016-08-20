@@ -50,7 +50,15 @@ EOD
       These modules are used to format times, and provide full time zone
       support. If they are not installed, POSIX::strftime() will be
       used, and you may find that you can not display correct local
-      times for zones other than your system's default zone or GMT.
+      times for zones other than your system's default zone or GMT. They
+      will also be used (if available) by the ISO8601 time parser
+      because they go farther into the past than Time::Local does.
+EOD
+    __any( 'DateTime::Calendar::Christian'	=> <<'EOD' ),
+      This module is used to parse (maybe) and format dates that might
+      be either Julian or Gregorian. Currently the only parser that has
+      this capability is ISO8601. If historical dates in the proleptic
+      Gregorian calendar are find with you, you do not need this module.
 EOD
     __any( 'Geo::Coder::OSM'		=> <<'EOD' ),
       This module is required for the Astro::App::Satpass2 geocode()

@@ -46,24 +46,27 @@ sub delegate {
 	    require DateTime;
 	    1;
 	} ? sub {
-	    my ( $y, $mo, $d, $h, $m, $s, $f, $z ) = @_;
-	    return DateTime->new(
-		year	=> $y,
-		month	=> $mo,
-		day	=> $d,
-		hour	=> $h,
-		minute	=> $m,
-		second	=> $s,
-		nanosecond	=> $f * 1_000_000_000,
-		time_zone	=> $z ? 'UTC' : 'local',
-	    )->epoch();
+	    my ( $self, @args ) = @_;
+	    my %dt_arg;
+	    @dt_arg{ qw<
+		year month day hour minute second nanosecond time_zone
+	    > } = @args;
+	    $dt_arg{nanosecond} *= 1_000_000_000;
+	    $dt_arg{time_zone} = $dt_arg{time_zone} ? 'UTC' : 'local';
+	    $self->{_reform_date}
+		and return DateTime::Calendar::Christian->new(
+		    %dt_arg,
+		    reform_date	=> $self->{_reform_date},
+		)->epoch();
+	    return DateTime->new( %dt_arg )->epoch();
 	} : sub {
-	    my @date = @_;
+	    my ( undef, @date ) = @_;
 	    my ( $frc, $z ) = splice @date, -2, 2;
 	    --$date[1];
-	    return $frc + $z ?
+	    return $frc + ( $z ?
 		timegm( reverse @date ) :
-		timelocal( reverse @date );
+		timelocal( reverse @date )
+	    );
 	};
     }
 
@@ -122,7 +125,7 @@ sub delegate {
 		)?
 	    )?
 	    \z >smxgc or return;
-	push @date, $1, $2, $3, $4;
+	push @date, $1, $2, $3, $4 ? ".$4" : 0;
 
 	my $offset = shift @date || 0;
 	if ( @zone && ! $zone[0] ) {
@@ -137,21 +140,61 @@ sub delegate {
 #	$date[0] -= 1900;
 	defined $date[1] or $date[1] = 1;
 	defined $date[2] or $date[2] = 1;
-	my $frc = pop @date;
-	if ( $frc ) {
-	    my $denom = '1' . ( '0' x length $frc );
-	    $frc /= $denom;
-	} else {
-	    $frc = 0;
-	}
 
 	foreach ( @date ) {
 	    defined $_ or $_ = 0;
 	}
 
-	return $make_epoch->( @date, $frc, scalar @zone ) + $offset;
+	return $make_epoch->( $self, @date, scalar @zone ) + $offset;
     }
 
+}
+
+sub reform_date {
+    my ( $self, @args ) = @_;
+    if ( @args ) {
+	( $args[0], $self->{_reform_date} ) = _reform_date( $args[0] );
+    }
+    return $self->SUPER::reform_date( @args );
+}
+
+# Take reform date specification. Return normalized specification and
+# DateTime object.
+
+{
+    my $default;
+
+    sub _reform_date {
+	my ( $rd ) = @_;
+	$rd
+	    or return;
+	require DateTime::Calendar::Christian;
+	if ( ref $rd ) {
+	    my $dt = DateTime::Calendar::Christian->new(
+		reform_date	=> $rd,
+	    )->reform_date();
+	    my $nf = $dt->strftime( '%Y-%m-%dT%H:%M:%S' );
+	    $nf =~ s/ T00:00:00 \z //smx;
+	    return ( $nf, $dt );
+	}
+	my $nf = $rd;
+	$nf =~ m/ \A dflt \z /smxi
+	    and return ( $nf,
+	    ( $default ||=
+		DateTime::Calendar::Christian->new()->reform_date() ) );
+	my @date = split qr{ [^0-9] }smx, $nf;
+	if ( 6 == @date || 3 == @date ) {
+	    3 == @date
+		and push @date, 0, 0, 0;
+	    my %dt_arg;
+	    @dt_arg{ qw{ year month day hour minute second } } = @date;
+	    $nf = sprintf '%04d-%-2d-%02dT%02d:%02d:%02d', @date;
+	    $nf =~ s/ T00:00:00 \z //smx;
+	    return ( $nf, DateTime->new( %dt_arg ) );
+	}
+	return ( $nf, DateTime::Calendar::Christian->new(
+		reform_date	=> $nf )->reform_date() );
+    }
 }
 
 sub tz {

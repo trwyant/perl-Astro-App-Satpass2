@@ -9,7 +9,7 @@ use Astro::App::Satpass2::Utils qw{ load_package __date_manip_backend };
 
 our $VERSION = '0.031';
 
-sub class_name_of_record {
+sub __class_name {
     return __PACKAGE__;
 }
 

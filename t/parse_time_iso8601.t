@@ -446,6 +446,74 @@ EOD
 
 }
 
+SKIP: {
+    my $tests = 7;
+
+    eval {
+	require DateTime::Calendar::Christian;
+	1;
+    } or skip 'Unable to load DateTime::Calendar::Christian', $tests;
+
+    note <<'EOD';
+
+We only do the following if DateTime::Calendar::Christian can be loaded.
+
+EOD
+
+    method new =>
+	class		=> 'Astro::App::Satpass2::ParseTime::ISO8601',
+	reform_date	=> 'dflt',
+	INSTANTIATE, 'Instantiate';
+
+    my $dt = DateTime::Calendar::Christian->new(	# Battle of Hastings
+	year	=> 1066,
+	month	=> 10,
+	day	=> 14,
+	time_zone	=> 'UTC',
+    );
+
+    method parse => '10661014Z', $dt->epoch(),
+	q{Parse ISO-8601 '10661014Z'};
+
+    method parse => '1066ad1014Z', $dt->epoch(),
+	q{Parse ISO-8601-ish '1066ad1014Z'};
+
+    $dt = DateTime::Calendar::Christian->new(	# Great fire of Rome
+	year	=> 64,
+	month	=> 7,
+	day	=> 19,
+	time_zone	=> 'UTC',
+    );
+
+    method parse => '64CE-7-19 Z', $dt->epoch(),
+	q{Parse ISO-8601-ish '64CE-7-19 Z'};
+
+    $dt = DateTime::Calendar::Christian->new(	# Asassination of J. Caesar
+	year	=> -43,	# Year 0 is 1 BC, so 44 BC is year -43.
+	month	=> 3,
+	day	=> 15,
+	time_zone	=> 'UTC',
+    );
+
+    method parse => '44 BC/3/15 ut', $dt->epoch(),
+	q{Parse ISO-8601-ish '44BC/3/15 ut'};
+
+    method parse => '44bce 3 15 gmt', $dt->epoch(),
+	q{Parse ISO-8601-ish '44bce 3 15 gmt'};
+	# 1582-10-15T00:00:00
+
+    method new =>
+	class		=> 'Astro::App::Satpass2::ParseTime::ISO8601',
+	reform_date	=> '1582-10-15T00:00:00',
+	INSTANTIATE, 'Instantiate';
+
+    method new =>
+	class		=> 'Astro::App::Satpass2::ParseTime::ISO8601',
+	reform_date	=> '1582-10-15',
+	INSTANTIATE, 'Instantiate';
+}
+
+
 done_testing;
 
 1;

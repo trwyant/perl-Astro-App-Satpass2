@@ -2062,6 +2062,7 @@ sub _set_time_parser {
 	class	=> 'Astro::App::Satpass2::ParseTime',
 	message	=> 'Unknown time parser',
 	default	=> 'Astro::App::Satpass2::ParseTime',
+	nocopy	=> 1,
 	prefix	=> [ 'Astro::App::Satpass2::ParseTime' ],
     );
 }
