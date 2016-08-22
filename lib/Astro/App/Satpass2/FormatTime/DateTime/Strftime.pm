@@ -16,6 +16,9 @@ use POSIX ();
 
 our $VERSION = '0.031';
 
+# So superclass can ducktype the object that does the real work.
+use constant METHOD_USED => 'strftime';
+
 sub __format_datetime {
     my ( $self, $date_time, $tplt ) = @_;
     my $calendar;
@@ -57,6 +60,11 @@ L<DateTime::TimeZone|DateTime::TimeZone> objects.
 
 All this class really provides is the interface to
 C<< DateTime->strftime() >>. Everything else is inherited.
+
+But in addition to the normal C<strftime> format patterns and the
+C<DateTime> method format patterns (e.g. C<%{year_with_era}>), this
+class provides format pattern C<%{calendar_name}>, which will be either
+C<'Julian'> or C<'Gregorian'>.
 
 =head1 METHODS
 

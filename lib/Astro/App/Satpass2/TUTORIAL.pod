@@ -461,6 +461,73 @@ is a separate subsystem all to itself. So:
  satpass2> # Save the configuration, overwriting any previous one
  satpass2> save -changes -overwrite
 
+=head2 The Julian Calendar
+
+No, there were no satellites in orbit when the last known holdout
+(Romania) adopted the Gregorian calendar. But the Sun and Moon have been
+rising and setting much longer than satellites have.
+
+If you install
+L<DateTime::Calendar::Christian|DateTime::Calendar::Christian> and
+properly configure C<satpass2>, you will be able to both parse and
+display dates in both the Gregorian and Julian calendars.
+
+=head3 Parsing Julian Calendar Dates
+
+The primary date parser is L<Date::Manip|Date::Manip>, which does not
+support Julian dates. But if you use the C<ISO8601> parser, you can
+configure it to parse a date as either Julian or Gregorian, depending on
+the date itself.
+
+What you have to do, in general, is use date parser
+L<Astro::App::Satpass2::ParseTime::ISO8601>, and set its
+L<reform_date|Astro::App::Satpass2::ParseTime::ISO8601/reform_date>
+attribute to the appropriate value. You should see the documentation for
+full details, but with the C<satpass2> script the configuration would
+look something like this
+
+ satpass2> # Configure the ISO8601 parser, with reform date
+ satpass2> set time_parser ISO8601,reform_date=dflt
+
+The C<'dflt'> specifies the default date, which is the date it was first
+adopted in Italy, on October 15 1582 (Gregorian). Any specification
+acceptable to 
+L<DateTime::Calendar::Christian|DateTime::Calendar::Christian> will work
+(e.g. C<'UK'>, which specifies September 24 1752), as will an ISO-8601
+time with delimiters (e.g. C<'1752-9-24'>). Specifying any false value
+causes all dates to be parsed as Gregorian.
+
+=head3 Formatting Julian Calendar Dates
+
+Here, you need to use the C<DateTime> date formatter, which will be the
+default if the L<DateTime|DateTime> module is installed. Since
+L<DateTime|DateTime> is a prerequisite for
+L<DateTime::Calendar::Christian|DateTime::Calendar::Christian>,
+installing this will make the proper date formatter the default. But
+before you can actually get Julian output dates, you need to configure
+the reform date. Because the date formatter is managed by the formatter
+object, the C<satpass2> commands to configure it are
+
+ satpass2> # Configure the time formatter and reform date
+ satpass2> formatter time_formatter DateTime::Strftime
+ satpass2> formatter reform_date dflt
+
+The available values for C<reform_date> are the same as for the parser.
+
+The C<DateTime> C<strftime> formatter also supports, as a special case,
+format pattern C<'%{calendar_name}'>, which renders as either
+C<'Julian'> or C<'Gregorian'> as appropriate. Given
+
+ satpass2> formatter time_format \
+ > '%{year_with_era}-%m-%d %{calendar_name}'
+
+The date of the asassination of Julius Caesar would be displayed as
+
+ '44BC-03-15 Julian'
+
+There is, currently, no support for the Julian calendar in
+L<Astro::App::Satpass2::FormatTime::DateTime::Cldr|Astro::App::Satpass2::FormatTime::DateTime::Cldr>.
+
 =head1 INTERMEDIATE TOPICS
 
 This section covers things that are beyond just getting the application

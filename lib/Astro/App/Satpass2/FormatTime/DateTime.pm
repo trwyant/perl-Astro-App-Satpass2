@@ -9,25 +9,26 @@ use base qw{
     Astro::App::Satpass2::FormatTime
 };
 
-use Astro::App::Satpass2::Utils qw{ instance };
+use Astro::App::Satpass2::Utils qw{ has_method __reform_date };
 use Astro::App::Satpass2::Locale qw{ __preferred };
 use DateTime;
 use DateTime::TimeZone;
 
 our $VERSION = '0.031';
 
-use constant DATETIME_CLASS => 'DateTime';
-
 sub format_datetime {
     my ( $self, $tplt, $time, $gmt ) = @_;
     $time = $self->__round_time_value( $time );
-    my $class = $self->DATETIME_CLASS();
-    if ( instance( $time, $class ) ) {
+    my $class = $self->__datetime_class();
+    if ( has_method( $time, $self->METHOD_USED() ) ) {
 	return $self->__format_datetime( $time, $tplt );
     } else {
 	ref $time
 	    and $self->warner()->wail( 'Unsupported time specification' );
 	# Oh, for 5.010 and the // operator.
+	my @dt_arg;
+	$self->{_reform_date}
+	    and push @dt_arg, reform_date => $self->{_reform_date};
 	my $dt = $class->from_epoch(
 	    epoch	=> $time,
 	    time_zone	=> $self->_get_zone( defined $gmt ? $gmt :
@@ -36,6 +37,14 @@ sub format_datetime {
 	);
 	return $self->__format_datetime( $dt, $tplt );
     }
+}
+
+sub reform_date {
+    my ( $self, @args ) = @_;
+    if ( @args ) {
+	( $args[0], $self->{_reform_date} ) = __reform_date( $args[0] );
+    }
+    return $self->SUPER::reform_date( @args );
 }
 
 {
@@ -92,12 +101,24 @@ sub format_datetime {
 }
 
 sub __calendar_name {
+    my ( undef, $date_time ) = @_;	# Invocant unused
+    my $code;
+    $code = $date_time->can( 'is_julian' )
+	and $code->( $date_time )
+	and return 'Julian';
     return 'Gregorian';
+}
+
+sub __datetime_class {
+    my ( $self ) = @_;
+    $self->reform_date()
+	and return 'DateTime::Calendar::Christian';
+    return 'DateTime';
 }
 
 sub __format_datetime_width_adjust_object {
     my ( $self, $obj, $name, $val ) = @_;
-    my $class = $self->DATETIME_CLASS();
+    my $class = $self->__datetime_class();
     $obj or $obj = $class->new( year => 2100 );
     $obj->set( $name => $val );
     return $obj;

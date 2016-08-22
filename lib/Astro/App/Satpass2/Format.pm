@@ -75,7 +75,8 @@ sub attribute_names {
     my ( $self ) = @_;
     return ( $self->SUPER::attribute_names(),
 	qw{ date_format desired_equinox_dynamical gmt
-	    local_coord provider round_time time_format time_formatter tz
+	    local_coord provider reform_date round_time
+	    time_format time_formatter tz
 	    value_formatter
 	} );
 }
@@ -423,6 +424,29 @@ If passed an argument, that argument becomes the new value of
 C<provider>, and the object itself is returned so that calls may be
 chained.
 
+=head3 reform_date
+
+ print 'Reform date: ', $fmt->reform_date(), "\n";
+ $fmt->reform_date( 'dflt' );
+
+The C<reform_date> attribute is maintained on behalf of subclasses of
+this class, which B<may> (but need not) use it to format times. This
+method B<may> be overridden by subclasses, but the override B<must> call
+C<SUPER::reform_date>, and return values consistent with the following
+description, and the override B<must> conform to the syntax and
+semantics described in the
+L<Astro::App::Satpass2::ParseTime::ISO8601|Astro::App::Satpass2::ParseTime::ISO8601>
+L<reform_date()|Astro::App::Satpass2::ParseTime::ISO8601/reform_date>
+documentation.
+
+This method acts as both accessor and mutator for the C<reform_date>
+attribute.  Without arguments it is an accessor, returning the current
+value of the C<reform_date> attribute.
+
+If passed an argument, that argument becomes the new value of
+C<reform_date>, and the object itself is returned so that calls may be
+chained.
+
 =head3 round_time
 
  print 'Time rounded to: ', $fmt->round_time(), " seconds\n";
@@ -511,8 +535,6 @@ C<tz> attribute.
 
 If passed an argument, that argument becomes the new value of C<tz>, and
 the object itself is returned so that calls may be chained.
-
-If no argument is passed, the current value of C<tz> is returned.
 
 The use of the argument is up to the subclass, but it is
 recommended for sanity's sake that the subclasses interpret this value

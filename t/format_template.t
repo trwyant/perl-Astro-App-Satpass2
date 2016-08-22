@@ -498,6 +498,34 @@ eval {
     1;
 } or fail "Added formatter failed: $@";
 
+SKIP: {
+    my $tests = 1;
+
+    eval {
+	require DateTime::Calendar::Christian;
+	1;
+    } or skip 'DateTime::Calendar::Christian not available', $tests;
+
+    $ft->template( fubar => q<[% data.date( width = '' ) %]> );
+    $ft->reform_date( 'dflt' );
+    $ft->date_format( '%{year_with_christian_era}-%m-%d %{calendar_name}' );
+
+    my $dt = DateTime::Calendar::Christian->new(
+	year		=> -43,
+	month		=> 3,
+	day		=> 15,
+	time_zone	=> 'UTC',
+    );
+
+    is $ft->format(
+	template	=> 'fubar',
+	data		=> {
+	    time	=> $dt->epoch(),
+	},
+    ), q{44BC-03-15 Julian}, 'Julian dates';
+
+}
+
 done_testing;
 
 1;

@@ -14,6 +14,9 @@ use POSIX ();
 
 our $VERSION = '0.031';
 
+# So superclass can ducktype the object that does the real work.
+use constant METHOD_USED => 'format_cldr';
+
 sub __format_datetime {
     my ( undef, $date_time, $tplt ) = @_;		# Invocant unused
     return $date_time->format_cldr( $tplt );

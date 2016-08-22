@@ -286,6 +286,19 @@ sub template {
     }
 }
 
+sub reform_date {
+    my ( $self, @args ) = @_;
+    if ( @args ) {
+	my $tf = $self->time_formatter();
+	# We go through the following because the time formatter at
+	# least needs to validate the reform date.
+	$tf->reform_date( @args );
+	return $self->SUPER::reform_date( $tf->reform_date() );
+    } else {
+	return $self->SUPER::reform_date();
+    }
+}
+
 sub tz {
     my ( $self, @args ) = @_;
     if ( @args ) {

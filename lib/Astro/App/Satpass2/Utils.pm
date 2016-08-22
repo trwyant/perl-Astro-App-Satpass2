@@ -19,6 +19,7 @@ our @EXPORT_OK = qw{
     __arguments expand_tilde
     has_method instance load_package merge_hashes my_dist_config quoter
     __date_manip_backend
+    __reform_date
     ARRAY CODE HASH Regexp SCALAR
 };
 
@@ -283,6 +284,45 @@ sub _quoter {
     return $string unless $string =~ m/ [\s'"\$] /smx;
     $string =~ s/ ( [\\'] ) /\\$1/smxg;
     return qq{'$string'};
+}
+
+# Take reform date specification. Return normalized specification and
+# DateTime object representing reform date.
+
+{
+    my $default;
+
+    sub __reform_date {
+	my ( $rd ) = @_;
+	$rd
+	    or return;
+	require DateTime::Calendar::Christian;
+	if ( ref $rd ) {
+	    my $dt = DateTime::Calendar::Christian->new(
+		reform_date	=> $rd,
+	    )->reform_date();
+	    my $nf = $dt->strftime( '%Y-%m-%dT%H:%M:%S' );
+	    $nf =~ s/ T00:00:00 \z //smx;
+	    return ( $nf, $dt );
+	}
+	my $nf = $rd;
+	$nf =~ m/ \A dflt \z /smxi
+	    and return ( $nf,
+	    ( $default ||=
+		DateTime::Calendar::Christian->new()->reform_date() ) );
+	my @date = split qr{ [^0-9] }smx, $nf;
+	if ( 6 == @date || 3 == @date ) {
+	    3 == @date
+		and push @date, 0, 0, 0;
+	    my %dt_arg;
+	    @dt_arg{ qw{ year month day hour minute second } } = @date;
+	    $nf = sprintf '%04d-%-2d-%02dT%02d:%02d:%02d', @date;
+	    $nf =~ s/ T00:00:00 \z //smx;
+	    return ( $nf, DateTime->new( %dt_arg ) );
+	}
+	return ( $nf, DateTime::Calendar::Christian->new(
+		reform_date	=> $nf )->reform_date() );
+    }
 }
 
 

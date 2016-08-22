@@ -3,6 +3,7 @@ package Astro::App::Satpass2::ParseTime::ISO8601;
 use strict;
 use warnings;
 
+use Astro::App::Satpass2::Utils qw{ __reform_date };
 use Astro::Coord::ECI::Utils 0.059 qw{ looks_like_number SECSPERDAY };
 use Time::Local;
 
@@ -153,48 +154,9 @@ sub delegate {
 sub reform_date {
     my ( $self, @args ) = @_;
     if ( @args ) {
-	( $args[0], $self->{_reform_date} ) = _reform_date( $args[0] );
+	( $args[0], $self->{_reform_date} ) = __reform_date( $args[0] );
     }
     return $self->SUPER::reform_date( @args );
-}
-
-# Take reform date specification. Return normalized specification and
-# DateTime object.
-
-{
-    my $default;
-
-    sub _reform_date {
-	my ( $rd ) = @_;
-	$rd
-	    or return;
-	require DateTime::Calendar::Christian;
-	if ( ref $rd ) {
-	    my $dt = DateTime::Calendar::Christian->new(
-		reform_date	=> $rd,
-	    )->reform_date();
-	    my $nf = $dt->strftime( '%Y-%m-%dT%H:%M:%S' );
-	    $nf =~ s/ T00:00:00 \z //smx;
-	    return ( $nf, $dt );
-	}
-	my $nf = $rd;
-	$nf =~ m/ \A dflt \z /smxi
-	    and return ( $nf,
-	    ( $default ||=
-		DateTime::Calendar::Christian->new()->reform_date() ) );
-	my @date = split qr{ [^0-9] }smx, $nf;
-	if ( 6 == @date || 3 == @date ) {
-	    3 == @date
-		and push @date, 0, 0, 0;
-	    my %dt_arg;
-	    @dt_arg{ qw{ year month day hour minute second } } = @date;
-	    $nf = sprintf '%04d-%-2d-%02dT%02d:%02d:%02d', @date;
-	    $nf =~ s/ T00:00:00 \z //smx;
-	    return ( $nf, DateTime->new( %dt_arg ) );
-	}
-	return ( $nf, DateTime::Calendar::Christian->new(
-		reform_date	=> $nf )->reform_date() );
-    }
 }
 
 sub tz {

@@ -61,6 +61,34 @@ method format_datetime => DATE_TIME_FORMAT, $time, 1,
 method format_datetime => '%{year_with_christian_era} %{calendar_name}',
     $time, 1, '2011AD Gregorian', 'Explicit GMT year, with calendar';
 
+SKIP: {
+    my $tests = 2;
+
+    eval {
+	require DateTime::Calendar::Christian;
+	1;
+    } or skip 'DateTime::Calendar::Christian not available', $tests;
+
+
+    method 'new', reform_date => 'dflt', gmt => 1, INSTANTIATE, 'Instantiate';
+
+    my $dt = DateTime::Calendar::Christian->new(
+	year	=> -43,
+	month	=> 3,
+	day	=> 15,
+	time_zone	=> 'UTC',
+    );
+
+    SKIP: {
+	$dt->is_julian()
+	    or skip 'DateTime::Calendar::Christian 44BC not Julian(?!)', 1;
+
+	method format_datetime =>
+	    '%{year_with_christian_era}-%m-%d %{calendar_name}',
+	    $dt->epoch(), '44BC-03-15 Julian', 'Julian date, with era';
+    }
+}
+
 done_testing;
 
 1;
