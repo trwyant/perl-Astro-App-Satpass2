@@ -19,7 +19,38 @@ use constant METHOD_USED => 'format_cldr';
 
 sub __format_datetime {
     my ( undef, $date_time, $tplt ) = @_;		# Invocant unused
-    return $date_time->format_cldr( $tplt );
+    my $quoted = 0;
+    my $rslt;
+    foreach my $elem ( split qr{ ( ' ) }smx, $tplt ) {
+	if ( q<'> eq $elem ) {
+	    $quoted = ! $quoted;
+	} elsif ( $quoted ) {
+	    $elem =~ s/ %[{] ( \w+ ) [}] / _expand( $date_time, "$1" ) /smxge;
+	}
+	$rslt .= $elem;
+    }
+    return $date_time->format_cldr( $rslt );
+}
+
+{
+    my %handler = (
+	calendar_name	=> sub {
+	    my ( $date_time ) = @_;
+	    my $code;
+	    $code = $date_time->can( 'is_julian' )
+		and $code->( $date_time )
+		and return 'Julian';
+	    return 'Gregorian';
+	},
+    );
+
+    sub _expand {
+	my ( $date_time, $name ) = @_;
+	my $code;
+	$code = ( $handler{$name} || $date_time->can( $name ) )
+	    and return $code->( $date_time );
+	return "%{$name}";
+    }
 }
 
 1;
@@ -54,6 +85,47 @@ L<DateTime::TimeZone|DateTime::TimeZone> objects.
 
 All this class really provides is the interface to
 C<< DateTime->format_cldr() >>. Everything else is inherited.
+
+As an enhancement (I hope!) to the L<DateTime|DateTime> C<cldr>
+functionality, this module, before calling C<format_cldr()>, examines
+all embedded literals in the template, replacing C</%{(\w+)}/> with the
+result of the named special-case code (if any), or the results of the
+named L<DateTime|DateTime> method (if any). If neither special-case code
+nor method exist, the matching string is left as-is.
+
+The following special cases are implemented:
+
+=over
+
+=item calendar_name
+
+This will be either C<'Gregorian'> or C<'Julian'>.
+
+=back
+
+Using this formatter with Julian dates enabled (i.e. with
+L<DateTime::Calendar::Christian|DateTime::Calendar::Christian> doing the
+heavy lifting) is B<unsupported>, because 
+L<DateTime::Calendar::Christian|DateTime::Calendar::Christian> lacks
+some of the methods you might want it to have, including
+C<format_cldr()>. This package checks for the following methods when it
+loads L<DateTime::Calendar::Christian|DateTime::Calendar::Christian>,
+and patches them in if they are not there:
+
+    christian_era()
+    era()
+    era_abbr()
+    era_name()
+    format_cldr()
+    secular_era()
+    year_with_era()
+    year_with_christian_era()
+    year_with_secular_era()
+
+This is unsupported not only because it is tinkering with somebody
+else's name space, but because the patches rely on knowing the internals
+of L<DateTime::Calendar::Christian|DateTime::Calendar::Christian>, which
+may change without warning. I<Caveat coder.>
 
 =head1 METHODS
 

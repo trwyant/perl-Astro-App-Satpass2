@@ -58,6 +58,39 @@ method round_time => 60, TRUE, 'Round to nearest minute';
 method format_datetime => DATE_TIME_FORMAT, $time, 1,
     '2011/04/01 00:01:00', 'Explicit GMT time, rounded to minute';
 
+method format_datetime => q<'%{calendar_name}'>, 1,
+    'Gregorian', 'Calendar name';
+
+SKIP: {
+    my $tests = 2;
+
+    eval {
+	require DateTime::Calendar::Christian;
+	1;
+    } or skip 'DateTime::Calendar::Christian not available', 1;
+
+    method 'new', reform_date => 'dflt', gmt => 1, INSTANTIATE, 'Instantiate';
+
+    SKIP: {
+
+	my $dt = DateTime::Calendar::Christian->new(
+	    year		=> -43,
+	    month		=> 3,
+	    day		=> 15,
+	    time_zone	=> 'UTC',
+	);
+
+	$dt->is_julian()
+	    or skip 'DateTime::Calendar::Christian thinks date is not Julian', $tests;
+
+	method format_datetime =>
+	    q<'%{year_with_christian_era}'-MM-dd '%{calendar_name}'>,
+	    $dt->epoch(), '44BC-03-15 Julian',
+	    'Method and Julian calendar name';
+    }
+
+}
+
 done_testing;
 
 1;

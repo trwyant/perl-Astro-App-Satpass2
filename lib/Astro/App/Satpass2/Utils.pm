@@ -297,6 +297,27 @@ sub _quoter {
 	$rd
 	    or return;
 	require DateTime::Calendar::Christian;
+	# Patch in DateTime methods that might be useful for output, but
+	# which we do not have.
+	foreach my $method ( qw{
+		christian_era
+		era
+		era_abbr
+		era_name
+		format_cldr
+		secular_era
+		year_with_era
+		year_with_christian_era
+		year_with_secular_era
+	    } ) {
+	    DateTime::Calendar::Christian->can( $method )
+		and next;
+	    my $symbol = "DateTime::Calendar::Christian::$method";
+	    no strict qw{ refs };
+	    *$symbol = sub {
+		shift->{date}->$method( @_ );
+	    };
+	}
 	if ( ref $rd ) {
 	    my $dt = DateTime::Calendar::Christian->new(
 		reform_date	=> $rd,
