@@ -11,7 +11,7 @@ use Astro::App::Satpass2::FormatTime::Strftime;
 use Astro::App::Satpass2::Utils qw{ ARRAY };
 use POSIX ();
 
-our $VERSION = '0.031';
+our $VERSION = '0.031_001';
 
 sub format_datetime {
     my ( $self, $tplt, $time, $gmt ) = @_;

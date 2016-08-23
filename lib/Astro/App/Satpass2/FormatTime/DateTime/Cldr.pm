@@ -12,7 +12,7 @@ use DateTime;
 use DateTime::TimeZone;
 use POSIX ();
 
-our $VERSION = '0.031';
+our $VERSION = '0.031_001';
 
 # So superclass can ducktype the object that does the real work.
 use constant METHOD_USED => 'format_cldr';

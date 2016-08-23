@@ -1,3 +1,36 @@
+0.031_001	2016-08-22	T. R. Wyant
+  Enhance FormatTime::DateTime::Strftime and ::Cldr to be able to format
+    dates in the Julian calendar. This requires the reform_date
+    attribute to be set, and is unsupported in
+    FormatTime::DateTime::Cldr because DateTime::Calendar::Christian as
+    distributed lacks method format_cldr().
+
+  Enhance ParseTime::ISO8601 to parse dates in the Julian calendar. This
+    requires optional module DateTime::Calendar::Christian and the
+    setting of Astro::App::Satpass2::ParseTime attribute reform_date.
+
+  Redo ParseTime->new() to do what was intended. Also correct
+    documentation, which was totally off-base.
+
+  Use DateTime to convert the ParseTime::ISO8601 time parse to epoch
+    time, if it is available.
+
+  Extend ::ParseTime::ISO8601 to do AD & BC.
+
+  Add time_formatter value to 'show' output.
+
+  Allow a scalar reference as a time. This is interpreted as epoch.
+
+  Document how epoch times are specified.
+
+  Special-case DateTime::Strftime format %{calendar_name} to display the
+    name of the calendar in use.
+
+  Heuristics to make ODF geocoding more useful. I hope.
+
+  Retract support for Geo::Coder::Geocoder::US. The underlying web site
+    has been AWOL since late 2015.
+
 0.031		2016-02-24	T. R. Wyant
   Consolidate development changes into next production release.
 
