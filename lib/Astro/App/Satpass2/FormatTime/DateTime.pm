@@ -124,6 +124,60 @@ sub __format_datetime_width_adjust_object {
     return $obj;
 }
 
+# my $mod_fmt = $self->__preprocess_strftime_format( $dt_obj, $fmt )
+# Preprocess out all the extensions to the strftime format.
+# What we're handling here is things of the form %{name:modifiers},
+# where the colon and modifiers are optional.
+# The modifier is a series of single-character flags followed by a field
+# width. The flags are:
+#  '-' - left-justify
+#  '0' - zero-pad (ineffective if '-' specified)
+#  't' - truncate to field width
+sub __preprocess_strftime_format {
+    my ( $self, $dt_obj, $fmt ) = @_;
+    caller->isa( __PACKAGE__ )
+	or $self->warner()->weep(
+	'__preprocess_strftime_format() is private to Astro-App-Satpass2' );
+    $fmt =~ s< ( % [{] ( \w+ | % ) (?: : ( [-0t]* ) ( [0-9]+ ) )? [}] ) >
+	< _expand_strftime_format( $dt_obj, $1, $2, $3, $4 ) >smxge;
+    return $fmt;
+}
+
+{
+    my %special = (
+	'%'		=> sub { return '%' },
+	calendar_name	=> sub {
+	    my ( $dt_obj ) = @_;
+	    my $code;
+	    $code = $dt_obj->can( 'is_julian' )
+		and $code->( $dt_obj )
+		and return 'Julian';
+	    return 'Gregorian';
+	},
+    );
+
+    sub _expand_strftime_format {
+	my ( $dt_obj, $all, $name, $flags, $width ) = @_;
+	my $code = $special{$name} || $dt_obj->can( $name )
+	    or return $all;
+	my $rslt = $code->( $dt_obj );
+	my %flg = map { $_ => 1 } split qr{}, defined $flags ? $flags : '';
+	if ( $width ) {
+	    my $tplt = '%';
+	    foreach my $f ( qw{ - 0 } ) {
+		$flg{$f}
+		    and $tplt .= $f;
+	    }
+	    $tplt .= '*s';
+	    $rslt = sprintf $tplt, $width, $rslt;
+	    $flg{t}
+		and length $rslt > $width
+		and substr $rslt, $width, length $rslt, '';
+	}
+	return $rslt;
+    }
+}
+
 1;
 
 __END__
@@ -160,6 +214,93 @@ L<Astro::App::Satpass2::FormaTime::DateTime::Strftime|Astro::App::Satpass2::Form
 
 This class provides no public methods over and above those provided by
 L<Astro::App::Satpass2::FormatTime|Astro::App::Satpass2::FormatTime>.
+The following package-private methods are documented for the convenience
+of the author, and may change or be retracted at any time.
+
+=head2 __preprocess_strftime_format
+
+ my $mod = $self->__preprocess_strftime_format( $dt_obj, $fmt );
+
+The functionality documented below is supported, but B<this method is
+not.> The method itself is package-private, and will in fact throw an
+exception unless called from a subclass of this class.
+
+This package-private method pre-processes a format, finding and
+potentially replacing substrings that look like C<'%{name:modifiers}'>.
+This is a further extension of the L<DateTime|DateTime> extension,
+providing more control of the output.
+
+The arguments are a L<DateTime|DateTime> or C<DateTime-ish> object and
+the format that is to be pre-processed. The return is the pre-processed
+format.
+
+In the substrings that are (potentially) replaced, the C<'name'>
+represents either a special-case string or the name of a method on the
+C<$dt_obj> object. If it is neither, the substring is left unmodified.
+The special-case names are:
+
+=over
+
+=item %
+
+This causes a literal C<'%'> to be inserted.
+
+=item calendar_name
+
+This causes either C<'Gregorian'> or C<'Julian'> to be inserted. You get
+C<'Julian'> only if C<$dt_obj> has an C<is_julian()> method, and that
+method returns a true value. Otherwise you get C<'Gregorian'>. There is
+no provision for localization, unfortunately.
+
+=back
+
+The colon and modifiers are optional. If present, the modifiers consist
+of, in order:
+
+=over
+
+=item zero or more single-character flags;
+
+These modify the formatting of the value, and may appear in any order.
+The following flags are implemented:
+
+=over
+
+=item * C<'-'>
+
+This flag causes the output to be left-justified in its field. It is
+only effective if the field width (see below) is positive.
+
+=item * C<'0'>
+
+This flag causes the output to be zero-filled on the left. It is only
+effective if the field width (see below) is positive, and C<'-'> is not
+specified.
+
+=item * C<'t'>
+
+This flag causes the output to be truncated on the right to the field
+width (see below). It is only effective if the field width is positive.
+
+=back
+
+=item a field width.
+
+This is a non-negative integer, not beginning with zero, which specifies
+the width of the output. Output will be at least this width, but may be
+wider unless the C<'t'> flag was specified.
+
+=back
+
+For example, if the C<$dt_obj> represents the Ides of March, 44 BC, and
+the template is C<'%{year_with_christian_era:06}-%m-%d'>, the returned
+value will be C<'0044BC-%m-%d'>.
+
+ $dt_obj->strftime(
+     $self->__preprocess_strftime_format(
+         $dt_obj, '%{year_with_christian_era:06}-%m-%d' ) );
+
+would therefore produce C<'0044BC-03-15'>.
 
 =head1 SUPPORT
 

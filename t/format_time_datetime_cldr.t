@@ -84,8 +84,8 @@ SKIP: {
 	    or skip 'DateTime::Calendar::Christian thinks date is not Julian', $tests;
 
 	method format_datetime =>
-	    q<'%{year_with_christian_era}'-MM-dd '%{calendar_name}'>,
-	    $dt->epoch(), '44BC-03-15 Julian',
+	    q<'%{year_with_christian_era:06}'-MM-dd '%{calendar_name:t3}'>,
+	    $dt->epoch(), '0044BC-03-15 Jul',
 	    'Method and Julian calendar name';
     }
 

@@ -21,10 +21,8 @@ use constant METHOD_USED => 'strftime';
 
 sub __format_datetime {
     my ( $self, $date_time, $tplt ) = @_;
-    my $calendar;
-    $tplt =~ s/ %\{calendar_name\} / $calendar ||=
-	$self->__calendar_name( $date_time ) /smxge;
-    return $date_time->strftime( $tplt );
+    return $date_time->strftime( $self->__preprocess_strftime_format(
+	    $date_time, $tplt ) );
 }
 
 1;
@@ -61,10 +59,12 @@ L<DateTime::TimeZone|DateTime::TimeZone> objects.
 All this class really provides is the interface to
 C<< DateTime->strftime() >>. Everything else is inherited.
 
-But in addition to the normal C<strftime> format patterns and the
-C<DateTime> method format patterns (e.g. C<%{year_with_era}>), this
-class provides format pattern C<%{calendar_name}>, which will be either
-C<'Julian'> or C<'Gregorian'>.
+The L<DateTime|DateTime> C<strftime()> template extensions have been
+further extended to add C<'%{calendar_name}'> and some control over
+formatting. See the documentation to
+L<Astro::App::Satpass2::FormatTime::DateTime|Astro::App::Satpass2::FormatTime::DateTime>
+L<__preprocess_strftime_format()|Astro::App::Satpass2::FormatTime::DateTime/__preprocess_strftime_format>
+for the details.
 
 =head1 METHODS
 
