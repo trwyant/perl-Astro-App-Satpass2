@@ -1,3 +1,6 @@
+0.031_002	2016-08-24	T. R. Wyant
+  Centralize strftime extensions, add format control
+
 0.031_001	2016-08-22	T. R. Wyant
   Enhance FormatTime::DateTime::Strftime and ::Cldr to be able to format
     dates in the Julian calendar. This requires the reform_date

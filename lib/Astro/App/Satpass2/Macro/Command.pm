@@ -9,7 +9,7 @@ use base qw{ Astro::App::Satpass2::Macro };
 
 use Astro::App::Satpass2::Utils qw{ quoter ARRAY };
 
-our $VERSION = '0.031_001';
+our $VERSION = '0.031_002';
 
 sub execute {
     my ( $self, $name ) = @_;

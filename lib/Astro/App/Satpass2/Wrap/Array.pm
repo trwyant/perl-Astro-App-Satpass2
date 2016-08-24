@@ -7,7 +7,7 @@ use warnings;
 
 use Astro::App::Satpass2::Utils qw{ ARRAY };
 
-our $VERSION = '0.031_001';
+our $VERSION = '0.031_002';
 
 sub new {
     my ( $class, $array ) = @_;
