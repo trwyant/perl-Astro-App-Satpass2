@@ -6,8 +6,6 @@ use warnings;
 use lib qw{ inc };
 
 use Test::More 0.88;
-use My::Module::Test::App;
-
 
 my $test_mocktime;
 
@@ -34,6 +32,13 @@ BEGIN {
 	Test::MockTime->import( qw{ restore_time set_fixed_time } );
 	1;
     };
+
+    # We have to load My::Module::Test::App this way because it pulls in
+    # Astro::App::Satpass2 modules, which in turn may pull in other
+    # things (e.g. DateTime) that we want to be affected by
+    # Test::MockTime.
+    require My::Module::Test::App;
+    My::Module::Test::App->import();
 
 }
 

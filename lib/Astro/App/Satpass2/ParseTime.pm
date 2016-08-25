@@ -72,8 +72,10 @@ sub base {
 sub class_name_of_record {
     my ( $self ) = @_;
     my $rslt = substr $self->__class_name(), 2 + length __PACKAGE__;
-    if ( my $rd = $self->reform_date() ) {
-	$rslt .= ",reform_date=$rd";
+    foreach my $attr ( qw{ reform_date tz } ) {
+	my $value = $self->$attr()
+	    or next;
+	$rslt .= ",$attr=$value";
     }
     return $rslt;
 }

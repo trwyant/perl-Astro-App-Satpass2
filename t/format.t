@@ -46,8 +46,8 @@ my $expect_time_formatter = eval {
     require DateTime;
     require DateTime::TimeZone;
     DateTime::TimeZone->new( name => 'local' );
-    'Astro::App::Satpass2::FormatTime::DateTime::Strftime';
-} || 'Astro::App::Satpass2::FormatTime::POSIX::Strftime';
+    'DateTime::Strftime';
+} || 'POSIX::Strftime';
 
 method config => decode => 1,
     [

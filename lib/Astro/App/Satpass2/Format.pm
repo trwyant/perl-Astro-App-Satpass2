@@ -148,7 +148,8 @@ sub attribute_names {
 	    my ( $self, $method, @args ) = @_;
 	    my $rslt = $self->$method( @args );
 	    @args and return $rslt;
-	    return ref $rslt || $rslt;
+#	    return ref $rslt || $rslt;
+	    return $rslt->class_name_of_record();
 	},
     );
     $decoder{value_formatter} = $decoder{time_formatter};

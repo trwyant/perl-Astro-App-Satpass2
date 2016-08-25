@@ -41,6 +41,16 @@ sub attribute_names {
     return ( qw{ reform_date gmt tz } );
 }
 
+{
+    my $leader_re = qr{ @{[ __PACKAGE__ ]} :: }smxo;
+
+    sub class_name_of_record {
+	my ( $self ) = @_;
+	( my $name = ref $self || $self ) =~ s/ \A $leader_re //smx;
+	return $name;
+    }
+}
+
 sub format_datetime {	## no critic (RequireFinalReturn)
     my ( $self ) = @_;
     # ->weep() throws an exception.

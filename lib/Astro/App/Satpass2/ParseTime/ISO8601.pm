@@ -11,6 +11,11 @@ use base qw{ Astro::App::Satpass2::ParseTime };
 
 our $VERSION = '0.031_002';
 
+use constant HAVE_DATETIME => eval {
+    require DateTime;
+    1;
+} || 0;
+
 my $zone_re = qr{ (?i: ( Z | UT | GMT ) |
     ( [+-] ) ( \d{1,2} ) :? ( \d{1,2} )? ) }smx;
 
@@ -35,81 +40,95 @@ sub delegate {
 	CE	=> $era_ad,
     );
 
+    # Note that we have to reverse sort the keys because otherwise 'BC'
+    # gets matched before we have a chance to try 'BCE'.
     my $era_re = qr< (?: @{[
-	join ' | ', sort keys %era_cvt
+	join ' | ', reverse sort keys %era_cvt
     ]} ) >smxi;
 
-    my $make_epoch;
-    {
-	local $@ = @_;
-
-	$make_epoch = eval {
-	    require DateTime;
-	    1;
-	} ? sub {
-	    my ( $self, @args ) = @_;
-	    my %dt_arg;
-	    @dt_arg{ qw<
-		year month day hour minute second nanosecond time_zone
-	    > } = @args;
-	    $dt_arg{nanosecond} *= 1_000_000_000;
-	    $dt_arg{time_zone} = $dt_arg{time_zone} ? 'UTC' : 'local';
-	    $self->{_reform_date}
-		and return DateTime::Calendar::Christian->new(
-		    %dt_arg,
-		    reform_date	=> $self->{_reform_date},
-		)->epoch();
-	    return DateTime->new( %dt_arg )->epoch();
-	} : sub {
-	    my ( undef, @date ) = @_;
-	    my ( $frc, $z ) = splice @date, -2, 2;
-	    --$date[1];
-	    return $frc + ( $z ?
-		timegm( reverse @date ) :
-		timelocal( reverse @date )
+    my $make_epoch = HAVE_DATETIME ? sub {
+	my ( $self, $zone, $offset, @date ) = @_;
+	$zone ||= 'local';
+	if ( defined( my $special = $special_day_offset{$date[0]} ) ) {
+	    my $dt = DateTime->today(
+		time_zone	=> $zone,
 	    );
-	};
-    }
+	    splice @date, 0, 3, $dt->year(), $dt->month(), $dt->day();
+	    $offset += $special;
+	}
+	my %dt_arg;
+	@dt_arg{ qw<
+	    year month day hour minute second nanosecond
+	> } = @date;
+	$dt_arg{nanosecond} *= 1_000_000_000;
+	$dt_arg{time_zone} = $zone;
+	$self->{_reform_date}
+	    and return DateTime::Calendar::Christian->new(
+		%dt_arg,
+		reform_date	=> $self->{_reform_date},
+	    )->epoch() + $offset;
+	return DateTime->new( %dt_arg )->epoch() + $offset;
+    } : sub {
+	my ( undef, $zone, $offset, @date ) = @_;
+	if ( defined( my $special = $special_day_offset{$date[0]} )
+	    ) {
+	    my @today = $zone ? gmtime : localtime;
+	    splice @date, 0, 3, @today[ 5, 4, 3 ];
+	    $date[0] += 1900;
+	    $offset += $special;
+	} else {
+	    --$date[1];
+	}
+	$offset += pop @date;
+	if ( $zone ) {
+	    return timegm( reverse @date ) + $offset;
+	} else {
+	    return timelocal( reverse @date ) + $offset;
+	}
+    };
 
     sub parse_time_absolute {
 	my ( $self, $string ) = @_;
 
-	my @zone;
-	if ( $string =~ s/ \s* $zone_re \z //smxo ) {
-	    @zone = ( $1, $2, $3, $4 );
-	} elsif ( $self->{+__PACKAGE__}{tz} ) {
-	    @zone = @{ $self->{+__PACKAGE__}{tz} };
-	}
 	my @date;
+
+	my $special_only;
 
 	# ISO 8601 date
 	if ( $string =~ m< \A
-		( [0-9]+ \s* $era_re [^0-9]* |		# year $1
+		( ( [0-9]+ ) \s* ( $era_re ) [^0-9]? |	# year $1, $2 era $3
 		    [0-9]{4} [^0-9]? |
 		    [0-9]+ [^0-9] )
-		(?: ( [0-9]{1,2} ) [^0-9]?		# month: $2
-		    (?: ( [0-9]{1,2} ) [^0-9]?		# day: $3
+		(?: ( [0-9]{1,2} ) [^0-9]?		# month: $4
+		    (?: ( [0-9]{1,2} ) [^0-9]?		# day: $5
 		    )?
 		)?
 	    >smxg ) {
-	    @date = ( 0, $1, $2, $3 );
 
-	    unless ( $date[1] =~ s/ \A ( [0-9]+ ) \s* ( $era_re ) [^0-9]? \z /
-		$era_cvt{ uc $2 }->( $1 + 0 ) /smxe ) {
-		$date[1] =~ s/ [^0-9] \z //smx;
-		$date[1] < 70
-		    and $date[1] += 2000;
-		$date[1] < 100
-		    and $date[1] += 1900;
+	    if ( $3 ) {
+		@date = ( $era_cvt{ uc $3 }->( $2 + 0 ), $4, $5 );
+	    } else {
+		@date = ( $1, $4, $5 );
+		$date[0] =~ s/ [^0-9] \z //smx;
+		$date[0] < 70
+		    and $date[0] += 2000;
+		$date[0] < 100
+		    and $date[0] += 1900;
 	    }
+
+	    defined $date[1]
+		or $date[1] = 1;
+	    defined $date[2]
+		or $date[2] = 1;
 
 	# special-case 'yesterday', 'today', and 'tomorrow'.
 	} elsif ( $string =~ m{ \A
-	    ( (?i: yesterday | today | tomorrow ) ) \D?		# day: $1
-	    }smxg ) {
-	    my @today = @zone ? gmtime : localtime;
-	    @date = ( $special_day_offset{ lc $1 }, $today[5] + 1900,
-		$today[4] + 1, $today[3] );
+	    ( yesterday | today | tomorrow ) \b [^0-9]?	# day: $1
+	    }smxgi ) {
+	    # Handle this when we make the epoch, since we do not yet
+	    # know the zone.
+	    @date = ( lc $1, 0, 0 );
+	    $special_only = 1;
 
 	} else {
 
@@ -117,43 +136,62 @@ sub delegate {
 
 	}
 
-	$string =~ m< \G
-	    (?: ( [0-9]{1,2} ) [^0-9]?			# hour: $1
-		(?: ( [0-9]{1,2} ) [^0-9]?		# minute: $2
-		    (?: ( [0-9]{1,2} ) [^0-9]?		# second: $3
+	if ( $string =~ m< \G
+		( [0-9]{1,2} ) [^0-9+-]?		# hour: $1
+		(?: ( [0-9]{1,2} ) [^0-9+-]?		# minute: $2
+		    (?: ( [0-9]{1,2} ) [^0-9+-]?	# second: $3
 			( [0-9]* )			# fract: $4
 		    )?
 		)?
-	    )?
-	    \z >smxgc or return;
-	push @date, $1, $2, $3, $4 ? ".$4" : 0;
-
-	my $offset = shift @date || 0;
-	if ( @zone && ! $zone[0] ) {
-	    my ( undef, $sign, $hr, $min ) = @zone;
-	    $offset -= $sign . ( ( $hr * 60 + ( $min || 0 ) ) * 60 )
+	    >smxgc ) {
+	    push @date, $1, $2 || 0, $3 || 0, $4 ? ".$4" : 0;
+	    $special_only = 0;
+	} else {
+	    push @date, ( 0 ) x 4;
 	}
 
-	foreach ( @date ) {
-	    defined $_ and s/ [^0-9] \z //smxg;
-	}
+	# We might have gobbled part of the zone.
+	not $special_only
+	    and $string =~ m/ \G (?<= [^0-9] ) /smxgc
+	    and pos $string -= 1;
+	my ( $zone ) = $string =~ m/ \G ( .* ) /smxgc;
 
-#	$date[0] -= 1900;
-	defined $date[1] or $date[1] = 1;
-	defined $date[2] or $date[2] = 1;
+	my ( $z, $offset ) = $self->_interpret_zone( $zone );
+	defined $offset
+	    or return;
 
-	foreach ( @date ) {
-	    defined $_ or $_ = 0;
-	}
-
-	return $make_epoch->( $self, @date, scalar @zone ) + $offset;
+	return $make_epoch->( $self, $z, $offset, @date );
     }
 
 }
 
+sub _interpret_zone {
+    my ( $self, $zone, $fatal ) = @_;
+    defined $zone
+	and $zone =~ s/ \A \s+ //smx;
+    $zone
+	or return ( @{ $self->{ __PACKAGE__() }{tz} || [ undef, 0 ] } );
+    if ( $zone =~ m/ \A $zone_re \z /smxo ) {
+	$1
+	    and return ( UTC => 0 );
+	my $offset = ( ( $3 || 0 ) * 60 + ( $4 || 0 ) ) * 60;
+	$2
+	    and '-' eq $2
+	    or $offset = - $offset;
+	return ( UTC => $offset );
+    } else {
+	HAVE_DATETIME
+	    and DateTime::TimeZone->is_valid_name( $zone )
+	    and return ( $zone => 0 );
+	$fatal
+	    and $self->warner()->wail( "Invalid time zone '$zone'" );
+	return;
+    }
+}
+
 sub reform_date {
     my ( $self, @args ) = @_;
-    if ( @args ) {
+    if ( HAVE_DATETIME && @args ) {
 	( $args[0], $self->{_reform_date} ) = __reform_date( $args[0] );
     }
     return $self->SUPER::reform_date( @args );
@@ -163,15 +201,10 @@ sub tz {
     my ( $self, @args ) = @_;
     if ( @args ) {
 	if ( defined $args[0] && $args[0] ne '' ) {
-	    if ( $args[0] =~ m/ \A $zone_re \z /smxo ) {
-		$self->{+__PACKAGE__}{tz} = [ $1, $2, $3, $4 ];
-	    } else {
-		$self->warner()->whinge(
-		    "Ignoring invalid zone '$args[0]'" );
-		delete $self->{+__PACKAGE__}{tz};
-	    }
+	    $self->{ __PACKAGE__() }{tz} = [
+		$self->_interpret_zone( $args[0], 1 ) ];
 	} else {
-	    delete $self->{+__PACKAGE__}{tz};
+	    delete $self->{ __PACKAGE__() }{tz};
 	}
     }
     return $self->SUPER::tz( @args );
