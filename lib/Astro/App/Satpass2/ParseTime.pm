@@ -354,6 +354,18 @@ that can actually be instantiated.
 The default is C<'Date::Manip,ISO8601'> (or, equivalently,
 C<[ qw{ Date::Manip ISO8601 ]>).
 
+=item reform_date
+
+This argument specifies the date the calendar was reformed from Julian
+to Gregorian. An exception will be thrown if a true value is specified,
+the class being instantiated has support for calendar reform, and some
+prerequesite for supporting calendar reform has not been met (e.g.
+missing module).
+
+=item tz
+
+This argument specifies the default time zone.
+
 =back
 
 =head2 base

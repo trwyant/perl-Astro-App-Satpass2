@@ -11,10 +11,20 @@ use base qw{ Astro::App::Satpass2::ParseTime };
 
 our $VERSION = '0.031_002';
 
-use constant HAVE_DATETIME => eval {
-    require DateTime;
-    1;
-} || 0;
+{
+    local $@ = undef;
+
+    use constant HAVE_DATETIME => eval {
+	require DateTime;
+	1;
+    } || 0;
+
+    use constant HAVE_JULIAN_SUPPORT => eval {
+	require DateTime::Calendar::Christian;
+	1;
+    } || 0;
+
+}
 
 my $zone_re = qr{ (?i: ( Z | UT | GMT ) |
     ( [+-] ) ( \d{1,2} ) :? ( \d{1,2} )? ) }smx;
@@ -191,7 +201,11 @@ sub _interpret_zone {
 
 sub reform_date {
     my ( $self, @args ) = @_;
-    if ( HAVE_DATETIME && @args ) {
+    if ( @args ) {
+	not $args[0]
+	    or HAVE_JULIAN_SUPPORT
+	    or $self->warner()->wail(
+	    'No reform date support without DateTime::Calendar::Christian' );
 	( $args[0], $self->{_reform_date} ) = __reform_date( $args[0] );
     }
     return $self->SUPER::reform_date( @args );
