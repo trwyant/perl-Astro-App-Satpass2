@@ -9,7 +9,7 @@ use base qw{ Astro::App::Satpass2::Macro };
 
 use Astro::App::Satpass2::Utils qw{ expand_tilde load_package quoter };
 
-our $VERSION = '0.031_002';
+our $VERSION = '0.031_003';
 
 sub init {
     my ( $self ) = @_;

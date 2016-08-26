@@ -1,3 +1,14 @@
+0.031_003	2016-08-25	T. R. Wyant
+  Document arguments to ParseTime->new()
+
+  Make attempt to handle calendar reform fatal unless all modules needed
+    are present.
+
+  Rewrite ParseTime::ISO8601 to better support DateTime zones.
+
+  The formatter object now displays its time_formatter attribute as a
+    short name where possible.
+
 0.031_002	2016-08-24	T. R. Wyant
   Centralize strftime extensions, add format control
 
