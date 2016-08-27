@@ -306,6 +306,7 @@ sub _quoter {
 		era_name
 		format_cldr
 		secular_era
+		time_zone_long_name
 		year_with_era
 		year_with_christian_era
 		year_with_secular_era
