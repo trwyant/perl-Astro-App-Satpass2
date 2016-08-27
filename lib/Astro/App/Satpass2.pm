@@ -29,6 +29,7 @@ use Clone ();
 use Cwd ();
 use File::Glob qw{ :glob };
 use File::HomeDir;
+use File::Spec;
 use File::Temp;
 use Getopt::Long 2.33;
 use IO::File 1.14;

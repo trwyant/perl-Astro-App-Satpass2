@@ -44,6 +44,7 @@ sub requires {
 	'Cwd'			=> 0,
 	'File::Glob'		=> 0,
 	'File::HomeDir'		=> 0.93,	# For my_dist_config
+	'File::Spec'		=> 0,
 	'File::Temp'		=> 0,
 	'Getopt::Long'		=> 2.39,	# For getoptionsfromarray
 	'I18N::LangTags'	=> 0,

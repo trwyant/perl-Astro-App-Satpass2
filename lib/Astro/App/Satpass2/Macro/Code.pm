@@ -8,6 +8,7 @@ use warnings;
 use base qw{ Astro::App::Satpass2::Macro };
 
 use Astro::App::Satpass2::Utils qw{ expand_tilde load_package quoter };
+use File::Spec;
 
 our $VERSION = '0.031_003';
 
