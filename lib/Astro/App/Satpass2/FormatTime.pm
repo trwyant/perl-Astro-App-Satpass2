@@ -63,40 +63,45 @@ sub format_datetime {	## no critic (RequireFinalReturn)
     my %cache;
 
     sub format_datetime_width {
-	my ( $self, $tplt ) = @_;
+	my ( $self, $tplt, $gmt ) = @_;
+
+	defined $gmt
+	    or $gmt = $self->gmt();
+	$gmt = $gmt ? 1 : 0;
 
 	my $class = ref $self;
 
-	exists $cache{$class}{$tplt}
-	    and return $cache{$class}{$tplt};
+	exists $cache{$class}{$tplt}[$gmt]
+	    and return $cache{$class}{$tplt}[$gmt];
 
 	my ( $time, $wid ) = $self->_format_datetime_width_try( $tplt, undef,
-	    year => 2100 );
+	    $gmt, year => 2100 );
 	( $time, $wid ) = $self->_format_datetime_width_try( $tplt, $time,
-	    month => 1 .. 12 );
+	    $gmt, month => 1 .. 12 );
 	( $time, $wid ) = $self->_format_datetime_width_try( $tplt, $time,
-	    day => 1 .. 7 );
+	    $gmt, day => 1 .. 7 );
 	( $time, $wid ) = $self->_format_datetime_width_try( $tplt, $time,
-	    hour => 6, 18 );
+	    $gmt, hour => 6, 18 );
 
-	return ( $cache{$class}{$tplt} = $wid );
+	return ( $cache{$class}{$tplt}[$gmt] = $wid );
     }
 
 }
 
 sub _format_datetime_width_try {
-    my ( $self, $tplt, $time, $name, @try ) = @_;
+    my ( $self, $tplt, $time, $gmt, $name, @try ) = @_;
     my $wid;
     my $max_trial;
     foreach my $trial ( @try ) {
 	$time = $self->__format_datetime_width_adjust_object(
-	    $time, $name, $trial );
+	    $time, $name, $trial, $gmt );
 	my $size = length $self->format_datetime( $tplt, $time );
 	defined $wid and $size <= $wid and next;
 	$wid = $size;
 	$max_trial = $trial;
     }
-    $time = $self->__format_datetime_width_adjust_object( $time, $name, $max_trial );
+    $time = $self->__format_datetime_width_adjust_object( $time, $name,
+	$max_trial, $gmt );
     return ( $time, $wid );
 }
 
@@ -206,12 +211,15 @@ it need not document or support these.
 
 =head2 format_datetime_width
 
- my $wid = $ft->format_datetime_width( '%H:%M:%S' );
+ my $wid = $ft->format_datetime_width( '%H:%M:%S', $gmt );
 
 This method computes the maximum width required to display a time in the
 given format. This is done by assuming only the month, day, and meridian
 might affect the width, and then trying each and returning the width of
 the widest.
+
+The optional C<$gmt> argument, if defined, overrides the L<gmt|/gmt>
+attribute.
 
 =head2 __format_datetime_width_adjust_object
 

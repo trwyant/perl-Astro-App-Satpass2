@@ -31,8 +31,7 @@ sub format_datetime {
 	    and push @dt_arg, reform_date => $self->{_reform_date};
 	my $dt = $class->from_epoch(
 	    epoch	=> $time,
-	    time_zone	=> $self->_get_zone( defined $gmt ? $gmt :
-		$self->gmt() ),
+	    time_zone	=> $self->_get_zone( $gmt ),
 	    locale	=> scalar __preferred(),
 	);
 	return $self->__format_datetime( $dt, $tplt );
@@ -80,7 +79,8 @@ sub reform_date {
 
     sub _get_zone {
 	my ( $self, $gmt ) = @_;
-	defined $gmt or $gmt = $self->gmt();
+	defined $gmt
+	    or $gmt = $self->gmt();
 
 	$gmt and return ( $zone_gmt ||= DateTime::TimeZone->new(
 	    name => 'UTC' ) );
@@ -117,9 +117,17 @@ sub __datetime_class {
 }
 
 sub __format_datetime_width_adjust_object {
-    my ( $self, $obj, $name, $val ) = @_;
+    my ( $self, $obj, $name, $val, $gmt ) = @_;
     my $class = $self->__datetime_class();
-    $obj or $obj = $class->new( year => 2100 );
+    # Note that I can not use new() here because I want to pass the
+    # locale argument, and DateTime::Calendar::Christian does not accept
+    # that. It works in from_epoch() or now() because
+    # DateTime::Calendar::Christian simply passes its arguments through
+    # to DateTime, which _does_ accept it.
+    $obj or $obj = $class->now(
+	time_zone	=> $self->_get_zone( $gmt ),
+	locale		=> scalar __preferred(),
+    );
     $obj->set( $name => $val );
     return $obj;
 }
