@@ -1893,6 +1893,12 @@ sub _set_copyable {
 	my $pkg = shift @args;
 	my $cls = $self->load_package(
 	    { fatal => 'wail' }, $pkg, @{ $arg{prefix} || [] } );
+	not $cls->can( 'init' )
+	    and _is_case_tolerant()
+	    and $self->wail(
+	    "$cls is missing methods. This can happen on a ",
+	    'case-tolerant system if you specify the class ',
+	    'name in the wrong case.' );
 	$obj = $cls->new(
 	    warner	=> $self->{_warner},
 	    map { split qr{ = }smx, $_, 2 } @args
@@ -3526,6 +3532,20 @@ sub _iridium_status {
 
     return;
 
+}
+
+# _is_case_tolerant()
+# Returns true if the OS supports case-tolerant file names. Yes, I know
+# it's the file system that is important, but I don't have access to
+# that level of detail.
+{
+    my %os = map { $_ => 1 } qw{ darwin };
+
+    sub _is_case_tolerant {
+	exists $os{$^O}
+	    and return $os{$^O};
+	return File::Spec->case_tolerant();
+    }
 }
 
 #	_is_interactive()
