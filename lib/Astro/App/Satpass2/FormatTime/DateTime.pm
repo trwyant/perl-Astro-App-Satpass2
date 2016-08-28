@@ -33,6 +33,7 @@ sub format_datetime {
 	    epoch	=> $time,
 	    time_zone	=> $self->_get_zone( $gmt ),
 	    locale	=> scalar __preferred(),
+	    @dt_arg,
 	);
 	return $self->__format_datetime( $dt, $tplt );
     }

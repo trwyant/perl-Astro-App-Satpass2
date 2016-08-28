@@ -62,7 +62,7 @@ method format_datetime => '%{year_with_christian_era} %{calendar_name}',
     $time, 1, '2011AD Gregorian', 'Explicit GMT year, with calendar';
 
 SKIP: {
-    my $tests = 2;
+    my $tests = 5;
 
     eval {
 	require DateTime::Calendar::Christian;
@@ -86,6 +86,27 @@ SKIP: {
 	method format_datetime =>
 	    '%{year_with_christian_era:06}-%m-%d %{calendar_name:t3}',
 	    $dt->epoch(), '0044BC-03-15 Jul', 'Julian date, with era';
+    }
+
+    $dt = DateTime::Calendar::Christian->new(
+	year	=> 1700,
+	month	=> 1,
+	day	=> 1,
+	time_zone	=> 'UTC',
+	reform_date	=> 'uk',
+    );
+
+    method 'new', reform_date => 'dflt', gmt => 1, reform_date => 'uk',
+	INSTANTIATE, 'Instantiate';
+
+    method reform_date => 'uk', 'Get reform date';
+
+    SKIP: {
+	$dt->is_julian()
+	    or skip 'DateTime::Calendar::Christian 1700 not Julian under UK reform', 1;
+	method format_datetime =>
+	    '%Y-%m-%d %{calendar_name}',
+	    $dt->epoch(), '1700-01-01 Julian', 'UK reform Julian date';
     }
 }
 
