@@ -1,3 +1,13 @@
+0.031_004	2016-08-27	T. R. Wyant
+  Try to warn if loading wrong-case module, if we think we might be on a
+    case-tolerant filesystem.
+
+  Add File::Spec to prerequisites
+
+  Correct time field widths when zone in format.
+
+  Patch in time_zone_long_name to DT::Cal::Christian
+
 0.031_003	2016-08-25	T. R. Wyant
   Document arguments to ParseTime->new()
 

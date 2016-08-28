@@ -9,7 +9,7 @@ use Time::Local;
 
 use base qw{ Astro::App::Satpass2::ParseTime };
 
-our $VERSION = '0.031_003';
+our $VERSION = '0.031_004';
 
 {
     local $@ = undef;
