@@ -1,3 +1,7 @@
+0.031_005	2016-08-28	T. R. Wyant
+  Make sure DateTime::Calendar::Christian gets reform_date when it is
+    non-default.
+
 0.031_004	2016-08-27	T. R. Wyant
   Try to warn if loading wrong-case module, if we think we might be on a
     case-tolerant filesystem.
