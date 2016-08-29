@@ -125,10 +125,20 @@ sub __format_datetime_width_adjust_object {
     # that. It works in from_epoch() or now() because
     # DateTime::Calendar::Christian simply passes its arguments through
     # to DateTime, which _does_ accept it.
-    $obj or $obj = $class->now(
-	time_zone	=> $self->_get_zone( $gmt ),
-	locale		=> scalar __preferred(),
-    );
+    unless ( $obj ) {
+	$obj = $class->now(
+	    time_zone	=> $self->_get_zone( $gmt ),
+	    locale	=> scalar __preferred(),
+	);
+	# But doing it that way I have to sanitize the object by hand so
+	# that I do not get invalid dates.
+	$obj->set( nanosecond	=> 0 );
+	$obj->set( second	=> 0 );
+	$obj->set( minute	=> 0 );
+	$obj->set( hour		=> 0 );
+	$obj->set( day		=> 1 );
+	$obj->set( month	=> 1 );
+    }
     $obj->set( $name => $val );
     return $obj;
 }
