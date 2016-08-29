@@ -5,7 +5,7 @@ use 5.008;
 use strict;
 use warnings;
 
-use Astro::App::Satpass2::Utils qw{ expand_tilde ARRAY CODE HASH };
+use Astro::App::Satpass2::Utils qw{ expand_tilde instance ARRAY CODE HASH };
 use Exporter qw{ import };
 use I18N::LangTags ();
 use I18N::LangTags::Detect ();
@@ -99,18 +99,19 @@ my $locale;
 
 }
 
+=begin comment
+
 {
     my %stringify_ref = map { $_ => 1 } qw{ Template::Exception };
 
-    # I feel like Perl::Critic OUGHT to accept map() if I tell it to,
-    # but it seems not to.
-    sub __message {	## no critic (RequireArgUnpacking)
+    sub __message {
 	# My OpenBSD 5.5 system seems not to stringify the arguments in
 	# the normal course of events, though my Mac OS 10.9 system
 	# does. The OpenBSD system gives instead a stringified hash
 	# reference (i.e. "HASH{0x....}").
+	my @raw_arg = @_;
 	my ( $msg, @arg ) =
-	    map { $stringify_ref{ ref $_ } ? '' . $_ : $_ } @_;
+	    map { $stringify_ref{ ref $_ } ? '' . $_ : $_ } @raw_arg;
 	my $lcl = __localize(
 	    text	=> [ '+message', $msg ],
 	    default	=> $msg,
@@ -122,6 +123,9 @@ my $locale;
 	$lcl =~ m/ \[ % /smx
 	    or return join ' ', $lcl, @arg;
 
+	grep { instance( $_, 'Template::Exception' ) } @raw_arg
+	    and return join ' ', $lcl, @arg;
+
 	my $tt = Template->new();
 
 	my $output;
@@ -131,6 +135,37 @@ my $locale;
 
 	return $output;
     }
+}
+
+=end comment
+
+=cut
+
+sub __message {
+    my ( $msg, @arg ) = @_;
+
+    instance( $msg, 'Template::Exception' )
+	and return join ' ', $msg->as_string(), @arg;
+
+    my $lcl = __localize(
+	text	=> [ '+message', $msg ],
+	default	=> $msg,
+    );
+
+    CODE eq ref $lcl
+	and return $lcl->( $msg, @arg );
+
+    $lcl =~ m/ \[ % /smx
+	or return join ' ', $lcl, @arg;
+
+    my $tt = Template->new();
+
+    my $output;
+    $tt->process( \$lcl, {
+	    arg	=> \@arg,
+	}, \$output );
+
+    return $output;
 }
 
 sub __preferred {
