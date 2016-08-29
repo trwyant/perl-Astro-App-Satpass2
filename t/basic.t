@@ -33,6 +33,12 @@ defined $ENV{TZ}
 require_ok 'Astro::App::Satpass2::Utils'
     or BAIL_OUT;
 
+require_ok 'Astro::App::Satpass2::Locale'
+    or BAIL_OUT;
+
+require_ok 'Astro::App::Satpass2::Locale::C'
+    or BAIL_OUT;
+
 require_ok 'Astro::App::Satpass2::Warner'
     or BAIL_OUT;
 
@@ -44,12 +50,6 @@ require_ok 'Astro::App::Satpass2::Copier'
     or BAIL_OUT;
 
 can_ok 'Astro::App::Satpass2::Copier', @copier_methods
-    or BAIL_OUT;
-
-require_ok 'Astro::App::Satpass2::Locale'
-    or BAIL_OUT;
-
-require_ok 'Astro::App::Satpass2::Locale::C'
     or BAIL_OUT;
 
 require_ok 'Astro::App::Satpass2::Macro'
