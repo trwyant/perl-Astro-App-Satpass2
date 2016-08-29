@@ -1,3 +1,23 @@
+0.031_006	2016-08-29	T. R. Wyant
+commit 5f2c5348106c873443a209c6ba0ac3c4f57d0686
+Author: Tom Wyant <wyant@cpan.org>
+Date:   Sun Aug 28 22:52:27 2016 -0400
+
+  Sanitize DateTime object used to calculate field width.
+    This is a case of bugs beget more bugs. When I started passing a locale
+    to the instantiator of the DateTime object used to calculate field
+    widths, it broke becaue DateTime::Calendar::Christian did not accept
+    this argument. So I had to use ->now() instead, because
+    DateTime::Calendar::Christian just delegates to DateTime->now().
+    But that meant that on days near the end of the month, the feeling
+    around for the biggest time field could generate invalid dates (e.g. Feb
+    30 if run on the 30th). The fix was to do a bunch of set() calls to make
+    sure the object represented midnight January 1 of the current year.
+
+  Don't localize Template::Exception messages.
+
+  Test Locale before Warner.
+
 0.031_005	2016-08-28	T. R. Wyant
   Make sure DateTime::Calendar::Christian gets reform_date when it is
     non-default.
