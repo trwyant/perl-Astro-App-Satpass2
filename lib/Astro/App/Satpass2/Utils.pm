@@ -164,6 +164,31 @@ sub instance {
 	-d $my_lib
 	    or $my_lib = undef;
     }
+    my %patch = (
+	'DateTime::Calendar::Christian' => sub {
+	    foreach my $method ( qw{
+		    christian_era
+		    era
+		    era_abbr
+		    era_name
+		    format_cldr
+		    secular_era
+		    time_zone_long_name
+		    year_with_era
+		    year_with_christian_era
+		    year_with_secular_era
+		} ) {
+		DateTime::Calendar::Christian->can( $method )
+		    and next;
+		my $symbol = "DateTime::Calendar::Christian::$method";
+		no strict qw{ refs };
+		*$symbol = sub {
+		    shift->{date}->$method( @_ );
+		};
+	    }
+	    return;
+	},
+    );
     my %valid_complaint = map { $_ => 1 } qw{ whinge wail weep };
 
     sub load_package {
@@ -219,6 +244,9 @@ sub instance {
 		require "$fn.pm";	## no critic (RequireBarewordIncludes)
 		1;
 	    } or next;
+	    if ( my $code = $patch{$package} ) {
+		$code->();
+	    }
 	    return ( $loaded{$key} = $package );
 	}
 
@@ -296,29 +324,9 @@ sub _quoter {
 	my ( $rd ) = @_;
 	$rd
 	    or return;
-	require DateTime::Calendar::Christian;
-	# Patch in DateTime methods that might be useful for output, but
-	# which we do not have.
-	foreach my $method ( qw{
-		christian_era
-		era
-		era_abbr
-		era_name
-		format_cldr
-		secular_era
-		time_zone_long_name
-		year_with_era
-		year_with_christian_era
-		year_with_secular_era
-	    } ) {
-	    DateTime::Calendar::Christian->can( $method )
-		and next;
-	    my $symbol = "DateTime::Calendar::Christian::$method";
-	    no strict qw{ refs };
-	    *$symbol = sub {
-		shift->{date}->$method( @_ );
-	    };
-	}
+
+	load_package( 'DateTime::Calendar::Christian' );
+
 	if ( ref $rd ) {
 	    my $dt = DateTime::Calendar::Christian->new(
 		reform_date	=> $rd,
