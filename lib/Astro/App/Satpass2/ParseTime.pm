@@ -359,7 +359,7 @@ C<[ qw{ Date::Manip ISO8601 ]>).
 This argument specifies the date the calendar was reformed from Julian
 to Gregorian. An exception will be thrown if a true value is specified,
 the class being instantiated has support for calendar reform, and some
-prerequesite for supporting calendar reform has not been met (e.g.
+prerequisite for supporting calendar reform has not been met (e.g.
 missing module).
 
 =item tz
