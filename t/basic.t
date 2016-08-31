@@ -33,6 +33,38 @@ defined $ENV{TZ}
 require_ok 'Astro::App::Satpass2::Utils'
     or BAIL_OUT;
 
+{
+    can_ok 'Astro::App::Satpass2::Utils', qw{ __parse_class_and_args }
+	or BAIL_OUT;
+
+    my $code = Astro::App::Satpass2::Utils->can(
+	'__parse_class_and_args' );
+
+    is_deeply [ $code->( undef, 'Fubar' ) ], [ 'Fubar' ],
+	q<__parse_class_and_args( 'Fubar' )>;
+
+    is_deeply [ $code->( undef, 'Fu::Bar,baz=burfle' ) ],
+	[ qw{ Fu::Bar baz burfle } ],
+	q<__parse_class_and_args( 'Fu::Bar,baz=burfle' )>;
+
+    is_deeply [ $code->( undef, 'Fu::Bar,baz=burfle=buzz' ) ],
+	[ qw{ Fu::Bar baz burfle=buzz } ],
+	q<__parse_class_and_args( 'Fu::Bar,baz=burfle=buzz' )>;
+
+    {
+	no warnings qw{ qw };
+
+	is_deeply [ $code->( undef, 'Fu::Bar,baz=bur\\,fle' ) ],
+	    [ qw{ Fu::Bar baz bur,fle } ],
+	    q<__parse_class_and_args( 'Fu::Bar,baz=bur\\,fle' )>;
+
+	is_deeply [ $code->( undef, 'Fu::Bar,baz="bur,fle"' ) ],
+	    [ qw{ Fu::Bar baz bur,fle } ],
+	    q<__parse_class_and_args( 'Fu::Bar,baz="bur,fle"' )>;
+    }
+
+}
+
 require_ok 'Astro::App::Satpass2::Locale'
     or BAIL_OUT;
 

@@ -13,6 +13,7 @@ use Astro::App::Satpass2::ParseTime;
 use Astro::App::Satpass2::Utils qw{
     __arguments expand_tilde has_method instance load_package
     my_dist_config quoter
+    __parse_class_and_args
     ARRAY CODE HASH SCALAR
 };
 
@@ -1882,15 +1883,7 @@ sub _set_copyable {
 	    );
 	    return ( $self->{$arg{name}} = $arg{value} = undef );
 	}
-	my @args;
-	my $base = 0;
-	while ( $arg{value} =~ m/ (?: \A | [^\\] ) (?: \\ \\ )* , /smxg ) {
-	    push @args, substr $arg{value}, $base, $+[0] - $base - 1;
-	    $base = $+[0];
-	    $args[-1] =~ s/ \\ ( . ) /./smxg;
-	}
-	push @args, substr $arg{value}, $base;
-	my $pkg = shift @args;
+	my ( $pkg, @args ) = $self->__parse_class_and_args( $arg{value} );
 	my $cls = $self->load_package(
 	    { fatal => 'wail' }, $pkg, @{ $arg{prefix} || [] } );
 	not $cls->can( 'init' )
@@ -1901,7 +1894,7 @@ sub _set_copyable {
 	    'name in the wrong case.' );
 	$obj = $cls->new(
 	    warner	=> $self->{_warner},
-	    map { split qr{ = }smx, $_, 2 } @args
+	    @args,
 	)
 	    or $self->wail( $arg{message} ||
 	    "Can not instantiate object from '$arg{value}'" );

@@ -12,6 +12,7 @@ use File::HomeDir;
 use File::Spec;
 use Getopt::Long 2.33;
 use Scalar::Util 1.26 qw{ blessed looks_like_number };
+use Text::ParseWords ();
 
 our $VERSION = '0.031_006';
 
@@ -19,6 +20,7 @@ our @EXPORT_OK = qw{
     __arguments expand_tilde
     has_method instance load_package merge_hashes my_dist_config quoter
     __date_manip_backend
+    __parse_class_and_args
     __reform_date
     ARRAY CODE HASH Regexp SCALAR
 };
@@ -297,6 +299,19 @@ sub my_dist_config {
     );
 }
 
+sub __parse_class_and_args {
+    my ( $self, $arg ) = @_;
+    my ( $cls, @val ) =
+	Text::ParseWords::parse_line( qr{ , }smx, 0, $arg );
+    defined $cls
+	and $cls =~ m/ \A [_[:alpha:]] \w* (?: :: \w+ )* \z /smx
+	or $self->wail( "Invalid class name $cls" );
+    foreach ( @val ) {
+	m/ = /smx
+	    or $_ .= '=';
+    };
+    return ( $cls, map { split qr{ = }smx, $_, 2 } @val );
+}
 
 sub quoter {
     my @args = @_;
@@ -508,6 +523,16 @@ the C<File::HomeDir> C<'create'> option.
 
 If the configuration directory is found or successfully created, the
 path to it is returned. Otherwise C<undef> is returned.
+
+=head2 __parse_class_and_args
+
+ my ( $cls, @arg ) = $self->__parse_class_and_args( $val );
+
+This mixin parses the C<$val> as a list of comma-delimited C<name=value>
+pairs. The first element, though, is expected not to contain an equals
+sign, and in fact to be a valid class name. The invocant is only used
+for error messages, and must conform to the
+L<Astro::App::Satpass2::Warner|Astro::App::Satpass2::Warner> interface.
 
 =head2 quoter
 
