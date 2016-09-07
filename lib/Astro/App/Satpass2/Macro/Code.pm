@@ -111,6 +111,16 @@ because the code interface has not been written.
 
 This class provides or overrides the following methods:
 
+=head2 execute
+
+ $macro->execute( $name, @argv );
+
+This method executes the named code, which must be findable via
+C<< $macro->implements( $name ) >>. The code will be passed the parent
+C<Astro::App::Satpass2> object as its first argument, and C<@argv> as
+subsequent arguments. Whatever it returns will be returned to the
+caller.
+
 =head2 has_lib
 
 This method returns true if the C<lib> attribute was specified when the
@@ -119,7 +129,7 @@ class was created.
 =head2 init
 
 This method treats the C<name> attribute as the name of a module to be
-loaded (either with or without C<'Astro::App::Satpass2::Module::Code::'>
+loaded (either with or without C<'Astro::App::Satpass2::Macro::Code::'>
 prepended). This module must be a subclass of C<Astro::App::Satpass2>.
 The loaded module's symbol table is examined, and the C<implements>
 attribute is populated with names of and references to any code that has
