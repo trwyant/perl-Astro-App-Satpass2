@@ -452,7 +452,7 @@ EOD
 }
 
 SKIP: {
-    my $tests = 7;
+    my $tests = 6;
 
     eval {
 	require DateTime::Calendar::Christian;
@@ -467,7 +467,7 @@ EOD
 
     method new =>
 	class		=> 'Astro::App::Satpass2::ParseTime::ISO8601',
-	reform_date	=> 'dflt',
+	back_end	=> 'Christian',
 	INSTANTIATE, 'Instantiate';
 
     my $dt = DateTime::Calendar::Christian->new(	# Battle of Hastings
@@ -509,12 +509,7 @@ EOD
 
     method new =>
 	class		=> 'Astro::App::Satpass2::ParseTime::ISO8601',
-	reform_date	=> '1582-10-15T00:00:00',
-	INSTANTIATE, 'Instantiate';
-
-    method new =>
-	class		=> 'Astro::App::Satpass2::ParseTime::ISO8601',
-	reform_date	=> '1582-10-15',
+	back_end	=> 'Christian,reform_date=uk',
 	INSTANTIATE, 'Instantiate';
 }
 

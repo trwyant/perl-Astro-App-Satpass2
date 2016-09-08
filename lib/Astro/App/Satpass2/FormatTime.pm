@@ -38,7 +38,7 @@ sub new {
 }
 
 sub attribute_names {
-    return ( qw{ reform_date gmt tz } );
+    return ( qw{ gmt tz } );
 }
 
 {
@@ -238,62 +238,6 @@ L<format_datetime()|/format_datetime> method, the name of a component
 value for that component. The time is returned with the given component
 set to the given value. If the time is C<undef>, a new time representing
 C<01-Jan-2100 00:00:00> is constructed, adjusted, and returned.
-
-=head2 reform_date
-
- $pt->reform_date( 'dflt' );
- $date_time = $pt->reform_date();
-
-This method is both accessor and mutator for the object's C<reform_date>
-attribute. Subclasses B<may (but need not)> use this attribute to
-determine whether to parse a given time as Julian or Gregorian.
-
-When called without arguments, it behaves as an accessor, and returns
-the current C<reform_date> setting. This is an opaque value which, if
-true, says that at least some dates are to be parsed as Julian.
-
-When called with an argument, it behaves as a mutator. If the argument
-is C<undef>, no dates are to be parsed as Julian. If the argument is
-defined but false, dates before October 15 1582 Gregorian are to be
-parsed as Julian. If the argument is a true value, it must be acceptable
-as a specification of when the reform was made. The invocant is returned
-to allow call chaining.
-
-This specific method simply records the C<reform_date> setting.
-
-Subclasses B<may> override this method, but if they do so they B<must>
-call C<SUPER::> with the same arguments they themselves were called
-with, and return whatever C<SUPER::> returns. Overrides may throw
-exceptions when needed, such as if called as a mutator and the new value
-is not acceptable. Mutators overrides are required to interpret their
-arguments as follows:
-
-=over
-
-=item Any false value
-
-This specifies that all dates are to be interpreted as Gregorian.
-
-=item C<'dflt'> (case-insensitive)
-
-This explicitly asks for the default reform date, which is October 15
-1582 Gregorian, at midnight in the local time zone.
-
-=item An ISO-8601 date, with separators
-
-This specifies midnight on the given date. Nothing fancy is done on the
-interpretation of this; it is simply split on the separators.
-
-=item An ISO-8601 date and time, with separators
-
-This specifies the given date and time. Nothing fancy is done on the
-interpretation of this; it is simply split on the separators.
-
-=back
-
-The mutator is free to accept other specifications, but is not required
-to. The mutator is also allowed to fail on the absence of optional
-modules, but only if the value being set is true.
 
 =head2 round_time
 

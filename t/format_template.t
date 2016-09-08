@@ -507,7 +507,8 @@ SKIP: {
     } or skip 'DateTime::Calendar::Christian not available', $tests;
 
     $ft->template( fubar => q<[% data.date( width = '' ) %]> );
-    $ft->reform_date( 'dflt' );
+    $ft->time_formatter(
+	q<DateTime::Strftime,back_end=DateTime::Calendar::Christian> );
     $ft->date_format( '%{year_with_christian_era}-%m-%d %{calendar_name}' );
 
     my $dt = DateTime::Calendar::Christian->new(

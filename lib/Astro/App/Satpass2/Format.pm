@@ -7,7 +7,7 @@ use base qw{ Astro::App::Satpass2::Copier };
 
 use Clone ();
 use Astro::App::Satpass2::FormatTime;
-use Astro::App::Satpass2::Utils qw{ load_package CODE };
+use Astro::App::Satpass2::Utils qw{ load_package __parse_class_and_args CODE };
 
 our $VERSION = '0.031_006';
 
@@ -75,7 +75,7 @@ sub attribute_names {
     my ( $self ) = @_;
     return ( $self->SUPER::attribute_names(),
 	qw{ date_format desired_equinox_dynamical gmt
-	    local_coord provider reform_date round_time
+	    local_coord provider round_time
 	    time_format time_formatter tz
 	    value_formatter
 	} );
@@ -206,18 +206,21 @@ foreach my $attribute (
     *$name = sub {
 	my ( $self, @args ) = @_;
 	if ( @args ) {
-	    my $fmtr = $args[0];
+	    my $fmtr = shift @args;
 	    defined $fmtr and $fmtr ne ''
 		or $fmtr = $class;
+	    my $old = $self->{$name};
 	    ref $fmtr or do {
+		my ( $pkg, @fmtr_arg ) = (
+		    $self->__parse_class_and_args( $fmtr ), @args );
 		my $class = $self->load_package(
-		    { fatal => 'wail' }, $fmtr, $prefix );
-		$fmtr = $class->new();
+		    { fatal => 'wail' }, $pkg, $prefix );
+		$fmtr = $class->new( @fmtr_arg );
+		ref $old
+		    and $old->copy( $fmtr, @fmtr_arg );
 	    };
-	    if ( ref ( my $old = $self->{$name} ) ) {
-		$old->copy( $fmtr );
-		$pre_set->( $self, $old, $fmtr );
-	    }
+	    ref $old
+		and $pre_set->( $self, $old, $fmtr );
 	    $self->{$name} = $fmtr;
 	    return $self;
 	} else {
@@ -423,29 +426,6 @@ value of the C<provider> attribute.
 
 If passed an argument, that argument becomes the new value of
 C<provider>, and the object itself is returned so that calls may be
-chained.
-
-=head3 reform_date
-
- print 'Reform date: ', $fmt->reform_date(), "\n";
- $fmt->reform_date( 'dflt' );
-
-The C<reform_date> attribute is maintained on behalf of subclasses of
-this class, which B<may> (but need not) use it to format times. This
-method B<may> be overridden by subclasses, but the override B<must> call
-C<SUPER::reform_date>, and return values consistent with the following
-description, and the override B<must> conform to the syntax and
-semantics described in the
-L<Astro::App::Satpass2::ParseTime::ISO8601|Astro::App::Satpass2::ParseTime::ISO8601>
-L<reform_date()|Astro::App::Satpass2::ParseTime::ISO8601/reform_date>
-documentation.
-
-This method acts as both accessor and mutator for the C<reform_date>
-attribute.  Without arguments it is an accessor, returning the current
-value of the C<reform_date> attribute.
-
-If passed an argument, that argument becomes the new value of
-C<reform_date>, and the object itself is returned so that calls may be
 chained.
 
 =head3 round_time

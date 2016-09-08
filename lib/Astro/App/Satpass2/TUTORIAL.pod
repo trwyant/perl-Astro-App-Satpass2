@@ -481,21 +481,25 @@ the date itself.
 
 What you have to do, in general, is use date parser
 L<Astro::App::Satpass2::ParseTime::ISO8601>, and set its
-L<reform_date|Astro::App::Satpass2::ParseTime::ISO8601/reform_date>
-attribute to the appropriate value. You should see the documentation for
-full details, but with the C<satpass2> script the configuration would
-look something like this
+L<back_end|Astro::App::Satpass2::ParseTime::ISO8601/back_end> attribute
+to C<'DateTime::Calendar::Christian'>. You must, of course have this
+module installed, and you can shorten the setting to just
+C<'Christian'>.  You should see the documentation for full details, but
+with the C<satpass2> script the configuration would look something like
+this:
 
- satpass2> # Configure the ISO8601 parser, with reform date
- satpass2> set time_parser ISO8601,reform_date=dflt
+ satpass2> # Configure the ISO8601 parser, with back end
+ satpass2> set time_parser ISO8601,back_end=Christian
 
-The C<'dflt'> specifies the default date, which is the date it was first
-adopted in Italy, on October 15 1582 (Gregorian). Any specification
-acceptable to 
-L<DateTime::Calendar::Christian|DateTime::Calendar::Christian> will work
-(e.g. C<'UK'>, which specifies September 24 1752), as will an ISO-8601
-time with delimiters (e.g. C<'1752-9-24'>). Specifying any false value
-causes all dates to be parsed as Gregorian.
+The L<DateTime::Calendar::Christian|DateTime::Calendar::Christian>
+module takes, as one of the arguments to C<new()>, a reform date, which
+defaults to the date it was first adopted in Italy, on October 15 1582
+(Gregorian). If you want something different you can append it to the
+value of C<back_end> and quote the whole value. The quotes must be
+either escaped or surrounded with outer quotes to protect them from the
+command parser. For example, to set the UK reform date, use
+
+ satpass2> set time_parser "ISO8601,back_end='Christian,reform_date=uk'"
 
 =head3 Formatting Julian Calendar Dates
 
@@ -505,14 +509,16 @@ L<DateTime|DateTime> is a prerequisite for
 L<DateTime::Calendar::Christian|DateTime::Calendar::Christian>,
 installing this will make the proper date formatter the default. But
 before you can actually get Julian output dates, you need to configure
-the reform date. Because the date formatter is managed by the formatter
-object, the C<satpass2> commands to configure it are
+the time formatter to use this class.  Because the date formatter is
+managed by the formatter object, the C<satpass2> commands to configure
+it are
 
  satpass2> # Configure the time formatter and reform date
- satpass2> formatter time_formatter DateTime::Strftime
- satpass2> formatter reform_date dflt
+ satpass2> formatter time_formatter \
+ > DateTime::Strftime,back_end=Christian
 
-The available values for C<reform_date> are the same as for the parser.
+A non-default reform date is specified the same way as for the parser,
+and the two reform dates need not be the same.
 
 The C<DateTime> C<strftime> formatter also supports, as a special case,
 format pattern C<'%{calendar_name}'>, which renders as either
@@ -529,11 +535,11 @@ Formatting Julian calendar dates in
 L<Astro::App::Satpass2::FormatTime::DateTime::Cldr|Astro::App::Satpass2::FormatTime::DateTime::Cldr>
 is unsupported, because
 L<DateTime::Calendar::Christian|DateTime::Calendar::Christian> lacks the
-C<format_strftime()> method. You may find that it works, because this
-module patches in C<format_strftime()> when it loads
+C<format_cldr()> method. You may find that it works, because this module
+patches in C<format_cldr()> when it loads
 L<DateTime::Calendar::Christian|DateTime::Calendar::Christian> if it
-finds that that method does not exist. But you may find that it does not
-work, because the patch messes with the internals of
+finds that that method does not already exist. But you may find that it
+does not work, because the patch messes with the internals of
 L<DateTime::Calendar::Christian|DateTime::Calendar::Christian>, and
 those might change without warning. I<Caveat coder.>
 

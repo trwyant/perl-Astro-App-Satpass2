@@ -57,7 +57,7 @@ sub new {
 sub attribute_names {
     my ( $self ) = @_;
     return ( $self->SUPER::attribute_names(), qw{
-	base perltime reform_date tz } );
+	base perltime tz } );
 }
 
 sub base {
@@ -72,7 +72,7 @@ sub base {
 sub class_name_of_record {
     my ( $self ) = @_;
     my $rslt = substr $self->__class_name(), 2 + length __PACKAGE__;
-    foreach my $attr ( qw{ reform_date tz } ) {
+    foreach my $attr ( qw{ tz } ) {
 	my $value = $self->$attr()
 	    or next;
 	$rslt .= ",$attr=$value";
@@ -354,14 +354,6 @@ that can actually be instantiated.
 The default is C<'Date::Manip,ISO8601'> (or, equivalently,
 C<[ qw{ Date::Manip ISO8601 ]>).
 
-=item reform_date
-
-This argument specifies the date the calendar was reformed from Julian
-to Gregorian. An exception will be thrown if a true value is specified,
-the class being instantiated has support for calendar reform, and some
-prerequisite for supporting calendar reform has not been met (e.g.
-missing module).
-
 =item tz
 
 This argument specifies the default time zone.
@@ -488,62 +480,6 @@ This method parses a time, returning the resultant Perl time. If
 C<$string> is C<undef> or C<''>, $default is returned, or C<undef> if
 C<$default> is not specified. If C<$string> fails to parse, C<undef> is
 returned.
-
-=head2 reform_date
-
- $pt->reform_date( 'dflt' );
- $date_time = $pt->reform_date();
-
-This method is both accessor and mutator for the object's C<reform_date>
-attribute. Subclasses B<may (but need not)> use this attribute to
-determine whether to parse a given time as Julian or Gregorian.
-
-When called without arguments, it behaves as an accessor, and returns
-the current C<reform_date> setting. This is an opaque value which, if
-true, says that at least some dates are to be parsed as Julian.
-
-When called with an argument, it behaves as a mutator. If the argument
-is C<undef>, no dates are to be parsed as Julian. If the argument is
-defined but false, dates before October 15 1582 Gregorian are to be
-parsed as Julian. If the argument is a true value, it must be acceptable
-as a specification of when the reform was made. The invocant is returned
-to allow call chaining.
-
-This specific method simply records the C<reform_date> setting.
-
-Subclasses B<may> override this method, but if they do so they B<must>
-call C<SUPER::> with the same arguments they themselves were called
-with, and return whatever C<SUPER::> returns. Overrides may throw
-exceptions when needed, such as if called as a mutator and the new value
-is not acceptable. Mutators overrides are required to interpret their
-arguments as follows:
-
-=over
-
-=item Any false value
-
-This specifies that all dates are to be interpreted as Gregorian.
-
-=item C<'dflt'> (case-insensitive)
-
-This explicitly asks for the default reform date, which is October 15
-1582 Gregorian, at midnight in the local time zone.
-
-=item An ISO-8601 date, with separators
-
-This specifies midnight on the given date. Nothing fancy is done on the
-interpretation of this; it is simply split on the separators.
-
-=item An ISO-8601 date and time, with separators
-
-This specifies the given date and time. Nothing fancy is done on the
-interpretation of this; it is simply split on the separators.
-
-=back
-
-The mutator is free to accept other specifications, but is not required
-to. The mutator is also allowed to fail on the absence of optional
-modules, but only if the value being set is true.
 
 =head2 reset
 

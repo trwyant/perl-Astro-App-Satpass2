@@ -784,10 +784,10 @@ EOD
     execute 'clear', undef, 'Clear observing list';
 
     execute 'load t/data.tle', undef, 'Load observing list';
-    
+
     execute 'choose 88888', undef, 'Restrict ourselves to body 88888';
-    
-execute q{position '20090401T000000Z'}, <<'EOD',
+
+    execute q{position '20090401T000000Z'}, <<'EOD',
 2009/04/01 00:00:00
             Name Eleva  Azimuth      Range               Epoch Illum
              Sun -34.0 358.8 N   1.495e+08

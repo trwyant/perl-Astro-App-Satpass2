@@ -9,12 +9,26 @@ use base qw{
     Astro::App::Satpass2::FormatTime
 };
 
-use Astro::App::Satpass2::Utils qw{ has_method __reform_date };
+use Astro::App::Satpass2::Utils qw{
+    back_end __back_end_class_name_of_record
+    has_method load_package
+    __parse_class_and_args };
 use Astro::App::Satpass2::Locale qw{ __preferred };
 use DateTime;
 use DateTime::TimeZone;
 
 our $VERSION = '0.031_006';
+
+sub attribute_names {
+    my ( $self ) = @_;
+    return ( qw{ back_end }, $self->SUPER::attribute_names() );
+}
+
+sub class_name_of_record {
+    my ( $self ) = @_;
+    return $self->__back_end_class_name_of_record(
+	$self->SUPER::class_name_of_record() );
+}
 
 sub format_datetime {
     my ( $self, $tplt, $time, $gmt ) = @_;
@@ -27,8 +41,10 @@ sub format_datetime {
 	    and $self->warner()->wail( 'Unsupported time specification' );
 	# Oh, for 5.010 and the // operator.
 	my @dt_arg;
-	$self->{_reform_date}
-	    and push @dt_arg, reform_date => $self->{_reform_date};
+	if ( $self->{_back_end} ) {
+	    $class = $self->{_back_end}{class};
+	    push @dt_arg, @{ $self->{_back_end}{arg} };
+	}
 	my $dt = $class->from_epoch(
 	    epoch	=> $time,
 	    time_zone	=> $self->_get_zone( $gmt ),
@@ -39,12 +55,11 @@ sub format_datetime {
     }
 }
 
-sub reform_date {
-    my ( $self, @args ) = @_;
-    if ( @args ) {
-	( $args[0], $self->{_reform_date} ) = __reform_date( $args[0] );
-    }
-    return $self->SUPER::reform_date( @args );
+sub init {
+    my ( $self, %arg ) = @_;
+    exists $arg{back_end}
+	or $arg{back_end} = undef;
+    return $self->SUPER::init( %arg );
 }
 
 {
@@ -101,6 +116,8 @@ sub reform_date {
 
 }
 
+=begin comment
+
 sub __calendar_name {
     my ( undef, $date_time ) = @_;	# Invocant unused
     my $code;
@@ -110,10 +127,12 @@ sub __calendar_name {
     return 'Gregorian';
 }
 
+=end comment
+
+=cut
+
 sub __datetime_class {
-    my ( $self ) = @_;
-    $self->reform_date()
-	and return 'DateTime::Calendar::Christian';
+#   my ( $self ) = @_;		# Invocant unused
     return 'DateTime';
 }
 
@@ -162,6 +181,9 @@ sub __preprocess_strftime_format {
     return $fmt;
 }
 
+use constant CALENDAR_GREGORIAN	=> 'Gregorian';
+use constant CALENDAR_JULIAN	=> 'Julian';
+
 {
     my %special = (
 	'%'		=> sub { return '%' },
@@ -169,9 +191,12 @@ sub __preprocess_strftime_format {
 	    my ( $dt_obj ) = @_;
 	    my $code;
 	    $code = $dt_obj->can( 'is_julian' )
-		and $code->( $dt_obj )
-		and return 'Julian';
-	    return 'Gregorian';
+		and return $code->( $dt_obj ) ?
+		    CALENDAR_JULIAN :
+		    CALENDAR_GREGORIAN;
+	    ( ref $dt_obj ) =~ m/ \A DateTime::Calendar:: ( \w+ ) \z /smx
+		and return "$1";
+	    return CALENDAR_GREGORIAN;
 	},
     );
 
@@ -195,6 +220,17 @@ sub __preprocess_strftime_format {
 	}
 	return $rslt;
     }
+}
+
+sub __back_end_default {
+    my ( undef, $cls ) = @_;		# Invocant ($self) unused
+    return defined $cls ? $cls : 'DateTime';
+}
+
+sub __back_end_validate {
+    my ( undef, $cls, @arg ) = @_;	# Invocant ($self) unused
+    $cls->now( @arg );
+    return;
 }
 
 1;
@@ -231,18 +267,48 @@ L<Astro::App::Satpass2::FormaTime::DateTime::Strftime|Astro::App::Satpass2::Form
 
 =head1 METHODS
 
-This class provides no public methods over and above those provided by
-L<Astro::App::Satpass2::FormatTime|Astro::App::Satpass2::FormatTime>.
-The following package-private methods are documented for the convenience
-of the author, and may change or be retracted at any time.
+This class provides the following methods over and above those provided
+by L<Astro::App::Satpass2::FormatTime|Astro::App::Satpass2::FormatTime>.
+
+These are public unless otherwise stated in the documentation of the
+individual method. As a guide, you should expect methods whose name
+begins with a double underscore to be private to the
+C<Astro-App-Satpass2> package.
+
+=head2 back_end
+
+ $self->back_end( 'DateTime::Calendar::Christian' );
+ $self->back_end( 'Christian' );
+ $self->back_end( 'Christian,reform_date=uk' );
+ $self->back_end( 'Christian', reform_date => 'uk' );
+ 
+ my $back_end = $self->back_end();
+ my ( $class, @arg ) = $self->back_end();
+
+This method acts as both accessor and mutator for the back end class
+that does all the actual time formatting.
+
+When called with arguments it is a mutator, setting the name of the back
+end class, and any arguments that need to be passed to its C<new()>
+method. The class specified should conform to the L<DateTime|DateTime>
+interface. If the class name begins with C<'DateTime::Calendar::'>, this
+can be omitted as in the second example above. Arguments can be
+specified as comma-delimited C<'name=value'> pairs, as in the third
+example, or as separate name/value arguments, as in the fourth example.
+
+When called with no arguments this method is an accessor. If called in
+list context it returns the class name and argument/value pairs as
+separate items. If called in scalar context the arguments are
+concatenated to the class name as comma-delimited C<'name=value'> pairs.
 
 =head2 __preprocess_strftime_format
 
  my $mod = $self->__preprocess_strftime_format( $dt_obj, $fmt );
 
 The functionality documented below is supported, but B<this method is
-not.> The method itself is package-private, and will in fact throw an
-exception unless called from a subclass of this class.
+not,> and may be changed or revoked without notice at any time. This
+method will in fact throw an exception unless called from a subclass of
+this class.
 
 This package-private method pre-processes a format, finding and
 potentially replacing substrings that look like C<'%{name:modifiers}'>.
@@ -268,8 +334,10 @@ This causes a literal C<'%'> to be inserted.
 
 This causes either C<'Gregorian'> or C<'Julian'> to be inserted. You get
 C<'Julian'> only if C<$dt_obj> has an C<is_julian()> method, and that
-method returns a true value. Otherwise you get C<'Gregorian'>. There is
-no provision for localization, unfortunately.
+method returns a true value. Otherwise, if the class name of the back
+end object begins with C<'DateTime::Calendar::'> you get the shortened
+name. Otherwise you get C<'Gregorian'>. There is no provision for
+localization, unfortunately.
 
 =back
 

@@ -17,11 +17,13 @@ use Text::ParseWords ();
 our $VERSION = '0.031_006';
 
 our @EXPORT_OK = qw{
-    __arguments expand_tilde
+    __arguments
+    back_end
+    __back_end_class_name_of_record
+    expand_tilde
     has_method instance load_package merge_hashes my_dist_config quoter
     __date_manip_backend
     __parse_class_and_args
-    __reform_date
     ARRAY CODE HASH Regexp SCALAR
 };
 
@@ -65,7 +67,7 @@ use constant SCALAR	=> ref \1;
 	    $lgl = $self->$method( \%opt, $lgl );
 	}
 	local $SIG{__WARN__} = sub {$err = $_[0]};
-	my $config = 
+	my $config =
 	    $self->_get_attr($code, 'Configure') || \@default_config;
 	my $go = Getopt::Long::Parser->new(config => $config);
 	if ( !  $go->getoptions(\%opt, @$lgl) ) {
@@ -77,6 +79,49 @@ use constant SCALAR	=> ref \1;
 
 	return ( $self, \%opt, @ARGV );
     }
+}
+
+sub back_end {
+    my ( $self, @arg ) = @_;
+    if ( @arg ) {
+	my ( $pkg, @cls_arg ) = ( $self->__parse_class_and_args(
+	    $self->__back_end_default( $arg[0] ) ), @arg[ 1 .. $#arg ] );
+	my $cls = $self->load_package( { fatal => 1 }, $pkg,
+	    'DateTime::Calendar' );
+	$self->__back_end_validate( $cls, @cls_arg );
+	$self->{_back_end} = {
+	    arg		=> \@cls_arg,
+	    class	=> $cls,
+	    pkg		=> $pkg,
+	};
+	$self->{back_end} = shift @arg;
+	while ( @arg ) {
+	    my ( $name, $value ) = splice @arg, 0, 2;
+	    $self->{back_end} .= ",$name=$value";
+	}
+	return $self;
+    } else {
+	wantarray
+	    and return ( $self->{_back_end}{pkg}, @{
+	    $self->{_back_end}{arg} } );
+	return $self->{back_end};
+    }
+}
+
+sub __back_end_class_name_of_record {
+    my ( $self, $name ) = @_;
+    defined( my $back_end = $self->{_back_end}{class} )
+	or return $name;
+    $back_end eq $self->__back_end_default()
+	and return $name;
+    $back_end =~ s/ \A DateTime::Calendar:: //smx;
+    @{ $self->{_back_end}{arg} }
+	or return "$name,back_end=$back_end";
+    my %dt_arg = @{ $self->{_back_end}{arg} };
+    foreach my $key ( sort keys %dt_arg ) {
+	$back_end .= ",$key=$dt_arg{$key}";
+    }
+    return "$name,back_end='$back_end'";
 }
 
 # $backend = __date_manip_backend()
@@ -227,7 +272,7 @@ sub instance {
 	    }
 
 	    require Carp;
-	    Carp::confess( 
+	    Carp::confess(
 		"Programming error - $msg"
 	    );
 	}
@@ -300,17 +345,20 @@ sub my_dist_config {
 }
 
 sub __parse_class_and_args {
-    my ( $self, $arg ) = @_;
+    my ( $self, $arg, @rest ) = @_;
     my ( $cls, @val ) =
 	Text::ParseWords::parse_line( qr{ , }smx, 0, $arg );
-    defined $cls
-	and $cls =~ m/ \A [_[:alpha:]] \w* (?: :: \w+ )* \z /smx
-	or $self->wail( "Invalid class name $cls" );
+    unless ( defined $cls &&
+	$cls =~ m/ \A [_[:alpha:]] \w* (?: :: \w+ )* \z /smx ) {
+	$cls = defined $cls ? "'$cls'" : 'undef';
+	my $warner = $self->can( 'wail' ) ? $self : $self->warner();
+	$warner->wail( "Invalid class name $cls" );
+    }
     foreach ( @val ) {
 	m/ = /smx
 	    or $_ .= '=';
     };
-    return ( $cls, map { split qr{ = }smx, $_, 2 } @val );
+    return ( $cls, ( map { split qr{ = }smx, $_, 2 } @val ), @rest );
 }
 
 sub quoter {
@@ -328,48 +376,6 @@ sub _quoter {
     $string =~ s/ ( [\\'] ) /\\$1/smxg;
     return qq{'$string'};
 }
-
-# Take reform date specification. Return normalized specification and
-# DateTime object representing reform date.
-
-{
-    my $default;
-
-    sub __reform_date {
-	my ( $rd ) = @_;
-	$rd
-	    or return;
-
-	load_package( 'DateTime::Calendar::Christian' );
-
-	if ( ref $rd ) {
-	    my $dt = DateTime::Calendar::Christian->new(
-		reform_date	=> $rd,
-	    )->reform_date();
-	    my $nf = $dt->strftime( '%Y-%m-%dT%H:%M:%S' );
-	    $nf =~ s/ T00:00:00 \z //smx;
-	    return ( $nf, $dt );
-	}
-	my $nf = $rd;
-	$nf =~ m/ \A dflt \z /smxi
-	    and return ( $nf,
-	    ( $default ||=
-		DateTime::Calendar::Christian->new()->reform_date() ) );
-	my @date = split qr{ [^0-9] }smx, $nf;
-	if ( 6 == @date || 3 == @date ) {
-	    3 == @date
-		and push @date, 0, 0, 0;
-	    my %dt_arg;
-	    @dt_arg{ qw{ year month day hour minute second } } = @date;
-	    $nf = sprintf '%04d-%-2d-%02dT%02d:%02d:%02d', @date;
-	    $nf =~ s/ T00:00:00 \z //smx;
-	    return ( $nf, DateTime->new( %dt_arg ) );
-	}
-	return ( $nf, DateTime::Calendar::Christian->new(
-		reform_date	=> $nf )->reform_date() );
-    }
-}
-
 
 1;
 
@@ -401,6 +407,45 @@ default.
 =head1 SUBROUTINES
 
 This module supports the following exportable subroutines:
+
+=head2 back_end
+
+ my ( $class, @args ) = $self->back_end();
+ my $back_end = $self->back_end();
+ $self->back_end( 'Christian,reform_date=uk' );
+ $self->back_end( 'Christian', reform_date => 'uk' );
+ $self->back_end( undef );
+
+This mixin is both accessor and mutator for the C<back_end> attribute,
+which defines the class name for a L<DateTime|DateTime> back end module,
+and any class-specific arguments to be passed to its C<new()> method.
+
+If called without arguments it is an accessor. If called in list context
+it returns the class name as specified when it was set, followed by any
+arguments to C<new()> that were specified when it was set. If called in
+scalar context it returns the class name, with the arguments to C<new()>
+appended as C<"name=value"> strings, comma-delimited.
+
+If called with arguments it is a mutator. The first argument is the
+class name, possibly with leading C<'DateTime::Calendar::'> omitted)
+followed optionally by comma-delimited C<"name=value"> arguments to
+C<new()>. Subsequent arguments are name/value pairs of arguments to
+C<new()>.
+
+If called with a single undefined argument, it specifies the default.
+
+=head2 __back_end_class_name_of_record
+
+ sub class_name_of_record {
+     my ( $self ) = @_;
+     return $self->__back_end_class_name_of_record(
+         $self->SUPER::class_name_of_record() );
+ }
+
+This mixin appends the C<back_end> information, if any, to the class
+name of record. It is called this way because C<SUPER::> is resolved
+with regard to the package it occurs in, not the package of the
+invocant.
 
 =head2 expand_tilde
 

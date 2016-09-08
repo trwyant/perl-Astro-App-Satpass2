@@ -64,18 +64,20 @@ method format_datetime => q<'%{calendar_name}'>, 1,
 SKIP: {
     my $tests = 2;
 
+    my $back_end = 'DateTime::Calendar::Christian';
+
     eval {
 	require DateTime::Calendar::Christian;
 	1;
     } or skip 'DateTime::Calendar::Christian not available', 1;
 
-    method 'new', reform_date => 'dflt', gmt => 1, INSTANTIATE, 'Instantiate';
+    method 'new', back_end => $back_end, gmt => 1, INSTANTIATE, 'Instantiate';
 
     SKIP: {
 
-	my $dt = DateTime::Calendar::Christian->new(
-	    year		=> -43,
-	    month		=> 3,
+	my $dt = $back_end->new(
+	    year	=> -43,
+	    month	=> 3,
 	    day		=> 15,
 	    time_zone	=> 'UTC',
 	);

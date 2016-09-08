@@ -3,7 +3,9 @@ package Astro::App::Satpass2::ParseTime::ISO8601;
 use strict;
 use warnings;
 
-use Astro::App::Satpass2::Utils qw{ __reform_date };
+use Astro::App::Satpass2::Utils qw{
+    back_end __back_end_class_name_of_record __parse_class_and_args
+};
 use Astro::Coord::ECI::Utils 0.059 qw{ looks_like_number SECSPERDAY };
 use Time::Local;
 
@@ -19,11 +21,17 @@ our $VERSION = '0.031_006';
 	1;
     } || 0;
 
-    use constant HAVE_JULIAN_SUPPORT => eval {
-	require DateTime::Calendar::Christian;
-	1;
-    } || 0;
+}
 
+sub attribute_names {
+    my ( $self ) = @_;
+    return ( $self->SUPER::attribute_names(), qw{ back_end } );
+}
+
+sub class_name_of_record {
+    my ( $self ) = @_;
+    return $self->__back_end_class_name_of_record(
+	$self->SUPER::class_name_of_record() );
 }
 
 my $zone_re = qr{ (?i: ( Z | UT | GMT ) |
@@ -72,10 +80,10 @@ sub delegate {
 	> } = @date;
 	$dt_arg{nanosecond} *= 1_000_000_000;
 	$dt_arg{time_zone} = $zone;
-	$self->{_reform_date}
-	    and return DateTime::Calendar::Christian->new(
+	$self->{_back_end}
+	    and return $self->{_back_end}{class}->new(
 		%dt_arg,
-		reform_date	=> $self->{_reform_date},
+		@{ $self->{_back_end}{arg} },
 	    )->epoch() + $offset;
 	return DateTime->new( %dt_arg )->epoch() + $offset;
     } : sub {
@@ -199,18 +207,6 @@ sub _interpret_zone {
     }
 }
 
-sub reform_date {
-    my ( $self, @args ) = @_;
-    if ( @args ) {
-	not $args[0]
-	    or HAVE_JULIAN_SUPPORT
-	    or $self->warner()->wail(
-	    'No reform date support without DateTime::Calendar::Christian' );
-	( $args[0], $self->{_reform_date} ) = __reform_date( $args[0] );
-    }
-    return $self->SUPER::reform_date( @args );
-}
-
 sub tz {
     my ( $self, @args ) = @_;
     if ( @args ) {
@@ -222,6 +218,20 @@ sub tz {
 	}
     }
     return $self->SUPER::tz( @args );
+}
+
+sub __back_end_default {
+    my ( undef, $cls ) = @_;		# Invocant ($self) unused
+    defined $cls
+	and return $cls;
+    return 'DateTime';
+}
+
+
+sub __back_end_validate {
+    my ( undef, $cls, @arg ) = @_;	# Invocant ($self) unused
+    $cls->now( @arg );
+    return;
 }
 
 1;

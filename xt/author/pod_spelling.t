@@ -66,6 +66,7 @@ equivocated
 EST
 exportable
 filename
+findable
 firstderivative
 formatter
 formatter's

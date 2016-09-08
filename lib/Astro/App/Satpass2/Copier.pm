@@ -25,9 +25,10 @@ sub clone {
 }
 
 sub copy {
-    my ( $self, $copy ) = @_;
+    my ( $self, $copy, %skip ) = @_;
     foreach my $attr ( $self->attribute_names() ) {
-	$copy->can( $attr )
+	not exists $skip{$attr}
+	    and $copy->can( $attr )
 	    and $copy->$attr( $self->$attr() );
     }
     return $self;
@@ -185,10 +186,15 @@ object.
 
 =head2 copy
 
- $obj->copy( $copy );
+ $obj->copy( $copy, %skip );
 
 This method copies the attribute values of the original object into the
 attribute_names of the copy object. The original object is returned.
+
+The C<%skip> hash is optional. Any attribute that appears in the
+C<%skip> hash is skipped. Note that you can also pass an array here
+provided it has an even number of elements; the even-numbered elements
+(from zero) will be taken as the attribute names.
 
 The copy object need not be the same class as the original, but it must
 support all attributes the original supports.

@@ -234,7 +234,6 @@ my %mutator = (
     pass_variant	=> \&_set_pass_variant,
     perltime => \&_set_time_parser_attribute,
     prompt => \&_set_unmodified,
-    reform_date	=> \&_set_formatter_attribute,
     simbad_url => \&_set_unmodified,
     singleton => \&_set_unmodified,
     spacetrack => \&_set_spacetrack,
@@ -266,7 +265,6 @@ my %accessor = (
     gmt => \&_get_formatter_attribute,
     local_coord => \&_get_formatter_attribute,
     perltime => \&_get_time_parser_attribute,
-    reform_date		=> \&_get_formatter_attribute,
     spacetrack => \&_get_spacetrack,
     time_format => \&_get_formatter_attribute,
     time_formatter	=> \&_get_formatter_attribute,
@@ -286,7 +284,6 @@ my %shower = (
     gmt => \&_show_formatter_attribute,
     local_coord => \&_show_formatter_attribute,
     pass_variant	=> \&_show_pass_variant,
-    reform_date		=> \&_show_formatter_attribute,
     time_parser => \&_show_copyable,
     time_format => \&_show_formatter_attribute,
     time_formatter	=> \&_show_formatter_attribute,
@@ -2252,7 +2249,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 			and $fcn eq fold_case( $body->get( 'name' ) )
 			and return;
 		}
-		@args >= 2 
+		@args >= 2
 		    or $self->wail(
 		    'You must give at least right ascension and declination' );
 		my $ra = deg2rad( $self->__parse_angle( shift @args ) );
@@ -4342,7 +4339,7 @@ sub _unescape {
 		    }
 		    $char eq '}'
 			or $self->wail('Missing right curly bracket');
-		
+
 		# If the name begins with an alpha or an underscore, we
 		# simply append any word ('\w') characters to it and
 		# advance the current location past them.
@@ -6525,7 +6522,7 @@ If specified as a true value, all currently-loaded orbiting bodies (that
 is, all objects displayed by
 
  satpass2> list
- 
+
 )will be aggregated and appended to the C<@list>.
 
 =item sky
