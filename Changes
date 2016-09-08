@@ -1,3 +1,17 @@
+0.031_0061	2016-09-08	T. R. Wyant
+  Replace reform_date with back_end
+    The difference is that you can specify the name of the class you are
+    going to use as a date back end, with the possibility of passing
+    arguments to its constructor. So we could display in any calendar
+    whose interface corresponds closely enough to the DateTime
+    interface.
+
+  Make parsing of class names with attributes more robust
+
+  Load & patch DateTime::Calendar::Christian via load_package(). The
+    problem is that we would like it to have some methods that it does
+    not in fact support, but that it could easily enough.
+
 0.031_006	2016-08-29	T. R. Wyant
 commit 5f2c5348106c873443a209c6ba0ac3c4f57d0686
 Author: Tom Wyant <wyant@cpan.org>
