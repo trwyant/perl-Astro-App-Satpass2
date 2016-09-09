@@ -116,21 +116,6 @@ sub init {
 
 }
 
-=begin comment
-
-sub __calendar_name {
-    my ( undef, $date_time ) = @_;	# Invocant unused
-    my $code;
-    $code = $date_time->can( 'is_julian' )
-	and $code->( $date_time )
-	and return 'Julian';
-    return 'Gregorian';
-}
-
-=end comment
-
-=cut
-
 sub __datetime_class {
 #   my ( $self ) = @_;		# Invocant unused
     return 'DateTime';
