@@ -48,10 +48,24 @@ sub geocode {
 	us	=> sub {
 	    my ( $info ) = @_;
 	    my $addr = $info->{address};
-	    return sprintf '%s %s, %s, %s USA', map { $addr->{$_} }
-		qw{ house_number pedestrian city state };
+	    my @field = (
+		_field( $addr, qw{ house_number pedestrian } ) ||
+		_field( $addr, qw{ house_number road } ) ||
+		_field( $addr, 'road' ),
+		_field( $addr, 'city' ),
+		_field( $addr, 'state' ),
+	    ) or return;
+	    $field[-1] .= ' USA';
+	    return join ', ', @field;
 	},
     };
+
+    sub _field {
+	my ( $addr, @items ) = @_;
+	@items == grep { defined $addr->{$_} } @items
+	    and return join ' ', map { $addr->{$_} } @items;
+	return;
+    }
 
     sub _description {
 	my ( $info ) = @_;
