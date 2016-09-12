@@ -1,3 +1,8 @@
+0.031_0062	2016-09-12	T. R. Wyant
+  Don't copy back end when replacing time formatter
+
+  Make Geocode::OSM a little more robust
+
 0.031_0061	2016-09-08	T. R. Wyant
   Replace reform_date with back_end
     The difference is that you can specify the name of the class you are
