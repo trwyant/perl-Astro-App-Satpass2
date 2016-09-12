@@ -42,6 +42,16 @@ sub attribute_names {
 }
 
 {
+
+    my %skip = map { $_ => 1 } qw{ back_end };
+
+    sub copy {
+	my ( $self, $copy ) = @_;
+	return $self->SUPER::copy( $copy, %skip );
+    }
+}
+
+{
     my $leader_re = qr{ @{[ __PACKAGE__ ]} :: }smxo;
 
     sub class_name_of_record {
