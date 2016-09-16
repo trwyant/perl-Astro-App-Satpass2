@@ -58,7 +58,7 @@ EOD
       This module is used to parse (maybe) and format dates that might
       be either Julian or Gregorian. Currently the only parser that has
       this capability is ISO8601. If historical dates in the proleptic
-      Gregorian calendar are find with you, you do not need this module.
+      Gregorian calendar are fine with you, you do not need this module.
 EOD
     __any( 'Geo::Coder::OSM'		=> <<'EOD' ),
       This module is required for the Astro::App::Satpass2 geocode()
