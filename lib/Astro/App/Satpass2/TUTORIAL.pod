@@ -531,6 +531,14 @@ The date of the assassination of Julius Caesar would be displayed as
 
  '44BC-03-15 Julian'
 
+In point of fact, the way the C<%{calendar_name}> machinery works is
+that if the back end provides the C<is_julian()> method, you get
+C<'Julian'> if that method returns a true value, and C<'Gregorian'> if
+it does not. If the back end does not provide the C<is_julian()> method,
+whatever follows C<'DateTime::Calendar::'> in the back end's class name
+is used. If the back end does not begin with C<'DateTime::Calendar::'>,
+C<'Gregorian'> is used.
+
 Formatting Julian calendar dates in
 L<Astro::App::Satpass2::FormatTime::DateTime::Cldr|Astro::App::Satpass2::FormatTime::DateTime::Cldr>
 is unsupported, because
