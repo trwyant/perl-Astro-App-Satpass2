@@ -24,6 +24,18 @@ sub attribute_names {
     return ( qw{ back_end }, $self->SUPER::attribute_names() );
 }
 
+sub _dt_class_and_args {
+    my ( $self ) = @_;
+    if ( $self->{_back_end} ) {
+	return (
+	    $self->{_back_end}{class},
+	    $self->{_back_end}{arg},
+	);
+    } else {
+	return ( 'DateTime', [] );
+    }
+}
+
 sub class_name_of_record {
     my ( $self ) = @_;
     return $self->__back_end_class_name_of_record(
@@ -33,23 +45,17 @@ sub class_name_of_record {
 sub format_datetime {
     my ( $self, $tplt, $time, $gmt ) = @_;
     $time = $self->__round_time_value( $time );
-    my $class = $self->__datetime_class();
     if ( has_method( $time, $self->METHOD_USED() ) ) {
 	return $self->__format_datetime( $time, $tplt );
     } else {
 	ref $time
 	    and $self->warner()->wail( 'Unsupported time specification' );
-	# Oh, for 5.010 and the // operator.
-	my @dt_arg;
-	if ( $self->{_back_end} ) {
-	    $class = $self->{_back_end}{class};
-	    push @dt_arg, @{ $self->{_back_end}{arg} };
-	}
+	my ( $class, $dt_arg ) = $self->_dt_class_and_args();
 	my $dt = $class->from_epoch(
 	    epoch	=> $time,
 	    time_zone	=> $self->_get_zone( $gmt ),
 	    locale	=> scalar __preferred(),
-	    @dt_arg,
+	    @{ $dt_arg },
 	);
 	return $self->__format_datetime( $dt, $tplt );
     }
@@ -116,14 +122,9 @@ sub init {
 
 }
 
-sub __datetime_class {
-#   my ( $self ) = @_;		# Invocant unused
-    return 'DateTime';
-}
-
 sub __format_datetime_width_adjust_object {
     my ( $self, $obj, $name, $val, $gmt ) = @_;
-    my $class = $self->__datetime_class();
+    my ( $class, $dt_arg ) = $self->_dt_class_and_args();
     # Note that I can not use new() here because I want to pass the
     # locale argument, and DateTime::Calendar::Christian does not accept
     # that. It works in from_epoch() or now() because
@@ -133,6 +134,7 @@ sub __format_datetime_width_adjust_object {
 	$obj = $class->now(
 	    time_zone	=> $self->_get_zone( $gmt ),
 	    locale	=> scalar __preferred(),
+	    @{ $dt_arg },
 	);
 	# But doing it that way I have to sanitize the object by hand so
 	# that I do not get invalid dates.
