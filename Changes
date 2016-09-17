@@ -1,3 +1,10 @@
+0.031_0063	2016-09-17	T. R. Wyant
+  Use correct class when finding date output width. The problem was that
+    the width calculation used DateTime willy-nilly, resulting in the
+    wrong field width if %{calendar_name} was used.
+
+  Tweak TUTORIAL re back_end formatting & parsing functionality.
+
 0.031_0062	2016-09-12	T. R. Wyant
   Don't copy back end when replacing time formatter
 

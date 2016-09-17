@@ -9,7 +9,7 @@ use utf8;	# Not actually needed for C locale, but maybe for others
 
 use Astro::Coord::ECI::TLE 0.059 qw{ :constants };
 use Scalar::Util ();
-our $VERSION = '0.031_0062';
+our $VERSION = '0.031_0063';
 
 my @event_names;
 $event_names[PASS_EVENT_NONE]		= '';
