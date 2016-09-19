@@ -379,7 +379,7 @@ Subclasses B<may> override this method, but if they do so they B<must>
 call C<SUPER::> with the same arguments they themselves were called
 with, and return whatever C<SUPER::> returns.
 
-=head3 config
+=head2 config
 
  use YAML;
  print Dump ( $pt->config( changes => 1 );
