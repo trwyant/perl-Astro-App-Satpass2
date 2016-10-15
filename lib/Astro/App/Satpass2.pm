@@ -14,7 +14,7 @@ use Astro::App::Satpass2::Utils qw{
     __arguments expand_tilde has_method instance load_package
     my_dist_config quoter
     __parse_class_and_args
-    ARRAY CODE HASH SCALAR
+    ARRAY_REF CODE_REF HASH_REF SCALAR_REF
 };
 
 use Astro::Coord::ECI 0.059;			# This needs at least 0.049.
@@ -595,7 +595,7 @@ sub execute {
     my $accum;
     my $in;
     my $extern;
-    if ( ref $args[0] eq CODE ) {
+    if ( CODE_REF eq ref $args[0] ) {
 	$extern = shift @args;
 	$in = sub {
 	    my ( $prompt ) = @_;
@@ -664,7 +664,7 @@ sub execute {
 
 sub _execute {
     my ($self, @args) = @_;
-    my $in = ref $args[0] eq CODE ? shift @args : sub { return shift
+    my $in = CODE_REF eq ref $args[0] ? shift @args : sub { return shift
 	@args };
     while ( @args ) {
 	local $SIG{INT} = sub {die "\n$interrupted\n"};
@@ -686,11 +686,11 @@ sub _execute_output {
     my $ref = ref $stdout;
     if ( !defined $stdout ) {
 	return $output;
-    } elsif ( $ref eq SCALAR ) {
+    } elsif ( SCALAR_REF eq $ref ) {
 	$$stdout .= $output;
-    } elsif ( $ref eq CODE ) {
+    } elsif ( CODE_REF eq $ref ) {
 	$stdout->( $output );
-    } elsif ( $ref eq ARRAY ) {
+    } elsif ( ARRAY_REF eq $ref ) {
 	push @$stdout, split qr{ (?<=\n) }smx, $output;
     } else {
 	$stdout->print( $output );
@@ -800,7 +800,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! q
 }
 
 sub formatter : Verb() {
-    splice @_, ( HASH eq ref $_[1] ? 2 : 1 ), 0, 'formatter';
+    splice @_, ( HASH_REF eq ref $_[1] ? 2 : 1 ), 0, 'formatter';
     goto &_helper_handler;
 }
 
@@ -956,7 +956,7 @@ EOD
 sub init {
     my ( $self, @args ) = @_;
 
-    my $opt = HASH eq ref $args[0] ? shift @args : {};
+    my $opt = HASH_REF eq ref $args[0] ? shift @args : {};
     my $init_file = shift @args;
 
     $self->{initfile} = undef;
@@ -1653,7 +1653,8 @@ sub pwd : Verb() {
 	# If the undocumented first option is a code reference, use it to
 	# get input.
 	my $in;
-	ref $args[0] eq CODE and $in = shift @args;
+	CODE_REF eq ref $args[0]
+	    and $in = shift @args;
 
 	# Parse the command options. -level1 is undocumented.
 	my %opt;
@@ -1836,7 +1837,7 @@ sub _set_angle_or_undef {
 }
 
 sub _set_code_ref {
-    CODE eq ref $_[2]
+    CODE_REF eq ref $_[2]
 	or $_[0]->wail( "Attribute $_[1] must be a code reference" );
     return( $_[0]{$_[1]} = $_[2] );
 }
@@ -2631,7 +2632,7 @@ sub system : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
 
 
 sub time : method Verb() {	## no critic (ProhibitBuiltInHomonyms,RequireArgUnpacking)
-    my ($self, @args) = map { ARRAY eq ref $_ ? @{ $_ } : $_ } @_;
+    my ($self, @args) = map { ARRAY_REF eq ref $_ ? @{ $_ } : $_ } @_;
     $have_time_hires->() or $self->wail( 'Time::HiRes not available' );
     my $start = Time::HiRes::time();
     my $output = $self->dispatch(@args);
@@ -2641,7 +2642,7 @@ sub time : method Verb() {	## no critic (ProhibitBuiltInHomonyms,RequireArgUnpac
 }
 
 sub time_parser : Verb() {
-    splice @_, ( HASH eq ref $_[1] ? 2 : 1 ), 0, 'time_parser';
+    splice @_, ( HASH_REF eq ref $_[1] ? 2 : 1 ), 0, 'time_parser';
     goto &_helper_handler;
 }
 
@@ -2812,7 +2813,7 @@ sub _attribute_exists {
 	    }
 	    return @rslt;
 	},
-	CODE	=> sub {
+	CODE_REF()	=> sub {
 	    my ( $sel ) = @_;
 	    return $sel;
 	},
@@ -2828,11 +2829,11 @@ sub _attribute_exists {
 
     sub __choose {
 	my ( $self, @args ) = @_;
-	my $opt = ref $args[0] eq HASH ? shift @args : {};
+	my $opt = HASH_REF eq ref $args[0] ? shift @args : {};
 	my $choice = shift @args;
 	defined $choice
 	    or $choice = [];
-	ARRAY eq ref $choice
+	ARRAY_REF eq ref $choice
 	    or $self->weep( 'Choice invalid' );
 	my @rslt;
 	my @selector;
@@ -2849,13 +2850,13 @@ sub _attribute_exists {
 	$opt->{sky}
 	    and push @args, $self->{sky};
 
-	@args = map { ARRAY eq ref $_ ? @{ $_ } : $_ } @args;
+	@args = map { ARRAY_REF eq ref $_ ? @{ $_ } : $_ } @args;
 
 	not @selector
 	    and return wantarray ? @args : \@args;
 
 	foreach my $tle ( @args ) {
-	    ARRAY eq ref $tle
+	    ARRAY_REF eq ref $tle
 		and $self->weep( 'Schwartzian-transform objects not supported' );
 
 	    my $match = $opt->{invert};
@@ -3504,7 +3505,7 @@ sub _iridium_status {
 	$rslt->is_success or $self->wail($rslt->status_line);
     }
 
-    if (ref $status eq ARRAY) {
+    if ( ARRAY_REF eq ref $status ) {
 	Astro::Coord::ECI::TLE->status (clear => 'iridium');
 	foreach (@$status) {
 	    Astro::Coord::ECI::TLE->status (add => $_->[0], iridium =>
@@ -3570,7 +3571,8 @@ sub _is_interactive {
 
     sub _load_module {
 	my ($self, @module) = @_;
-	ref $module[0] eq ARRAY and @module = @{$module[0]};
+	ARRAY_REF eq ref $module[0]
+	    and @module = @{$module[0]};
 	@module or $self->weep( 'No module specified' );
 	my @probs;
 	foreach my $module (@module) {
@@ -3658,7 +3660,7 @@ sub _parse_angle_parts {
 
 sub __parse_angle {
     my ( $self, @args ) = @_;
-    my $opt = HASH eq ref $args[0] ? shift @args : {};
+    my $opt = HASH_REF eq ref $args[0] ? shift @args : {};
     my ( $angle ) = @args;
     defined $angle or return;
 
@@ -3774,7 +3776,8 @@ sub _read_continuation {
 	    my $prompt = $self->get( 'continuation_prompt' ) ) )
 	or do {
 	    $error or return;
-	    ref $error eq CODE and return $error->();
+	    ref $error eq CODE_REF
+		and return $error->();
 	    $self->wail( $error );
 	};
     $self->{echo} and $self->whinge( $prompt, $more );
@@ -4222,7 +4225,7 @@ sub _unescape {
 
     sub _tokenize {
 	my ($self, @parms) = @_;
-	my $opt = ref $parms[0] eq HASH ? shift @parms : {};
+	my $opt = HASH_REF eq ref $parms[0] ? shift @parms : {};
 	my $in = $opt->{in};
 	my $buffer = shift @parms;
 	$buffer =~ m/ \n \z /smx or $buffer .= "\n";

@@ -24,14 +24,14 @@ our @EXPORT_OK = qw{
     has_method instance load_package merge_hashes my_dist_config quoter
     __date_manip_backend
     __parse_class_and_args
-    ARRAY CODE HASH Regexp SCALAR
+    ARRAY_REF CODE_REF HASH_REF REGEXP_REF SCALAR_REF
 };
 
-use constant ARRAY	=> ref [];
-use constant CODE	=> ref sub {};
-use constant HASH	=> ref {};
-use constant Regexp	=> ref qr{};
-use constant SCALAR	=> ref \1;
+use constant ARRAY_REF	=> ref [];
+use constant CODE_REF	=> ref sub {};
+use constant HASH_REF	=> ref {};
+use constant REGEXP_REF	=> ref qr{};
+use constant SCALAR_REF	=> ref \1;
 
 # Documented in POD
 
@@ -49,7 +49,7 @@ use constant SCALAR	=> ref \1;
 	    has_method( $_, 'dereference' ) ?  $_->dereference() : $_
 	} @args;
 
-	HASH eq ref $args[0]
+	HASH_REF eq ref $args[0]
 	    and return ( $self, @args );
 
 	my @data = caller(1);
@@ -244,7 +244,7 @@ sub instance {
 	my $self;
 	blessed( $prefix[0] )
 	    and $self = shift @prefix;
-	my $opt = HASH eq ref $prefix[0] ? shift @prefix : {};
+	my $opt = HASH_REF eq ref $prefix[0] ? shift @prefix : {};
 	my $module = shift @prefix;
 
 	local @INC = @INC;
@@ -321,7 +321,7 @@ sub instance {
 # understand the unpacking to be subject to the configuration
 #     allow_arg_unpacking = grep
 sub merge_hashes {	## no critic (RequireArgUnpacking)
-    my @args = grep { HASH eq ref $_ } @_;
+    my @args = grep { HASH_REF eq ref $_ } @_;
     @args == 1
 	and return $args[0];
     my %rslt;
@@ -642,23 +642,23 @@ otherwise C<Carp> is loaded and C<Carp::croak()> is called.
 
 This module supports the following exportable constants:
 
-=head2 ARRAY
+=head2 ARRAY_REF
 
 This constant is simply C<ref []>, i.e. C<'ARRAY'>.
 
-=head2 CODE
+=head2 CODE_REF
 
 This constant is simply C<ref sub {}>, i.e. C<'CODE'>.
 
-=head2 HASH
+=head2 HASH_REF
 
 This constant is simply C<ref {}>, i.e. C<'HASH'>.
 
-=head2 Regexp
+=head2 REGEXP_REF
 
 This constant is simply C<ref qr{}>, i.e. C<'Regexp'>.
 
-=head2 SCALAR
+=head2 SCALAR_REF
 
 This constant is simply C<ref \1>, i.e. C<'SCALAR'>.
 

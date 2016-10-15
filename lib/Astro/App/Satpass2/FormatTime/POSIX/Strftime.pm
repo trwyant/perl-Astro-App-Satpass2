@@ -8,7 +8,7 @@ use warnings;
 use base qw{ Astro::App::Satpass2::FormatTime };
 
 use Astro::App::Satpass2::FormatTime::Strftime;
-use Astro::App::Satpass2::Utils qw{ ARRAY };
+use Astro::App::Satpass2::Utils qw{ ARRAY_REF };
 use POSIX ();
 
 our $VERSION = '0.031_0063';
@@ -18,7 +18,7 @@ sub format_datetime {
     $time = $self->__round_time_value( $time );
     defined $gmt or $gmt = $self->gmt();
     my @parts;
-    if ( ref $time eq ARRAY ) {
+    if ( ARRAY_REF eq ref $time ) {
 	@parts = @{ $time };
     } elsif ( $gmt ) {
 	@parts = gmtime $time;

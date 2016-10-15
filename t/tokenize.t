@@ -8,7 +8,7 @@ use Test::More 0.88;
 use Cwd qw{ cwd };
 
 use lib qw{ inc/mock inc };
-use Astro::App::Satpass2::Utils qw{ HASH Regexp };
+use Astro::App::Satpass2::Utils qw{ HASH_REF REGEXP_REF };
 use My::Module::Test::App;	# for environment clean-up.
 
 use File::HomeDir;	# Mocked
@@ -508,7 +508,7 @@ done_testing;
 
     sub tokenize (@) {	## no critic (RequireArgUnpacking)
 	my @args = @_;
-	my $opt = ref $args[0] eq HASH ? shift @args : {};
+	my $opt = HASH_REF eq ref $args[0] ? shift @args : {};
 	my ( $source, $tokens, $name ) = @args;
 	if ( $source =~ m/ \n /sxm ) {
 	    my @src = split qr{ (?<= \n ) }sxm, $source;
@@ -559,7 +559,7 @@ done_testing;
 
     sub tokenize_fail (@) {	## no critic (RequireArgUnpacking)
 	my @args = @_;
-	my $opt = ref $args[0] eq HASH ? shift @args : {};
+	my $opt = HASH_REF eq ref $args[0] ? shift @args : {};
 	my ( $source, $message, $name ) = @args;
 	@got = ();
 	if ( ! defined $name ) {
@@ -576,7 +576,7 @@ done_testing;
 		@_ = ( "$name succeeded unexpectedly" );
 		goto &fail;
 	    } else {
-		Regexp eq ref $message
+		REGEXP_REF eq ref $message
 		    or $message = qr{ $message }smx;
 		@_ = ( $@, $message, $name );
 		goto &like;

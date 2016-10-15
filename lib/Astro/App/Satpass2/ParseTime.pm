@@ -8,7 +8,10 @@ use warnings;
 use base qw{ Astro::App::Satpass2::Copier };
 
 use Astro::App::Satpass2::FormatTime;
-use Astro::App::Satpass2::Utils qw{ load_package ARRAY CODE SCALAR };
+use Astro::App::Satpass2::Utils qw{
+    load_package
+    ARRAY_REF CODE_REF SCALAR_REF
+};
 use Astro::Coord::ECI::Utils 0.059 qw{ looks_like_number };
 
 our $VERSION = '0.031_0063';
@@ -31,7 +34,7 @@ sub new {
 
 	$args{class} ||= [ qw{ Date::Manip ISO8601 } ];
 
-	my @classes = ARRAY eq ref $args{class} ? @{ $args{class} } :
+	my @classes = ARRAY_REF eq ref $args{class} ? @{ $args{class} } :
 	    split qr{ \s* , \s* }smx, $args{class};
 
 	$class = _try ( @classes )
@@ -141,7 +144,7 @@ sub delegate {	## no critic (RequireFinalReturn)
 	    or return $self->$method( @args );
 	my $type = ref $dcdr
 	    or $self->warner()->weep( "Decoder for $method is scalar" );
-	CODE eq $type
+	CODE_REF eq $type
 	    or $self->warner()->weep(
 	    "Decoder for $method is $type reference" );
 	return $dcdr->( $self, $method, @args );
@@ -155,7 +158,7 @@ sub delegate {	## no critic (RequireFinalReturn)
     sub parse {
 	my ( $self, $string, $default ) = @_;
 
-	if ( SCALAR eq ref $string ) {
+	if ( SCALAR_REF eq ref $string ) {
 	    my $time = ${ $string };
 	    $self->base( $self->{absolute} = $time );
 	    return $time;

@@ -5,14 +5,14 @@ use 5.008;
 use strict;
 use warnings;
 
-use Astro::App::Satpass2::Utils qw{ ARRAY };
+use Astro::App::Satpass2::Utils qw{ ARRAY_REF };
 
 our $VERSION = '0.031_0063';
 
 sub new {
     my ( $class, $array ) = @_;
     ref $class and $class = ref $class;
-    if ( ARRAY ne ref $array ) {
+    if ( ARRAY_REF ne ref $array ) {
 	require Carp;
 	Carp::croak( 'Argument must be an array reference' );
     }

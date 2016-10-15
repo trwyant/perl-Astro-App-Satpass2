@@ -5,7 +5,7 @@ use warnings;
 
 use base qw{ Astro::App::Satpass2::Format };
 
-use Astro::App::Satpass2::Utils qw{ load_package CODE };
+use Astro::App::Satpass2::Utils qw{ load_package CODE_REF };
 
 our $VERSION = '0.031_0063';
 
@@ -53,7 +53,7 @@ sub dumper {
 	ref $val
 	    or $self->warner()->wail(
 	    "Unknown or unavailable dumper class '$val'" );
-    } elsif ( $ref ne CODE ) {
+    } elsif ( CODE_REF ne $ref ) {
 	$self->warner()->wail(
 	    'Dumper must be a code ref or the name of a known class' );
     }

@@ -7,7 +7,10 @@ use base qw{ Astro::App::Satpass2::Copier };
 
 use Clone ();
 use Astro::App::Satpass2::FormatTime;
-use Astro::App::Satpass2::Utils qw{ load_package __parse_class_and_args CODE };
+use Astro::App::Satpass2::Utils qw{
+    load_package __parse_class_and_args
+    CODE_REF
+};
 
 our $VERSION = '0.031_0063';
 
@@ -160,7 +163,7 @@ sub attribute_names {
 	    or return $self->$method( @args );
 	my $type = ref $dcdr
 	    or $self->warner()->weep( "Decoder for $method is scalar" );
-	CODE eq $type
+	CODE_REF eq $type
 	    or $self->warner()->weep(
 		"Decoder for $method is $type reference" );
 	return $dcdr->( $self, $method, @args );
