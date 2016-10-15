@@ -49,7 +49,7 @@ sub format_datetime {
 	return $self->__format_datetime( $time, $tplt );
     } else {
 	ref $time
-	    and $self->warner()->wail( 'Unsupported time specification' );
+	    and $self->wail( 'Unsupported time specification' );
 	my ( $class, $dt_arg ) = $self->_dt_class_and_args();
 	my $dt = $class->from_epoch(
 	    epoch	=> $time,
@@ -82,7 +82,7 @@ sub init {
 		if ( ! DateTime::TimeZone->is_valid_name( $zone ) ) {
 		    my $zed = uc $zone;
 		    DateTime::TimeZone->is_valid_name( $zed )
-			or $self->warner()->wail(
+			or $self->wail(
 			    "'$zone' is not a valid time zone name" );
 		    $zone = $zed;
 		}
@@ -161,7 +161,7 @@ sub __format_datetime_width_adjust_object {
 sub __preprocess_strftime_format {
     my ( $self, $dt_obj, $fmt ) = @_;
     caller->isa( __PACKAGE__ )
-	or $self->warner()->weep(
+	or $self->weep(
 	'__preprocess_strftime_format() is private to Astro-App-Satpass2' );
     $fmt =~ s< ( % [{] ( \w+ | % ) (?: : ( [-0t]* ) ( [0-9]+ ) )? [}] ) >
 	< _expand_strftime_format( $dt_obj, $1, $2, $3, $4 ) >smxge;

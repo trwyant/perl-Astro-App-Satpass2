@@ -51,7 +51,7 @@ sub _new_tt {
 		),
 	    ],
 	}
-    ) or $self->warner()->weep(
+    ) or $self->weep(
 	"Failed to instantate tt: $Template::ERROR" );
 
     return;
@@ -65,10 +65,10 @@ sub add_formatter_method {
     my ( $self, @arg ) = @_;
     my $fmtr = HASH_REF eq ref $arg[0] ? $arg[0] : $arg[1];
     HASH_REF eq ref $fmtr
-	or $self->warner()->wail(
+	or $self->wail(
 	'Formatter definition must be a HASH reference' );
     defined( my $fmtr_name = $fmtr->{name} )
-	or $self->warner()->wail(
+	or $self->wail(
 	    'Formatter definition must have {name} defined' );
     $self->{formatter_method}{$fmtr_name}
 	and $self->{warner}->wail(
@@ -145,7 +145,7 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
     _is_format() and return $data{data};
 
     my $tplt = delete $data{template}
-	or $self->warner()->wail( 'template argument is required' );
+	or $self->wail( 'template argument is required' );
 
     my $tplt_name = SCALAR_REF eq ref $tplt ? ${ $tplt } : $tplt;
 
@@ -235,7 +235,7 @@ sub local_coord {
 	    or $val = $self->DEFAULT_LOCAL_COORD;
 
 	defined $self->template( $val )
-	    or $self->warner()->wail(
+	    or $self->wail(
 		'Unknown local coordinate specification', $val );
 
 	return $self->SUPER::local_coord( @args );
@@ -260,7 +260,7 @@ sub permissive {
 sub template {
     my ( $self, $name, @value ) = @_;
     defined $name
-	or $self->warner()->wail( 'Template name not specified' );
+	or $self->wail( 'Template name not specified' );
 
     if ( @value ) {
 	my $tplt_text;
@@ -359,7 +359,7 @@ sub _process {
 	and $tplt = \$tplt_text;
 
     $tt->process( $tplt, \%arg, \$output )
-	or $self->warner()->wail( $tt->error() );
+	or $self->wail( $tt->error() );
     return $output;
 }
 

@@ -115,7 +115,7 @@ sub __class_name {
 
 sub delegate {	## no critic (RequireFinalReturn)
     my ( $self ) = @_;
-    $self->warner()->weep( 'The delegate() method must be overridden' );
+    $self->weep( 'The delegate() method must be overridden' );
     # Weep throws an exception, but there is no way to tell perlcritic
     # this.
 }
@@ -143,9 +143,9 @@ sub delegate {	## no critic (RequireFinalReturn)
 	my $dcdr = $decoder{$method}
 	    or return $self->$method( @args );
 	my $type = ref $dcdr
-	    or $self->warner()->weep( "Decoder for $method is scalar" );
+	    or $self->weep( "Decoder for $method is scalar" );
 	CODE_REF eq $type
-	    or $self->warner()->weep(
+	    or $self->weep(
 	    "Decoder for $method is $type reference" );
 	return $dcdr->( $self, $method, @args );
     }
@@ -213,7 +213,7 @@ sub delegate {	## no critic (RequireFinalReturn)
 sub parse_time_absolute {	## no critic (RequireFinalReturn)
 ##  my ( $self, $string ) = @_;
     my ( $self ) = @_;		# $string unused
-    $self->warner()->weep(
+    $self->weep(
 	'parse_time_absolute() must be overridden' );
     # Weep throws an exception, but there is no way to tell perlcritic
     # this.

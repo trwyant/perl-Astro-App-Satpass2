@@ -64,7 +64,7 @@ sub attribute_names {
 sub format_datetime {	## no critic (RequireFinalReturn)
     my ( $self ) = @_;
     # ->weep() throws an exception.
-    $self->warner()->weep(
+    $self->weep(
 	'Method format_datetime() must be overridden' );
 }
 
@@ -128,7 +128,7 @@ sub _format_datetime_width_try {
 	    my $val = $arg[0];
 	    if ( defined $val && $val =~ m/ [^0-9] /smx ) {
 		exists $valid{$val}
-		    or $self->warner()->wail( "Invalid rounding spec '$val'" );
+		    or $self->wail( "Invalid rounding spec '$val'" );
 		$val = $valid{$val}
 	    }
 	    $self->{round_time} = $val;

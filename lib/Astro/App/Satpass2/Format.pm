@@ -39,7 +39,7 @@ sub new {
 
     $class eq __PACKAGE__
 	and 'My::Module::Test::App' ne caller
-	and $self->warner()->wail( __PACKAGE__,
+	and $self->wail( __PACKAGE__,
 	    ' may not be instantiated. Use a subclass' );
 
     exists $args{tz} or $args{tz} = $ENV{TZ};
@@ -162,9 +162,9 @@ sub attribute_names {
 	my $dcdr = $decoder{$method}
 	    or return $self->$method( @args );
 	my $type = ref $dcdr
-	    or $self->warner()->weep( "Decoder for $method is scalar" );
+	    or $self->weep( "Decoder for $method is scalar" );
 	CODE_REF eq $type
-	    or $self->warner()->weep(
+	    or $self->weep(
 		"Decoder for $method is $type reference" );
 	return $dcdr->( $self, $method, @args );
     }
@@ -173,7 +173,7 @@ sub attribute_names {
 sub format : method {	## no critic (ProhibitBuiltInHomonyms,RequireFinalReturn)
     my ( $self ) = @_;
     # ->weep() throws an exception.
-    $self->warner()->weep(
+    $self->weep(
 	'The format() method must be overridden' );
 }
 

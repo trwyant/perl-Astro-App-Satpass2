@@ -64,11 +64,16 @@ sub init {
     }
     if ( %arg ) {
 	my @extra = sort keys %arg;
-	$self->warner()->wail(
+	$self->wail(
 	    join ' ', 'Unknown attribute name(s):', @extra
 	);
     }
     return $self;
+}
+
+sub wail {
+    my ( $self, @args ) = @_;
+    return $self->warner()->wail( @args );
 }
 
 sub warner {
@@ -82,7 +87,7 @@ sub warner {
 	    $val = Astro::App::Satpass2::Warner->new();
 	} elsif ( ! ( blessed( $val ) &&
 		$val->isa('Astro::App::Satpass2::Warner' ) ) ) {
-	    $self->warner()->wail(
+	    $self->wail(
 		'Warner must be undef or an Astro::App::Satpass2::Warner'
 	    );
 	}
@@ -91,6 +96,16 @@ sub warner {
     } else {
 	return $self->{warner} ||= Astro::App::Satpass2::Warner->new();
     }
+}
+
+sub weep {
+    my ( $self, @args ) = @_;
+    return $self->warner()->weep( @args );
+}
+
+sub whinge {
+    my ( $self, @args ) = @_;
+    return $self->warner()->whinge( @args );
 }
 
 1;
@@ -217,6 +232,26 @@ existence when this method is called will not be overridden.
 
 This method sets multiple attributes. It dies if any of the names does
 not represent a legal attribute name. It returns the invocant.
+
+=head2 Other Methods
+
+=head3 wail
+
+ $self->wail( 'Something bad happened' );
+
+This convenience method simply wraps C<< $self->warner()->wail() >>.
+
+=head3 weep
+
+ $self->weep( 'Something really horrible happened' );
+
+This convenience method simply wraps C<< $self->warner()->weep() >>.
+
+=head3 whinge
+
+ $self->whinge( 'Something annoying happened' );
+
+This convenience method simply wraps C<< $self->warner()->whinge() >>.
 
 =head1 SUPPORT
 

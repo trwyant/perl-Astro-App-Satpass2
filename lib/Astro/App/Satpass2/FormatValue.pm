@@ -1749,14 +1749,14 @@ sub _apply_dimension {
 
     my $fmtr_name = $fmtr->{name};
     defined( my $dim_name = $fmtr->{dimension}{dimension} )
-	or $self->warner()->weep( 'No dimension specified' );
+	or $self->weep( 'No dimension specified' );
 
     my $dim;
     $dim = $dimensions{$dim_name}
 	and defined( my $unit_name = _dor( $arg->{units}, $fmtr->{dimension}{units},
 	    $self->_get( default => $fmtr_name, 'units' ),
 	    $dim->{default} ) )
-	or $self->warner()->weep( "Dimension $dim_name undefined" );
+	or $self->weep( "Dimension $dim_name undefined" );
 
     my $unit = $dim->{define}{$unit_name}
 	or $self->{warner}->wail(
@@ -1764,7 +1764,7 @@ sub _apply_dimension {
 
     if ( defined $unit->{alias} ) {
 	my $alias = $dim->{define}{$unit->{alias}}
-	    or $self->warner()->weep( "Undefined alias '$unit->{alias}'" );
+	    or $self->weep( "Undefined alias '$unit->{alias}'" );
 	$unit_name = $unit->{alias};
 	$unit = $alias;
     }
@@ -1805,7 +1805,7 @@ sub _apply_dimension {
 	    $fmtr->{dimension}{formatter},
 	    $dim->{formatter},
 	) )
-	or $self->warner()->weep( "No formatter for $dim_name $unit_name" );
+	or $self->weep( "No formatter for $dim_name $unit_name" );
 
     return $self->$formatter( $value, $arg, $fmtr );
 }
@@ -1966,7 +1966,7 @@ sub _get {
     foreach my $key ( @arg ) {
 	ref $hash or return NONE;
 	defined $key
-	    or $self->warner()->weep( 'Undefined key' );
+	    or $self->weep( 'Undefined key' );
 	my $ref = reftype( $hash );
 	if ( HASH_REF eq $ref ) {
 	    $hash = $hash->{$key};
@@ -2319,7 +2319,7 @@ sub _format_time {	## no critic (ProhibitUnusedPrivateSubroutines)
     $time_fmtr->round_time( $arg->{round_time} );
     my $fmt = $arg->{format};
     defined $fmt
-	or $self->warner()->weep( 'No time format' );
+	or $self->weep( 'No time format' );
 
     my $buffer = $time_fmtr->format_datetime(
 	$fmt, $value, $arg->{gmt} );
@@ -2412,7 +2412,7 @@ sub _manufacture_date_format {
 sub _set_time_format {
     my ($self, $name, $data) = @_;
     $self->_valid_time_format( $name )
-	or $self->warner()->weep(
+	or $self->weep(
 	    "'$name' invalid for _set_time_format()" );
     $self->{$name} = $data;
     delete $self->{internal}{_date_format};

@@ -25,13 +25,13 @@ sub new {
     $self->warner( delete $args{warner} );
 
     __PACKAGE__ eq $class
-	and $self->warner()->wail(
+	and $self->wail(
 	"Class $class may not be instantiated directly",
     );
 
     my $geocoder_class = $class->GEOCODER_CLASS();
     load_package( $geocoder_class )
-	or $self->warner()->wail(
+	or $self->wail(
 	"Unable to load $geocoder_class",
     );
 
@@ -49,7 +49,7 @@ sub attribute_names {
 
 sub geocode {
     my ( $self ) = @_;
-    $self->warner()->wail(
+    $self->wail(
 	"The @{[ ref $self ]} class does not support geocoding. Use a subclass"
     );
     return;	# wail() does not return, but Perl::Critic does not
@@ -67,7 +67,7 @@ sub geocoder {
 	ref $geocoder
 	    or $geocoder = $geocoder->new();
 	instance( $geocoder, $geocoder_class )
-	    or $self->warner()->wail(
+	    or $self->wail(
 	    "Argument 'geocoder' must be an instance of $geocoder_class"
 	);
 	$self->{geocoder} = $geocoder;
@@ -81,10 +81,10 @@ sub __geocode_failure {
     my ( $self ) = @_;
     my $geocoder = $self->geocoder();
     my $resp = $geocoder->response()
-	or $self->warner()->wail( 'No HTTP response found' );
+	or $self->wail( 'No HTTP response found' );
     $resp->is_success()
-	and $self->warner()->wail( 'No match found for location' );
-    $self->warner()->wail( $resp->status_line() );
+	and $self->wail( 'No match found for location' );
+    $self->wail( $resp->status_line() );
     return;	# wail() does not return, but Perl::Critic does not know
 		# this.
 }

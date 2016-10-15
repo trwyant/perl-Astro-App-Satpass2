@@ -202,7 +202,7 @@ sub _interpret_zone {
 	    and DateTime::TimeZone->is_valid_name( $zone )
 	    and return ( $zone => 0 );
 	$fatal
-	    and $self->warner()->wail( "Invalid time zone '$zone'" );
+	    and $self->wail( "Invalid time zone '$zone'" );
 	return;
     }
 }
