@@ -55,7 +55,6 @@ use constant SCALAR_REF	=> ref \1;
 	my @data = caller(1);
 	my $code = \&{$data[3]};
 
-	local @ARGV = @args;
 	my ( $err, %opt );
 	my $lgl = $self->_get_attr($code, 'Verb') || [];
 	if ( @{ $lgl } && ':compute' eq $lgl->[0] ) {
@@ -70,14 +69,14 @@ use constant SCALAR_REF	=> ref \1;
 	my $config =
 	    $self->_get_attr($code, 'Configure') || \@default_config;
 	my $go = Getopt::Long::Parser->new(config => $config);
-	if ( !  $go->getoptions(\%opt, @$lgl) ) {
+	if ( !  $go->getoptionsfromarray( \@args, \%opt, @$lgl) ) {
 	    $self->can( 'wail' )
 		and $self->wail($err);
 	    require Carp;
 	    Carp::croak( $err );
 	}
 
-	return ( $self, \%opt, @ARGV );
+	return ( $self, \%opt, @args );
     }
 }
 
