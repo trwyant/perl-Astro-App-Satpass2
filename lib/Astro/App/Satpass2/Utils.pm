@@ -56,7 +56,7 @@ use constant SCALAR_REF	=> ref \1;
 	my $code = \&{$data[3]};
 
 	my ( $err, %opt );
-	my $lgl = $self->_get_attr($code, 'Verb') || [];
+	my $lgl = $self->__get_attr($code, 'Verb') || [];
 	if ( @{ $lgl } && ':compute' eq $lgl->[0] ) {
 	    my $method = $lgl->[1];
 	    unless ( defined $method ) {
@@ -67,7 +67,7 @@ use constant SCALAR_REF	=> ref \1;
 	}
 	local $SIG{__WARN__} = sub {$err = $_[0]};
 	my $config =
-	    $self->_get_attr($code, 'Configure') || \@default_config;
+	    $self->__get_attr($code, 'Configure') || \@default_config;
 	my $go = Getopt::Long::Parser->new(config => $config);
 	if ( !  $go->getoptionsfromarray( \@args, \%opt, @$lgl) ) {
 	    $self->can( 'wail' )

@@ -1551,13 +1551,10 @@ sub _confess {
 sub __make_formatter_code {
     my ( $class, $fmtr ) = @_;
 
-    # TODO duplicate code (??!!)
     HASH_REF eq ref $fmtr
 	or _confess( 'The argument must be a HASH reference' );
     defined( my $fmtr_name = $fmtr->{name} )
 	or _confess( 'The {name} must be defined' );
-    HASH_REF eq ref $fmtr
-	or _confess( 'The info argument must be a HASH reference' );
 
     # Validate the dimension information
     $fmtr->{dimension}

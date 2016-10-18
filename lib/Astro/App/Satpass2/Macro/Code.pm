@@ -56,7 +56,7 @@ sub init {
 	# If the code does not have the Verb() attribute, we ignore it.
 	# TODO technically we have an encapsulation failure here which
 	# needs to be fixed up.
-	$parent->_get_attr( *{$glob}{CODE}, 'Verb' )
+	$parent->__get_attr( *{$glob}{CODE}, 'Verb' )
 	or next;
 
 	# Record the fact that the module defines this name.

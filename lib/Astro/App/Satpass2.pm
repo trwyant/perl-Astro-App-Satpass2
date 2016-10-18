@@ -189,7 +189,7 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 	return @rslt;
     }
 
-    sub _get_attr {
+    sub __get_attr {
 	my ( undef, $code, $name ) = @_;	# $pkg unused
 	defined $name or return $attr{$code};
 	return $attr{$code}{$name};
@@ -528,7 +528,7 @@ sub dispatch {
     my $code;
     $verb =~ s/ \A core [.] //smx;
     $code = $self->can($verb)
-	and $self->_get_attr($code, 'Verb')
+	and $self->__get_attr($code, 'Verb')
 	or $self->wail("Unknown interactive method '$verb'");
 
 ##    $self->{_interactive} = \$verb;	# Any local variable will do.
@@ -2057,6 +2057,16 @@ sub _set_stdout {
 
 sub _set_time_parser {
     my ( $self, $name, $val ) = @_;
+
+    if ( CODE_REF eq ref $val ) {
+	$val = _set_time_parser_code( $val );
+    } elsif ( my $macro = $self->{macro}{$val} ) {
+	$val = _set_time_parser_code(
+	    $macro->implements( $val, required => 1 ),
+	    $val,
+	);
+    }
+
     return $self->_set_copyable(
 	name	=> $name,
 	value	=> $val,
@@ -2073,6 +2083,13 @@ sub _set_time_parser_attribute {
     defined $val and $val eq 'undef' and $val = undef;
     $self->{time_parser}->$name( $val );
     return $val;
+}
+
+sub _set_time_parser_code {
+    my ( $code, $name ) = @_;
+    require Astro::App::Satpass2::ParseTime::Code;
+    my $obj = Astro::App::Satpass2::ParseTime::Code->new();
+    return $obj->code( $code, $name );
 }
 
 _frame_pop_force_set ( 'twilight' );	# Force use of the set() method
@@ -4677,7 +4694,7 @@ sub _unescape {
 	my $expand_tildes = 1;
 	if ( defined $rslt[0]{token}
 		and my $kode = $self->can( $rslt[0]{token} ) ) {
-	    if ( my $hash = $self->_get_attr( $kode, 'Tokenize' ) ) {
+	    if ( my $hash = $self->__get_attr( $kode, 'Tokenize' ) ) {
 		$expand_tildes = $hash->{expand_tilde};
 	    }
 	}

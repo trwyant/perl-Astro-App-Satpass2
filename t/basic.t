@@ -252,6 +252,21 @@ isa_ok 'Astro::App::Satpass2::ParseTime', 'Astro::App::Satpass2::Copier'
 can_ok 'Astro::App::Satpass2::ParseTime', @parse_time_methods
     or BAIL_OUT;
 
+require_ok 'Astro::App::Satpass2::ParseTime::Code'
+    or BAIL_OUT;
+
+isa_ok 'Astro::App::Satpass2::ParseTime::Code',
+    'Astro::App::Satpass2::ParseTime'
+    or BAIL_OUT;
+
+can_ok 'Astro::App::Satpass2::ParseTime::Code',
+    @parse_time_methods
+    or BAIL_OUT;
+
+is eval { Astro::App::Satpass2::ParseTime::Code->delegate() },	## no critic (RequireCheckingReturnValueOfEval)
+    'Astro::App::Satpass2::ParseTime::Code',
+    'Code delegate is Astro::App::Satpass2::ParseTime::Code';
+
 require_ok 'Astro::App::Satpass2::ParseTime::Date::Manip'
     or BAIL_OUT;
 
