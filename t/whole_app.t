@@ -382,6 +382,43 @@ execute 'list', <<'EOD', 'List the loaded items';
  11801                          1980/08/17 07:06:40 10:30:08
 EOD
 
+{
+    local $ENV{FUBAR} = undef;
+    local $ENV{FROBOZZ} = 'Plugh';
+
+    execute 'if loaded 88888 then echo OID 88888 is loaded',
+	'OID 88888 is loaded',
+	'if loaded 88888, with 88888 loaded';
+
+    execute 'if loaded somesat then echo Somesat is loaded', undef,
+	'if loaded somesat, with somesat not loaded';
+
+    execute 'if env FUBAR then echo FUBAR is defined', undef,
+	'if env FUBAR, with FUBAR not defined';
+
+    execute 'if not env FUBAR then echo FUBAR is not defined',
+	'FUBAR is not defined',
+	'if not env FUBAR, with FUBAR not defined';
+
+    execute 'if env FROBOZZ then echo FROBOZZ is defined',
+	'FROBOZZ is defined',
+	'if env FROBOZZ, with FROBOZZ defined';
+
+    execute 'if not env FROBOZZ then echo FROBOZZ is not defined', undef,
+	'if not env FROBOZZ, with FROBOZZ defined';
+
+    execute 'if env FUBAR and env FROBOZZ then echo both defined', undef,
+	'if env FUBAR and env FROBOZZ, only FROBOZZ defined';
+
+    execute 'if env FUBAR or env FROBOZZ then echo one defined',
+	'one defined',
+	'if env FUBAR or env FROBOZZ, only FROBOZZ defined';
+
+    execute 'if not ( env FUBAR and env FROBOZZ ) then echo not both defined',
+	'not both defined',
+	'if not ( env FUBAR and env FROBOZZ ), only FROBOZZ defined';
+}
+
 execute 'status clear', undef, 'Clear status for testing' ;
 
 execute 'status', '', 'Nothing in status' ;
@@ -918,7 +955,35 @@ EOD
 
 # TODO test spacetrack (how?)
 
-# TODO test time (how?)
+SKIP: {
+
+    my $tests = 3;
+
+    {
+	local $@ = undef;
+	eval {
+	    require Time::HiRes;
+	    1;
+	} or skip 'Time::HiRes not available', $tests;
+    }
+
+    my $time = 0;
+
+    no warnings qw{ redefine };
+
+    # Poor man's mock time().
+    local *Time::HiRes::time = sub {
+	return $time;
+    };
+
+    execute 'time begin', undef, 'Begin timed block';
+
+    execute 'echo Hello world', "Hello world\n", 'Execute random command';
+
+    $time = 10;
+
+    execute 'end', "10.000 seconds\n", 'End timed block';
+}
 
 execute  'status drop 88888', undef, 'OID 88888 no longer Iridium';
 

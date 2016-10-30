@@ -534,7 +534,15 @@ sub dispatch {
 ##    $self->{_interactive} = \$verb;	# Any local variable will do.
 ##    weaken ($self->{_interactive});	# Goes away when $verb does.
 
-    return $code->($self, @args);
+    my $rslt = $code->($self, @args);
+    defined $rslt
+	and $rslt =~ s/ (?<! \n ) \z /\n/smx;
+    foreach my $code (
+	reverse @{ delete( $self->{frame}[-1]{post_dispatch} ) || [] }
+    ) {
+	$rslt .= $code->();
+    }
+    return $rslt;
 }
 
 sub drop : Verb() {
@@ -953,6 +961,154 @@ http://search.cpan.org/dist/Astro-App-Satpass2/
 EOD
 }
 
+{
+
+    my %forbid = map { $_ => 1 } qw{ begin end };
+
+    my %define = (
+	done	=> sub {
+	    # my ( $self, $def, $tokens, $ctx ) = @_;
+	    my ( $self, undef, undef, $ctx ) = @_;
+	    @{ $ctx }
+		and $self->wail( q<No 'then'> );;
+	    return;
+	},
+	oper	=> {
+	    '('	=> {
+		handler	=> sub {
+		    my ( $self, $def, $tokens, $ctx ) = @_;
+		    my $want = delete $ctx->[-1]{want};
+		    defined $want
+			or $want = 1;
+		    push @{ $ctx }, {
+			want	=> $want,
+			value	=> [],
+		    };
+		    my $depth = @{ $ctx };
+		    while ( $depth <= @{ $ctx } ) {
+			$self->_infix_engine_dispatch( $def, $tokens, $ctx );
+		    }
+		    return;
+		},
+	    },
+	    ')'	=> {
+		handler	=> sub {
+		    # my ( $self, $def, $tokens, $ctx ) = @_;
+		    my ( $self, undef, undef, $ctx ) = @_;
+		    @{ $ctx }
+			or $self->wail( 'Unpaired right parentheses' );
+		    $ctx->[-1]{want} == @{ $ctx->[-1]{value} }
+			or $self->wail(
+			"Expected $ctx->[-1]{want} value(s), got " .
+			scalar @{ $ctx->[-1]{value} } );
+		    push @{ $ctx->[-2]{value} }, @{ $ctx->[-1]{value} };
+		    pop @{ $ctx };
+		    return;
+		},
+	    },
+	    and	=> {
+		handler	=> sub {
+		    my ( $self, $def, $tokens, $ctx ) = @_;
+		    $self->_infix_engine_dispatch( $def, $tokens, $ctx );
+		    # For some reason the following has to be done in
+		    # two statements, or both operands remain on the
+		    # stack.
+		    my $ro = pop @{ $ctx->[-1]{value} };
+		    $ctx->[-1]{value}[-1] &&= $ro;
+		    return;
+		},
+		validation	=> 'infix',
+	    },
+	    env	=> {
+		handler	=> sub {
+		    # my ( $self, $def, $tokens, $ctx ) = @_;
+		    my ( undef, undef, $tokens, $ctx ) = @_;
+		    push @{ $ctx->[-1]{value} }, $ENV{ shift @{ $tokens } };
+		    return;
+		},
+		validation	=> 'prefix',
+	    },
+	    loaded	=> {
+		handler	=> sub {
+		    # my ( $self, $def, $tokens, $ctx ) = @_;
+		    my ( $self, undef, $tokens, $ctx ) = @_;
+		    my @loaded = $self->__choose(
+			{ bodies	=> 1 },
+			[ shift @{ $tokens } ],
+		    );
+		    push @{ $ctx->[-1]{value} }, scalar @loaded;
+		    return;
+		},
+		validation	=> 'prefix',
+	    },
+	    or	=> {
+		handler	=> sub {
+		    my ( $self, $def, $tokens, $ctx ) = @_;
+		    $self->_infix_engine_dispatch( $def, $tokens, $ctx );
+		    # For some reason the following has to be done in
+		    # two statements, or both operands remain on the
+		    # stack.
+		    my $ro = pop @{ $ctx->[-1]{value} };
+		    $ctx->[-1]{value}[-1] ||= $ro;
+		    return;
+		},
+		validation	=> 'infix',
+	    },
+	    not	=> {
+		handler	=> sub {
+		    my ( $self, $def, $tokens, $ctx ) = @_;
+		    $self->_infix_engine_dispatch( $def, $tokens, $ctx );
+		    $ctx->[-1]{value}[-1] = ! $ctx->[-1]{value}[-1];
+		    return;
+		},
+		validation	=> 'prefix',
+	    },
+	    then	=> {
+		handler	=> sub {
+		    # my ( $self, $def, $tokens, $ctx ) = @_;
+		    my ( $self, undef, $tokens, $ctx ) = @_;
+		    1 == @{ $ctx }
+			or $self->wail( 'Unclosed left parentheses' );
+		    my $last = pop @{ $ctx };
+		    my @arg = splice @{ $tokens }, 0
+			or return;
+		    $forbid{$arg[0]}
+			and $self->wail( "'$arg[0]' is forbidden in if()" );
+		    $last->{value}[-1]
+			and return $self->dispatch( @arg );
+		    return;
+		},
+		validation	=> 'infix',
+	    },
+	},
+	vld	=> {
+	    infix	=> sub {
+		# my ( $self, $def, $tkn, $tokens, $ctx ) = @_;
+		my ( $self, undef, $tkn, $tokens, $ctx ) = @_;
+		@{ $ctx->[-1]{value} }
+		    or $self->wail( "'$tkn' requires a left argument" );
+		@{ $tokens }
+		    or $self->wail( "'$tkn' requires a right argument" );
+		return;
+	    },
+	    prefix	=> sub {
+		# my ( $self, $def, $tkn, $tokens, $ctx ) = @_;
+		my ( $self, undef, $tkn, $tokens ) = @_;
+		@{ $tokens }
+		    or $self->wail( "'$tkn' requires an argument" );
+		return;
+	    },
+	},
+    );
+
+    sub if : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
+	my ( $self, @args ) = @_;
+	@args
+	    or $self->wail( 'Arguments required' );
+	return $self->__infix_engine( \%define, @args );
+    }
+}
+
 sub init {
     my ( $self, @args ) = @_;
 
@@ -1007,6 +1163,35 @@ sub initfile : Verb( create-directory! quiet! ) {
     };
 
     return File::Spec->catfile( $init_dir, 'satpass2rc' );
+}
+
+sub __infix_engine {
+    my ( $self, $def, @tokens ) = @_;
+    @tokens
+	or $self->wail( 'Nothing to compute' );
+    my @ctx = ( {
+	    value	=> [],
+	} );
+    my $rslt;
+    while ( @tokens ) {
+	$rslt = $self->_infix_engine_dispatch( $def, \@tokens, \@ctx );
+    }
+    $def->{done}
+	and $def->{done}->( $self, $def, \@tokens, \@ctx );
+    return $rslt;
+}
+
+sub _infix_engine_dispatch {
+    my ( $self, $def, $tokens, $ctx ) = @_;
+    @{ $tokens }
+	or return;
+    my $tkn = shift @{ $tokens };
+    my $info = $def->{oper}{$tkn}
+	or $self->wail( "Unrecognized token '$tkn'" );
+    $info->{validation}
+	and $def->{vld}{ $info->{validation} }->(
+	$self, $def, $tkn, $tokens, $ctx );
+    return $info->{handler}->( $self, $def, $tokens, $ctx );
 }
 
 #	$file_name = _init_file_01()
@@ -2647,15 +2832,36 @@ sub system : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
     }
 }
 
+{
+    my %special = (
+	begin	=> sub {
+	    my ( $self ) = @_;
+	    $self->_is_interactive()
+		or $self->wail(
+		q<'begin' forbidden in non-interactive time()> );
+	    return;
+	},
+	end	=> sub {
+	    my ( $self ) = @_;
+	    $self->wail(
+		q<'end' forbidden in time()> );
+	},
+    );
 
-sub time : method Verb() {	## no critic (ProhibitBuiltInHomonyms,RequireArgUnpacking)
-    my ($self, @args) = map { ARRAY_REF eq ref $_ ? @{ $_ } : $_ } @_;
-    $have_time_hires->() or $self->wail( 'Time::HiRes not available' );
-    my $start = Time::HiRes::time();
-    my $output = $self->dispatch(@args);
-    defined $output and $output .= "\n";
-    $output .= sprintf "%.3f seconds\n", Time::HiRes::time() - $start;
-    return $output;
+    sub time : method Verb() {	## no critic (ProhibitBuiltInHomonyms,RequireArgUnpacking)
+	my ($self, @args) = map { ARRAY_REF eq ref $_ ? @{ $_ } : $_ } @_;
+	$have_time_hires->() or $self->wail( 'Time::HiRes not available' );
+	my $code;
+	$code = $special{ $args[0] }
+	    and $code->( $self );
+	my $start = Time::HiRes::time();
+	$self->_add_post_dispatch(
+	    sub {
+		return sprintf "%.3f seconds\n", Time::HiRes::time() - $start;
+	    },
+	);
+	return $self->dispatch( @args );
+    }
 }
 
 sub time_parser : Verb() {
@@ -2743,6 +2949,21 @@ EOD
 
 ########################################################################
 
+#   $self->_add_post_dispatch( $code_ref );
+
+#   Add a reference to code to be executed after the current interactive
+#   method is dispatched. All such code is executed, in the reverse of
+#   the order it was added. The only argument will be the invocant.
+#   Because it is added to the current execution frame, if the
+#   interactive method being dispatched is begin(), the code will be
+#   executed after the corresponding end(). Code to make the execution
+#   happen is, of course, in dispatch().
+sub _add_post_dispatch {
+    my ( $self, $code ) = @_;
+    push @{ $self->{frame}[-1]{post_dispatch} ||= [] }, $code;
+    return;
+}
+
 #	$self->_aggregate( $list_ref );
 
 sub __add_to_observing_list {
@@ -2818,6 +3039,8 @@ sub _attribute_exists {
 		    push @rslt, sub {
 			my ( $tle, $context ) = @_;
 			$context->{name} ||= $tle->get( 'name' );
+			defined $context->{name}
+			    or return;
 			return $context->{name} =~ $re;
 		    };
 		} else {
@@ -5015,6 +5238,11 @@ Most methods simply correspond to commands in the C<satpass2> script,
 and the arguments correspond to arguments in the script. Such methods
 will be identified in the following as 'interactive methods.'
 
+An interactive method call is one that is made via the
+L<dispatch()|/dispatch> method, however called, and includes methods
+called via L<execute()|/execute> or L<run()|/run> (i.e. F<satpass2>
+scripts).
+
 When the documentation specifies that an interactive method takes
 options, they may be specified either as command-style options or as a
 hash.
@@ -5514,6 +5742,55 @@ launch the L<http://search.cpan.org/> page for this package, and
 arguments will be ignored.
 
 In any case, nothing is returned.
+
+=head2 if
+
+ $output = $satpass2->if(
+     qw{ env FUBAR then echo FUBAR is defined } );
+ satpass2> if env FUBAR then echo FUBAR is defined
+
+This interactive method performs a test, and executes the specified
+method if the test is true. The test is an infix expression, with prefix
+operators binding more tightly than infix operators, but otherwise all
+operators having the same precedence. You can use parentheses to group
+operations.
+
+The method after C<'then'> may not be C<begin()> or C<end()>.
+
+The following operators and functions are implemented:
+
+=over
+
+=item and
+
+This infix operator computes the Boolean C<and> of its operands.
+
+=item env
+
+This prefix operator computes the value of the environment variable
+named as its operand.
+
+=item loaded
+
+This prefix operator computes the number of loaded bodies chosen by its
+operand, which can be a comma-delimited list of values like those taken
+by the C<choose()|/choose> method.
+
+=item or
+
+This infix operator computes the Boolean C<or> of its operands.
+
+=item not
+
+This prefix operator computes the Boolean negation of its operand.
+
+=item then
+
+This infix operator causes everything to the right of it to be executed
+if the left operand was true. The first token to the right must be the
+name of a method.
+
+=back
 
 =head2 init
 
@@ -6354,6 +6631,15 @@ This interactive method times the given method. The arguments are the
 name of an interactive method and the arguments to that method. The
 return is whatever the called method returns. The timings are written to
 standard error.
+
+You can only time the L<begin()|/begin> method if C<time()> is called
+interactively. If you do this, the timing will include everything
+through the corresponding interactive call to L<end()|/end> (or whenever
+the frame created by the C<begin()> is popped off the stack, which may
+be the end of a macro or source file.) See L<METHODS|/METHODS> above
+fore what it means to be called interactively.
+
+You can not time the L<end()|/end> method.
 
 This method will fail if the L<Time::HiRes|Time::HiRes> module can not
 be loaded.
