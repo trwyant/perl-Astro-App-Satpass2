@@ -417,6 +417,16 @@ EOD
     execute 'if not ( env FUBAR and env FROBOZZ ) then echo not both defined',
 	'not both defined',
 	'if not ( env FUBAR and env FROBOZZ ), only FROBOZZ defined';
+
+    execute 'if env FUBAR then begin', undef,
+	'if env FUBAR then begin, with FUBAR undefined';
+
+    execute 'echo hello sailor', undef,
+	'echo in unsatisfied if() should do nothing';
+
+    execute 'end', undef, 'end of unsatisfied if';
+
+    execute 'echo plugh', "plugh\n", 'echo should now execute';
 }
 
 execute 'status clear', undef, 'Clear status for testing' ;

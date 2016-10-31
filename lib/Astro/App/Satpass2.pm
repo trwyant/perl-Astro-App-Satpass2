@@ -129,6 +129,19 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 #		specifying -noexpand_tilde. Tildes in redirect
 #		specifications are always expanded.
 #
+#	Tweak(options)
+#
+#	The 'Tweak' attribute specifies miscellaneous tweaks to
+#	subroutine usage. Possible options are:
+#	  -unsatisfied - Execute even inside an unsatisfied if().
+#		Subroutines with this attribute may have to be aware
+#		that they are being called within the scope of an
+#		unsatisfied if(). All interactive methods that must be
+#		called even inside an unsatisfied if() MUST have this
+#		attribute. These are begin() and end(), and anything
+#		that might dispatch either of these. At the moment this
+#		means if() and time().
+#
 #	Verb(options)
 #
 #	The 'Verb' attribute identifies the subroutine as representing a
@@ -142,6 +155,20 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 {
     my (%attr, %want);
     BEGIN {
+	my $hash = sub {
+	    my ( $name, $arg, @legal ) = @_;
+	    my $gol = Getopt::Long::Parser->new();
+	    my %opt;
+	    $gol->getoptionsfromarray(
+		[ split qr{ \s+ }smx, $arg ],
+		\%opt,
+		@legal,
+	    ) or do {
+		require Carp;
+		Carp::croak( "Bad $name option" );
+	    };
+	    return \%opt;
+	};
 	my $list = sub {
 	    return [ split qr{ \s+ }smx, $_[0] ];
 	};
@@ -149,19 +176,16 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 	    Configure	=> $list,
 	    Tokenize	=> sub {
 		my ( $arg ) = @_;
-		my $gol = Getopt::Long::Parser->new();
-		my %opt;
-		$gol->getoptionsfromarray(
-		    [ split qr{ \s+ }smx, $arg ],
-		    \%opt,
-		    qw{ expand_tilde! },
-		) or do {
-		    require Carp;
-		    Carp::croak( 'Bad Tokenize option' );
-		};
-		exists $opt{expand_tilde}
-		    or $opt{expand_tilde} = 1;
-		return \%opt;
+		my $opt = $hash->( Tokenize => $arg,
+		    qw{ expand_tilde! } );
+		exists $opt->{expand_tilde}
+		    or $opt->{expand_tilde} = 1;
+		return $opt;
+	    },
+	    Tweak	=> sub {
+		my ( $arg ) = @_;
+		return $hash->( Tweak => $arg,
+		    qw{ unsatisfied! } );
 	    },
 	    Verb	=> $list,
 	);
@@ -190,9 +214,14 @@ my %twilight_abbr = abbrev (keys %twilight_def);
     }
 
     sub __get_attr {
-	my ( undef, $code, $name ) = @_;	# $pkg unused
-	defined $name or return $attr{$code};
-	return $attr{$code}{$name};
+	my ( undef, $code, $name, $dflt ) = @_;	# $pkg unused
+	defined $code
+	    or return;
+	defined $name
+	    or return $attr{$code};
+	exists $attr{$code}{$name}
+	    and return $attr{$code}{$name};
+	return $dflt;
     }
 }
 
@@ -472,7 +501,7 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter
 
 }
 
-sub begin : Verb() {
+sub begin : Verb() Tweak( -unsatisfied ) {
     my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
     $self->_frame_push(
 	begin => @args ? \@args : $self->{frame}[-1]{args});
@@ -522,8 +551,13 @@ sub dispatch {
 
     defined $verb or return;
 
-    $self->{macro}{$verb}
-	and return $self->_macro( $verb, @args );
+    my $unsatisfied = $self->{_unsatisfied_if};
+
+    if ( $self->{macro}{$verb} ) {
+	$unsatisfied
+	    and return;
+	return $self->_macro( $verb, @args );
+    }
 
     my $code;
     $verb =~ s/ \A core [.] //smx;
@@ -534,15 +568,45 @@ sub dispatch {
 ##    $self->{_interactive} = \$verb;	# Any local variable will do.
 ##    weaken ($self->{_interactive});	# Goes away when $verb does.
 
-    my $rslt = $code->($self, @args);
+    my $rslt;
+    $unsatisfied
+	and not $self->__get_attr( $code, Tweak => {} )->{unsatisfied}
+	or $rslt = $code->( $self, @args );
+
     defined $rslt
 	and $rslt =~ s/ (?<! \n ) \z /\n/smx;
+
     foreach my $code (
 	reverse @{ delete( $self->{frame}[-1]{post_dispatch} ) || [] }
     ) {
-	$rslt .= $code->();
+	my $append;
+	defined( $append = $code->( $self ) )
+	    and $rslt .= $append;
     }
     return $rslt;
+}
+
+{
+    my %special = (
+	begin	=> sub {
+	    my ( $self, $verb ) = @_;
+	    $self->_is_interactive()
+		or $self->wail(
+		"'begin' forbidden in non-interactive $verb()" );
+	    return;
+	},
+	end	=> sub {
+	    my ( $self, $verb ) = @_;
+	    $self->wail( "'end' forbidden in $verb()" );
+	},
+    );
+
+    sub _dispatch_check {
+	my ( $self, $verb, $disp ) = @_;
+	my $code = $special{$disp}
+	    or return;
+	return $code->( $self, $verb, $disp );
+    }
 }
 
 sub drop : Verb() {
@@ -583,7 +647,7 @@ sub echo : Verb( n! ) {
     return $output;
 }
 
-sub end : Verb() {
+sub end : Verb() Tweak( -unsatisfied ) {
     my ( $self ) = __arguments( @_ );	# $opt, @args unused
 
     $self->{frame}[-1]{type} eq 'begin'
@@ -963,8 +1027,18 @@ EOD
 
 {
 
-    my %forbid = map { $_ => 1 } qw{ begin end };
-
+    # This hash specifies the specific grammar passed to
+    # __infix_engine(). The keys are:
+    # {done} optional; called when parse is complete.
+    # {oper} defines operators. Values are hash refs with:
+    #	{handler} code that handles operator;
+    #	{validation} name of validation style (see {vld} below).
+    # {vld} defines operator validation. There must be a key for each
+    #	distinct value of {oper}{$name}{validation}.
+    # NOTE WELL
+    # Because if() has the Tweak( -unsatisfied ) attribute, any
+    # operators that have side effects will beed to be aware of whether
+    # they are running inside an unsatisfied if().
     my %define = (
 	done	=> sub {
 	    # my ( $self, $def, $tokens, $ctx ) = @_;
@@ -1072,11 +1146,17 @@ EOD
 		    my $last = pop @{ $ctx };
 		    my @arg = splice @{ $tokens }, 0
 			or return;
-		    $forbid{$arg[0]}
-			and $self->wail( "'$arg[0]' is forbidden in if()" );
-		    $last->{value}[-1]
-			and return $self->dispatch( @arg );
-		    return;
+		    $self->_dispatch_check( if => $arg[0] );
+		    unless ( $last->{value}[-1] ) {
+			$self->{_unsatisfied_if} = 1;
+			$self->_add_post_dispatch( sub {
+				my ( $self ) = @_;
+				delete $self->{_unsatisfied_if};
+				return;
+			    },
+			);
+		    }
+		    return $self->dispatch( @arg );
 		},
 		validation	=> 'infix',
 	    },
@@ -1101,7 +1181,7 @@ EOD
 	},
     );
 
-    sub if : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
+    sub if : method Verb() Tweak( -unsatisfied ) {	## no critic (ProhibitBuiltInHomonyms)
 	my ( $self, @args ) = @_;
 	@args
 	    or $self->wail( 'Arguments required' );
@@ -2832,36 +2912,20 @@ sub system : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
     }
 }
 
-{
-    my %special = (
-	begin	=> sub {
-	    my ( $self ) = @_;
-	    $self->_is_interactive()
-		or $self->wail(
-		q<'begin' forbidden in non-interactive time()> );
-	    return;
-	},
-	end	=> sub {
-	    my ( $self ) = @_;
-	    $self->wail(
-		q<'end' forbidden in time()> );
+sub time : method Verb() Tweak( -unsatisfied ) {	## no critic (ProhibitBuiltInHomonyms,RequireArgUnpacking)
+    my ($self, @args) = map { ARRAY_REF eq ref $_ ? @{ $_ } : $_ } @_;
+    $have_time_hires->() or $self->wail( 'Time::HiRes not available' );
+    $self->_dispatch_check( time => $args[0] );
+    my $start = Time::HiRes::time();
+    # If we're inside an unsatisfied if() we do not do the timing,
+    # because dispatch() is probably a no-op.
+    $self->{_unsatisfied_if}
+	or $self->_add_post_dispatch(
+	sub {
+	    return sprintf "%.3f seconds\n", Time::HiRes::time() - $start;
 	},
     );
-
-    sub time : method Verb() {	## no critic (ProhibitBuiltInHomonyms,RequireArgUnpacking)
-	my ($self, @args) = map { ARRAY_REF eq ref $_ ? @{ $_ } : $_ } @_;
-	$have_time_hires->() or $self->wail( 'Time::HiRes not available' );
-	my $code;
-	$code = $special{ $args[0] }
-	    and $code->( $self );
-	my $start = Time::HiRes::time();
-	$self->_add_post_dispatch(
-	    sub {
-		return sprintf "%.3f seconds\n", Time::HiRes::time() - $start;
-	    },
-	);
-	return $self->dispatch( @args );
-    }
+    return $self->dispatch( @args );
 }
 
 sub time_parser : Verb() {
@@ -5755,7 +5819,36 @@ operators binding more tightly than infix operators, but otherwise all
 operators having the same precedence. You can use parentheses to group
 operations.
 
-The method after C<'then'> may not be C<begin()> or C<end()>.
+The method name after C<'then'> may not be C<'end'>.
+
+The method name after C<'then'> may be C<'begin'> only if C<if()> was
+called interactively. If you do this and the C<if()> is not satisfied,
+nothing called interactively will be executed until after the
+corresponding interactive call to L<end()|/end> (or whenever the frame
+created by the C<begin()> is popped off the stack, which may be the end
+of a macro or source file.) Non-interactive methods will still be
+executed. See L<METHODS|/METHODS> above fore what it means to be called
+interactively.
+
+For example (assuming OID 99999 is not loaded)
+
+ $satpass2->dispatch( qw{ if loaded 99999 then begin } );
+ 
+ # The following will do nothing because the above if()
+ # was not satisfied.
+ $satpass2->dispatch( qw{ echo hello there } );
+ 
+ # The following will be executed even though the if()
+ # was not satisfied, because it is not being routed
+ # through dispatch()
+ $satpass2->spacetrack( retrieve => 25544 );
+ 
+ # The following ends the scope of the if()
+ $satpass2->execute( qw{ end } );
+ 
+ # The following will be executed because we are no longer
+ # in the scope of the unsatisfied if().
+ $satpass2->execute( qw{ echo we are back } );
 
 The following operators and functions are implemented:
 
