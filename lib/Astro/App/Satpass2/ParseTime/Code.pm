@@ -9,7 +9,7 @@ use base qw{ Astro::App::Satpass2::ParseTime };
 
 use Astro::App::Satpass2::Utils qw{ CODE_REF HASH_REF };
 
-our $VERSION = '0.031_0063';
+our $VERSION = '0.031_0064';
 
 use constant DUMMY	=> 'DUMMY';
 

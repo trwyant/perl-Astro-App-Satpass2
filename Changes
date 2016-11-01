@@ -1,3 +1,12 @@
+0.031_0064	2016-10-31	T. R. Wyant
+  Implement if(), including block if() (with begin ... end). Block if()
+    works only interactively.
+
+  Implement block time() (with begin ... end). This works only
+    interactively.
+
+  Allow code or code macro as time parser.
+
 0.031_0063	2016-09-17	T. R. Wyant
   Use correct class when finding date output width. The problem was that
     the width calculation used DateTime willy-nilly, resulting in the
