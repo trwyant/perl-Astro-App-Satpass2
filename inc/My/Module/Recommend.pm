@@ -99,6 +99,10 @@ EOD
       is available.
 EOD
     ),
+    __any( 'Time::HiRes'		=> <<'EOD' ),
+      This module is required only for the time() command/method. If
+      you do not plan to use this method you do not need this module.
+EOD
 );
 
 sub make_optional_modules_tests {
