@@ -27,6 +27,11 @@ sub new {
     my $msg = pop @modules;
     $msg =~ s/ ^\s* /      /smxg;
 
+    foreach ( @modules ) {
+	my ( $name, $version ) = split qr{ = }smx, $_, 2;
+	$_ = [ $name, $version ];
+    }
+
     return bless {
 	modules	=> \@modules,
 	message	=> $msg,
@@ -36,15 +41,31 @@ sub new {
 sub check {
     my ( $self ) = @_;
     my @missing;
-    foreach my $m ( $self->modules() ) {
-	eval "require $m; 1"
-	    and return;
-	push @missing, $m;
+    foreach my $m ( $self->__modules() ) {
+	my $msg = $self->module_is_ok( @{ $m } )
+	    or return;
+	push @missing, $msg;
     }
     return @missing;
 }
 
+sub module_is_ok {
+    my ( undef, $name, $version ) = @_;
+    local $@ = undef;
+    eval "require $name; 1"
+	and eval {
+	not $version
+	    or $name->VERSION( $version );
+    } and return;
+    return $version ? "$name $version" : $name;
+}
+
 sub modules {
+    my ( $self ) = @_;
+    return ( map { $_->[0] } $self->__modules() );
+}
+
+sub __modules {
     my ( $self ) = @_;
     return @{ $self->{modules} };
 }
@@ -105,6 +126,9 @@ This static method instantiates the object. The arguments are module
 names, of which at least one must be installed. The last argument,
 however, is text giving the reason you need one of the modules.
 
+Any or all of the module names can be optionally followed by an equals
+sign (C<'='>) and the minimum required version number.
+
 =head2 __any
 
  my $rec = __any( Foo => "bar\n" );
@@ -123,12 +147,32 @@ least one of the modules are installed it returns nothing. If not, it
 returns the names of the missing modules in list context, and the number
 of missing modules in scalar context.
 
+=head2 module_is_ok
+
+ $rec->module_is_ok( 'Fubar', 1.2 );
+
+This method checks to see if the given module is OK for use. To be OK
+for use it must be loadable. If the optional version is given it must be
+at least that version.
+
+Despite the name, the return is a message if the module is not OK, or
+nothing if it is OK.
+
+This is really just exposed for the use of the L<check()|/check> method.
+
 =head2 modules
 
  say 'Optional modules: ', join ', ', $rec->modules();
 
 This method just returns the names of the modules with which the object
 was initialized.
+
+=head2 __modules
+
+B<This method is private to the Astro-App-Satpass2 package.>
+
+This method returns array references, with element 0 of each reference
+being the module name, and element 1 being the version, if any.
 
 =head2 recommend
 

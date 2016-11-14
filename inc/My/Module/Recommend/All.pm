@@ -22,9 +22,8 @@ sub __all {
 sub check {
     my ( $self ) = @_;
     my @missing;
-    foreach my $m ( $self->modules() ) {
-	eval "require $m; 1"
-	    or push @missing, $m;
+    foreach my $m ( $self->__modules() ) {
+	push @missing, $self->module_is_ok( @{ $m } );
     }
     return @missing;
 }
