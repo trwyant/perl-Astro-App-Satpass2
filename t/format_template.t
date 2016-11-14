@@ -499,12 +499,8 @@ eval {
 } or fail "Added formatter failed: $@";
 
 SKIP: {
-    my $tests = 1;
 
-    eval {
-	require DateTime::Calendar::Christian;
-	1;
-    } or skip 'DateTime::Calendar::Christian not available', $tests;
+    load_or_skip 'DateTime::Calendar::Christian', 1;
 
     $ft->template( fubar => q<[% data.date( width = '' ) %]> );
     $ft->time_formatter(

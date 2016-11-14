@@ -9,23 +9,12 @@ use Test::More 0.88;
 use My::Module::Test::App;
 
 BEGIN {
-    eval {
-	require DateTime;
-	require DateTime::TimeZone;
-	1;
-    } or do {
-	plan skip_all => 'DateTime or DateTime::TimeZone not available';
-	exit;
-    };
 
-    eval {
-	require Time::Local;
-	Time::Local->import();
-	1;
-    } or do {
-	plan skip_all => 'Time::Local not available';
-	exit;
-    };
+    load_or_skip 'DateTime', 'all';
+    load_or_skip 'DateTime::TimeZone', 'all';
+    # Note that load_or_skip() does a default import as well as loading
+    # the module.
+    load_or_skip 'Time::Local', 'all';
 
     require Astro::App::Satpass2::FormatTime::DateTime::Cldr;
 }
@@ -66,10 +55,7 @@ SKIP: {
 
     my $back_end = 'DateTime::Calendar::Christian';
 
-    eval {
-	require DateTime::Calendar::Christian;
-	1;
-    } or skip 'DateTime::Calendar::Christian not available', 1;
+    load_or_skip $back_end, $tests;
 
     method 'new', back_end => $back_end, gmt => 1, INSTANTIATE, 'Instantiate';
 

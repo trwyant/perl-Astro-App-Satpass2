@@ -71,8 +71,7 @@ SKIP: {
 
     my $tests = 2;
 
-    require File::Temp
-	or skip 'File::Temp not available', $tests;
+    load_or_skip 'File::Temp', $tests;
 
     my %failing_os = map { $_ => 1 } qw{ MSWin32 };
 
@@ -969,13 +968,7 @@ SKIP: {
 
     my $tests = 3;
 
-    {
-	local $@ = undef;
-	eval {
-	    require Time::HiRes;
-	    1;
-	} or skip 'Time::HiRes not available', $tests;
-    }
+    load_or_skip 'Time::HiRes', $tests;
 
     my $time = 0;
 
@@ -1013,10 +1006,7 @@ SKIP: {
 
     my $tests = 2;
 
-    eval {
-	require File::Spec;
-	1;
-    } or skip 'File::Spec not available', $tests;
+    load_or_skip 'File::Spec', $tests;
 
     -d 't' or skip 'No t directory found', $tests;
     my $t = File::Spec->catfile( cwd(), 't');

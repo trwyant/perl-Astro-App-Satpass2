@@ -398,10 +398,7 @@ SKIP: {
 SKIP: {
     my $tests = 5;
 
-    eval {
-	require DateTime;
-	1;
-    } or skip 'Unable to load DateTime', $tests;
+    load_or_skip 'DateTime', $tests;
 
     note <<'EOD';
 
@@ -454,10 +451,7 @@ EOD
 SKIP: {
     my $tests = 6;
 
-    eval {
-	require DateTime::Calendar::Christian;
-	1;
-    } or skip 'Unable to load DateTime::Calendar::Christian', $tests;
+    load_or_skip 'DateTime::Calendar::Christian';
 
     note <<'EOD';
 

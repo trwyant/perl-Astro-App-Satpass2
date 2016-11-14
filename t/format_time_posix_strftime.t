@@ -9,23 +9,9 @@ use Test::More 0.88;
 use My::Module::Test::App;
 
 BEGIN {
-    eval {
-	require POSIX;
-	POSIX->import( 'strftime' );
-	1;
-    } or do {
-	plan skip_all => 'POSIX strftime() not available';
-	exit;
-    };
 
-    eval {
-	require Time::Local;
-	Time::Local->import();
-	1;
-    } or do {
-	plan skip_all => 'Time::Local not available';
-	exit;
-    };
+    load_or_skip qw{ POSIX all -import strftime };
+    load_or_skip qw{ Time::Local all };
 
     require Astro::App::Satpass2::FormatTime::POSIX::Strftime;
 }

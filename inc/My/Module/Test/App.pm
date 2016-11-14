@@ -10,6 +10,7 @@ use base qw{ Exporter };
 use Carp;
 
 use Cwd qw{ abs_path };
+use Getopt::Long 2.39 ();
 use POSIX qw{ strftime };
 use Scalar::Util 1.26 qw{ blessed };
 use Test::More 0.52;
@@ -23,6 +24,7 @@ our @EXPORT = qw{
     dump_date_manip
     dump_date_manip_init
     execute
+    load_or_skip
     method
     normalize_path
     same_path
@@ -148,6 +150,45 @@ sub class ($) {
 sub execute (@) {	## no critic (RequireArgUnpacking)
     splice @_, 0, 0, 'execute';
     goto &method;
+}
+
+{
+    my $go;
+
+    # When this gets populated, document it in the POD for the
+    # subroutine.
+    my %version = (
+    );
+
+    # skip() actually jumps out via 'goto SKIP', but Perl::Critic does
+    # not know this.
+    sub load_or_skip (@) {	## no critic (RequireFinalReturn)
+	my @arg = @_;
+	$go ||= Getopt::Long::Parser->new();
+	my %opt;
+	$go->getoptionsfromarray( \@arg, \%opt,
+	    qw{ import=s@ noimport! } );
+	my ( $module, $skip ) = @arg;
+	my $v = $version{$module};
+	local $@ = undef;
+	my $caller = caller;
+	eval "require $module; 1"
+	    and eval {
+	    $v and $module->VERSION( $v );
+	    my @import = map { split qr{ \s* , \s* }smx }
+		@{ $opt{import} || [] };
+	    # We rely on the following statement always being true
+	    # unless the import is requested and fails.
+	    $opt{noimport}
+		or eval "package $caller; $module->import( qw{ @import } ); 1";
+	} and return;
+	my $display = $v ? "$module $v" : $module;
+	$display .= ' not available';
+	$skip
+	    and $skip =~ m/ \A all \z /smxi
+	    and plan skip_all => $display;
+	skip $display, $skip;
+    }
 }
 
 sub method (@) {	## no critic (RequireArgUnpacking)
@@ -321,6 +362,49 @@ is the expected result.  All other arguments are arguments to
 C<execute()>.
 
 This is really just a convenience wrapper for L<method()|/method>.
+
+=head2 load_or_skip
+
+ SKIP: {
+     load_or_skip 'Fubar', 2;
+     load_or_skip qw{ Frobozz -import foozle };
+     load_or_skip qw{ Moe::Howard -noimport };
+     ...
+ }
+
+This subroutine loads the given module or skips the remaining tests in
+the skip block. The skip count is not required, but it is an error to
+omit it if your script plans an explicit number of tests.
+
+You can specify option C<-import> to specify what is to be imported into
+the caller's name space if the load is successful. This option can be
+specified more than once, or with a comma-delimited list of stuff to
+import, or both. If nothing is specified a default import is done.
+
+As a special case, the skip count can be C<'all'>, in which case C<plan
+skip_all => ...> is done if the module can not be loaded. This is an
+error if you have already done tests.
+
+The following options can be specified:
+
+=over
+
+=item -import
+
+ -import foozle
+
+This option specifies an explicit import. You can specify it more than
+once, or specify a comma-delimited list, or both. If this is unspecified
+the default import is done.
+
+=item -noimport
+
+ -noimport
+
+If this option is specified, no import is done, even if C<-import> is
+also specified.
+
+=back
 
 =head2 method
 

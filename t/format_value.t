@@ -7,6 +7,9 @@ use warnings;
 
 use Test::More 0.88;
 
+use lib qw{ inc };
+use My::Module::Test::App qw{ load_or_skip };
+
 use Astro::Coord::ECI 0.059;
 use Astro::Coord::ECI::Moon 0.059;
 use Astro::Coord::ECI::TLE 0.059;
@@ -630,14 +633,14 @@ method station => [], time => '23:23:41',
 $time_formatter->gmt( 0 );	# Turn off GMT
 SKIP: {
     my $tests = 1;
-    eval {
-	require DateTime;
-	# Under circumstances I do not understand, some Perl 5.8.8s seem
-	# to throw an exception for the above, but not for the below.
-	# Both should fail, since ::Strftime uses DateTime.
-	require Astro::App::Satpass2::FormatTime::DateTime::Strftime;
-	1;
-    } or skip 'DateTime not available', $tests;
+
+    load_or_skip 'DateTime', $tests;
+    # Under circumstances I do not understand, some Perl 5.8.8s seem to
+    # throw an exception for the above, but not for the below.  Both
+    # should fail, since ::Strftime uses DateTime.
+    load_or_skip 'Astro::App::Satpass2::FormatTime::DateTime::Strftime',
+	$tests;
+
     $time_formatter->tz( 'MST7MDT' );	# Zone to US Mountain
     method time => '17:23:41', 'Time of day, Mountain';
     $time_formatter->tz( undef );	# Zone back to default
