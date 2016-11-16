@@ -1115,6 +1115,15 @@ EOD
 		},
 		validation	=> 'prefix',
 	    },
+	    not	=> {
+		handler	=> sub {
+		    my ( $self, $def, $tokens, $ctx ) = @_;
+		    $self->_infix_engine_dispatch( $def, $tokens, $ctx );
+		    $ctx->[-1]{value}[-1] = ! $ctx->[-1]{value}[-1];
+		    return;
+		},
+		validation	=> 'prefix',
+	    },
 	    or	=> {
 		handler	=> sub {
 		    my ( $self, $def, $tokens, $ctx ) = @_;
@@ -1128,11 +1137,20 @@ EOD
 		},
 		validation	=> 'infix',
 	    },
-	    not	=> {
+	    os	=> {
 		handler	=> sub {
-		    my ( $self, $def, $tokens, $ctx ) = @_;
-		    $self->_infix_engine_dispatch( $def, $tokens, $ctx );
-		    $ctx->[-1]{value}[-1] = ! $ctx->[-1]{value}[-1];
+		    # my ( $self, $def, $tokens, $ctx ) = @_;
+		    my ( undef, undef, $tokens, $ctx ) = @_;
+		    my $re = qr< \A \Q$^O\E \z >smxi;
+		    my $rslt = 0;
+		    foreach my $os ( split qr< [|] >smx, shift @{
+			$tokens } ) {
+			$os =~ $re
+			    or next;
+			$rslt = 1;
+			last;
+		    }
+		    push @{ $ctx->[-1]{value} }, $rslt;
 		    return;
 		},
 		validation	=> 'prefix',
@@ -5869,13 +5887,28 @@ This prefix operator computes the number of loaded bodies chosen by its
 operand, which can be a comma-delimited list of values like those taken
 by the C<choose()|/choose> method.
 
+=item not
+
+This prefix operator computes the Boolean negation of its operand.
+
 =item or
 
 This infix operator computes the Boolean C<or> of its operands.
 
-=item not
+=item os
 
-This prefix operator computes the Boolean negation of its operand.
+This prefix operator is true if and only if the Perl script is running
+under the operating system named in its operand, as determined by a
+case-insensitive match against C<$^O>.
+
+You can specify multiple
+operating systems by separating the names with the pipe character
+(C<'|'>). If you do this the operator is true if C<$^O> matches any one
+of the names. If using this interactively, you will need to quote the
+operand or escape the pipes to hide them from the command line
+tokenizer. For example:
+
+ satpass2> if os 'mswin32|dos|os2' then echo DOS-ish
 
 =item then
 

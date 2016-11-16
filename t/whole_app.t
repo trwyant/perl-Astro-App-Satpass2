@@ -417,6 +417,23 @@ EOD
 	'not both defined',
 	'if not ( env FUBAR and env FROBOZZ ), only FROBOZZ defined';
 
+    {
+
+	my $os = ( $^O =~ m/ \A fubar \z /smxi ) ? 'Frobozz' : 'Fubar';
+
+	execute "if os '$^O' then echo Running under $^O",
+	    "Running under $^O",
+	    "if os '$^O', running under $^O";
+
+	execute "if os '$os' then echo Running under $os", undef,
+	    "if os '$os', running under $^O";
+
+	execute "if os '$os|$^O' then echo Running under $os or $^O",
+	    "Running under $os or $^O",
+	    "if os '$os|$^O', running under $^O";
+
+    }
+
     execute 'if env FUBAR then begin', undef,
 	'if env FUBAR then begin, with FUBAR undefined';
 
