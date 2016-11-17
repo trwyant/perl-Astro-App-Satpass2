@@ -1044,12 +1044,12 @@ EOD
     #	distinct value of {oper}{$name}{validation}.
     # NOTE WELL
     # Because if() has the Tweak( -unsatisfied ) attribute, any
-    # operators that have side effects will beed to be aware of whether
+    # operators that have side effects will need to be aware of whether
     # they are running inside an unsatisfied if().
     my %define = (
 	done	=> sub {
-	    # my ( $self, $def, $tokens, $ctx ) = @_;
-	    my ( $self, undef, undef, $ctx ) = @_;
+	    # my ( $self, $def, $ctx, $tokens ) = @_;
+	    my ( $self, undef, $ctx ) = @_;
 	    @{ $ctx }
 		and $self->wail( q<No 'then'> );;
 	    return;
@@ -1057,7 +1057,7 @@ EOD
 	oper	=> {
 	    '('	=> {
 		handler	=> sub {
-		    my ( $self, $def, $tokens, $ctx ) = @_;
+		    my ( $self, $def, $ctx, $tokens ) = @_;
 		    my $want = delete $ctx->[-1]{want};
 		    defined $want
 			or $want = 1;
@@ -1065,17 +1065,19 @@ EOD
 			want	=> $want,
 			value	=> [],
 		    };
+		    $ctx->[-2]{shortcut}
+			and $ctx->[1]{shortcut} = $ctx->[-2]{shortcut};
 		    my $depth = @{ $ctx };
 		    while ( $depth <= @{ $ctx } ) {
-			$self->_infix_engine_dispatch( $def, $tokens, $ctx );
+			$self->_infix_engine_dispatch( $def, $ctx, $tokens );
 		    }
 		    return;
 		},
 	    },
 	    ')'	=> {
 		handler	=> sub {
-		    # my ( $self, $def, $tokens, $ctx ) = @_;
-		    my ( $self, undef, undef, $ctx ) = @_;
+		    # my ( $self, $def, $ctx, $tokens ) = @_;
+		    my ( $self, undef, $ctx ) = @_;
 		    @{ $ctx }
 			or $self->wail( 'Unpaired right parentheses' );
 		    $ctx->[-1]{want} == @{ $ctx->[-1]{value} }
@@ -1089,25 +1091,30 @@ EOD
 	    },
 	    and	=> {
 		handler	=> sub {
-		    my ( $self, $def, $tokens, $ctx ) = @_;
-		    $self->_infix_engine_dispatch( $def, $tokens, $ctx );
+		    my ( $self, $def, $ctx, $tokens ) = @_;
+		    $ctx->[-1]{value}[-1]
+			or $ctx->[-1]{shortcut} = 1;
+		    $self->_infix_engine_dispatch( $def, $ctx, $tokens );
 		    # For some reason the following has to be done in
 		    # two statements, or both operands remain on the
 		    # stack.
 		    my $ro = pop @{ $ctx->[-1]{value} };
-		    $ctx->[-1]{value}[-1] &&= $ro;
+		    $ctx->[-1]{value}[-1] &&= $ro
+			unless delete $ctx->[-1]{shortcut};
 		    return;
 		},
 		validation	=> 'infix',
 	    },
-	    attr	=> {	# formatter, spacetrack, time_parser
+	    attr	=> {
 		handler	=> sub {
-		    # my ( $self, $def, $tokens, $ctx ) = @_;
-		    my ( $self, undef, $tokens, $ctx ) = @_;
+		    # my ( $self, $def, $ctx, $tokens ) = @_;
+		    my ( $self, undef, $ctx, $tokens ) = @_;
 		    my $attr = shift @{ $tokens };
-		    my $val = $self->_attribute_value( $attr );
+		    my $val;
+		    $ctx->[-1]{shortcut}
+			or $val = $self->_attribute_value( $attr );
 		    NULL_REF eq ref $val
-			and $self->wail( "No such attribbute as '$attr'" );
+			and $self->wail( "No such attribute as '$attr'" );
 		    push @{ $ctx->[-1]{value} }, $val;
 		    return;
 		},
@@ -1115,20 +1122,27 @@ EOD
 	    },
 	    env	=> {
 		handler	=> sub {
-		    # my ( $self, $def, $tokens, $ctx ) = @_;
-		    my ( undef, undef, $tokens, $ctx ) = @_;
-		    push @{ $ctx->[-1]{value} }, $ENV{ shift @{ $tokens } };
+		    # my ( $self, $def, $ctx, $tokens ) = @_;
+		    my ( undef, undef, $ctx, $tokens ) = @_;
+		    my $name = shift @{ $tokens };
+		    my $val;
+		    $ctx->[-1]{shortcut}
+			or $val = $ENV{$name};
+		    push @{ $ctx->[-1]{value} }, $val;
 		    return;
 		},
 		validation	=> 'prefix',
 	    },
 	    loaded	=> {
 		handler	=> sub {
-		    # my ( $self, $def, $tokens, $ctx ) = @_;
-		    my ( $self, undef, $tokens, $ctx ) = @_;
-		    my @loaded = $self->__choose(
+		    # my ( $self, $def, $ctx, $tokens ) = @_;
+		    my ( $self, undef, $ctx, $tokens ) = @_;
+		    my $name = shift @{ $tokens };
+		    my @loaded;
+		    $ctx->[-1]{shortcut}
+			or @loaded = $self->__choose(
 			{ bodies	=> 1 },
-			[ shift @{ $tokens } ],
+			[ $name ],
 		    );
 		    push @{ $ctx->[-1]{value} }, scalar @loaded;
 		    return;
@@ -1137,8 +1151,8 @@ EOD
 	    },
 	    not	=> {
 		handler	=> sub {
-		    my ( $self, $def, $tokens, $ctx ) = @_;
-		    $self->_infix_engine_dispatch( $def, $tokens, $ctx );
+		    my ( $self, $def, $ctx, $tokens ) = @_;
+		    $self->_infix_engine_dispatch( $def, $ctx, $tokens );
 		    $ctx->[-1]{value}[-1] = ! $ctx->[-1]{value}[-1];
 		    return;
 		},
@@ -1146,29 +1160,34 @@ EOD
 	    },
 	    or	=> {
 		handler	=> sub {
-		    my ( $self, $def, $tokens, $ctx ) = @_;
-		    $self->_infix_engine_dispatch( $def, $tokens, $ctx );
+		    my ( $self, $def, $ctx, $tokens ) = @_;
+		    $ctx->[-1]{value}[-1]
+			and $ctx->[-1]{shortcut} = 1;
+		    $self->_infix_engine_dispatch( $def, $ctx, $tokens );
 		    # For some reason the following has to be done in
 		    # two statements, or both operands remain on the
 		    # stack.
 		    my $ro = pop @{ $ctx->[-1]{value} };
-		    $ctx->[-1]{value}[-1] ||= $ro;
+		    $ctx->[-1]{value}[-1] ||= $ro
+			unless delete $ctx->[-1]{shortcut};
 		    return;
 		},
 		validation	=> 'infix',
 	    },
 	    os	=> {
 		handler	=> sub {
-		    # my ( $self, $def, $tokens, $ctx ) = @_;
-		    my ( undef, undef, $tokens, $ctx ) = @_;
+		    # my ( $self, $def, $ctx, $tokens ) = @_;
+		    my ( undef, undef, $ctx, $tokens ) = @_;
 		    my $re = qr< \A \Q$^O\E \z >smxi;
 		    my $rslt = 0;
-		    foreach my $os ( split qr< [|] >smx, shift @{
-			$tokens } ) {
-			$os =~ $re
-			    or next;
-			$rslt = 1;
-			last;
+		    my $name = shift @{ $tokens };
+		    unless ( $ctx->[-1]{shortcut} ) {
+			foreach my $os ( split qr< [|] >smx, $name ) {
+			    $os =~ $re
+				or next;
+			    $rslt = 1;
+			    last;
+			}
 		    }
 		    push @{ $ctx->[-1]{value} }, $rslt;
 		    return;
@@ -1177,8 +1196,8 @@ EOD
 	    },
 	    then	=> {
 		handler	=> sub {
-		    # my ( $self, $def, $tokens, $ctx ) = @_;
-		    my ( $self, undef, $tokens, $ctx ) = @_;
+		    # my ( $self, $def, $ctx, $tokens ) = @_;
+		    my ( $self, undef, $ctx, $tokens ) = @_;
 		    1 == @{ $ctx }
 			or $self->wail( 'Unclosed left parentheses' );
 		    my $last = pop @{ $ctx };
@@ -1201,8 +1220,8 @@ EOD
 	},
 	vld	=> {
 	    infix	=> sub {
-		# my ( $self, $def, $tkn, $tokens, $ctx ) = @_;
-		my ( $self, undef, $tkn, $tokens, $ctx ) = @_;
+		# my ( $self, $def, $ctx, $tkn, $tokens ) = @_;
+		my ( $self, undef, $ctx, $tkn, $tokens ) = @_;
 		@{ $ctx->[-1]{value} }
 		    or $self->wail( "'$tkn' requires a left argument" );
 		@{ $tokens }
@@ -1210,8 +1229,8 @@ EOD
 		return;
 	    },
 	    prefix	=> sub {
-		# my ( $self, $def, $tkn, $tokens, $ctx ) = @_;
-		my ( $self, undef, $tkn, $tokens ) = @_;
+		# my ( $self, $def, $ctx, $tkn, $tokens ) = @_;
+		my ( $self, undef, undef, $tkn, $tokens ) = @_;
 		@{ $tokens }
 		    or $self->wail( "'$tkn' requires an argument" );
 		return;
@@ -1223,7 +1242,10 @@ EOD
 	my ( $self, @args ) = @_;
 	@args
 	    or $self->wail( 'Arguments required' );
-	return $self->__infix_engine( \%define, @args );
+	my @ctx = ( {
+		value	=> [],
+	    } );
+	return $self->__infix_engine( \%define, \@ctx, @args );
     }
 }
 
@@ -1283,24 +1305,34 @@ sub initfile : Verb( create-directory! quiet! ) {
     return File::Spec->catfile( $init_dir, 'satpass2rc' );
 }
 
+# This is a generalized infix expression engine. It does not implement
+# operator precedence and is therefore very small. The arguments are:
+#   - $self is the invocant, which must be an
+#     Astro::App::Satpass2::Copier.
+#   - $def is the hash that defines the grammar. This needs keys {oper}
+#     and {validation}. Key {oper} defines operators, and needs key
+#     {handler} to be a code reference, and {vld} to be the name of a
+#     validation style, meaning a string that must be a key in the
+#     {validation} sub-hash. The values in {validation} are code
+#     references.
+#   - $ctx is context for the operations and is not used by the engine
+#     itself. See if() for an example.
+#   - @tokens are the tokens to be evaluated by the engine.
 sub __infix_engine {
-    my ( $self, $def, @tokens ) = @_;
+    my ( $self, $def, $ctx, @tokens ) = @_;
     @tokens
 	or $self->wail( 'Nothing to compute' );
-    my @ctx = ( {
-	    value	=> [],
-	} );
     my $rslt;
     while ( @tokens ) {
-	$rslt = $self->_infix_engine_dispatch( $def, \@tokens, \@ctx );
+	$rslt = $self->_infix_engine_dispatch( $def, $ctx, \@tokens );
     }
     $def->{done}
-	and $def->{done}->( $self, $def, \@tokens, \@ctx );
+	and $def->{done}->( $self, $def, $ctx, \@tokens );
     return $rslt;
 }
 
 sub _infix_engine_dispatch {
-    my ( $self, $def, $tokens, $ctx ) = @_;
+    my ( $self, $def, $ctx, $tokens ) = @_;
     @{ $tokens }
 	or return;
     my $tkn = shift @{ $tokens };
@@ -1308,8 +1340,8 @@ sub _infix_engine_dispatch {
 	or $self->wail( "Unrecognized token '$tkn'" );
     $info->{validation}
 	and $def->{vld}{ $info->{validation} }->(
-	$self, $def, $tkn, $tokens, $ctx );
-    return $info->{handler}->( $self, $def, $tokens, $ctx );
+	$self, $def, $ctx, $tkn, $tokens );
+    return $info->{handler}->( $self, $def, $ctx, $tokens );
 }
 
 #	$file_name = _init_file_01()
@@ -3168,9 +3200,10 @@ sub _attribute_exists {
 	my ( $attr, $sub ) = split qr{ [.] }smx, $name, 2;
 	$accessor{$attr}
 	    or return NULL;
-	my $rslt;
-	if ( $rslt = $self->get( $attr ) and defined $sub ) {
-	    my $code = $special{$attr}
+	my $rslt = $self->get( $attr );
+	if ( defined $sub ) {
+	    $rslt
+		and my $code = $special{$attr}
 		or return NULL;
 	    $rslt = $code->( $rslt, $sub );
 	}
@@ -5950,7 +5983,9 @@ The following operators and functions are implemented:
 
 =item and
 
-This infix operator computes the Boolean C<and> of its operands.
+This infix operator computes the Boolean C<and> of its operands. This
+operator shortcuts; if the first operand is false the second operand is
+not evaluated.
 
 =item attr
 
@@ -5965,12 +6000,13 @@ exception.
 
 B<Note> that L<Astro::SpaceTrack|Astro::SpaceTrack> is an optional
 module. If it is not installed we can not determine which attributes are
-valid, so the results of trying to access an attribute are undefined
-(meaning, that they may change, not that you get C<undef>). The
-canonical way to test the username attribute of the spacetrack object is
-thus
+valid, so the results of trying to access any spacetrack attribute
+result in an exception. If you wish to share the same configuration
+among installations that may or may not have
+L<Astro::SpaceTrack|Astro::Spacetracl> installed, you can guard against
+the exception by using something like
 
- if attr spacetrack and attr spacetrack.username
+ if attr spacetrack and attr spacetrack.username ...
 
 =item env
 
@@ -5989,7 +6025,9 @@ This prefix operator computes the Boolean negation of its operand.
 
 =item or
 
-This infix operator computes the Boolean C<or> of its operands.
+This infix operator computes the Boolean C<or> of its operands. This
+operator shortcuts; if the first operand is true the second operand is
+not evaluated.
 
 =item os
 
@@ -5997,12 +6035,11 @@ This prefix operator is true if and only if the Perl script is running
 under the operating system named in its operand, as determined by a
 case-insensitive match against C<$^O>.
 
-You can specify multiple
-operating systems by separating the names with the pipe character
-(C<'|'>). If you do this the operator is true if C<$^O> matches any one
-of the names. If using this interactively, you will need to quote the
-operand or escape the pipes to hide them from the command line
-tokenizer. For example:
+You can specify multiple operating systems by separating the names with
+the pipe character (C<'|'>). If you do this the operator is true if
+C<$^O> matches any one of the names. If using this interactively, you
+will need to quote the operand or escape the pipes to hide them from the
+command line tokenizer. For example:
 
  satpass2> if os 'mswin32|dos|os2' then echo DOS-ish
 
@@ -8194,6 +8231,10 @@ F<satpass>. Those methods, and the reason for their addition, are:
 
 =over
 
+=item add
+
+Added in version 0.021.
+
 =item begin, end
 
 The restructuring involved in the rewrite made it possible to have
@@ -8205,6 +8246,10 @@ It was decided to have an explicit method to display the location,
 rather than have certain methods (e.g. C<pass()>) display it, and others
 (e.g. C<flare()>) not. In other words, I decided I was not smart enough
 to know when a user would want the location displayed.
+
+=item if
+
+Added in version 0.032.
 
 =item pwd
 
