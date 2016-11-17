@@ -32,6 +32,7 @@ ascendingnode
 ASCIIbetical
 Astro
 astro
+attr
 au
 autoheight
 azel
@@ -87,6 +88,7 @@ Geocoding
 geoid
 GMT
 gmt
+GnuPG
 Goran
 gory
 harvard
@@ -111,6 +113,7 @@ lookup
 Lookup
 lookups
 ly
+MacPorts
 meananomaly
 meanmotion
 merchantability
@@ -133,6 +136,7 @@ pc
 periapsis
 perigee
 perltime
+pinentry
 pm
 POSIX
 pre

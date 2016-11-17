@@ -434,6 +434,14 @@ EOD
 
     }
 
+    execute 'if attr horizon then echo the horizon is $horizon',
+	'the horizon is 20',
+	'if attr horizon, with horizon set';
+
+    execute 'if attr formatter.time_format then echo $formatter.time_format',
+	'%H:%M:%S',
+	'if attr formatter.time_format';
+
     execute 'if env FUBAR then begin', undef,
 	'if env FUBAR then begin, with FUBAR undefined';
 

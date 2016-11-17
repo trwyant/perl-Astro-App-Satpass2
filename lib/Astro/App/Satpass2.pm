@@ -54,6 +54,14 @@ BEGIN {
 	};
 }
 
+# The following is returned by method _attribute_value() when a
+# non-existent attribute is specified. We can't use undef for this,
+# because the attribute might really be undef.
+use constant NULL	=> bless \( my $x = undef ), 'Null';
+# The canonical way to see if $rslt actually contains the above is
+# NULL_REF eq ref $rslt
+use constant NULL_REF	=> ref NULL;
+
 our $VERSION = '0.031_0064';
 
 # The following 'cute' code is so that we do not determine whether we
@@ -1026,7 +1034,6 @@ EOD
 }
 
 {
-
     # This hash specifies the specific grammar passed to
     # __infix_engine(). The keys are:
     # {done} optional; called when parse is complete.
@@ -1092,6 +1099,19 @@ EOD
 		    return;
 		},
 		validation	=> 'infix',
+	    },
+	    attr	=> {	# formatter, spacetrack, time_parser
+		handler	=> sub {
+		    # my ( $self, $def, $tokens, $ctx ) = @_;
+		    my ( $self, undef, $tokens, $ctx ) = @_;
+		    my $attr = shift @{ $tokens };
+		    my $val = $self->_attribute_value( $attr );
+		    NULL_REF eq ref $val
+			and $self->wail( "No such attribbute as '$attr'" );
+		    push @{ $ctx->[-1]{value} }, $val;
+		    return;
+		},
+		validation	=> 'prefix',
 	    },
 	    env	=> {
 		handler	=> sub {
@@ -3108,6 +3128,56 @@ sub _attribute_exists {
     return $accessor{$name};
 }
 
+{
+
+    my %spacetrack_attributes;
+    $have_astro_spacetrack->()
+	and %spacetrack_attributes = map { $_ => 1 }
+	Astro::SpaceTrack->attribute_names();
+
+    my %special = (
+	formatter	=> sub {
+	    my ( $obj, $attr ) = @_;
+	    $obj->can( $attr )
+		or return NULL;
+	    return $obj->$attr();
+	},
+	spacetrack	=> sub {
+	    my ( $obj, $attr ) = @_;
+	    $spacetrack_attributes{$attr}
+		or return NULL;
+	    return $obj->getv( $attr );
+	},
+	time_parser	=> sub {
+	    my ( $obj, $attr ) = @_;
+	    $obj->can( $attr )
+		or return NULL;
+	    return $obj->$attr();
+	},
+    );
+
+    # my $value = $self->_attribute_value( $name );
+    #
+    # Return an attribute value. If the attribute is 'formatter',
+    # 'spacetrack' or 'time_parser' you can specify a dot and the name
+    # of an attribute of the relevant object, e.g. spacetrack.username.
+    # If the attribute does not exist you get back manifest constant
+    # NULL, which is a reference to undef blessed into class 'Null'.
+    sub _attribute_value {
+	my ( $self, $name ) = @_;
+	my ( $attr, $sub ) = split qr{ [.] }smx, $name, 2;
+	$accessor{$attr}
+	    or return NULL;
+	my $rslt;
+	if ( $rslt = $self->get( $attr ) and defined $sub ) {
+	    my $code = $special{$attr}
+		or return NULL;
+	    $rslt = $code->( $rslt, $sub );
+	}
+	return $rslt;
+    }
+}
+
 # Documented in POD
 
 {
@@ -4666,12 +4736,16 @@ sub _unescape {
 			or $self->wail('Missing right curly bracket');
 
 		# If the name begins with an alpha or an underscore, we
-		# simply append any word ('\w') characters to it and
-		# advance the current location past them.
+		# simply append any word ('\w') characters to it. If it
+		# the word characters are immediately followed by a dot
+		# and more word characters we grab them too, and advance
+		# the current location past whatever we grabbed. The dot
+		# syntax is in aid of accessing attributes of
+		# attributes (e.g. $formatter.time_format)
 
 		} elsif ( $name =~ m/ \A [[:alpha:]_] \z /smx ) {
 		    pos( $buffer ) = $inx;
-		    if ( $buffer =~ m/ \G ( \w* ) /smxgc ) {
+		    if ( $buffer =~ m/ \G ( \w* (?: [.] \w+ )? ) /smxgc ) {
 			$name .= $1;
 			$inx += length $1;
 		    }
@@ -5057,8 +5131,9 @@ sub _unescape {
 	$name !~ m/ \D /smx
 	    and return $args->[$name - 1];
 
-	exists $accessor{$name}
-	    and return $self->get($name);
+	my $value = $self->_attribute_value( $name );
+	NULL_REF eq ref $value
+	    or return $value;
 
 	exists $self->{exported}{$name}
 	    and return $self->{exported}{$name};
@@ -5074,6 +5149,7 @@ sub _unescape {
 	return;
     }
 }
+
 
 #	$self->wail(...)
 #
@@ -5876,6 +5952,26 @@ The following operators and functions are implemented:
 
 This infix operator computes the Boolean C<and> of its operands.
 
+=item attr
+
+This prefix operator computes the value of the attribute specified by
+its operand. If the operand is C<'formatter'>, C<'spacetrack'> or
+C<'time_parser'>, you can follow the attribute name by a dot and the
+name of an attribute of the specified object, for example
+C<'spacetrack.username'>.
+
+An attempt to access a non-existent attribute will result in an
+exception.
+
+B<Note> that L<Astro::SpaceTrack|Astro::SpaceTrack> is an optional
+module. If it is not installed we can not determine which attributes are
+valid, so the results of trying to access an attribute are undefined
+(meaning, that they may change, not that you get C<undef>). The
+canonical way to test the username attribute of the spacetrack object is
+thus
+
+ if attr spacetrack and attr spacetrack.username
+
 =item env
 
 This prefix operator computes the value of the environment variable
@@ -5917,6 +6013,17 @@ if the left operand was true. The first token to the right must be the
 name of a method.
 
 =back
+
+This was actually implemented just so I could share the configuration
+file between operating systems. The problem I was addressing was that
+the pinentry program in the MacPorts version of GnuPG does not seem to
+work nicely when you log in over ssh. With the above functionality, my
+configuration file could contain the lines
+
+ if not ( os darwin and env SSH_CONNECTION ) then \
+     spacetrack set identity 1
+ if not attr spacetrack.username then \
+     echo You will need to set your spacetrack identity manually.
 
 =head2 init
 
@@ -7954,9 +8061,11 @@ quotes are recognized inside double quotes.
 The dollar sign (C<$>) introduces an interpolation. If the first
 character after the dollar sign is not a left curly bracket, that
 character and any following word characters name the thing to be
-interpolated, which may be either an argument (specified by its number,
-starting from 1), an L<attribute|/ATTRIBUTES> of the object, an
-environment variable, or any of the following special characters:
+interpolated, which may be one of the following things.
+
+=over
+
+=item One of the following special variables.
 
  0 - The name of the Perl script ($0);
  # - The number of positional arguments;
@@ -7966,6 +8075,24 @@ environment variable, or any of the following special characters:
      quotes;
  $ - The process ID;
  _ - The name of the Perl executable ($^X).
+
+=item An argument, specified by its number, starting from 1.
+
+=item An L<attribute|/ATTRIBUTE> name.
+
+If the attribute is C<'formatter'>, C<'spacetrack'>, or C<'time_parser'>
+the attribute name can be followed by a dot (C<'.'>) and the name of an
+attribute of the resultant object.
+
+=item An environment variable.
+
+=back
+
+If the interpolation can be more than one of the things on the above
+list, the first thing actually encountered will be used. For example,
+C<$horizon> will interpolate the value of the C<horizon|/horizon>
+attribute, even in the presence of an environment variable named
+C<'horizon'>.
 
 The interpolated value will be split on white space into multiple tokens
 unless the interpolation takes place inside double quotes.
