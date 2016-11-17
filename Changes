@@ -41,7 +41,7 @@ Date:   Sun Aug 28 22:52:27 2016 -0400
   Sanitize DateTime object used to calculate field width.
     This is a case of bugs beget more bugs. When I started passing a locale
     to the instantiator of the DateTime object used to calculate field
-    widths, it broke becaue DateTime::Calendar::Christian did not accept
+    widths, it broke because DateTime::Calendar::Christian did not accept
     this argument. So I had to use ->now() instead, because
     DateTime::Calendar::Christian just delegates to DateTime->now().
     But that meant that on days near the end of the month, the feeling
@@ -137,9 +137,6 @@ Date:   Sun Aug 28 22:52:27 2016 -0400
 0.028		2015-08-29	T. R. Wyant
   Remove notices saying this is alpha code.
 
-  Properly check which time formatter in t/format.t. This is fallout
-    from 0.027_03.
-
   Try to quash errors under Cygwin using DateTime. The problem is that
     we think we can use it, but we get failures when initializing
     because DateTime::TimeZone can not determine the local zone. We
@@ -152,22 +149,9 @@ Date:   Sun Aug 28 22:52:27 2016 -0400
     attribute.
 
 0.027		2015-07-11	T. R. Wyant
-  No changes since 0.026_02. This release should be functionally
-    identical to 0.026, but was made because I wanted a production
-    release that superseded 0.026_01.
-
-0.026_02	2015-07-04	T. R. Wyant
-  Reverted 0.026_01. The problem turned out to be in a patch I developed
-    for Date::Manip. So the patch got corrected, and the kluge goes
-    away. What a fiasco on my part.
-
-0.026_01	2015-07-03	T. R. Wyant
-  Protect against Date::Manip calling chdir()
-    Under FreeBSD, under at least some circumstances, Date::Manip calls
-    chdir() when determining the default time zone. In order to protect
-    against this we save and restore the working directory around module
-    loads (which is overkill) and around time zone setting (since setting
-    the zone to '' triggers this behavior). Yes, this is a kluge.
+  This release should be functionally identical to 0.026, but was made
+    because I wanted a production release that superseded 0.026_01,
+    which was made due to a bad patch I developed for Date::Manip.
 
 0.026		2015-06-26	T. R. Wyant
   Change localization of equinoxes and solstices to take advantage of
@@ -428,6 +412,7 @@ Date:   Sun Aug 28 22:52:27 2016 -0400
 
   Further tweak dumping of Date::Manip info in tests, in the hope of
     getting enough information to actually diagnose test failures.
+
   Eliminate warnings in t/parse_time_date_manip_5.t if Date::Manip v5 is
     being used (rather than Date::Manip 6's DM5 back end).
 
