@@ -1,3 +1,11 @@
+0.031_0065	2016-11-17	T. R. Wyant
+    Add if() conditions 'os' and 'attr', and make the Boolean operators
+      short cut. Attributes of attributes are specified in dot notation
+      (e.g. spacetrack.username).
+
+    As a side effect of the above, attributes of attributes also
+      interpolate (e.g. $spacetrack.username).
+
 0.031_0064	2016-10-31	T. R. Wyant
   Implement if(), including block if() (with begin ... end). Block if()
     works only interactively.
