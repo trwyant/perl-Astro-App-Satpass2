@@ -77,7 +77,8 @@ sub use_perltime {
 
 sub _attr {
     my ( $self ) = @_;
-    return $self->{ __PACKAGE__() } ||= {};
+    my $pkg = __PACKAGE__;
+    return $self->{$pkg} ||= {};
 }
 
 sub _call_code {

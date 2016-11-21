@@ -24,19 +24,8 @@ BEGIN {
     $^O eq 'MSWin32'
 	and plan skip_all => 'Date::Manip 5 tests fail under Windows';
 
-    eval {
-	require Time::y2038;
-	Time::y2038->import( qw{ timegm timelocal } );
-	1;
-    } or eval {
-	require Time::Local;
-	Time::Local->import( qw{ timegm timelocal } );
-	1;
-    } or do {
-	plan skip_all =>
-	    'Time::y2038 or Time::Local required';
-	exit;
-    };
+    require Astro::App::Satpass2::Utils;
+    Astro::App::Satpass2::Utils->import( qw{ time_gm time_local } );
 
 }
 
@@ -73,10 +62,10 @@ method 'delegate',
 method use_perltime => TRUE, 'Uses perltime';
 
 method parse => '20100202T120000Z',
-    timegm( 0, 0, 12, 2, 1, 110 ),
+    time_gm( 0, 0, 12, 2, 1, 2010 ),
     'Parse noon on Groundhog Day 2010';
 
-my $base = timegm( 0, 0, 0, 1, 3, 109 );	# April 1, 2009 GMT;
+my $base = time_gm( 0, 0, 0, 1, 3, 2009 );	# April 1, 2009 GMT;
 use constant ONE_DAY => 86400;			# One day, in seconds.
 use constant HALF_DAY => 43200;			# 12 hours, in seconds.
 
@@ -106,25 +95,32 @@ method parse => '-0 12', $base - HALF_DAY,
 
 method perltime => 1, TRUE, 'Set perltime true';
 
-method parse => '20090101T000000',
-    timelocal( 0, 0, 0, 1, 0, 109 ),
-    'Parse ISO-8601 20090101T000000'
-    or dump_date_manip();
+SKIP: {
 
-method parse => '20090701T000000',
-    timelocal( 0, 0, 0, 1, 6, 109 ),
-    'Parse ISO-8601 20090701T000000'
-    or dump_date_manip();
+    Time::y2038->can( 'timegm' )
+	and skip 'Time::y2038 has problems with summer/winter time', 2;
+
+    method parse => '20090101T000000',
+	time_local( 0, 0, 0, 1, 0, 2009 ),
+	'Parse ISO-8601 20090101T000000'
+	or dump_date_manip();
+
+    method parse => '20090701T000000',
+	time_local( 0, 0, 0, 1, 6, 2009 ),
+	'Parse ISO-8601 20090701T000000'
+	or dump_date_manip();
+
+}
 
 method perltime => 0, TRUE, 'Set perltime false';
 
 method parse => '20090101T000000Z',
-    timegm( 0, 0, 0, 1, 0, 109 ),
+    time_gm( 0, 0, 0, 1, 0, 2009 ),
     'Parse ISO-8601 20090101T000000Z'
     or dump_date_manip();
 
 method parse => '20090701T000000Z',
-    timegm( 0, 0, 0, 1, 6, 109 ),
+    time_gm( 0, 0, 0, 1, 6, 2009 ),
     'Parse ISO-8601 20090701T000000Z'
     or dump_date_manip();
 

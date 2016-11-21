@@ -11,6 +11,7 @@ use lib qw{ inc };
 use My::Module::Test::App;	# For environment clean-up.
 
 use Astro::App::Satpass2::Format::Template;
+use Astro::App::Satpass2::Utils qw{ time_gm };
 
 use Astro::Coord::ECI 0.059;
 use Astro::Coord::ECI::Moon 0.059;
@@ -84,7 +85,7 @@ is $ft->format(
 		},
 		body	=> $moon,
 		station	=> $sta,
-		time	=> timegm( 8, 38, 9, 1, 3, 111 ),
+		time	=> time_gm( 8, 38, 9, 1, 3, 2011 ),
 	    },
 	    {
 		almanac	=> {
@@ -94,7 +95,7 @@ is $ft->format(
 		},
 		body	=> $moon,
 		station	=> $sta,
-		time	=> timegm( 20, 46, 15, 1, 3, 111 ),
+		time	=> time_gm( 20, 46, 15, 1, 3, 2011 ),
 	    },
 	    {
 		almanac	=> {
@@ -104,7 +105,7 @@ is $ft->format(
 		},
 		body	=> $moon,
 		station	=> $sta,
-		time	=> timegm( 40, 2, 22, 1, 3, 111 ),
+		time	=> time_gm( 40, 2, 22, 1, 3, 2011 ),
 	    },
 	] ), <<'EOD', 'Almanac';
 2011-04-01 09:38:08 Moon rise
@@ -139,7 +140,7 @@ is $ft->format(
 		specular => 0,
 		station => $sta,
 		status => '',
-		time => timegm( 44, 7, 10, 13, 9, 80 ) + .606786,
+		time => time_gm( 44, 7, 10, 13, 9, 1980 ) + .606786,
 		type => 'am',
 		virtual_image => Astro::Coord::ECI->new()->eci(
 		    -126704974.030369,
@@ -238,7 +239,7 @@ is $ft->format(
 			illumination => PASS_EVENT_LIT,
 			range => 537.930341183133,
 			station => $sta,
-			time	=> timegm( 14, 7, 10, 13, 9, 80 ),
+			time	=> time_gm( 14, 7, 10, 13, 9, 1980 ),
 		    },
 		    {
 			azimuth		=> 2.22028221624351,
@@ -248,7 +249,7 @@ is $ft->format(
 			illumination	=> PASS_EVENT_LIT,
 			range		=> 402.657696214206,
 			station		=> $sta,
-			time		=> timegm( 48, 7, 10, 13, 9, 80 ),
+			time		=> time_gm( 48, 7, 10, 13, 9, 1980 ),
 		    },
 		    {
 			azimuth => 1.95627424522813,
@@ -258,7 +259,7 @@ is $ft->format(
 			illumination => PASS_EVENT_LIT,
 			range => 385.864099675914,
 			station => $sta,
-			time => timegm( 0, 8, 10, 13, 9, 80 ),
+			time => time_gm( 0, 8, 10, 13, 9, 1980 ),
 		    },
 		    {
 			azimuth => 0.988652345285029,
@@ -268,10 +269,10 @@ is $ft->format(
 			illumination => PASS_EVENT_LIT,
 			range => 552.731309464471,
 			station => $sta,
-			time => timegm( 56, 8, 10, 13, 9, 80 ),
+			time => time_gm( 56, 8, 10, 13, 9, 1980 ),
 		    },
 		],
-		time => timegm( 0, 8, 10, 13, 9, 80 ),
+		time => time_gm( 0, 8, 10, 13, 9, 1980 ),
 	    },
 	] ), <<'EOD', 'Pass';
     Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
@@ -297,7 +298,7 @@ is $ft->format(
 			illumination => PASS_EVENT_LIT,
 			range => 537.930341183133,
 			station => $sta,
-			time	=> timegm( 14, 7, 10, 13, 9, 80 ),
+			time	=> time_gm( 14, 7, 10, 13, 9, 1980 ),
 		    },
 		    {
 			azimuth => 1.95627424522813,
@@ -307,7 +308,7 @@ is $ft->format(
 			illumination => PASS_EVENT_LIT,
 			range => 385.864099675914,
 			station => $sta,
-			time => timegm( 0, 8, 10, 13, 9, 80 ),
+			time => time_gm( 0, 8, 10, 13, 9, 1980 ),
 		    },
 		    {
 			azimuth => 0.988652345285029,
@@ -317,10 +318,10 @@ is $ft->format(
 			illumination => PASS_EVENT_LIT,
 			range => 552.731309464471,
 			station => $sta,
-			time => timegm( 56, 8, 10, 13, 9, 80 ),
+			time => time_gm( 56, 8, 10, 13, 9, 1980 ),
 		    },
 		],
-		time => timegm( 0, 8, 10, 13, 9, 80 ),
+		time => time_gm( 0, 8, 10, 13, 9, 1980 ),
 	    },
 	] ), <<'EOD', 'Pass';
 Date       Time     OID    Event Illum Eleva  Azimuth      Range
@@ -329,7 +330,7 @@ Date       Time     OID    Event Illum Eleva  Azimuth      Range
 1980-10-13 10:08:56  88888 set   lit    19.8  56.6 NE      552.7
 EOD
 
-$moon->universal( timegm( 0, 0, 4, 1, 3, 111 ) );
+$moon->universal( time_gm( 0, 0, 4, 1, 3, 2011 ) );
 is $ft->format(
     template	=> 'phase',
     data	=> [ { body => $moon, time => $moon->universal() } ]
@@ -343,7 +344,7 @@ is $ft->format(
     data	=> {
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
-	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
+	    time	=> time_gm( 45, 7, 10, 13, 9, 1980 ),
 	} ), <<'EOD', 'Position';
 1980-10-13 10:07:45
             Name Eleva  Azimuth      Range               Epoch Illum
@@ -360,7 +361,7 @@ is $ft->format(
     data	=> {
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
-	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
+	    time	=> time_gm( 45, 7, 10, 13, 9, 1980 ),
 	} ), <<'EOD', 'Position, local_coord = azel';
 1980-10-13 10:07:45
             Name Eleva  Azimuth               Epoch Illum
@@ -377,7 +378,7 @@ is $ft->format(
     data	=> {
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
-	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
+	    time	=> time_gm( 45, 7, 10, 13, 9, 1980 ),
 	} ), <<'EOD', 'Position, local_coord = az_rng';
 1980-10-13 10:07:45
             Name  Azimuth      Range               Epoch Illum
@@ -394,7 +395,7 @@ is $ft->format(
     data	=> {
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
-	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
+	    time	=> time_gm( 45, 7, 10, 13, 9, 1980 ),
 	} ), <<'EOD', 'Position, local_coord = equatorial';
 1980-10-13 10:07:45
                     Right
@@ -412,7 +413,7 @@ is $ft->format(
     data	=> {
 	    bodies	=> [ $sat, $moon ],
 	    station	=> $sta,
-	    time	=> timegm( 45, 7, 10, 13, 9, 80 ),
+	    time	=> time_gm( 45, 7, 10, 13, 9, 1980 ),
 	} ), <<'EOD', 'Position, local_coord = equatorial_rng';
 1980-10-13 10:07:45
                     Right

@@ -13,6 +13,7 @@ use Astro::App::Satpass2::ParseTime;
 use Astro::App::Satpass2::Utils qw{
     __arguments expand_tilde has_method instance load_package
     my_dist_config quoter
+    time_gm time_local
     __parse_class_and_args
     ARRAY_REF CODE_REF HASH_REF SCALAR_REF
 };
@@ -3814,7 +3815,7 @@ sub _get_today_midnight {
     my $gmt = $self->get( 'formatter' )->gmt();
     my @time = $gmt ? gmtime() : localtime();
     $time[0] = $time[1] = $time[2] = 0;
-    return $gmt ? timegm(@time) : timelocal(@time);
+    return $gmt ? time_gm(@time) : time_local(@time);
 }
 
 sub _get_today_noon {
@@ -3823,7 +3824,7 @@ sub _get_today_noon {
     my @time = $gmt ? gmtime() : localtime();
     $time[0] = $time[1] = 0;
     $time[2] = 12;
-    return $gmt ? timegm(@time) : timelocal(@time);
+    return $gmt ? time_gm(@time) : time_local(@time);
 }
 
 sub _get_warner_attribute {

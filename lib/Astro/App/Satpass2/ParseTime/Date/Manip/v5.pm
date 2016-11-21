@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Astro::Coord::ECI::Utils 0.059 qw{ looks_like_number };
+use Astro::App::Satpass2::Utils qw{ time_gm time_local };
 use Time::Local;
 
 use base qw{ Astro::App::Satpass2::ParseTime::Date::Manip };
@@ -30,7 +31,7 @@ my ( $default_zone ) = eval {
     grep { m{ \A TZ= }smx } Date_Init()
 };
 
-my $epoch_offset = timegm( 0, 0, 0, 1, 0, 70 );
+my $epoch_offset = time_gm( 0, 0, 0, 1, 0, 70 );
 
 sub delegate {
     return __PACKAGE__;
@@ -41,7 +42,7 @@ sub parse_time_absolute {
     $invalid and $self->wail( $invalid );
     my $time = UnixDate( $string, '%s' ) - $epoch_offset;
     if ( $self->perltime() ) {
-	$time = timelocal( gmtime $time );
+	$time = time_local( gmtime $time );
     }
     return $time;
 }

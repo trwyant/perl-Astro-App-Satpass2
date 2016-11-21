@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Astro::App::Satpass2::Utils qw{
+    time_gm time_local
     back_end __back_end_class_name_of_record __parse_class_and_args
 };
 use Astro::Coord::ECI::Utils 0.059 qw{ looks_like_number SECSPERDAY };
@@ -12,6 +13,8 @@ use Time::Local;
 use base qw{ Astro::App::Satpass2::ParseTime };
 
 our $VERSION = '0.031_01';
+
+my $package = __PACKAGE__;
 
 {
     local $@ = undef;
@@ -99,9 +102,9 @@ sub delegate {
 	}
 	$offset += pop @date;
 	if ( $zone ) {
-	    return timegm( reverse @date ) + $offset;
+	    return time_gm( reverse @date ) + $offset;
 	} else {
-	    return timelocal( reverse @date ) + $offset;
+	    return time_local( reverse @date ) + $offset;
 	}
     };
 
@@ -188,7 +191,7 @@ sub _interpret_zone {
     defined $zone
 	and $zone =~ s/ \A \s+ //smx;
     $zone
-	or return ( @{ $self->{ __PACKAGE__() }{tz} || [ undef, 0 ] } );
+	or return ( @{ $self->{$package}{tz} || [ undef, 0 ] } );
     if ( $zone =~ m/ \A $zone_re \z /smxo ) {
 	$1
 	    and return ( UTC => 0 );
@@ -211,10 +214,10 @@ sub tz {
     my ( $self, @args ) = @_;
     if ( @args ) {
 	if ( defined $args[0] && $args[0] ne '' ) {
-	    $self->{ __PACKAGE__() }{tz} = [
+	    $self->{$package}{tz} = [
 		$self->_interpret_zone( $args[0], 1 ) ];
 	} else {
-	    delete $self->{ __PACKAGE__() }{tz};
+	    delete $self->{$package}{tz};
 	}
     }
     return $self->SUPER::tz( @args );

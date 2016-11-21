@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Astro::Coord::ECI::Utils 0.059 qw{ looks_like_number };
+use Astro::App::Satpass2::Utils qw{ time_gm };
 use Time::Local;
 
 use base qw{ Astro::App::Satpass2::ParseTime::Date::Manip };
@@ -41,7 +42,7 @@ BEGIN {
 	or *_normalize_zone = sub{};
 }
 
-my $epoch_offset = timegm( 0, 0, 0, 1, 0, 70 );
+my $epoch_offset = time_gm( 0, 0, 0, 1, 0, 70 );
 
 sub delegate {
     return __PACKAGE__;

@@ -18,6 +18,8 @@ BEGIN {
 
 use constant DATE_TIME_FORMAT => '%Y/%m/%d %H:%M:%S';
 
+use Astro::App::Satpass2::Utils qw{ time_gm };
+
 class 'Astro::App::Satpass2::FormatTime::POSIX::Strftime';
 
 method 'new', INSTANTIATE, 'Instantiate';
@@ -26,7 +28,7 @@ method gmt => 1, TRUE, 'Turn on gmt';
 
 method 'gmt', 1, 'Confirm gmt is on';
 
-my $time = timegm( 50, 0, 0, 1, 3, 111 );	# 1-Apr-2011 00:00:50
+my $time = time_gm( 50, 0, 0, 1, 3, 2011 );	# 1-Apr-2011 00:00:50
 
 method format_datetime => DATE_TIME_FORMAT, $time,
     '2011/04/01 00:00:50', 'Implicit GMT time';

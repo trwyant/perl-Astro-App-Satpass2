@@ -7,28 +7,9 @@ use lib qw{ inc };
 
 use Test::More 0.88;
 
-BEGIN {
+use Astro::App::Satpass2::Utils qw{ time_gm time_local };
 
-    local $@;
-
-    eval {
-	require Time::y2038;
-	Time::y2038->import( qw{ timegm timelocal } );
-	1;
-    } or eval {
-	require Time::Local;
-	Time::Local->import( qw{ timegm timelocal } );
-	1;
-    } or do {
-	plan skip_all =>
-	    'Time::y2038 or Time::Local required';
-	exit;
-    };
-
-    require My::Module::Test::App;
-    My::Module::Test::App->import();
-
-}
+use My::Module::Test::App;
 
 require_ok 'Astro::App::Satpass2::ParseTime';
 
@@ -50,7 +31,7 @@ method 'delegate',
 
 # method 'use_perltime', FALSE, 'Does not use perltime';
 
-my $base = timegm( 0, 0, 0, 1, 3, 109 );	# April 1, 2009 GMT;
+my $base = time_gm( 0, 0, 0, 1, 3, 2009 );	# April 1, 2009 GMT;
 use constant ONE_DAY => 86400;			# One day, in seconds.
 use constant HALF_DAY => 43200;			# 12 hours, in seconds.
 
@@ -81,77 +62,77 @@ method parse => '-0 12', $base - HALF_DAY,
 method perltime => 1, TRUE, 'Set perltime true';
 
 method parse => '2009-1-1',
-    timelocal( 0, 0, 0, 1, 0, 109 ),
+    time_local( 0, 0, 0, 1, 0, 2009 ),
     q<Parse '2009-1-1'>;
 
 method parse => '2009-7-1',
-    timelocal( 0, 0, 0, 1, 6, 109 ),
+    time_local( 0, 0, 0, 1, 6, 2009 ),
     q<Parse '2009-7-1'>;
 
 method perltime => 0, TRUE, 'Set perltime false';
 
 method parse => '2009-1-1',
-    timelocal( 0, 0, 0, 1, 0, 109 ),
+    time_local( 0, 0, 0, 1, 0, 2009 ),
     q<Parse '2009-1-1', no help from perltime>;
 
 method parse => '2009-7-1',
-    timelocal( 0, 0, 0, 1, 6, 109 ),
+    time_local( 0, 0, 0, 1, 6, 2009 ),
     q<Parse '2009-7-1', no help from perltime>;
 
 method parse => '2009-1-1Z',
-    timegm( 0, 0, 0, 1, 0, 109 ),
+    time_gm( 0, 0, 0, 1, 0, 2009 ),
     q<Parse '2009-1-1Z'>;
 
 method parse => '2009-7-1Z',
-    timegm( 0, 0, 0, 1, 6, 109 ),
+    time_gm( 0, 0, 0, 1, 6, 2009 ),
     q<Parse '2009-7-1Z'>;
 
 method parse => '2009-7-2 16:23:37',
-    timelocal( 37, 23, 16, 2, 6, 109 ),
+    time_local( 37, 23, 16, 2, 6, 2009 ),
     q{Parse '2009-7-2 16:23:37'};
 
 method parse => '2009-7-2 16:23:37Z',
-    timegm( 37, 23, 16, 2, 6, 109 ),
+    time_gm( 37, 23, 16, 2, 6, 2009 ),
     q{Parse '2009-7-2 16:23:37Z'};
 
 method parse => '2009-7-2 16:23',
-    timelocal( 0, 23, 16, 2, 6, 109 ),
+    time_local( 0, 23, 16, 2, 6, 2009 ),
     q{Parse '2009-7-2 16:23'};
 
 method parse => '2009-7-2 16:23 Z',
-    timegm( 0, 23, 16, 2, 6, 109 ),
+    time_gm( 0, 23, 16, 2, 6, 2009 ),
     q{Parse ISO-8601 '2009-7-2 16:23 Z'};
 
 method parse => '2009-7-2 16',
-    timelocal( 0, 0, 16, 2, 6, 109 ),
+    time_local( 0, 0, 16, 2, 6, 2009 ),
     q{Parse '2009-7-2 16'};
 
 method parse => '2009-7-2 16Z',
-    timegm( 0, 0, 16, 2, 6, 109 ),
+    time_gm( 0, 0, 16, 2, 6, 2009 ),
     q{Parse '2009-7-2 16Z'};
 
 method parse => '2009-7-2',
-    timelocal( 0, 0, 0, 2, 6, 109 ),
+    time_local( 0, 0, 0, 2, 6, 2009 ),
     q{Parse '2009-7-2'};
 
 method parse => '2009-7-2 Z',
-    timegm( 0, 0, 0, 2, 6, 109 ),
+    time_gm( 0, 0, 0, 2, 6, 2009 ),
     q{Parse '2009-7-2 Z'};
 
 method parse => '2009-7',
-    timelocal( 0, 0, 0, 1, 6, 109 ),
+    time_local( 0, 0, 0, 1, 6, 2009 ),
     q{Parse '2009-7'};
 
 method parse => '2009-7Z',
-    timegm( 0, 0, 0, 1, 6, 109 ),
+    time_gm( 0, 0, 0, 1, 6, 2009 ),
     q{Parse '2009-7Z'};
 
 method parse => '2009',
-    timelocal( 0, 0, 0, 1, 0, 109 ),
+    time_local( 0, 0, 0, 1, 0, 2009 ),
     q{Parse '2009'};
 
 method parse => '2009Z',
-    timegm( 0, 0, 0, 1, 0, 109 ),
+    time_gm( 0, 0, 0, 1, 0, 2009 ),
     q{Parse '2009Z'};
 
 done_testing;
@@ -172,7 +153,7 @@ done_testing;
 		    and push @time, ( 0 ) x ( 6 - @time );
 		splice @time, 6;
 		--$time[1];
-		my $code = $zulu ? \&timegm : \&timelocal;
+		my $code = $zulu ? \&time_gm : \&time_local;
 		return $code->( reverse @time );
 	    },
 	);
