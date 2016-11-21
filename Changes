@@ -1,3 +1,53 @@
+0.031_02	2016-11-21	T. R. Wyant
+commit 2c5d9013a69167364658b5f45cad1bbf63b409b5
+Author: Tom Wyant <wyant@cpan.org>
+Date:   Mon Nov 21 13:04:08 2016 -0500
+
+    Handle inconsistency Time::Local vs Time::y2038
+    
+    The problem here is that earlier in the year I found that Time::Local
+    worked better for dates well away from the current year if I passed it
+    the Gregorian year rather than computing the Perl year. But I support
+    Time::y2038 for the benefit of older Perls, and it expects a Perl year.
+    The fix was to wrap the Time::y2038 calls in code that duplicates
+    Time::Local's year handling.
+    
+    Thanks to Slaven Rezic for finding this, and for having smokers
+    configured with modules like Time::y2038 (which is optional for this
+    package) so that he _could_ find it. Kudos!
+
+commit cc4ce758f0f5c215124e0205ed1bc76d676c9358
+Author: Tom Wyant <wyant@cpan.org>
+Date:   Sun Nov 20 23:38:25 2016 -0500
+
+    Version 0.031_01
+    
+    Set version to 0.031_01. Update Changes file for changes since v00.031_0065.
+
+commit d9077509a8844a1cab3967e4d53048ac8c1f0c80
+Author: Tom Wyant <wyant@cpan.org>
+Date:   Sun Nov 20 22:52:53 2016 -0500
+
+    Modernize DateTime::Calendar::Christian code
+    
+    The thing I could not fit in Git's 50 character limit was that there was
+    in Astro::App::Satpass2::FormatTime::DateTime a kluge that was put in
+    because DateTime::Calendar::Christian->new() did not support the
+    'locale' argument. Since it does as of version 0.06, and since this code
+    now requires 0.06, the kluge is now removed.
+
+commit ea8143865218271687894b969764a5aba928028a
+Author: Tom Wyant <wyant@cpan.org>
+Date:   Sun Nov 20 22:29:37 2016 -0500
+
+    Require DateTime::Calendar::Christian 0.06.
+
+commit aa19dab91444ef90984a9a415536623768bf8fec
+Author: Tom Wyant <wyant@cpan.org>
+Date:   Sat Nov 19 23:23:52 2016 -0500
+
+    xt/author/minimum_perl.t now checks for use x.xxx
+
 0.031_01	2016-11-20	T. R. Wyant
   Support formatting times with any class conforming to the DateTime
     interface, via formatter attribute 'back_end'.

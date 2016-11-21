@@ -13,7 +13,7 @@ use Exporter qw{ import };
 use I18N::LangTags ();
 use I18N::LangTags::Detect ();
 
-our $VERSION = '0.031_01';
+our $VERSION = '0.031_02';
 
 our @EXPORT_OK = qw{ __localize __message __preferred };
 

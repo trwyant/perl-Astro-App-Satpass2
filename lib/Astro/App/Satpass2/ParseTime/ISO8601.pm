@@ -12,7 +12,7 @@ use Time::Local;
 
 use base qw{ Astro::App::Satpass2::ParseTime };
 
-our $VERSION = '0.031_01';
+our $VERSION = '0.031_02';
 
 my $package = __PACKAGE__;
 

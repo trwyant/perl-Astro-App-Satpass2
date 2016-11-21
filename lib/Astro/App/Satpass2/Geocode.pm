@@ -12,7 +12,7 @@ use Astro::App::Satpass2::Warner;
 
 our @CARP_NOT = qw{ Astro::App::Satpass2 };
 
-our $VERSION = '0.031_01';
+our $VERSION = '0.031_02';
 
 sub new {
     my ( $class, %args ) = @_;
