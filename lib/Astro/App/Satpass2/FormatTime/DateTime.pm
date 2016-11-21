@@ -124,28 +124,20 @@ sub init {
 
 sub __format_datetime_width_adjust_object {
     my ( $self, $obj, $name, $val, $gmt ) = @_;
-    my ( $class, $dt_arg ) = $self->_dt_class_and_args();
-    # Note that I can not use new() here because I want to pass the
-    # locale argument, and DateTime::Calendar::Christian does not accept
-    # that. It works in from_epoch() or now() because
-    # DateTime::Calendar::Christian simply passes its arguments through
-    # to DateTime, which _does_ accept it.
-    unless ( $obj ) {
-	$obj = $class->now(
+
+    if ( $obj ) {
+	$obj->set( $name => $val );
+    } else {
+	my ( $class, $dt_arg ) = $self->_dt_class_and_args();
+	$obj = $class->new(
 	    time_zone	=> $self->_get_zone( $gmt ),
 	    locale	=> scalar __preferred(),
+	    $name	=> $val,
+	    ( 'year' eq $name ? () : ( year	=> 2020 ) ),
 	    @{ $dt_arg },
 	);
-	# But doing it that way I have to sanitize the object by hand so
-	# that I do not get invalid dates.
-	$obj->set( nanosecond	=> 0 );
-	$obj->set( second	=> 0 );
-	$obj->set( minute	=> 0 );
-	$obj->set( hour		=> 0 );
-	$obj->set( day		=> 1 );
-	$obj->set( month	=> 1 );
     }
-    $obj->set( $name => $val );
+
     return $obj;
 }
 
