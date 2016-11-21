@@ -1,121 +1,46 @@
-0.031_0065	2016-11-17	T. R. Wyant
-    Add if() conditions 'os' and 'attr', and make the Boolean operators
-      short cut. Attributes of attributes are specified in dot notation
-      (e.g. spacetrack.username).
+0.031_01	2016-11-20	T. R. Wyant
+  Support formatting times with any class conforming to the DateTime
+    interface, via formatter attribute 'back_end'.
 
-    As a side effect of the above, attributes of attributes also
-      interpolate (e.g. $spacetrack.username).
+  Support using DateTime (if available) to convert a parsed ISO-8601
+    time to epoch. An arbitrary class confirming to the DateTime
+    interface can be used instead, if specified.
 
-0.031_0064	2016-10-31	T. R. Wyant
-  Implement if(), including block if() (with begin ... end). Block if()
-    works only interactively.
+  Support era indicators (AD/BC, CE/BCE) suffixed to year in the
+    ISO-8601 time parser. Yes, this is an extension to the standard.
 
-  Implement block time() (with begin ... end). This works only
-    interactively.
+  Support parsing time with code (a code macro in the case of
+    bin/satpass2).
 
-  Allow code or code macro as time parser.
+  Add interactive method if(), which conditionally executes another
+    interactive command. The conditional command can be 'begin', i.e. a
+    block 'if'. Conditions include checks for operating systems, whether
+    given objects are loaded, and Boolean tests on the values of
+    environment variables and attributes.
 
-0.031_0063	2016-09-17	T. R. Wyant
-  Use correct class when finding date output width. The problem was that
-    the width calculation used DateTime willy-nilly, resulting in the
-    wrong field width if %{calendar_name} was used.
+  Implement block time() (with begin ... end). Like if(), this works
+    only interactively.
 
-  Tweak TUTORIAL re back_end formatting & parsing functionality.
+  Except Template::Exception messages from the localization code.
 
-0.031_0062	2016-09-12	T. R. Wyant
-  Don't copy back end when replacing time formatter
-
-  Make Geocode::OSM a little more robust
-
-0.031_0061	2016-09-08	T. R. Wyant
-  Replace reform_date with back_end
-    The difference is that you can specify the name of the class you are
-    going to use as a date back end, with the possibility of passing
-    arguments to its constructor. So we could display in any calendar
-    whose interface corresponds closely enough to the DateTime
-    interface.
-
-  Make parsing of class names with attributes more robust
-
-  Load & patch DateTime::Calendar::Christian via load_package(). The
-    problem is that we would like it to have some methods that it does
-    not in fact support, but that it could easily enough.
-
-0.031_006	2016-08-29	T. R. Wyant
-commit 5f2c5348106c873443a209c6ba0ac3c4f57d0686
-Author: Tom Wyant <wyant@cpan.org>
-Date:   Sun Aug 28 22:52:27 2016 -0400
-
-  Sanitize DateTime object used to calculate field width.
-    This is a case of bugs beget more bugs. When I started passing a locale
-    to the instantiator of the DateTime object used to calculate field
-    widths, it broke because DateTime::Calendar::Christian did not accept
-    this argument. So I had to use ->now() instead, because
-    DateTime::Calendar::Christian just delegates to DateTime->now().
-    But that meant that on days near the end of the month, the feeling
-    around for the biggest time field could generate invalid dates (e.g. Feb
-    30 if run on the 30th). The fix was to do a bunch of set() calls to make
-    sure the object represented midnight January 1 of the current year.
-
-  Don't localize Template::Exception messages.
-
-  Test Locale before Warner.
-
-0.031_005	2016-08-28	T. R. Wyant
-  Make sure DateTime::Calendar::Christian gets reform_date when it is
-    non-default.
-
-0.031_004	2016-08-27	T. R. Wyant
   Try to warn if loading wrong-case module, if we think we might be on a
     case-tolerant filesystem.
 
   Add File::Spec to prerequisites
 
-  Correct time field widths when zone in format.
-
-  Patch in time_zone_long_name to DT::Cal::Christian
-
-0.031_003	2016-08-25	T. R. Wyant
-  Document arguments to ParseTime->new()
-
-  Make attempt to handle calendar reform fatal unless all modules needed
-    are present.
-
-  Rewrite ParseTime::ISO8601 to better support DateTime zones.
+  Redo Astro::App::Satpass2::ParseTime->new() to perform as intended,
+    and document its arguments.
 
   The formatter object now displays its time_formatter attribute as a
     short name where possible.
 
-0.031_002	2016-08-24	T. R. Wyant
-  Centralize strftime extensions, add format control
-
-0.031_001	2016-08-22	T. R. Wyant
-  Enhance FormatTime::DateTime::Strftime and ::Cldr to be able to format
-    dates in the Julian calendar. This requires the reform_date
-    attribute to be set, and is unsupported in
-    FormatTime::DateTime::Cldr because DateTime::Calendar::Christian as
-    distributed lacks method format_cldr().
-
-  Enhance ParseTime::ISO8601 to parse dates in the Julian calendar. This
-    requires optional module DateTime::Calendar::Christian and the
-    setting of Astro::App::Satpass2::ParseTime attribute reform_date.
-
-  Redo ParseTime->new() to do what was intended. Also correct
-    documentation, which was totally off-base.
-
-  Use DateTime to convert the ParseTime::ISO8601 time parse to epoch
-    time, if it is available.
-
-  Extend ::ParseTime::ISO8601 to do AD & BC.
-
   Add time_formatter value to 'show' output.
 
-  Allow a scalar reference as a time. This is interpreted as epoch.
+  Allow specifying a time as a scalar reference, The dereferenced value
+    is interpreted as epoch.
 
-  Document how epoch times are specified.
-
-  Special-case DateTime::Strftime format %{calendar_name} to display the
-    name of the calendar in use.
+  Special-case DateTime strftime() format %{calendar_name} to display
+    the name of the calendar in use.
 
   Heuristics to make ODF geocoding more useful. I hope.
 
