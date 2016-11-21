@@ -54,7 +54,17 @@ EOD
       will also be used (if available) by the ISO8601 time parser
       because they go farther into the past than Time::Local does.
 EOD
-    __any( 'DateTime::Calendar::Christian'	=> <<'EOD' ),
+
+    # CAVEAT:
+    #
+    # Unfortunately as things currently stand, the version needs to be
+    # maintained three places:
+    # - lib/Astro/App/Satpass2/Utils.pm
+    # - inc/My/Module/Recommend.pm
+    # - inc/My/Module/Test/App.pm
+    # These all need to stay the same. Sigh.
+
+    __any( 'DateTime::Calendar::Christian=0.06'	=> <<'EOD' ),
       This module is used to parse (maybe) and format dates that might
       be either Julian or Gregorian. Currently the only parser that has
       this capability is ISO8601. If historical dates in the proleptic

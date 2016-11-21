@@ -210,31 +210,20 @@ sub instance {
 	-d $my_lib
 	    or $my_lib = undef;
     }
-    my %patch = (
-	'DateTime::Calendar::Christian' => sub {
-	    foreach my $method ( qw{
-		    christian_era
-		    era
-		    era_abbr
-		    era_name
-		    format_cldr
-		    secular_era
-		    time_zone_long_name
-		    year_with_era
-		    year_with_christian_era
-		    year_with_secular_era
-		} ) {
-		DateTime::Calendar::Christian->can( $method )
-		    and next;
-		my $symbol = "DateTime::Calendar::Christian::$method";
-		no strict qw{ refs };
-		*$symbol = sub {
-		    shift->{date}->$method( @_ );
-		};
-	    }
-	    return;
-	},
+
+    # CAVEAT:
+    #
+    # Unfortunately as things currently stand, the version needs to be
+    # maintained three places:
+    # - lib/Astro/App/Satpass2/Utils.pm
+    # - inc/My/Module/Recommend.pm
+    # - inc/My/Module/Test/App.pm
+    # These all need to stay the same. Sigh.
+
+    my %version = (
+	'DateTime::Calendar::Christian'	=> 0.06,
     );
+
     my %valid_complaint = map { $_ => 1 } qw{ whinge wail weep };
 
     sub load_package {
@@ -290,9 +279,10 @@ sub instance {
 		require "$fn.pm";	## no critic (RequireBarewordIncludes)
 		1;
 	    } or next;
-	    if ( my $code = $patch{$package} ) {
-		$code->();
-	    }
+
+	    not $version{$package}
+		or $package->VERSION( $version{$package} );
+
 	    return ( $loaded{$key} = $package );
 	}
 

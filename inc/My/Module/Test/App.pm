@@ -155,9 +155,17 @@ sub execute (@) {	## no critic (RequireArgUnpacking)
 {
     my $go;
 
-    # When this gets populated, document it in the POD for the
-    # subroutine.
+    # CAVEAT:
+    #
+    # Unfortunately as things currently stand, the version needs to be
+    # maintained three places:
+    # - lib/Astro/App/Satpass2/Utils.pm
+    # - inc/My/Module/Recommend.pm
+    # - inc/My/Module/Test/App.pm
+    # These all need to stay the same. Sigh.
+
     my %version = (
+	'DateTime::Calendar::Christian'	=> 0.06,
     );
 
     # skip() actually jumps out via 'goto SKIP', but Perl::Critic does
@@ -405,6 +413,10 @@ If this option is specified, no import is done, even if C<-import> is
 also specified.
 
 =back
+
+This method enforces version limits on the following module:
+
+ DateTime::Calendar::Christian  0.06
 
 =head2 method
 
