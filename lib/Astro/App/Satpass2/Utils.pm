@@ -661,6 +661,10 @@ C<< join ' ', ... >>. Otherwise they are simply returned.
 
  my $epoch = time_gm( $yr, $mon, $day, $hr, $min, $sec );
 
+B<Note:> Despite its name, this subroutine is B<private> to the
+C<Astro-App-Satpass2> package, and may well be moved upstream to
+L<Astro::Coord::ECI::Utils|Astro::Coord::ECI::Utils>.
+
 This exportable subroutine is a wrapper for either
 C<Time::y2038::timegm()> (if that module is installed) or
 C<Time::Local::timegm()> (if not.)
@@ -674,6 +678,10 @@ greater than 999 as Gregorian years.
 =head2 time_local
 
  my $epoch = time_local( $yr, $mon, $day, $hr, $min, $sec );
+
+B<Note:> Despite its name, this subroutine is B<private> to the
+C<Astro-App-Satpass2> package, and may well be moved upstream to
+L<Astro::Coord::ECI::Utils|Astro::Coord::ECI::Utils>.
 
 This exportable subroutine is a wrapper for either
 C<Time::y2038::timelocal()> (if that module is installed) or
