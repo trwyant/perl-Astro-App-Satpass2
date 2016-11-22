@@ -17,7 +17,7 @@ use Astro::App::Satpass2::Locale qw{ __preferred };
 use DateTime;
 use DateTime::TimeZone;
 
-our $VERSION = '0.031_02';
+our $VERSION = '0.031_03';
 
 sub attribute_names {
     my ( $self ) = @_;

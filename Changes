@@ -1,3 +1,6 @@
+0.031_03	2016-11-22	T. R. Wyant
+  Fix deep recursion in ::Macro->wail() & friends
+
 0.031_02	2016-11-21	T. R. Wyant
   Handle inconsistency Time::Local vs Time::y2038
 
