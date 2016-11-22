@@ -77,7 +77,7 @@ sub parent {
 
 sub wail {
     my ( $self, @args ) = @_;
-    $self->wail( @args );
+    $self->warner()->wail( @args );
     return;	# wail() dies, but Perl::Critic does not know this.
 }
 
@@ -90,13 +90,13 @@ sub warner {
 
 sub weep {
     my ( $self, @args ) = @_;
-    $self->weep( @args );
+    $self->warner()->weep( @args );
     return;	# weep() dies, but Perl::Critic does not know this.
 }
 
 sub whinge {
     my ( $self, @args ) = @_;
-    $self->whinge( @args );
+    $self->warner()->whinge( @args );
     return;
 }
 

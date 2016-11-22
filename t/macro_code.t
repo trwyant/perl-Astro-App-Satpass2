@@ -89,6 +89,42 @@ EOD
     1;
 } or diag "Macro 'angle' failed: $@";
 
+{
+    my $warning = '';
+
+    local $SIG{__WARN__} = sub {
+	$warning = $_[0];
+	return;
+    };
+
+    my $msg = 'By the pricking of my thumbs';
+
+    $mac->whinge( $msg );
+
+    like $warning, qr/ \A \Q$msg\E /smx, 'Whinge';
+}
+
+{
+    local $@ = '';
+
+    my $msg = 'Something wicked this way comes';
+
+    eval {
+	$mac->wail( $msg );
+    };
+
+    like $@, qr/ \A \Q$msg\E /smx, 'Wail';
+
+    $msg = 'Open locks, whoever knocks';
+
+    eval {
+	$mac->weep( $msg );
+    };
+
+    like $@, qr/ \A \QProgramming Error - $msg\E /smx, 'Weep';
+
+}
+
 done_testing;
 
 1;
