@@ -114,15 +114,17 @@ SKIP: {
 
 method perltime => 0, TRUE, 'Set perltime false';
 
+my $time_gm = time_gm( 0, 0, 0, 1, 0, 2009 );
 method parse => '20090101T000000Z',
-    time_gm( 0, 0, 0, 1, 0, 2009 ),
+    $time_gm,
     'Parse ISO-8601 20090101T000000Z'
-    or dump_date_manip();
+    or dump_date_manip( $time_gm );
 
+$time_gm = time_gm( 0, 0, 0, 1, 6, 2009 );
 method parse => '20090701T000000Z',
-    time_gm( 0, 0, 0, 1, 6, 2009 ),
+    $time_gm,
     'Parse ISO-8601 20090701T000000Z'
-    or dump_date_manip();
+    or dump_date_manip( $time_gm );
 
 done_testing;
 

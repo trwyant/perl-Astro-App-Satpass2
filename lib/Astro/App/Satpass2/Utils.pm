@@ -385,6 +385,10 @@ eval {
 	return Time::y2038::timelocal( @date );
     };
 
+    *__time_to_epoch_uses = sub {
+	return 'Time::y2038';
+    };
+
     1;
 } or do {
     require Time::Local;
@@ -394,6 +398,10 @@ eval {
 
     # sub time_local
     *time_local = Time::Local->can( 'timelocal' );
+
+    *__time_to_epoch_uses = sub {
+	return 'Time::Local';
+    };
 
 };
 

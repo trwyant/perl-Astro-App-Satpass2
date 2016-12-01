@@ -128,13 +128,21 @@ sub class ($) {
 	}
 
 	if ( $app->isa( 'Astro::App::Satpass2::ParseTime' ) ) {
+	    # Only displays for Date::Manip v6 interface
 	    $app->can( 'dmd_zone' )
 		and diag 'dmd_zone = ', $app->dmd_zone();
 	}
 
-	defined $time_tested
-	    and diag strftime(
-		q<POSIX zone: %z ('%Z')>, localtime $time_tested );
+	diag strftime(
+	    q<POSIX zone: %z ('%Z')>, localtime $time_tested );
+
+	eval {
+	    require Astro::App::Satpass2::Utils;
+	    my $class =
+		Astro::App::Satpass2::Utils->__time_to_epoch_uses();
+	    diag sprintf 'Time to epoch uses %s %s', $class,
+		$class->VERSION();
+	};
 
 	diag q<$ENV{TZ} = >, defined $ENV{TZ} ? "'$ENV{TZ}'" : 'undef';
 
