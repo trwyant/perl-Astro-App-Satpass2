@@ -36,8 +36,9 @@ BEGIN {
 	or plan skip_all =>
 	    "Date::Manip version 6 backend not available under Perl $]";
 
-    require Astro::App::Satpass2::Utils;
-    Astro::App::Satpass2::Utils->import( qw{ time_gm time_local } );
+    require Astro::Coord::ECI::Utils;
+    Astro::Coord::ECI::Utils->VERSION( '0.077' );
+    Astro::Coord::ECI::Utils->import( qw{ time_gm time_local } );
 
     {
 	my ( $dm_zone, $dt_zone );

@@ -7,7 +7,7 @@ use lib qw{ inc };
 
 use Test::More 0.88;
 use My::Module::Test::App;
-use Astro::App::Satpass2::Utils qw{ time_gm };
+use Astro::Coord::ECI::Utils 0.077 qw{ time_gm };
 
 BEGIN {
 

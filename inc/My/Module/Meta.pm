@@ -31,14 +31,14 @@ sub distribution {
 sub requires {
     my ( undef, @extra ) = @_;		# Invocant unused
     return {
-	'Astro::Coord::ECI'		=> 0.064,
-	'Astro::Coord::ECI::Moon'	=> 0.064,
-	'Astro::Coord::ECI::Star'	=> 0.064,
-	'Astro::Coord::ECI::Sun'	=> 0.064,
-	'Astro::Coord::ECI::TLE'	=> 0.064, # for illuminated()
-	'Astro::Coord::ECI::TLE::Iridium'	=> 0.064,
-	'Astro::Coord::ECI::TLE::Set'	=> 0.064,
-	'Astro::Coord::ECI::Utils'	=> 0.064,
+	'Astro::Coord::ECI'		=> 0.077,
+	'Astro::Coord::ECI::Moon'	=> 0.077,
+	'Astro::Coord::ECI::Star'	=> 0.077,
+	'Astro::Coord::ECI::Sun'	=> 0.077,
+	'Astro::Coord::ECI::TLE'	=> 0.077,
+	'Astro::Coord::ECI::TLE::Iridium'	=> 0.077,
+	'Astro::Coord::ECI::TLE::Set'	=> 0.077,
+	'Astro::Coord::ECI::Utils'	=> 0.077,	# for time_gm() ...
 	'Carp'			=> 0,
 	'Clone'			=> 0,
 	'Cwd'			=> 0,

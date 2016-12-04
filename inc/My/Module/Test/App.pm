@@ -134,12 +134,12 @@ sub class ($) {
 	}
 
 	diag strftime(
-	    q<POSIX zone: %z ('%Z')>, localtime $time_tested );
+	    q<POSIX zone: %z ('%Z')>, localtime( $time_tested || 0 ) );
 
 	eval {
-	    require Astro::App::Satpass2::Utils;
-	    my $class =
-		Astro::App::Satpass2::Utils->__time_to_epoch_uses();
+	    no strict qw{ refs };
+	    my $class = defined $Time::y2038::VERSION ? 'Time::y2038' :
+		'Time::Local';
 	    diag sprintf 'Time to epoch uses %s %s', $class,
 		$class->VERSION();
 	};

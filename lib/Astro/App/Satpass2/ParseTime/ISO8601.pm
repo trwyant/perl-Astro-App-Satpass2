@@ -4,11 +4,10 @@ use strict;
 use warnings;
 
 use Astro::App::Satpass2::Utils qw{
-    time_gm time_local
     back_end __back_end_class_name_of_record __parse_class_and_args
 };
-use Astro::Coord::ECI::Utils 0.059 qw{ looks_like_number SECSPERDAY };
-use Time::Local;
+use Astro::Coord::ECI::Utils 0.077 qw{
+    looks_like_number SECSPERDAY time_gm time_local };
 
 use base qw{ Astro::App::Satpass2::ParseTime };
 

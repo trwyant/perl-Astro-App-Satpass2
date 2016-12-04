@@ -18,7 +18,7 @@ BEGIN {
 
 use constant DATE_TIME_FORMAT => '%Y/%m/%d %H:%M:%S';
 
-use Astro::App::Satpass2::Utils qw{ time_gm };
+use Astro::Coord::ECI::Utils 0.077 qw{ time_gm };
 
 class 'Astro::App::Satpass2::FormatTime::POSIX::Strftime';
 

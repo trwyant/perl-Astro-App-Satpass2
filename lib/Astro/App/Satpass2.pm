@@ -13,19 +13,18 @@ use Astro::App::Satpass2::ParseTime;
 use Astro::App::Satpass2::Utils qw{
     __arguments expand_tilde has_method instance load_package
     my_dist_config quoter
-    time_gm time_local
     __parse_class_and_args
     ARRAY_REF CODE_REF HASH_REF SCALAR_REF
 };
 
-use Astro::Coord::ECI 0.059;			# This needs at least 0.049.
-use Astro::Coord::ECI::Moon 0.059;
-use Astro::Coord::ECI::Star 0.059;
-use Astro::Coord::ECI::Sun 0.059;
-use Astro::Coord::ECI::TLE 0.059 qw{:constants}; # This needs at least 0.059.
-use Astro::Coord::ECI::TLE::Iridium 0.059;	# This needs at least 0.049.
-use Astro::Coord::ECI::TLE::Set 0.059;
-use Astro::Coord::ECI::Utils 0.059 qw{:all};
+use Astro::Coord::ECI 0.077;			# This needs at least 0.049.
+use Astro::Coord::ECI::Moon 0.077;
+use Astro::Coord::ECI::Star 0.077;
+use Astro::Coord::ECI::Sun 0.077;
+use Astro::Coord::ECI::TLE 0.077 qw{:constants}; # This needs at least 0.059.
+use Astro::Coord::ECI::TLE::Iridium 0.077;	# This needs at least 0.049.
+use Astro::Coord::ECI::TLE::Set 0.077;
+use Astro::Coord::ECI::Utils 0.077 qw{:all};	# This needs at least 0.077.
 
 use Clone ();
 use Cwd ();

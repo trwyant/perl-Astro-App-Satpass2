@@ -11,14 +11,13 @@ use lib qw{ inc };
 use My::Module::Test::App;	# For environment clean-up.
 
 use Astro::App::Satpass2::Format::Template;
-use Astro::App::Satpass2::Utils qw{ time_gm };
 
-use Astro::Coord::ECI 0.059;
-use Astro::Coord::ECI::Moon 0.059;
-use Astro::Coord::ECI::Sun 0.059;
-use Astro::Coord::ECI::TLE 0.059 qw{ :constants };
-use Astro::Coord::ECI::TLE::Iridium 0.059;
-use Astro::Coord::ECI::Utils 0.059 qw{ deg2rad };
+use Astro::Coord::ECI 0.077;
+use Astro::Coord::ECI::Moon 0.077;
+use Astro::Coord::ECI::Sun 0.077;
+use Astro::Coord::ECI::TLE 0.077 qw{ :constants };
+use Astro::Coord::ECI::TLE::Iridium 0.077;
+use Astro::Coord::ECI::Utils 0.077 qw{ deg2rad time_gm };
 
 use Cwd ();
 use Time::Local;

@@ -24,8 +24,9 @@ BEGIN {
     $^O eq 'MSWin32'
 	and plan skip_all => 'Date::Manip 5 tests fail under Windows';
 
-    require Astro::App::Satpass2::Utils;
-    Astro::App::Satpass2::Utils->import( qw{ time_gm time_local } );
+    require Astro::Coord::ECI::Utils;
+    Astro::Coord::ECI::Utils->VERSION( '0.077' );
+    Astro::Coord::ECI::Utils->import( qw{ time_gm time_local } );
 
 }
 

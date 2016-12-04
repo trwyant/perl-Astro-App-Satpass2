@@ -22,8 +22,6 @@ our @EXPORT_OK = qw{
     __back_end_class_name_of_record
     expand_tilde
     has_method instance load_package merge_hashes my_dist_config quoter
-    time_gm
-    time_local
     __date_manip_backend
     __parse_class_and_args
     ARRAY_REF CODE_REF HASH_REF REGEXP_REF SCALAR_REF
@@ -368,79 +366,6 @@ sub _quoter {
     return qq{'$string'};
 }
 
-eval {
-    require Time::y2038;
-
-    # sub time_gm
-    *time_gm = sub {
-	my @date = @_;
-	$date[5] = _year_adjust( $date[5] );
-	return Time::y2038::timegm( @date );
-    };
-
-    # sub time_local
-    *time_local = sub {
-	my @date = @_;
-	$date[5] = _year_adjust( $date[5] );
-	return Time::y2038::timelocal( @date );
-    };
-
-    *__time_to_epoch_uses = sub {
-	return 'Time::y2038';
-    };
-
-    1;
-} or do {
-    require Time::Local;
-
-    # sub time_gm
-    *time_gm = Time::Local->can( 'timegm' );
-
-    # sub time_local
-    *time_local = Time::Local->can( 'timelocal' );
-
-    *__time_to_epoch_uses = sub {
-	return 'Time::Local';
-    };
-
-};
-
-# This subroutine is used to convert year numbers to Perl years in
-# accordance with the documentation in the 5.24.0 version of
-# Time::Local. It is intended to be called by the Time::y2038 code,
-# which expects Perl years.
-
-{
-    # The following code is lifted verbatim from Time::Local 1.25.
-    # Because that code bases the window used for expanding two-digit
-    # years on the local year as of the time the module was loaded, I do
-    # too.
-
-    my $ThisYear    = ( localtime() )[5];
-    my $Breakpoint  = ( $ThisYear + 50 ) % 100;
-    my $NextCentury = $ThisYear - $ThisYear % 100;
-    $NextCentury += 100 if $Breakpoint < 50;
-    my $Century = $NextCentury - 100;
-
-    # The above code is lifted verbatim from Time::Local 1.25.
-
-    sub _year_adjust {
-	my ( $year ) = @_;
-
-	$year < 0
-	    and return $year;
-
-	$year >= 1000
-	    and return $year - 1900;
-
-	# The following line of code is lifted verbatim from Time::Local
-	# 1.25.
-	$year += ( $year > $Breakpoint ) ? $Century : $NextCentury;
-
-	return $year;
-    }
-}
-
 1;
 
 __END__
@@ -664,39 +589,6 @@ escaped and enclosed in double quotes (C<"">).
 
 If called in scalar context, the results are concatenated with
 C<< join ' ', ... >>. Otherwise they are simply returned.
-
-=head2 time_gm
-
- my $epoch = time_gm( $yr, $mon, $day, $hr, $min, $sec );
-
-B<Note:> Despite its name, this subroutine is B<private> to the
-C<Astro-App-Satpass2> package, and may well be moved upstream to
-L<Astro::Coord::ECI::Utils|Astro::Coord::ECI::Utils>.
-
-This exportable subroutine is a wrapper for either
-C<Time::y2038::timegm()> (if that module is installed) or
-C<Time::Local::timegm()> (if not.)
-
-This wrapper is needed because the two modules have subtly different
-signatures; L<Time::y2038|Time::y2038> interprets years strictly as Perl
-years, whereas L<Time::Local|Time::Local> interprets them differently
-depending on the value of the year, and in particular interprets years
-greater than 999 as Gregorian years.
-
-=head2 time_local
-
- my $epoch = time_local( $yr, $mon, $day, $hr, $min, $sec );
-
-B<Note:> Despite its name, this subroutine is B<private> to the
-C<Astro-App-Satpass2> package, and may well be moved upstream to
-L<Astro::Coord::ECI::Utils|Astro::Coord::ECI::Utils>.
-
-This exportable subroutine is a wrapper for either
-C<Time::y2038::timelocal()> (if that module is installed) or
-C<Time::Local::timelocal()> (if not.)
-
-This wrapper is needed for the same reason L<time_gm()|/time_gm> is
-needed.
 
 =head2 __arguments
 
