@@ -1,3 +1,9 @@
+0.031_04	2016-12-04	T. R. Wyant
+  Use time_local() and time_gm() from Astro::Coord::ECI::Utils. This
+    requires Astro::Coord::ECI::Utils 0.077.
+
+  Better diagnostics for Date::Manip::DM5 test fails
+
 0.031_03	2016-11-22	T. R. Wyant
   Fix deep recursion in ::Macro->wail() & friends
 
