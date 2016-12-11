@@ -62,7 +62,7 @@ use constant NULL	=> bless \( my $x = undef ), 'Null';
 # NULL_REF eq ref $rslt
 use constant NULL_REF	=> ref NULL;
 
-our $VERSION = '0.031_04';
+our $VERSION = '0.032';
 
 # The following 'cute' code is so that we do not determine whether we
 # actually have optional modules until we really need them, and yet do

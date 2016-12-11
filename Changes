@@ -1,14 +1,6 @@
-0.031_04	2016-12-04	T. R. Wyant
+0.032		2016-12-11	T. R. Wyant
   Use time_local() and time_gm() from Astro::Coord::ECI::Utils. This
     requires Astro::Coord::ECI::Utils 0.077.
-
-  Better diagnostics for Date::Manip::DM5 test fails
-
-0.031_03	2016-11-22	T. R. Wyant
-  Fix deep recursion in ::Macro->wail() & friends
-
-0.031_02	2016-11-21	T. R. Wyant
-  Handle inconsistency Time::Local vs Time::y2038
 
     The problem here is that earlier in the year I found that Time::Local
     worked better for dates well away from the current year if I passed it
@@ -21,19 +13,13 @@
     configured with modules like Time::y2038 (which is optional for this
     package) so that he _could_ find it. Kudos!
 
-0.031_01	2016-11-20	T. R. Wyant
-  Modernize DateTime::Calendar::Christian code
-    The thing I could not fit in Git's 50 character limit was that there
-    was in Astro::App::Satpass2::FormatTime::DateTime a kluge that was
-    put in because DateTime::Calendar::Christian->new() did not support
-    the 'locale' argument. Since it does as of version 0.06, and since
-    this code now requires 0.06, the kluge is now removed.
+  Better diagnostics for Date::Manip::DM5 test fails
 
-  Require DateTime::Calendar::Christian 0.06.
+  Fix deep recursion in ::Macro->wail() & friends
 
-0.031_01	2016-11-20	T. R. Wyant
   Support formatting times with any class conforming to the DateTime
-    interface, via formatter attribute 'back_end'.
+    interface, via formatter attribute 'back_end'. If
+    DateTime::Calendar::Christian is used her, require version 0.06.
 
   Support using DateTime (if available) to convert a parsed ISO-8601
     time to epoch. An arbitrary class confirming to the DateTime
