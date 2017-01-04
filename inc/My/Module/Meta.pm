@@ -65,6 +65,7 @@ sub requires {
 	'Text::Wrap'		=> 0,
 	'Time::Local'		=> 0,
 	'constant'		=> 0,
+	'parent'		=> 0,
 	'strict'		=> 0,
 	'warnings'		=> 0,
 	@extra,

@@ -3,7 +3,7 @@ package Astro::App::Satpass2::ParseTime::Date::Manip;
 use strict;
 use warnings;
 
-use base qw{ Astro::App::Satpass2::ParseTime };
+use parent qw{ Astro::App::Satpass2::ParseTime };
 
 use Astro::App::Satpass2::Utils qw{ load_package __date_manip_backend };
 

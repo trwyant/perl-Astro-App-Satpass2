@@ -5,7 +5,7 @@ use 5.008;
 use strict;
 use warnings;
 
-use base qw{ Astro::App::Satpass2 };
+use parent qw{ Astro::App::Satpass2 };
 
 use Astro::App::Satpass2::Utils qw{ __arguments };
 use Astro::Coord::ECI::Utils 0.059 qw{ rad2deg };

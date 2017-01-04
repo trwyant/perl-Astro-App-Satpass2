@@ -9,7 +9,7 @@ use Astro::App::Satpass2::Utils qw{
 use Astro::Coord::ECI::Utils 0.077 qw{
     looks_like_number SECSPERDAY time_gm time_local };
 
-use base qw{ Astro::App::Satpass2::ParseTime };
+use parent qw{ Astro::App::Satpass2::ParseTime };
 
 our $VERSION = '0.032';
 

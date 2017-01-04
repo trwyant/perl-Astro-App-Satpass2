@@ -123,7 +123,7 @@ Astro::App::Satpass2::Copier - Object copying functionality for Astro::App::Satp
  use strict;
  use warnings;
  
- use base qw{ Astro::App::Satpass2::Copier };
+ use parent qw{ Astro::App::Satpass2::Copier };
  
  sub new { ... }
  

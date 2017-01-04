@@ -5,7 +5,7 @@ use 5.008;
 use strict;
 use warnings;
 
-use base qw{ Astro::App::Satpass2::Macro };
+use parent qw{ Astro::App::Satpass2::Macro };
 
 use Astro::App::Satpass2::Utils qw{ expand_tilde load_package quoter };
 use File::Spec;

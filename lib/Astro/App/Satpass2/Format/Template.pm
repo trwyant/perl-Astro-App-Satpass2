@@ -3,7 +3,7 @@ package Astro::App::Satpass2::Format::Template;
 use strict;
 use warnings;
 
-use base qw{ Astro::App::Satpass2::Format };
+use parent qw{ Astro::App::Satpass2::Format };
 
 use Astro::App::Satpass2::Locale qw{ __localize };
 # use Astro::App::Satpass2::FormatValue;

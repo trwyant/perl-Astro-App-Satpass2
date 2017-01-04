@@ -6,7 +6,7 @@ use warnings;
 use Astro::Coord::ECI::Utils 0.077 qw{
     looks_like_number time_gm time_local };
 
-use base qw{ Astro::App::Satpass2::ParseTime::Date::Manip };
+use parent qw{ Astro::App::Satpass2::ParseTime::Date::Manip };
 
 use Astro::App::Satpass2::Utils qw{ load_package };
 

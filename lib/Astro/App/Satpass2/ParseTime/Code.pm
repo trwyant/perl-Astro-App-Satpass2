@@ -5,7 +5,7 @@ use 5.008;
 use strict;
 use warnings;
 
-use base qw{ Astro::App::Satpass2::ParseTime };
+use parent qw{ Astro::App::Satpass2::ParseTime };
 
 use Astro::App::Satpass2::Utils qw{ CODE_REF HASH_REF };
 

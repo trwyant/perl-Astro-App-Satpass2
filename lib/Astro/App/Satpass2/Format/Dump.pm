@@ -3,7 +3,7 @@ package Astro::App::Satpass2::Format::Dump;
 use strict;
 use warnings;
 
-use base qw{ Astro::App::Satpass2::Format };
+use parent qw{ Astro::App::Satpass2::Format };
 
 use Astro::App::Satpass2::Utils qw{ load_package CODE_REF };
 

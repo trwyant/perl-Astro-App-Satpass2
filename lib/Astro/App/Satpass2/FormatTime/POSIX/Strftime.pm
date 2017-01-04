@@ -5,7 +5,7 @@ use 5.008;
 use strict;
 use warnings;
 
-use base qw{ Astro::App::Satpass2::FormatTime };
+use parent qw{ Astro::App::Satpass2::FormatTime };
 
 use Astro::App::Satpass2::FormatTime::Strftime;
 use Astro::App::Satpass2::Utils qw{ ARRAY_REF };

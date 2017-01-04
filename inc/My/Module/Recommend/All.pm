@@ -5,7 +5,8 @@ use 5.008;
 use strict;
 use warnings;
 
-use base qw{ My::Module::Recommend::Any };
+use My::Module::Recommend::Any;
+our @ISA = qw{ My::Module::Recommend::Any };
 
 use Carp;
 use Exporter qw{ import };

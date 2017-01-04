@@ -7,7 +7,7 @@ use warnings;
 
 use POSIX ();
 
-use base qw{ Astro::App::Satpass2::Copier };
+use parent qw{ Astro::App::Satpass2::Copier };
 
 our $VERSION = '0.032';
 

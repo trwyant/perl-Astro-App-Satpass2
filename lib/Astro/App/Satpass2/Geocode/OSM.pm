@@ -5,7 +5,7 @@ use 5.008;
 use strict;
 use warnings;
 
-use base qw{ Astro::App::Satpass2::Geocode };
+use parent qw{ Astro::App::Satpass2::Geocode };
 
 use Astro::App::Satpass2::Utils qw{ instance };
 use List::Util ();

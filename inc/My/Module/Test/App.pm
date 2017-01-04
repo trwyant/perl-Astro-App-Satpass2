@@ -5,7 +5,8 @@ use 5.008;
 use strict;
 use warnings;
 
-use base qw{ Exporter };
+use Exporter ();
+our @ISA = qw{ Exporter };
 
 use Carp;
 
