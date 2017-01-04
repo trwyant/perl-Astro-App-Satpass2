@@ -7,7 +7,7 @@ use parent qw{ Astro::App::Satpass2::Format };
 
 use Astro::App::Satpass2::Utils qw{ load_package CODE_REF };
 
-our $VERSION = '0.032';
+our $VERSION = '0.032_01';
 
 my %dumper_hash = (
     'YAML' => 'Dump',

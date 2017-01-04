@@ -1,3 +1,6 @@
+0.032_01	2017-01-03	T. R. Wyant
+  Use 'use parent' instead of 'use base'.
+
 0.032		2016-12-11	T. R. Wyant
   Use time_local() and time_gm() from Astro::Coord::ECI::Utils. This
     requires Astro::Coord::ECI::Utils 0.077.
