@@ -11,7 +11,7 @@ use Astro::Coord::ECI::Utils 0.077 qw{
 
 use parent qw{ Astro::App::Satpass2::ParseTime };
 
-our $VERSION = '0.032_01';
+our $VERSION = '0.032_02';
 
 my $package = __PACKAGE__;
 
