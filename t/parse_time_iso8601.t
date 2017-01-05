@@ -25,6 +25,13 @@ use My::Module::Test::App;
 
 use Astro::Coord::ECI::Utils 0.077 qw{ time_gm time_local };
 
+# >>>> THIS MUST BE DONE BEFORE ANY TESTS <<<<
+#
+# Note that we rely on check_datetime_timezone_local() returning a true
+# value if we're using POSIX rather than DateTime.
+check_datetime_timezone_local
+    or plan skip_all => 'Cannot determine local time zone';
+
 require_ok 'Astro::App::Satpass2::ParseTime';
 
 class 'Astro::App::Satpass2::ParseTime';

@@ -48,8 +48,13 @@ method round_time => 60, TRUE, 'Round to nearest minute';
 method format_datetime => DATE_TIME_FORMAT, $time, 1,
     '2011/04/01 00:01:00', 'Explicit GMT time, rounded to minute';
 
-method format_datetime => q<'%{calendar_name}'>, 1,
-    'Gregorian', 'Calendar name';
+SKIP: {
+    check_datetime_timezone_local
+	or skip 'Cannot determine local time zone', 1;
+
+    method format_datetime => q<'%{calendar_name}'>, 1,
+	'Gregorian', 'Calendar name';
+}
 
 SKIP: {
     my $tests = 2;

@@ -21,6 +21,7 @@ use constant CODE	=> ref sub {};
 our @EXPORT = qw{
     application
     check_access
+    check_datetime_timezone_local
     class
     dump_date_manip
     dump_date_manip_init
@@ -87,6 +88,18 @@ sub check_access ($) {
     $rslt->is_success or return $rslt->status_line;
 
     return;
+}
+
+sub check_datetime_timezone_local {
+    local $@ = undef;
+    eval {
+	require DateTime::TimeZone;
+	1;
+    } or return 1;
+    return eval {
+	DateTime::TimeZone->new( name => 'local' );
+	1;
+    };
 }
 
 sub class ($) {
@@ -358,6 +371,23 @@ This subroutine checks access to the given URL. It returns a false value
 if it has access to the URL, or an appropriate message otherwise.
 Besides the usual reasons of net connectivity or host availability, it
 may fail because L<LWP::UserAgent|LWP::UserAgent> can not be loaded.
+
+=head2 check_datetime_timezone_local
+
+ check_datetime_timezone_local()
+     or skip 'Can not create local zone object', 1;
+
+This method is intended to determine whether tests involving the local
+time zone should be run. It returns true unless C<DateTime::TimeZone>
+can be loaded but the requisite object can not be instantiated. The
+assumption is that if C<DateTime::TimeZone> can not be loaded we are
+using some other mechanism (probably POSIX) to determine the local zone.
+
+This is really to help us to skip specific tests which fail under
+Cygwin. C<DateTime::TimeZone> assumes Cygwin is a Unix system, but I am
+seeing test failures thre, where presumably the Windows machinery would
+come up with a time zone. We assume the user who really wants to use
+this machinery will sort things out.
 
 =head2 class
 
