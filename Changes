@@ -1,7 +1,6 @@
-0.032_02	2017-01-05	T. R. Wyant
+0.033		2017-01-12	T. R. Wyant
   Protect tests from local zone problems
 
-0.032_01	2017-01-03	T. R. Wyant
   Use 'use parent' instead of 'use base'.
 
 0.032		2016-12-11	T. R. Wyant
