@@ -29,7 +29,9 @@ my %attr = (
 $mmv >= 6.31 and $attr{LICENSE} = 'perl';
 
 if ( $mmv >= 6.4501 ) {
-    $attr{META_MERGE} = $meta->meta_merge();
+    $attr{META_MERGE} = $meta->meta_merge(
+	$meta->provides(),
+    );
 } else {
     $attr{PREREQ_PM}{'Test::More'} = 0.40;
 }
