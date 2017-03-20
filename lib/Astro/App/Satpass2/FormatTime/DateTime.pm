@@ -169,11 +169,13 @@ use constant CALENDAR_JULIAN	=> 'Julian';
 	calendar_name	=> sub {
 	    my ( $dt_obj ) = @_;
 	    my $code;
+	    $code = $dt_obj->can( 'calendar_name' )
+		and return $code->( $dt_obj );
 	    $code = $dt_obj->can( 'is_julian' )
 		and return $code->( $dt_obj ) ?
 		    CALENDAR_JULIAN :
 		    CALENDAR_GREGORIAN;
-	    ( ref $dt_obj ) =~ m/ \A DateTime::Calendar:: ( \w+ ) \z /smx
+	    ( ref $dt_obj ) =~ m/ \A DateTime:: (?: \w+ :: )* ( \w+ ) \z /smx
 		and return "$1";
 	    return CALENDAR_GREGORIAN;
 	},
