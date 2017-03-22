@@ -1,3 +1,9 @@
+0.033_01	2017-03-21	T. R. Wyant
+  Update FormatTime/DateTime.pm calendar_name code to take advantage of
+    the calendar_name() method if present.
+
+  Add 'provides' data to ExtUtils::MakeMaker output
+
 0.033		2017-01-12	T. R. Wyant
   Protect tests from local zone problems
 
