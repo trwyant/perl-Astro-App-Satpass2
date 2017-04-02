@@ -7,7 +7,7 @@ use parent qw{ Astro::App::Satpass2::ParseTime };
 
 use Astro::App::Satpass2::Utils qw{ load_package __date_manip_backend };
 
-our $VERSION = '0.033_01';
+our $VERSION = '0.034';
 
 sub __class_name {
     return __PACKAGE__;
