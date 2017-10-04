@@ -2910,57 +2910,57 @@ sub station {
 # TODO I must have thought -reload would be good for something, but it
 # appears I never implemented it.
 
-{
-    my @status_code_map = qw{+ S -};
+sub status : Verb( name! reload! ) {
+    my ( $self, $opt, @args ) = __arguments( @_ );
 
-    sub status : Verb( name! reload! ) {
-	my ( $self, $opt, @args ) = __arguments( @_ );
+    @args or @args = qw{show};
 
-	@args or @args = qw{show};
+    my $verb = lc (shift (@args) || 'show');
 
-	my $verb = lc (shift (@args) || 'show');
-
-	if ( $verb eq 'iridium' ) {
-	    $self->_deprecation_notice( status => 'iridium', 'show' );
-	    $verb = 'show';
-	}
-
-	my $output;
-
-	if ($verb eq 'add' || $verb eq 'drop') {
-
-	    Astro::Coord::ECI::TLE->status ($verb, @args);
-	    foreach my $tle (@{$self->{bodies}}) {
-		$tle->get ('id') == $args[0] and $tle->rebless ();
-	    }
-
-	} elsif ($verb eq 'clear') {
-
-	    Astro::Coord::ECI::TLE->status ($verb, @args);
-	    foreach my $tle (@{$self->{bodies}}) {
-		$tle->rebless ();
-	    }
-
-	} elsif ($verb eq 'show' || $verb eq 'list') {
-
-	    my @data = Astro::Coord::ECI::TLE->status( 'show', @args );
-	    @data = sort {$a->[3] cmp $b->[3]} @data if $opt->{name};
-	    $output .= '';	# Don't want it to be undef.
-
-	    foreach my $tle (@data) {
-		$output .= quoter( 'status', 'add',
-		    $tle->[0], $tle->[1], $status_code_map[$tle->[2]],
-		    $tle->[3], $tle->[4] ) . "\n";
-	    }
-
-	} else {
-	    $output .= '';	# Don't want it to be undef.
-	    $output .= Astro::Coord::ECI::TLE->status ($verb, @args);
-	}
-
-	return $output;
-
+    if ( $verb eq 'iridium' ) {
+	$self->_deprecation_notice( status => 'iridium', 'show' );
+	$verb = 'show';
     }
+
+    my $output;
+
+    if ($verb eq 'add' || $verb eq 'drop') {
+
+	Astro::Coord::ECI::TLE->status ($verb, @args);
+	foreach my $tle (@{$self->{bodies}}) {
+	    $tle->get ('id') == $args[0] and $tle->rebless ();
+	}
+
+    } elsif ($verb eq 'clear') {
+
+	Astro::Coord::ECI::TLE->status ($verb, @args);
+	foreach my $tle (@{$self->{bodies}}) {
+	    $tle->rebless ();
+	}
+
+    } elsif ($verb eq 'show' || $verb eq 'list') {
+
+	my @data = Astro::Coord::ECI::TLE->status( 'show', @args );
+	@data = sort {$a->[3] cmp $b->[3]} @data if $opt->{name};
+	$output .= '';	# Don't want it to be undef.
+
+	my $encoder = Astro::Coord::ECI::TLE::Iridium->can(
+	    '__encode_operational_status' ) || sub { return $_[2] };
+
+	foreach my $tle (@data) {
+	    my $status = $encoder->( undef, status => $tle->[2] );
+	    $output .= quoter( 'status', 'add',
+		$tle->[0], $tle->[1], $status,
+		$tle->[3], $tle->[4] ) . "\n";
+	}
+
+    } else {
+	$output .= '';	# Don't want it to be undef.
+	$output .= Astro::Coord::ECI::TLE->status ($verb, @args);
+    }
+
+    return $output;
+
 }
 
 sub system : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
@@ -3934,7 +3934,7 @@ sub _iridium_status {
 	Astro::Coord::ECI::TLE->status (clear => 'iridium');
 	foreach (@$status) {
 	    Astro::Coord::ECI::TLE->status (add => $_->[0], iridium =>
-		$_->[4], $_->[1], $_->[5]);
+		$_->[4], $_->[1], $_->[3]);
 	}
     } else {
 	$self->weep(
