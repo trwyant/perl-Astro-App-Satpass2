@@ -1,3 +1,6 @@
+0.034_01	2017-10-04	T. R. Wyant
+    Support for decayed Iridium satellites.
+
 0.034		2017-04-01	T. R. Wyant
   Update FormatTime/DateTime.pm calendar_name code to take advantage of
     the calendar_name() method if present.
