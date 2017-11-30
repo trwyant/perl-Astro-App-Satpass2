@@ -89,7 +89,7 @@ sub meta_merge {
 	resources	=> {
 	    bugtracker	=> {
                 web	=> 'https://rt.cpan.org/Public/Dist/Display.html?Name=Astro-App-Satpass2',
-                mailto  => 'wyant@cpan.org',
+#                mailto  => 'wyant@cpan.org',
             },
 	    license	=> 'http://dev.perl.org/licenses/',
 	    repository	=> {
