@@ -16,7 +16,8 @@ use POSIX qw{ strftime };
 use Scalar::Util 1.26 qw{ blessed };
 use Test::More 0.52;
 
-use constant CODE	=> ref sub {};
+use constant CODE_REF	=> ref sub {};
+use constant REGEXP_REF	=> ref qr{};
 
 our @EXPORT = qw{
     application
@@ -227,7 +228,7 @@ sub method (@) {	## no critic (RequireArgUnpacking)
     my $got;
     if ( eval { $got = $app->$method( @args ); 1 } ) {
 
-	if ( CODE eq ref $want ) {
+	if ( CODE_REF eq ref $want ) {
 	    @_ = ( $want, $got, $title );
 	    goto &$want;
 	}
@@ -236,13 +237,13 @@ sub method (@) {	## no critic (RequireArgUnpacking)
 	    defined and not ref and chomp;
 	}
 	@_ = ( $got, $want, $title );
-	ref $want eq 'Regexp' ? goto &like :
+	REGEXP_REF eq ref $want ? goto &like :
 	    ref $want ? goto &is_deeply : goto &is;
     } else {
 	$got = $@;
 	chomp $got;
 	defined $want or $want = 'Unexpected error';
-	ref $want eq 'Regexp'
+	REGEXP_REF eq ref $want
 	    or $want = qr<\Q$want>smx;
 	@_ = ( $got, $want, $title );
 	goto &like;

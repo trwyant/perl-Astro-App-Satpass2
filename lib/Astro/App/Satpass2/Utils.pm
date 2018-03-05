@@ -27,6 +27,10 @@ our @EXPORT_OK = qw{
     ARRAY_REF CODE_REF HASH_REF REGEXP_REF SCALAR_REF
 };
 
+our %EXPORT_TAGS = (
+    ref	=> [ grep { m/ _REF \z /smx } @EXPORT_OK ],
+);
+
 use constant ARRAY_REF	=> ref [];
 use constant CODE_REF	=> ref sub {};
 use constant HASH_REF	=> ref {};
@@ -629,27 +633,28 @@ otherwise C<Carp> is loaded and C<Carp::croak()> is called.
 
 =head2 CONSTANTS
 
-This module supports the following exportable constants:
+This module supports the following exportable constants. You can export
+them all using tag C<':ref'>.
 
 =head2 ARRAY_REF
 
-This constant is simply C<ref []>, i.e. C<'ARRAY'>.
+This constant is simply C<ref []>.
 
 =head2 CODE_REF
 
-This constant is simply C<ref sub {}>, i.e. C<'CODE'>.
+This constant is simply C<ref sub {}>.
 
 =head2 HASH_REF
 
-This constant is simply C<ref {}>, i.e. C<'HASH'>.
+This constant is simply C<ref {}>.
 
 =head2 REGEXP_REF
 
-This constant is simply C<ref qr{}>, i.e. C<'Regexp'>.
+This constant is simply C<ref qr{}>.
 
 =head2 SCALAR_REF
 
-This constant is simply C<ref \1>, i.e. C<'SCALAR'>.
+This constant is simply C<ref \1>.
 
 =head1 SUPPORT
 
