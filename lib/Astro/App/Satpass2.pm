@@ -11,10 +11,10 @@ use Astro::App::Satpass2::Macro::Command;
 use Astro::App::Satpass2::Macro::Code;
 use Astro::App::Satpass2::ParseTime;
 use Astro::App::Satpass2::Utils qw{
+    :ref
     __arguments expand_tilde has_method instance load_package
     my_dist_config quoter
     __parse_class_and_args
-    ARRAY_REF CODE_REF HASH_REF SCALAR_REF
 };
 
 use Astro::Coord::ECI 0.077;			# This needs at least 0.049.
@@ -3242,7 +3242,7 @@ sub _attribute_exists {
 	    my ( $sel ) = @_;
 	    return $sel;
 	},
-	Regexp	=> sub {
+	REGEXP_REF()	=> sub {
 	    my ( $sel ) = @_;
 	    return sub {
 	        my ( $tle, $context ) = @_;

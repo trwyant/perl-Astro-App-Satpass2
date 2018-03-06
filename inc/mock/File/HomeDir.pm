@@ -7,7 +7,7 @@ use warnings;
 
 use Carp;
 
-use constant HASH	=> ref {};
+use constant HASH_REF	=> ref {};
 
 our $VERSION = '0.035';
 
@@ -17,7 +17,7 @@ our $MOCK_FILE_HOMEDIR_USERS_HOME;
 
 sub my_dist_config {
     my ( undef, $dist ) = @_;
-    HASH eq ref $MOCK_FILE_HOMEDIR_MY_DIST_CONFIG
+    HASH_REF eq ref $MOCK_FILE_HOMEDIR_MY_DIST_CONFIG
 	and return $MOCK_FILE_HOMEDIR_MY_DIST_CONFIG->{$dist};
     return $MOCK_FILE_HOMEDIR_MY_DIST_CONFIG;
 }
@@ -28,7 +28,7 @@ sub my_home {
 
 sub users_home {
     my ( undef, $user ) = @_;
-    HASH eq ref $MOCK_FILE_HOMEDIR_USERS_HOME
+    HASH_REF eq ref $MOCK_FILE_HOMEDIR_USERS_HOME
 	and return $MOCK_FILE_HOMEDIR_USERS_HOME->{$user};
     return $MOCK_FILE_HOMEDIR_USERS_HOME;
 }
