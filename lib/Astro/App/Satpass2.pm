@@ -5952,7 +5952,7 @@ Under Mac OS 9 or below, this method simply returns an apology, since
 L<Pod::Usage|Pod::Usage> appears not to work there.
 
 If you set the L<webcmd|/webcmd> attribute properly, this method will
-launch a web browser displaying the desired documentatin from
+launch a web browser displaying the desired documentation from
 L<https://metacpan.org>.
 
 In any case, nothing is returned.
