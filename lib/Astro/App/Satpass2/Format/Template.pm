@@ -117,6 +117,36 @@ sub __list_templates {
 	    ) ) );
 }
 
+{
+    my %decoder = (
+	template	=> sub {
+	    my ( $self, $method, @args ) = @_;
+
+=begin comment
+
+	    1 == @args
+		and return ( @args, $self->$method( @args ) );
+	    $self->$method( @args );
+	    return $self;
+
+=end comment
+
+=cut
+
+	    1 == @args
+		or return $self->$method( @args );
+	    return ( @args, $self->$method( @args ) );
+	},
+    );
+
+    sub decode {
+	my ( $self, $method, @args ) = @_;
+	my $dcdr = $decoder{$method}
+	    or return $self->SUPER::decode( $method, @args );
+	goto $dcdr;
+    }
+}
+
 sub __default {
     my ( $self, @arg ) = @_;
     @arg or return $self->{default};

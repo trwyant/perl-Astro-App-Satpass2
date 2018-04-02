@@ -3892,11 +3892,11 @@ sub _helper_get_object {
 	    and @args = $parse_input{$name}{$method}->( $self, $opt, @args );
 	delete $opt->{raw}
 	    and return $object->$method( @args );
-	my $rslt = $object->decode( $method, @args );
+	my @rslt = $object->decode( $method, @args );
 
-	instance( $rslt, ref $object ) and return;
-	ref $rslt and return $rslt;
-	return quoter( $name, $method, $rslt ) . "\n";
+	instance( $rslt[0], ref $object ) and return;
+	ref $rslt[0] and return $rslt[0];
+	return quoter( $name, $method, @rslt ) . "\n";
     }
 }
 
@@ -5954,7 +5954,7 @@ nothing called interactively will be executed until after the
 corresponding interactive call to L<end()|/end> (or whenever the frame
 created by the C<begin()> is popped off the stack, which may be the end
 of a macro or source file.) Non-interactive methods will still be
-executed. See L<METHODS|/METHODS> above fore what it means to be called
+executed. See L<METHODS|/METHODS> above for what it means to be called
 interactively.
 
 For example (assuming OID 99999 is not loaded)
