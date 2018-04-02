@@ -985,7 +985,7 @@ sub _height_us {
     );
     sub help : Verb() {
 	my ( $self, undef, $arg ) = __arguments( @_ );	# $opt unused
-	if ( my $cmd = $self->get( 'webcmd' ) ) {
+	if ( my $cmd = $self->_get_browser_command() ) {
 	    $self->system( $cmd,
 		'https://metacpan.org/release/Astro-App-Satpass2' );
 	} else {
@@ -2466,9 +2466,11 @@ sub _set_warner_attribute {
 
 sub _set_webcmd {
     my ($self, $name, $val) = @_;
-    my $st;
-    $st = $self->get( 'spacetrack' )
-	and $st->set( webcmd => $val );
+    # TODO warn if $val is true but not '1'.
+    if ( my $st = $self->get( 'spacetrack' ) ) {
+	# TODO once spacetrack supports '1', just pass $val.
+	$st->set( webcmd => $self->_get_browser_command( $val ) );
+    }
     return ($self->{$name} = $val);
 }
 
@@ -3619,6 +3621,19 @@ sub _frame_push {
     }
 }
 
+sub _get_browser_command {
+    my ( $self, $val ) = @_;
+    defined $val
+	or $val = $self->{webcmd};
+    defined $val
+	and '' ne $val
+	or return $val;
+    '1' eq $val
+	or return $val;
+    require Browser::Open;
+    return Browser::Open::open_browser_cmd();
+}
+
 #	$dumper = $self->_get_dumper();
 #
 #	This method returns a reference to code that can be used to dump
@@ -3802,8 +3817,9 @@ sub _get_spacetrack_default {
     my ( $self ) = @_;
     $have_astro_spacetrack->()
 	or return;
+    # TODO once spacetrack supports '1', go back to $self->{webcmd}
     return Astro::SpaceTrack->new (
-	webcmd => $self->{webcmd},
+	webcmd => $self->_get_browser_command(),
 	filter => 1,
 	iridium_status_format => 'kelso',
     );
@@ -7938,7 +7954,27 @@ find C<'start'> useful.
 This functionality was added on speculation, since there is no good way
 to test it in the initial release of the package.
 
-The default is '' (i.e. the empty string), which leaves the
+As of version [%% next_version %%], a value of C<'1'> causes
+L<Browser::Open|Browser::Open> to be loaded, and the web command is
+taken from it. All other true values are deprecated, on the following
+schedule:
+
+=over
+
+=item 2018-11-01: First use of deprecated value will warn;
+
+=item 2019-05-01: All uses of deprecated value will warn;
+
+=item 2019-11-01: Any use of deprecated value is fatal;
+
+=item 2020-05-01: Attribute is treated as Boolean.
+
+=back
+
+The above schedule may be extended based on what other changes are
+needed, but will not be compressed.
+
+The default is C<''> (i.e. the empty string), which leaves the
 functionality disabled.
 
 =head1 SPECIFYING ANGLES

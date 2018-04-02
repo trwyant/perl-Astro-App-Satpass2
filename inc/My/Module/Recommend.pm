@@ -33,6 +33,11 @@ EOD
       this package (say, with a web browser or curl), Astro::SpaceTrack
       is not needed.
 EOD
+    __any( 'Browser::Open'		=> <<'EOD' ),
+      This module is being phased in as the only supported way to
+      display web-based help. If you intend to leave the 'webcmd'
+      attribute false, this module is not needed.
+EOD
     __any( 'Date::Manip'		=> <<'EOD' .
       This module is not required, but the alternative to installing it
       is to specify times in ISO 8601 format.  See 'SPECIFYING TIMES' in
