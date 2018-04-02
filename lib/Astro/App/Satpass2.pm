@@ -987,7 +987,7 @@ sub _height_us {
 	my ( $self, undef, $arg ) = __arguments( @_ );	# $opt unused
 	if ( my $cmd = $self->get( 'webcmd' ) ) {
 	    $self->system( $cmd,
-		"http://search.cpan.org/~wyant/Astro-App-Satpass2-$VERSION/");
+		'https://metacpan.org/release/Astro-App-Satpass2' );
 	} else {
 	    $arg = $arg ? lc $arg : '';
 	    my @ha;
@@ -1028,7 +1028,7 @@ Normally, we would display the documentation for the satpass2
 script here. But unfortunately this depends on the ability to
 spawn the perldoc command, and we do not have this ability under
 Mac OS 9 and earlier. You can find the same thing online at
-http://search.cpan.org/dist/Astro-App-Satpass2/
+https://metacpan.org/release/Astro-App-Satpass2
 
 EOD
 }
@@ -5929,7 +5929,7 @@ Under Mac OS 9 or below, this method simply returns an apology, since
 L<Pod::Usage|Pod::Usage> appears not to work there.
 
 If you set the L<webcmd|/webcmd> attribute properly, this method will
-launch the L<http://search.cpan.org/> page for this package, and
+launch L<https://metacpan.org/release/Astro-App-Satpass2>, and
 arguments will be ignored.
 
 In any case, nothing is returned.
@@ -7931,7 +7931,7 @@ The default is 1 (i.e. true).
 
 This string attribute specifies the system command to spawn to display a
 web page. If not the empty string, the L<help|/help> method uses it to
-display the help for this package on L<http://search.cpan.org/>. Mac OS
+display L<https://metacpan.org/release/Astro-App-Satpass2>. Mac OS
 X users will find C<'open'> a useful setting, and Windows users will
 find C<'start'> useful.
 
