@@ -2118,9 +2118,9 @@ EOD
     }
 
     if ($fn ne '-') {
-	my $fh = IO::File->new($fn, '>')
+	my $fh = IO::File->new( $fn, '>:encoding(utf-8)')
 	    or $self->wail("Unable to open $fn: $!");
-	print {$fh} $output;
+	print { $fh } $output;
 	$output = "$fn\n";
     }
     return $output;
