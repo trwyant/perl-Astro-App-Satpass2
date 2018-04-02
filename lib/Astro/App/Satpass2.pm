@@ -12,7 +12,8 @@ use Astro::App::Satpass2::Macro::Code;
 use Astro::App::Satpass2::ParseTime;
 use Astro::App::Satpass2::Utils qw{
     :ref
-    __arguments expand_tilde has_method instance load_package
+    __arguments expand_tilde find_package_pod
+    has_method instance load_package
     my_dist_config quoter
     __parse_class_and_args
 };
@@ -972,7 +973,7 @@ sub _height_us {
 
 {
     my %help_module = (
-	'' => 'Astro::App::Satpass2',
+	''	=> __PACKAGE__,
 	eci => 'Astro::Coord::ECI',
 	iridium => 'Astro::Coord::ECI::TLE::Iridium',
 	moon => 'Astro::Coord::ECI::Moon',
@@ -985,24 +986,24 @@ sub _height_us {
     );
     sub help : Verb() {
 	my ( $self, undef, $arg ) = __arguments( @_ );	# $opt unused
+	defined $arg
+	    or $arg = '';
+	defined $help_module{$arg}
+	    and $arg = $help_module{$arg};
 	if ( my $cmd = $self->_get_browser_command() ) {
+	    my $kind = $arg =~ m/ - /smx ? 'release' : 'pod';
 	    $self->system( $cmd,
-		'https://metacpan.org/release/Astro-App-Satpass2' );
+		"https://metacpan.org/$kind/$arg" );
 	} else {
-	    $arg = $arg ? lc $arg : '';
-	    my @ha;
-	    if (my $fn = $help_module{$arg}) {
-		$self->_load_module($fn);
-		$fn =~ s{ :: }{/}smxg;
-		$fn .= '.pm';
-		@ha = ('-input' => $INC{$fn});
-
-	    }
 
 	    my $os_specific = "_help_$^O";
 	    if (__PACKAGE__->can ($os_specific)) {
 		return __PACKAGE__->$os_specific ();
 	    } elsif ( load_package( 'Pod::Usage' ) ) {
+		my @ha;
+		if ( defined( my $path = find_package_pod( $arg ) ) ) {
+		    push @ha, '-input' => $path;
+		}
 		my $stdout = $self->{frame}[-1]{localout};
 		if (openhandle $stdout && !-t $stdout) {
 		    push @ha, -output => $stdout;
@@ -1010,6 +1011,11 @@ sub _height_us {
 		Pod::Usage::pod2usage (
 		    -verbose => 2, -exitval => 'NOEXIT', @ha);
 	    } else {
+		# This should never happen, since Pod::Usage is core
+		# since 5.6. On the other hand we have not declared it
+		# as a dependency, and some downstream packagers seem to
+		# think they know more than the author what should be in
+		# a package.
 		return <<'EOD'
 No help available; Pod::Usage can not be loaded.
 EOD
@@ -5927,8 +5933,9 @@ module can not be loaded.
 
 This interactive method can be used to get usage help. Without
 arguments, it displays the documentation for this class (hint: you are
-reading this now). You can get documentation for related Perl modules by
-specifying the appropriate arguments, as follows:
+reading this now). You can get documentation for other Perl modules by
+specifying their names. For convenience, there are abbreviations for
+some modules, as follows:
 
  eci -------- Astro::Coord::ECI
  iridium ---- Astro::Coord::ECI::TLE::Iridium
@@ -5945,8 +5952,8 @@ Under Mac OS 9 or below, this method simply returns an apology, since
 L<Pod::Usage|Pod::Usage> appears not to work there.
 
 If you set the L<webcmd|/webcmd> attribute properly, this method will
-launch L<https://metacpan.org/release/Astro-App-Satpass2>, and
-arguments will be ignored.
+launch a web browser displaying the desired documentatin from
+L<https://metacpan.org>.
 
 In any case, nothing is returned.
 

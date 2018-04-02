@@ -20,7 +20,7 @@ our @EXPORT_OK = qw{
     __arguments
     back_end
     __back_end_class_name_of_record
-    expand_tilde
+    expand_tilde find_package_pod
     has_method instance load_package merge_hashes my_dist_config quoter
     __date_manip_backend
     __parse_class_and_args
@@ -180,6 +180,25 @@ sub expand_tilde {
 	    return $home_dir;
 	}
     }
+}
+
+sub find_package_pod {
+    my ( $pkg ) = @_;
+    ( my $fn = $pkg ) =~ s{ :: }{/}smxg;
+    foreach my $dir ( @INC ) {
+	defined $dir
+	    and not ref $dir
+	    and -d $dir
+	    and -x _
+	    or next;
+	foreach my $sfx ( qw{ pod pm } ) {
+	    my $path = "$dir/$fn.$sfx";
+	    -r $path
+		or next;
+	    return Cwd::abs_path( $path );
+	}
+    }
+    return;
 }
 
 sub _wail {
@@ -453,6 +472,18 @@ exception if the configuration directory does not exist.
 
 All that is required of the invocant is that it support the package's
 suite of error-reporting methods C<whinge()>, C<wail()>, and C<weep()>.
+
+=head2 find_package_pod
+
+ my $path = find_package_pod( $package_name );
+
+This subroutine finds the given package in C<@INC> and returns the path
+to its POD file. C<@INC> entries which are references are ignored.
+
+The code for this subroutine borrows heavily from Neil Bowers'
+L<Module::Path|Module::Path>. In fact, I would probably have used that
+module except for the need to find the F<.pod> file if it was separate
+from the F<.pm> file.
 
 =head2 has_method
 
