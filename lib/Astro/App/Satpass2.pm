@@ -3388,6 +3388,14 @@ sub _attribute_exists {
 #	The code snippet will return undef at end-of-file.
 #
 #	The following keys in %opt are recognized:
+#	{encoding} specifies the encoding of the file. How this is used
+#	    on the $file argument as follows:
+#	    * An open handle -- unused
+#	    * A URL ----------- unused (encoding taken from HTTP::Response)
+#	    * A file name ----- used (default is utf-8)
+#	    * A scalar ref ---- used (default is un-encoded)
+#	    * An array ref ---- unused
+#	    * A code ref ------ unused
 #	{glob} causes the contents of the file to be returned, rather
 #	    than a reader.
 #	{optional} causes the code to simply return on an error, rather
@@ -3434,12 +3442,17 @@ sub _file_reader_ {	## no critic (ProhibitUnusedPrivateSubroutines)
 	    $self->wail( "Failed to retrieve $file: ",
 		$resp->status_line() );
 	};
-	$opt->{glob} and return $resp->content();
-	return $self->_file_reader( \( scalar $resp->content() ), $opt );
+	$opt->{glob} and return $resp->decoded_content();
+	$opt = { %{ $opt }, encoding => $resp->content_charset() };
+	return $self->_file_reader(
+	    \( scalar $resp->content() ),
+	    $opt,
+	);
     } else {
+	my $encoding = $opt->{encoding} || 'utf-8';
 	my $fh = IO::File->new(
 	    $self->expand_tilde( $file ),
-	    '<:encoding(utf-8)',
+	    "<:encoding($encoding)",
 	) or do {
 	    $opt->{optional} and return;
 	    $self->wail( "Failed to open $file: $!" );
@@ -3510,8 +3523,9 @@ sub _file_reader_SCALAR {	## no critic (ProhibitUnusedPrivateSubroutines)
 
     $opt->{glob}
 	and return ${ $file };
+    my $mode = $opt->{encoding} ? "<:encoding($opt->{encoding})" : '<';
 
-    my $fh = IO::File->new( $file, '<' )	# Needs IO::File 1.14.
+    my $fh = IO::File->new( $file, $mode )	# Needs IO::File 1.14.
 	or $self->wail( "Failed to open SCALAR ref: $!" );
 
     return sub { return scalar <$fh> };
