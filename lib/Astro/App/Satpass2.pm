@@ -41,7 +41,7 @@ use Scalar::Util 1.26 qw{ blessed isdual openhandle };
 use Text::Abbrev;
 use Text::ParseWords ();	# Used only for {level1} stuff.
 
-use constant ASTRO_SPACETRACK_VERSION => 0.074;
+use constant ASTRO_SPACETRACK_VERSION => 0.105;
 
 BEGIN {
     eval {
@@ -3837,9 +3837,8 @@ sub _get_spacetrack_default {
     my ( $self ) = @_;
     $have_astro_spacetrack->()
 	or return;
-    # TODO once spacetrack supports '1', go back to $self->{webcmd}
     return Astro::SpaceTrack->new (
-	webcmd => $self->_get_browser_command(),
+	webcmd => $self->{webcmd},
 	filter => 1,
 	iridium_status_format => 'kelso',
     );
