@@ -75,7 +75,7 @@ sub geocode {
 	} else {
 	    my $desc = $info->{display_name};
 	    $desc =~ s/ [^,]+ , \s* //smx;
-	    $desc =~ s/ \A ( \d+ ) , /$1/smx;	# Oh, for 5.10 and \K
+	    $desc =~ s/ \A ( [0-9]+ ) , /$1/smx;	# Oh, for 5.10 and \K
 	    return $desc;
 	}
     }

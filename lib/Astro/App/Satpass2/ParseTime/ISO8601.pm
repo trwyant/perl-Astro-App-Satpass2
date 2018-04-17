@@ -37,7 +37,7 @@ sub class_name_of_record {
 }
 
 my $zone_re = qr{ (?i: ( Z | UT | GMT ) |
-    ( [+-] ) ( \d{1,2} ) :? ( \d{1,2} )? ) }smx;
+    ( [+-] ) ( [0-9]{1,2} ) :? ( [0-9]{1,2} )? ) }smx;
 
 sub delegate {
     return __PACKAGE__;

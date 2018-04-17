@@ -191,7 +191,7 @@ sub delegate {	## no critic (RequireFinalReturn)
 	    return ( $self->{absolute} = $dt + $self->{absolute} );
 
 	} elsif ( $string =~
-	    m/ \A epoch \s* ( \d+ (?: [.] \d* )? ) \z /smx ) {
+	    m/ \A epoch \s* ( [0-9]+ (?: [.] [0-9]* )? ) \z /smx ) {
 
 	    my $time = $1 + 0;
 	    $self->base( $self->{absolute} = $time );

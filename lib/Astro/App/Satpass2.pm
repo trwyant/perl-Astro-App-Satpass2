@@ -4107,7 +4107,7 @@ sub _parse_angle_parts {
 	defined $part or last;
 	$circle *= $size;
 	$angle = $angle * $size + $part;
-	$places = $part =~ m/ [.] ( \d+ ) /smx ? length $1 : 0;
+	$places = $part =~ m/ [.] ( [0-9]+ ) /smx ? length $1 : 0;
     }
     $angle *= 360 / $circle;
     if ( my $mag = sprintf '%d', $circle / 360 ) {
@@ -4134,9 +4134,9 @@ sub __parse_angle {
 	);
 
     } elsif ( $angle =~
-	m{ \A ( [-+] )? (\d*) d
-	    ( \d* (?: [.] \d*)? ) (?: m
-	    ( \d* (?: [.] \d* )? ) s? )? \z
+	m{ \A ( [-+] )? ( [0-9]* ) d
+	    ( [0-9]* (?: [.] [0-9]* )? ) (?: m
+	    ( [0-9]* (?: [.] [0-9]* )? ) s? )? \z
 	}smxi ) {
 	my ( $sgn, $deg, $min, $sec ) = ( $1, $2, $3, $4 );
 	$angle = _parse_angle_parts(
@@ -4888,7 +4888,7 @@ sub _unescape {
 				and $self->wail(
 				'Substring expansion has extra arguments' );
 			    foreach ( @pos ) {
-				m/ \A [-+]? \d+ \z /smx
+				m/ \A [-+]? [0-9]+ \z /smx
 				    or $self->wail(
 				    'Substring expansion argument non-numeric'
 				);
