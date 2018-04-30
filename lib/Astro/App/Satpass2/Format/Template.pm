@@ -8,7 +8,13 @@ use parent qw{ Astro::App::Satpass2::Format };
 use Astro::App::Satpass2::Locale qw{ __localize };
 # use Astro::App::Satpass2::FormatValue;
 use Astro::App::Satpass2::FormatValue::Formatter;
-use Astro::App::Satpass2::Utils qw{ instance ARRAY_REF HASH_REF SCALAR_REF };
+use Astro::App::Satpass2::Utils qw{
+    instance
+    ARRAY_REF
+    HASH_REF
+    SCALAR_REF
+    @CARP_NOT
+};
 use Astro::App::Satpass2::Wrap::Array;
 use Astro::Coord::ECI::TLE 0.059 qw{ :constants };
 use Astro::Coord::ECI::Utils 0.059 qw{

@@ -5,6 +5,7 @@ use warnings;
 
 use Astro::App::Satpass2::Utils qw{
     back_end __back_end_class_name_of_record __parse_class_and_args
+    @CARP_NOT
 };
 use Astro::Coord::ECI::Utils 0.077 qw{
     looks_like_number SECSPERDAY time_gm time_local };

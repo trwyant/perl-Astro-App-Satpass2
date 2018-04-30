@@ -5,7 +5,11 @@ use 5.008;
 use strict;
 use warnings;
 
-use Astro::App::Satpass2::Utils qw{ instance CODE_REF };
+use Astro::App::Satpass2::Utils qw{
+    instance
+    CODE_REF
+    @CARP_NOT
+};
 use Astro::App::Satpass2::Warner;
 use Scalar::Util 1.26 qw{ weaken };
 

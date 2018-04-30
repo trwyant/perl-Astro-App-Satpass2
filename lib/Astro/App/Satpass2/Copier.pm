@@ -5,6 +5,7 @@ use warnings;
 
 use Clone ();
 
+use Astro::App::Satpass2::Utils qw{ @CARP_NOT };
 use Astro::App::Satpass2::Warner;
 use Scalar::Util 1.26 qw{ blessed };
 

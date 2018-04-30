@@ -10,6 +10,7 @@ use parent qw{
 };
 
 use Astro::App::Satpass2::FormatTime::Strftime;
+use Astro::App::Satpass2::Utils qw{ @CARP_NOT };
 use DateTime;
 use DateTime::TimeZone;
 use POSIX ();

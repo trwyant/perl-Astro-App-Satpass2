@@ -11,6 +11,7 @@ use Astro::App::Satpass2::FormatTime;
 use Astro::App::Satpass2::Utils qw{
     load_package
     ARRAY_REF CODE_REF SCALAR_REF
+    @CARP_NOT
 };
 use Astro::Coord::ECI::Utils 0.059 qw{ looks_like_number };
 

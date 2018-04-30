@@ -25,7 +25,8 @@ use Astro::Coord::ECI::Sun 0.077;
 use Astro::Coord::ECI::TLE 0.077 qw{:constants}; # This needs at least 0.059.
 use Astro::Coord::ECI::TLE::Iridium 0.077;	# This needs at least 0.049.
 use Astro::Coord::ECI::TLE::Set 0.077;
-use Astro::Coord::ECI::Utils 0.077 qw{:all};	# This needs at least 0.077.
+# The following includes @CARP_NOT.
+use Astro::Coord::ECI::Utils 0.077 qw{ :all };	# This needs at least 0.077.
 
 use Clone ();
 use Cwd ();

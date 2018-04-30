@@ -7,7 +7,7 @@ use warnings;
 
 use parent qw{ Astro::App::Satpass2::Geocode };
 
-use Astro::App::Satpass2::Utils qw{ instance };
+use Astro::App::Satpass2::Utils qw{ instance @CARP_NOT };
 use List::Util ();
 
 our $VERSION = '0.035';

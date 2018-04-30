@@ -16,6 +16,39 @@ use Text::ParseWords ();
 
 our $VERSION = '0.035';
 
+our @CARP_NOT = qw{
+    Astro::App::Satpass2
+    Astro::App::Satpass2::Copier
+    Astro::App::Satpass2::Format
+    Astro::App::Satpass2::Format::Dump
+    Astro::App::Satpass2::Format::Template
+    Astro::App::Satpass2::FormatTime
+    Astro::App::Satpass2::FormatTime::Cldr
+    Astro::App::Satpass2::FormatTime::DateTime
+    Astro::App::Satpass2::FormatTime::DateTime::Cldr
+    Astro::App::Satpass2::FormatTime::DateTime::Strftime
+    Astro::App::Satpass2::FormatTime::POSIX::Strftime
+    Astro::App::Satpass2::FormatTime::Strftime
+    Astro::App::Satpass2::FormatValue
+    Astro::App::Satpass2::FormatValue::Formatter
+    Astro::App::Satpass2::Geocode
+    Astro::App::Satpass2::Geocode::OSM
+    Astro::App::Satpass2::Locale
+    Astro::App::Satpass2::Locale::C
+    Astro::App::Satpass2::Macro
+    Astro::App::Satpass2::Macro::Code
+    Astro::App::Satpass2::Macro::Command
+    Astro::App::Satpass2::ParseTime
+    Astro::App::Satpass2::ParseTime::Code
+    Astro::App::Satpass2::ParseTime::Date::Manip
+    Astro::App::Satpass2::ParseTime::Date::Manip::v5
+    Astro::App::Satpass2::ParseTime::Date::Manip::v6
+    Astro::App::Satpass2::ParseTime::ISO8601
+    Astro::App::Satpass2::Utils
+    Astro::App::Satpass2::Warner
+    Astro::App::Satpass2::Wrap::Array
+};
+
 our @EXPORT_OK = qw{
     __arguments
     back_end
@@ -25,6 +58,7 @@ our @EXPORT_OK = qw{
     __date_manip_backend
     __parse_class_and_args
     ARRAY_REF CODE_REF HASH_REF REGEXP_REF SCALAR_REF
+    @CARP_NOT
 };
 
 our %EXPORT_TAGS = (
@@ -662,7 +696,7 @@ L<Getopt::Long|Getopt::Long> encounters an error an exception is thrown.
 This is done using the invocant's C<wail()> method if it has one,
 otherwise C<Carp> is loaded and C<Carp::croak()> is called.
 
-=head2 CONSTANTS
+=head1 CONSTANTS
 
 This module supports the following exportable constants. You can export
 them all using tag C<':ref'>.
@@ -686,6 +720,14 @@ This constant is simply C<ref qr{}>.
 =head2 SCALAR_REF
 
 This constant is simply C<ref \1>.
+
+=head1 GLOBALS
+
+This module exports the following globals:
+
+=head2 @CARP_NOT
+
+This global contains all modules in this package.
 
 =head1 SUPPORT
 

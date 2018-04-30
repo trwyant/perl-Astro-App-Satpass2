@@ -11,6 +11,7 @@ use Astro::App::Satpass2::Locale qw{ __localize };
 use Astro::App::Satpass2::Utils qw{
     has_method instance merge_hashes
     ARRAY_REF CODE_REF HASH_REF
+    @CARP_NOT
 };
 use Astro::App::Satpass2::Warner;
 use Astro::Coord::ECI::Sun 0.059;

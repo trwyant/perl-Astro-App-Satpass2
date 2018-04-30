@@ -7,6 +7,8 @@ use warnings;
 
 use parent qw{ Exporter };
 
+use Astro::App::Satpass2::Utils qw{ @CARP_NOT };
+
 our $VERSION = '0.035';
 
 our @EXPORT_OK = qw{
