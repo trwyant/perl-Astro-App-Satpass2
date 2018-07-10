@@ -1417,12 +1417,12 @@ sub load : Verb( verbose! ) {
 	bsd_glob( $_, GLOB_NOSORT | GLOB_BRACE | GLOB_QUOTE )
     } @names;
     @names = _glob_files( @names );
+    @names or $self->wail( 'No files found' );
 
 =end comment
 
 =cut
 
-    @names or $self->wail( 'No files found' );
     foreach my $fn ( @names ) {
 	$opt->{verbose} and warn "Loading $fn\n";
 	my $data = $self->_file_reader( $fn, { glob => 1 } );

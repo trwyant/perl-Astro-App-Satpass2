@@ -180,7 +180,6 @@ sub bodies {
 
     my $questionable = $self->_get( data => 'questionable' );
     my $sta = $self->_get( data => 'station' );
-    my $sun = Astro::Coord::ECI::Sun->new();
     my $time = $self->_get( data => 'time' );
     my $twilight = $self->_get( data => 'twilight' );
     defined $twilight
@@ -197,7 +196,6 @@ sub bodies {
 		body	=> $body,
 		station	=> $sta,
 		time	=> $time,
-		sun	=> $sun,
 		twilight => $twilight,
 	    ),
 	    questionable	=> $questionable,
@@ -225,7 +223,7 @@ sub _illumination {
 	or $arg{time} = $arg{body}->universal();
 
     embodies( $arg{sun}, 'Astro::Coord::ECI' )
-	or $arg{sun} = $arg{body}->get( 'illum' );
+	or $arg{sun} = $arg{body}->get( 'sun' );
     embodies( $arg{sun}, 'Astro::Coord::ECI' )
 	or $arg{sun} = Astro::Coord::ECI::Sun->new();
 
