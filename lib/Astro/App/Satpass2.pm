@@ -64,6 +64,8 @@ use constant NULL	=> bless \( my $x = undef ), 'Null';
 # NULL_REF eq ref $rslt
 use constant NULL_REF	=> ref NULL;
 
+use constant SUN_CLASS_DEFAULT	=> 'Astro::Coord::ECI::Sun';
+
 our $VERSION = '0.035';
 
 # The following 'cute' code is so that we do not determine whether we
@@ -263,6 +265,7 @@ my %mutator = (
     gmt => \&_set_formatter_attribute,
     height => \&_set_distance_meters,
     horizon => \&_set_angle,
+    illum	=> \&_set_illum_class,
     latitude => \&_set_angle,
     local_coord => \&_set_formatter_attribute,
     location => \&_set_unmodified,
@@ -277,6 +280,7 @@ my %mutator = (
     singleton => \&_set_unmodified,
     spacetrack => \&_set_spacetrack,
     stdout => \&_set_stdout,
+    sun		=> \&_set_sun_class,
     time_format => \&_set_formatter_attribute,
     time_formatter => \&_set_formatter_attribute,
     time_parser => \&_set_time_parser,
@@ -367,6 +371,7 @@ my %static = (
     height => undef,		# meters
 #   initfile => undef,		# Set by init()
     horizon => 20,		# degrees
+    illum	=> SUN_CLASS_DEFAULT,
     latitude => undef,		# degrees
     longitude => undef,		# degrees
     max_mirror_angle => rad2deg(
@@ -380,6 +385,7 @@ my %static = (
     singleton => 0,
 #   spacetrack => undef,	# Astro::SpaceTrack object set when accessed
 #   stdout => undef,		# Set to stdout in new().
+    sun		=> SUN_CLASS_DEFAULT,
     time_parser => 'Astro::App::Satpass2::ParseTime',	# Time parser class.
     twilight => 'civil',
     tz => $ENV{TZ},
@@ -397,9 +403,21 @@ sub new {
     $self->{bodies} = [];
     $self->{macro} = {};
     $self->{sky} = [
-	Astro::Coord::ECI::Sun->new (),
+	SUN_CLASS_DEFAULT->new (),
 	Astro::Coord::ECI::Moon->new (),
     ];
+    $self->{_help_module} = {
+	''	=> __PACKAGE__,
+	eci => 'Astro::Coord::ECI',
+	iridium => 'Astro::Coord::ECI::TLE::Iridium',
+	moon => 'Astro::Coord::ECI::Moon',
+	set => 'Astro::Coord::ECI::TLE::Set',
+	sun => SUN_CLASS_DEFAULT,
+	spacetrack => 'Astro::SpaceTrack',
+	star => 'Astro::Coord::ECI::Star',
+	tle => 'Astro::Coord::ECI::TLE',
+	utils => 'Astro::Coord::ECI::Utils',
+    };
     bless $self, $class;
     $self->_frame_push(initial => []);
     $self->set(stdout => select());
@@ -634,13 +652,25 @@ sub drop : Verb() {
     return;
 }
 
+=begin comment
+
 sub dump : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
     my ( $self, undef, $arg ) = __arguments( @_ );	# $opt unused
-    if ( defined $arg && 'twilight' eq $arg ) {
-	return <<"EOD";
+    if ( defined $arg ) {
+	if ( 'twilight' eq $arg ) {
+	    return <<"EOD";
 twilight => @{[ $self->{twilight} ]}
 _twilight => @{[ $self->{_twilight} ]}
 EOD
+	} else {
+	    my @d = $self->__choose( [ $arg ], $self->{bodies} );
+	    if ( defined( my $inx = $self->_find_in_sky( $arg ) ) ) {
+		push @d, $self->{sky}[$inx];
+	    }
+	    @d
+		or return "Nothing matched '$arg'";
+	    return $self->_get_dumper()->( @d );
+	}
     } else {
 	my $tp = delete $self->{time_parser};
 	$self->{time_parser} = ref $tp;
@@ -648,6 +678,31 @@ EOD
 	$self->{time_parser} = $tp;
 	return $dump;
     }
+}
+
+=end comment
+
+=cut
+
+sub dump : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
+    my ( $self, undef, @arg ) = __arguments( @_ );	# $opt unused
+    my @dump;
+    @arg
+	or push @dump, $self;
+    local $self->{time_parser} = ref $self->{time_parser};
+    foreach ( @arg ) {
+	if ( ref ) {
+	    push @dump, $_;
+	} elsif ( 'twilight' eq $_ ) {
+	    push @dump, { map { $_ => $self->{$_} } qw{ twilight _twilight } };
+	} else {
+	    push @dump, $self->__choose( [ $_ ], $self->{bodies} );
+	    if ( defined( my $inx = $self->_find_in_sky( $_ ) ) ) {
+		push @dump, $self->{sky}[$inx];
+	    }
+	}
+    }
+    return $self->_get_dumper()->( @dump );
 }
 
 sub echo : Verb( n! ) {
@@ -972,58 +1027,44 @@ sub _height_us {
     return $output;
 }
 
-{
-    my %help_module = (
-	''	=> __PACKAGE__,
-	eci => 'Astro::Coord::ECI',
-	iridium => 'Astro::Coord::ECI::TLE::Iridium',
-	moon => 'Astro::Coord::ECI::Moon',
-	set => 'Astro::Coord::ECI::TLE::Set',
-	sun => 'Astro::Coord::ECI::Sun',
-	spacetrack => 'Astro::SpaceTrack',
-	star => 'Astro::Coord::ECI::Star',
-	tle => 'Astro::Coord::ECI::TLE',
-	utils => 'Astro::Coord::ECI::Utils',
-    );
-    sub help : Verb() {
-	my ( $self, undef, $arg ) = __arguments( @_ );	# $opt unused
-	defined $arg
-	    or $arg = '';
-	defined $help_module{$arg}
-	    and $arg = $help_module{$arg};
-	if ( my $cmd = $self->_get_browser_command() ) {
-	    my $kind = $arg =~ m/ - /smx ? 'release' : 'pod';
-	    $self->system( $cmd,
-		"https://metacpan.org/$kind/$arg" );
-	} else {
+sub help : Verb() {
+    my ( $self, undef, $arg ) = __arguments( @_ );	# $opt unused
+    defined $arg
+	or $arg = '';
+    defined $self->{_help_module}{$arg}
+	and $arg = $self->{_help_module}{$arg};
+    if ( my $cmd = $self->_get_browser_command() ) {
+	my $kind = $arg =~ m/ - /smx ? 'release' : 'pod';
+	$self->system( $cmd,
+	    "https://metacpan.org/$kind/$arg" );
+    } else {
 
-	    my $os_specific = "_help_$^O";
-	    if (__PACKAGE__->can ($os_specific)) {
-		return __PACKAGE__->$os_specific ();
-	    } elsif ( load_package( 'Pod::Usage' ) ) {
-		my @ha;
-		if ( defined( my $path = find_package_pod( $arg ) ) ) {
-		    push @ha, '-input' => $path;
-		}
-		my $stdout = $self->{frame}[-1]{localout};
-		if (openhandle $stdout && !-t $stdout) {
-		    push @ha, -output => $stdout;
-		}
-		Pod::Usage::pod2usage (
-		    -verbose => 2, -exitval => 'NOEXIT', @ha);
-	    } else {
-		# This should never happen, since Pod::Usage is core
-		# since 5.6. On the other hand we have not declared it
-		# as a dependency, and some downstream packagers seem to
-		# think they know more than the author what should be in
-		# a package.
-		return <<'EOD'
+	my $os_specific = "_help_$^O";
+	if (__PACKAGE__->can ($os_specific)) {
+	    return __PACKAGE__->$os_specific ();
+	} elsif ( load_package( 'Pod::Usage' ) ) {
+	    my @ha;
+	    if ( defined( my $path = find_package_pod( $arg ) ) ) {
+		push @ha, '-input' => $path;
+	    }
+	    my $stdout = $self->{frame}[-1]{localout};
+	    if (openhandle $stdout && !-t $stdout) {
+		push @ha, -output => $stdout;
+	    }
+	    Pod::Usage::pod2usage (
+		-verbose => 2, -exitval => 'NOEXIT', @ha);
+	} else {
+	    # This should never happen, since Pod::Usage is core
+	    # since 5.6. On the other hand we have not declared it
+	    # as a dependency, and some downstream packagers seem to
+	    # think they know more than the author what should be in
+	    # a package.
+	    return <<'EOD'
 No help available; Pod::Usage can not be loaded.
 EOD
-	    }
 	}
-	return;
     }
+    return;
 }
 
 # The call to this is generated dynamically above, and there is no way
@@ -1423,11 +1464,15 @@ sub load : Verb( verbose! ) {
 
 =cut
 
+    my $attrs = {
+	map { $_ => $self->get( $_ ) } qw{ illum sun },
+    };
+
     foreach my $fn ( @names ) {
 	$opt->{verbose} and warn "Loading $fn\n";
 	my $data = $self->_file_reader( $fn, { glob => 1 } );
 	$self->__add_to_observing_list(
-	    Astro::Coord::ECI::TLE->parse( $data ) );
+	    Astro::Coord::ECI::TLE->parse( $attrs, $data ) );
     }
     return;
 }
@@ -2255,6 +2300,28 @@ sub _set_distance_meters {
 	( $_[0]->__parse_distance( $_[2], '0m' ) * 1000 ) : $_[2] );
 }
 
+sub _set_eci_class {
+    my ( $self, $name, $val, $class ) = @_;
+    ref $val and $self->wail( "$name must not be a reference" );
+    if ( defined $val ) {
+	$self->_load_module( $val );
+	$val->isa( $class )
+	    or $self->wail( "$name must be an $class" );
+    } else {
+	$val = $class;
+    }
+    $self->{$name} = $val;
+    $self->{_help_module}{$name}
+	and $self->{_help_module}{$name} = $val;
+    foreach my $body ( @{ $self->{bodies} } ) {
+	$body->set( $name => $val );
+    }
+    if ( defined( my $inx = $self->_find_in_sky( $name ) ) ) {
+	splice @{ $self->{sky} }, $inx, $inx + 1, $val->new();
+    }
+    return;
+}
+
 sub _set_ellipsoid {
     my ($self, $name, $val) = @_;
     Astro::Coord::ECI->set (ellipsoid => $val);
@@ -2290,6 +2357,11 @@ sub _set_geocoder {
 	nocopy	=> 1,
 	prefix	=> [ 'Astro::App::Satpass2::Geocode' ]
     );
+}
+
+sub _set_illum_class {
+    $_[3] = 'Astro::Coord::ECI';
+    goto &_set_eci_class;
 }
 
 #sub _set_lowercase {
@@ -2395,6 +2467,11 @@ sub _set_stdout {
     $self->{frame}
 	and $self->{frame}[-1]{$name} = $val;
     return ($self->{$name} = $val);
+}
+
+sub _set_sun_class {
+    $_[3] = SUN_CLASS_DEFAULT;
+    goto &_set_eci_class;
 }
 
 sub _set_time_parser {
@@ -2550,8 +2627,8 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 {
 
     my %planet_class = (
-	( map { fold_case( $_ ) => "Astro::Coord::ECI::$_" } qw{ Sun
-	    Moon } ),
+	fold_case( 'Sun' ) => SUN_CLASS_DEFAULT,
+	fold_case( 'Moon' ) => 'Astro::Coord::ECI::Moon',
 	# The shape of things to come -- maybe
 	( map { fold_case( $_ ) =>
 	    "Astro::Coord::ECI::Heliocentric::$_" } qw{ Mercury Venus
@@ -2595,22 +2672,17 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    my ( $self, @args ) = @_;
 	    my $name = shift @args
 		or $self->wail( 'You did not specify what to add' );
+	    defined $self->_find_in_sky( $name )
+		and return;
 	    my $fcn = fold_case( $name );
 	    if ( my $class = $planet_class{$fcn} ) {
-		foreach my $body ( @{ $self->{sky} } ) {
-		    $body->isa( $class )
-			and return;
-		}
+		SUN_CLASS_DEFAULT eq $class
+		    and $class = $self->get( 'sun' );
 		load_package( $class );
 		push @{ $self->{sky} }, $class->new(
 		    debug	=> $self->{debug},
 		);
 	    } else {
-		foreach my $body ( @{ $self->{sky} } ) {
-		    $body->isa( 'Astro::Coord::ECI::Star' )
-			and $fcn eq fold_case( $body->get( 'name' ) )
-			and return;
-		}
 		@args >= 2
 		    or $self->wail(
 		    'You must give at least right ascension and declination' );
@@ -2643,9 +2715,11 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    my ( $self, @args ) = @_;
 	    @args or $self->wail(
 		'You must specify at least one name to drop' );
-	    my $match = qr< @{[ join '|', map {quotemeta $_} @args ]} >smxi;
-	    @{$self->{sky}} = grep {
-		$_->get ('name') !~ m/ $match /smx } @{$self->{sky}};
+	    foreach my $name ( @args ) {
+		defined( my $inx = $self->_find_in_sky( $name ) )
+		    or next;
+		splice @{ $self->{sky} }, $inx, $inx + 1;
+	    }
 	    return;
 	},
 	load	=> sub {	# Undocumented. That means I can revoke
@@ -2667,12 +2741,8 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    my ( $self, @args ) = @_;
 	    my $output;
 	    my $name = shift @args;
-	    my $lcn = lc $name;
-	    foreach my $body (@{$self->{sky}}) {
-		next unless $body->isa ('Astro::Coord::ECI::Star') &&
-			$lcn eq lc $body->get ('name');
-		$self->wail( "Duplicate sky entry '$name'" );
-	    }
+	    defined $self->_find_in_sky( $name )
+		and $self->wail( "Duplicate sky entry '$name'" );
 	    my ($ra, $dec, $rng, $pmra, $pmdec, $pmrec) =
 		$self->_simbad4 ($name);
 	    $rng = sprintf '%.2f', $rng;
@@ -3530,6 +3600,33 @@ sub _file_reader_SCALAR {	## no critic (ProhibitUnusedPrivateSubroutines)
 	or $self->wail( "Failed to open SCALAR ref: $!" );
 
     return sub { return scalar <$fh> };
+}
+
+# $inx = $self->_find_in_sky( $name )
+# The return is the index of the named body in @{ $self->{sky} }, or
+# undef if it is not present. 'Sun' and 'Moon' are special cases;
+# everything else is presumed to be found by name.
+{
+    my %special = map {;
+	fold_case( $_ ) => "Astro::Coord::ECI::\u$_"
+    } qw{ sun moon };
+
+    sub _find_in_sky {
+	my ( $self, $name ) = @_;
+	$name = fold_case( $name );
+	my $check = $special{$name} ? sub {
+	    instance( $self->{sky}[$_[0]], $special{$name} )
+	} : do {
+	    my $re = qr/ \A \Q$name\E \z /smxi;
+	    sub { $self->{sky}[$_[0]]->get( 'name' ) =~ $re };
+	};
+
+	foreach my $inx ( 0 .. $#{ $self->{sky} } ) {
+	    $check->( $inx )
+		and return $inx;
+	}
+	return;
+    }
 }
 
 # Documented in POD
@@ -7617,6 +7714,14 @@ This attribute may not be set.
 
 The default is C<undef>.
 
+=head2 illum
+
+This string specifies the name of the class to be used for the
+L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE> C<illum> attribute. If
+you specify C<undef> you get the default.
+
+The default is L<Astro::Coord::ECI::Sun|Astro::Coord::ECI::Sun>.
+
 =head2 latitude
 
 This numeric attribute specifies the latitude of the observer in degrees
@@ -7840,6 +7945,14 @@ gotten or set via the L</dispatch> method, and therefore not by the
 F<satpass2> script.
 
 The default is the C<STDOUT> file handle.
+
+=head2 sun
+
+This string specifies the name of the class to be used for the
+L<Astro::Coord::ECI|Astro::Coord::ECI> C<sun> attribute. If you specify
+C<undef> you get the default.
+
+The default is L<Astro::Coord::ECI::Sun|Astro::Coord::ECI::Sun>.
 
 =head2 time_format
 
