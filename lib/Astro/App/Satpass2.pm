@@ -2470,8 +2470,12 @@ sub _set_stdout {
 }
 
 sub _set_sun_class {
-    $_[3] = SUN_CLASS_DEFAULT;
-    goto &_set_eci_class;
+    my ( $self, $name, $val ) = @_;
+    $self->_set_eci_class( $name, $val, SUN_CLASS_DEFAULT );
+    foreach my $body ( @{ $self->{sky} } ) {
+	$body->set( $name, $val );
+    }
+    return;
 }
 
 sub _set_time_parser {
