@@ -396,6 +396,15 @@ my %static = (
     webcmd => ''
 );
 
+my %sky_class = (
+    fold_case( 'Sun' ) => SUN_CLASS_DEFAULT,
+    fold_case( 'Moon' ) => 'Astro::Coord::ECI::Moon',
+    # The shape of things to come -- maybe
+    ( map { fold_case( $_ ) =>
+	"Astro::Coord::ECI::VSOP87D::$_" } qw{ Mercury Venus
+	Mars Jupiter Saturn Uranus Neptune } ),
+);
+
 sub new {
     my ( $class, %args ) = @_;
     ref $class and $class = ref $class;
@@ -406,6 +415,7 @@ sub new {
 	SUN_CLASS_DEFAULT->new (),
 	Astro::Coord::ECI::Moon->new (),
     ];
+    $self->{sky_class} = { %sky_class };
     $self->{_help_module} = {
 	''	=> __PACKAGE__,
 	eci => 'Astro::Coord::ECI',
@@ -2316,9 +2326,7 @@ sub _set_eci_class {
     foreach my $body ( @{ $self->{bodies} } ) {
 	$body->set( $name => $val );
     }
-    if ( defined( my $inx = $self->_find_in_sky( $name ) ) ) {
-	splice @{ $self->{sky} }, $inx, $inx + 1, $val->new();
-    }
+    $self->_replace_in_sky( $name, $val );
     return;
 }
 
@@ -2472,6 +2480,7 @@ sub _set_stdout {
 sub _set_sun_class {
     my ( $self, $name, $val ) = @_;
     $self->_set_eci_class( $name, $val, SUN_CLASS_DEFAULT );
+    $self->{sky_class}{sun} = $val;
     foreach my $body ( @{ $self->{sky} } ) {
 	$body->set( $name, $val );
     }
@@ -2630,15 +2639,6 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 
 {
 
-    my %planet_class = (
-	fold_case( 'Sun' ) => SUN_CLASS_DEFAULT,
-	fold_case( 'Moon' ) => 'Astro::Coord::ECI::Moon',
-	# The shape of things to come -- maybe
-	( map { fold_case( $_ ) =>
-	    "Astro::Coord::ECI::Heliocentric::$_" } qw{ Mercury Venus
-	    Mars Jupiter Saturn Uranus Neptune } ),
-    );
-
     my %handler = (
 	list	=> sub {
 	    my ( $self ) = @_;		# Arguments unused
@@ -2679,7 +2679,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    defined $self->_find_in_sky( $name )
 		and return;
 	    my $fcn = fold_case( $name );
-	    if ( my $class = $planet_class{$fcn} ) {
+	    if ( my $class = $self->{sky_class}{$fcn} ) {
 		SUN_CLASS_DEFAULT eq $class
 		    and $class = $self->get( 'sun' );
 		load_package( $class );
@@ -2710,6 +2710,27 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    }
 	    return;
 	},
+	class	=> sub {
+	    my ( $self, $name, $class ) = @_;
+	    if ( ! defined $name ) {
+		return join '', map {
+		    "sky class $_ $self->{sky_class}{$_}\n" }
+		    sort keys %{ $self->{sky_class} };
+	    } elsif ( $name =~ m/ \A sun \z /smxi ) {
+		defined $class
+		    or $self->wail( 'May not delete sun class' );
+		$self->_set_sun_class( sun => $class );
+	    } elsif ( defined $class ) {
+		load_package( $class );
+		$self->{sky_class}{ fold_case( $name ) } = $class;
+		# TODO this needs to replace the object in the sky if it
+		# is there
+	    } else {
+		delete $self->{sky_class}{ fold_case( $name ) };
+		$self->_drop_from_sky( $name );
+	    }
+	    return;
+	},
 	clear	=> sub {
 	    my ( $self ) = @_;		# Arguments unused
 	    @{ $self->{sky} } = ();
@@ -2720,9 +2741,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    @args or $self->wail(
 		'You must specify at least one name to drop' );
 	    foreach my $name ( @args ) {
-		defined( my $inx = $self->_find_in_sky( $name ) )
-		    or next;
-		splice @{ $self->{sky} }, $inx, $inx + 1;
+		$self->_drop_from_sky( $name );
 	    }
 	    return;
 	},
@@ -3448,6 +3467,16 @@ sub _attribute_exists {
 
 }
 
+# my ( $obj ) = $self->_drop_from_sky( $name );
+# The return is an array containing the dropped body, or nothing if the
+# body was not found.
+sub _drop_from_sky {
+    my ( $self, $name ) = @_;
+    defined( my $inx = $self->_find_in_sky( $name ) )
+	or return;
+    return splice @{ $self->{sky} }, $inx, $inx + 1;
+}
+
 #	$code = $self->_file_reader( $file, \%opt );
 #
 #	This method returns a code snippet that returns the contents of
@@ -3610,27 +3639,24 @@ sub _file_reader_SCALAR {	## no critic (ProhibitUnusedPrivateSubroutines)
 # The return is the index of the named body in @{ $self->{sky} }, or
 # undef if it is not present. 'Sun' and 'Moon' are special cases;
 # everything else is presumed to be found by name.
-{
-    my %special = map {;
-	fold_case( $_ ) => "Astro::Coord::ECI::\u$_"
-    } qw{ sun moon };
-
-    sub _find_in_sky {
-	my ( $self, $name ) = @_;
-	$name = fold_case( $name );
-	my $check = $special{$name} ? sub {
-	    instance( $self->{sky}[$_[0]], $special{$name} )
-	} : do {
-	    my $re = qr/ \A \Q$name\E \z /smxi;
-	    sub { $self->{sky}[$_[0]]->get( 'name' ) =~ $re };
-	};
-
-	foreach my $inx ( 0 .. $#{ $self->{sky} } ) {
-	    $check->( $inx )
-		and return $inx;
+sub _find_in_sky {
+    my ( $self, $name ) = @_;
+    $name = fold_case( $name );
+    my $check = $self->{sky_class}{$name} ? do {
+	my $class = $self->{sky_class}{$name};
+	sub {
+	    instance( $self->{sky}[$_[0]], $class )
 	}
-	return;
+    } : do {
+	my $re = qr/ \A \Q$name\E \z /smxi;
+	sub { $self->{sky}[$_[0]]->get( 'name' ) =~ $re };
+    };
+
+    foreach my $inx ( 0 .. $#{ $self->{sky} } ) {
+	$check->( $inx )
+	    and return $inx;
     }
+    return;
 }
 
 # Documented in POD
@@ -4345,6 +4371,19 @@ sub _read_continuation {
     $self->{echo} and $self->whinge( $prompt, $more );
     $more =~ m/ \n \z /smx or $more .= "\n";
     return $more;
+}
+
+# my ( $obj ) = $self->_replace_in_sky( $name );
+# This is restricted to objects constructed via {sky_class}.
+# The return is an array containing the replaced body, or nothing if
+# the body was not found.
+sub _replace_in_sky {
+    my ( $self, $name, $class ) = @_;
+    ( $class ||= $self->{sky_class}{ fold_case( $name ) } )
+	or $self->weep( "Can not replace $name; no class defined" );
+    defined( my $inx = $self->_find_in_sky( $name ) )
+	or return;
+    return splice @{ $self->{sky} }, $inx, $inx + 1, $class->new();
 }
 
 #	$self->_rewrite_level1_command( $buffer, $context );
