@@ -201,7 +201,6 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 	    },
 	    Verb	=> $list,
 	);
-##	%want = map {$_ => 1} qw{Configure Verb};
     }
 
     sub FETCH_CODE_ATTRIBUTES {
@@ -280,7 +279,7 @@ my %mutator = (
     singleton => \&_set_unmodified,
     spacetrack => \&_set_spacetrack,
     stdout => \&_set_stdout,
-    sun		=> \&_set_sun_class,
+    sun	=> \&_set_sun_class,		# Only in {level1}
     time_format => \&_set_formatter_attribute,
     time_formatter => \&_set_formatter_attribute,
     time_parser => \&_set_time_parser,
@@ -327,6 +326,7 @@ my %shower = (
     gmt => \&_show_formatter_attribute,
     local_coord => \&_show_formatter_attribute,
     pass_variant	=> \&_show_pass_variant,
+    sun		=> \&_show_sun_class,	# only in {level1}
     time_parser => \&_show_copyable,
     time_format => \&_show_formatter_attribute,
     time_formatter	=> \&_show_formatter_attribute,
@@ -351,7 +351,6 @@ my %static = (
     background => 1,
     backdate => 0,
     continuation_prompt => '> ',
-##  country => 'us',				# Deprecated
     date_format => '%a %d-%b-%Y',
     debug => 0,
     echo => 0,
@@ -385,7 +384,6 @@ my %static = (
     singleton => 0,
 #   spacetrack => undef,	# Astro::SpaceTrack object set when accessed
 #   stdout => undef,		# Set to stdout in new().
-    sun		=> SUN_CLASS_DEFAULT,
     time_parser => 'Astro::App::Satpass2::ParseTime',	# Time parser class.
     twilight => 'civil',
     tz => $ENV{TZ},
@@ -603,9 +601,6 @@ sub dispatch {
 	and $self->__get_attr($code, 'Verb')
 	or $self->wail("Unknown interactive method '$verb'");
 
-##    $self->{_interactive} = \$verb;	# Any local variable will do.
-##    weaken ($self->{_interactive});	# Goes away when $verb does.
-
     my $rslt;
     $unsatisfied
 	and not $self->__get_attr( $code, Tweak => {} )->{unsatisfied}
@@ -661,38 +656,6 @@ sub drop : Verb() {
 
     return;
 }
-
-=begin comment
-
-sub dump : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
-    my ( $self, undef, $arg ) = __arguments( @_ );	# $opt unused
-    if ( defined $arg ) {
-	if ( 'twilight' eq $arg ) {
-	    return <<"EOD";
-twilight => @{[ $self->{twilight} ]}
-_twilight => @{[ $self->{_twilight} ]}
-EOD
-	} else {
-	    my @d = $self->__choose( [ $arg ], $self->{bodies} );
-	    if ( defined( my $inx = $self->_find_in_sky( $arg ) ) ) {
-		push @d, $self->{sky}[$inx];
-	    }
-	    @d
-		or return "Nothing matched '$arg'";
-	    return $self->_get_dumper()->( @d );
-	}
-    } else {
-	my $tp = delete $self->{time_parser};
-	$self->{time_parser} = ref $tp;
-	my $dump = $self->_get_dumper()->( $self );
-	$self->{time_parser} = $tp;
-	return $dump;
-    }
-}
-
-=end comment
-
-=cut
 
 sub dump : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
     my ( $self, undef, @arg ) = __arguments( @_ );	# $opt unused
@@ -788,7 +751,6 @@ sub execute {
 
 	my $frame_depth = $#{$self->{frame}};
 	$self->{frame}[-1]{localout} = $stdout;
-##	ref $stdout and weaken ($self->{frame}[-1]{localout});
 
 	my $output = $self->dispatch( @$args );
 
@@ -1438,44 +1400,13 @@ sub list : Verb( choose=s@ ) {
     return;
 }
 
-=begin comment
-
-sub _glob_files {
-    my @arg = @_;
-    my @rslt;
-    foreach ( @arg ) {
-	if ( openhandle( $_ ) || ref $_ ) {
-	    push @rslt, $_;
-	} else {
-	    push @rslt, bsd_glob( $_, GLOB_NOSORT | GLOB_BRACE |
-		GLOB_QUOTE | GLOB_NOCHECK );
-	}
-    }
-    return @rslt;
-}
-
-=end comment
-
-=cut
-
 sub load : Verb( verbose! ) {
     my ( $self, $opt, @names ) = __arguments( @_ );
     @names or $self->wail( 'No file names specified' );
 
-=begin comment
-
-    @names = map {
-	bsd_glob( $_, GLOB_NOSORT | GLOB_BRACE | GLOB_QUOTE )
-    } @names;
-    @names = _glob_files( @names );
-    @names or $self->wail( 'No files found' );
-
-=end comment
-
-=cut
-
     my $attrs = {
-	map { $_ => $self->get( $_ ) } qw{ illum sun },
+	illum	=> $self->get( 'illum' ),
+	sun	=> $self->_sky_object( 'sun' ),
     };
 
     foreach my $fn ( @names ) {
@@ -1840,19 +1771,6 @@ sub pass : Verb( choose=s@ appulse! brightest|magnitude! chronological! dump! ev
 	my ( undef, $opt, @passes ) = @_;	# Invocant unused
 	my @rslt;
 	foreach my $pass ( @passes ) {
-
-=begin comment
-
-	    @{ $pass->{events} } = grep {
-		    ! isdual( $_->{event} )
-		    || $_->{event} == PASS_EVENT_NONE
-		    || $opt->{ $selector[ $_->{event} ] }
-		} @{ $pass->{events} }
-		and push @rslt, $pass;
-
-=end comment
-
-=cut
 	    @{ $pass->{events} } = grep {
 		_pass_select_event_code( $opt, $_->{event} )
 		} @{ $pass->{events} }
@@ -2310,26 +2228,6 @@ sub _set_distance_meters {
 	( $_[0]->__parse_distance( $_[2], '0m' ) * 1000 ) : $_[2] );
 }
 
-sub _set_eci_class {
-    my ( $self, $name, $val, $class ) = @_;
-    ref $val and $self->wail( "$name must not be a reference" );
-    if ( defined $val ) {
-	$self->_load_module( $val );
-	$val->isa( $class )
-	    or $self->wail( "$name must be an $class" );
-    } else {
-	$val = $class;
-    }
-    $self->{$name} = $val;
-    $self->{_help_module}{$name}
-	and $self->{_help_module}{$name} = $val;
-    foreach my $body ( @{ $self->{bodies} } ) {
-	$body->set( $name => $val );
-    }
-    $self->_replace_in_sky( $name, $val );
-    return;
-}
-
 sub _set_ellipsoid {
     my ($self, $name, $val) = @_;
     Astro::Coord::ECI->set (ellipsoid => $val);
@@ -2368,8 +2266,23 @@ sub _set_geocoder {
 }
 
 sub _set_illum_class {
-    $_[3] = 'Astro::Coord::ECI';
-    goto &_set_eci_class;
+    my ( $self, $name, $val ) = @_;
+    my $class = 'Astro::Coord::ECI';
+    ref $val and $self->wail( "$name must not be a reference" );
+    if ( defined $val ) {
+	$self->_load_module( $val );
+	$val->isa( $class )
+	    or $self->wail( "$name must be an $class" );
+    } else {
+	$val = $class;
+    }
+    $self->{$name} = $val;
+    $self->{_help_module}{$name}
+	and $self->{_help_module}{$name} = $val;
+    foreach my $body ( @{ $self->{bodies} } ) {
+	$body->set( $name => $val );
+    }
+    return;
 }
 
 #sub _set_lowercase {
@@ -2479,12 +2392,8 @@ sub _set_stdout {
 
 sub _set_sun_class {
     my ( $self, $name, $val ) = @_;
-    $self->_set_eci_class( $name, $val, SUN_CLASS_DEFAULT );
-    $self->{sky_class}{sun} = $val;
-    foreach my $body ( @{ $self->{sky} } ) {
-	$body->set( $name, $val );
-    }
-    return;
+    $self->_attribute_exists( $name );
+    return $self->sky( class => $name, $val );
 }
 
 sub _set_time_parser {
@@ -2581,6 +2490,8 @@ sub show : Verb( changes! deprecated! readonly! ) {
 
     unless ( @args ) {
 	foreach my $name ( sort keys %accessor ) {
+	    $self->_attribute_exists( $name, query => 1 )
+		or next;
 	    $nointeractive{$name}
 		and next;
 	    exists $mutator{$name}
@@ -2622,6 +2533,12 @@ sub _show_formatter_attribute {
     my ( $self, $name ) = @_;
     my $val = $self->{formatter}->decode( $name );
     return ( qw{ formatter }, $name, $val );
+}
+
+sub _show_sun_class {
+    my ( $self, $name ) = @_;
+    $self->_attribute_exists( $name );
+    return $self->_sky_class_components( $name );
 }
 
 sub _show_unmodified {
@@ -2680,11 +2597,10 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 		and return;
 	    my $fcn = fold_case( $name );
 	    if ( my $class = $self->{sky_class}{$fcn} ) {
-		SUN_CLASS_DEFAULT eq $class
-		    and $class = $self->get( 'sun' );
 		load_package( $class );
 		push @{ $self->{sky} }, $class->new(
 		    debug	=> $self->{debug},
+		    sun		=> $self->_sky_object( 'sun' ),
 		);
 	    } else {
 		@args >= 2
@@ -2706,29 +2622,50 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 		push @{ $self->{sky} }, Astro::Coord::ECI::Star->new(
 		    debug	=> $self->{debug},
 		    name	=> $name,
+		    sun		=> $self->_sky_object( 'sun' ),
 		)->position( $ra, $dec, $rng, $pmra, $pmdec, $pmrec );
 	    }
 	    return;
 	},
 	class	=> sub {
 	    my ( $self, $name, $class ) = @_;
-	    if ( ! defined $name ) {
+
+	    if ( ! defined $class ) {
 		return join '', map {
-		    "sky class $_ $self->{sky_class}{$_}\n" }
-		    sort keys %{ $self->{sky_class} };
-	    } elsif ( $name =~ m/ \A sun \z /smxi ) {
-		defined $class
-		    or $self->wail( 'May not delete sun class' );
-		$self->_set_sun_class( sun => $class );
-	    } elsif ( defined $class ) {
-		load_package( $class );
-		$self->{sky_class}{ fold_case( $name ) } = $class;
-		# TODO this needs to replace the object in the sky if it
-		# is there
-	    } else {
+		    join( ' ', map { quoter( $_ ) }
+			$self->_sky_class_components( $_ ) ) . "\n"
+		    } defined $name ? ( fold_case( $name ) ) : (
+			sort keys %{ $self->{sky_class} } );
+	    } elsif ( $class =~ m/ \A --? (?:
+		d|de|del|dele|delet|delete) \z /smxi ) {
+		$name =~ m/ \A sun \z /smxi
+		    and $self->wail( 'Can not remove Sun class' );
+		defined $self->_find_in_sky( $name )
+		    and $self->wail( 'Can not remove in-use class' );
 		delete $self->{sky_class}{ fold_case( $name ) };
-		$self->_drop_from_sky( $name );
+	    } else {
+		load_package( $class );
+		my $want_class = $name =~ m/ \A sun \z /smxi ?
+		    SUN_CLASS_DEFAULT :
+		    'Astro::Coord::ECI';
+		embodies( $class, $want_class )
+		    or $self->wail(
+		    "Must be a subclass of $want_class" );
+		my $folded_name = fold_case( $name );
+		$self->{sky_class}{$folded_name} = $class;
+		$self->_replace_in_sky( $folded_name );
+		$self->{_help_module}{$folded_name} = $class;
+		if ( $name =~ m/ \A sun \z /smxi ) {
+		    foreach my $body (
+			@{ $self->{bodies} }, @{ $self->{sky} }
+		    ) {
+			$body->set(
+			    sun => $self->_sky_object( 'sun' ),
+			);
+		    }
+		}
 	    }
+
 	    return;
 	},
 	clear	=> sub {
@@ -2772,7 +2709,10 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	    $output .= 'sky add ' . quoter ($name) .
 		" $ra $dec $rng $pmra $pmdec $pmrec\n";
 	    $ra = deg2rad ($self->__parse_angle ($ra));
-	    my $body = Astro::Coord::ECI::Star->new (name => $name);
+	    my $body = Astro::Coord::ECI::Star->new(
+		name	=> $name,
+		sun	=> $self->_sky_object( 'sun' ),
+	      );
 	    $body->position ($ra, deg2rad ($self->__parse_angle ($dec)),
 		$rng * PARSEC, deg2rad ($pmra * 24 / 360 / cos ($ra) / SPY2DPS),
 		deg2rad ($pmdec / SPY2DPS), $pmrec);
@@ -2798,6 +2738,24 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 	return;	# We can't get here, but Perl::Critic does not know this.
     }
 
+}
+
+# Given the name of a potential background object, return its definition
+# as an array.
+sub _sky_class_components {
+    my ( $self, $name ) = @_;
+    $name = fold_case( $name );
+    $self->{sky_class}{$name}
+	or $self->weep( "No class defined for $name" );
+    return( qw{ sky class }, $name, $self->{sky_class}{$name} );
+}
+
+# Given the name of a potential sky object, instantiate it.
+sub _sky_object {
+    my ( $self, $name ) = @_;
+    my $class = $self->{sky_class}{ fold_case( $name ) }
+	or $self->weep( "No class defined for $name" );
+    return $class->new();
 }
 
 sub _sky_tle {
@@ -3250,16 +3208,26 @@ sub _apply_boolean_default {
     return;
 }
 
-#	$self->_attribute_exists( $name );
+#	$self->_attribute_exists( $name, %arg );
 #
 #	This method returns true if an accessor for the given attribute
 #	exists, and croaks otherwise.
+#	Attributes in the %level1_attr hash fail unless in level1 mode
+#	Named arguments:
+#	  query: if true, returns false if attribute does not exist
 
-sub _attribute_exists {
-    my ( $self, $name ) = @_;
-    exists $accessor{$name}
-	or $self->wail("No such attribute as '$name'");
-    return $accessor{$name};
+{
+    my %level1_attr = map { $_ => 1 } qw{ sun };
+
+    sub _attribute_exists {
+	my ( $self, $name, %arg ) = @_;
+	exists $accessor{$name}
+	    and ( ! $level1_attr{$name} || $self->{frame}[-1]{level1} )
+	    and return $accessor{$name};
+	$arg{query}
+	    or $self->wail("No such attribute as '$name'");
+	return;
+    }
 }
 
 {
@@ -3641,19 +3609,10 @@ sub _file_reader_SCALAR {	## no critic (ProhibitUnusedPrivateSubroutines)
 # everything else is presumed to be found by name.
 sub _find_in_sky {
     my ( $self, $name ) = @_;
-    $name = fold_case( $name );
-    my $check = $self->{sky_class}{$name} ? do {
-	my $class = $self->{sky_class}{$name};
-	sub {
-	    instance( $self->{sky}[$_[0]], $class )
-	}
-    } : do {
-	my $re = qr/ \A \Q$name\E \z /smxi;
-	sub { $self->{sky}[$_[0]]->get( 'name' ) =~ $re };
-    };
 
+    my $re = qr/ \A \Q$name\E \z /smxi;
     foreach my $inx ( 0 .. $#{ $self->{sky} } ) {
-	$check->( $inx )
+	$self->{sky}[$inx]->get( 'name' ) =~ $re
 	    and return $inx;
     }
     return;
@@ -6860,6 +6819,41 @@ kilometers per second). All but right ascension and declination may be
 omitted. It is an error to attempt to add an object which is already
 listed among the background objects. Nothing is returned.
 
+'Class' maintains the classes of background objects. The arguments are
+the object name and the class that represents that object. The action of
+the subcommand depends on the arguments given:
+
+=over
+
+=item * no arguments
+
+All defined objects and their classes are listed.
+
+=item * name
+
+The definition of that object, if any, is listed. Names are case-folded
+before use to the best of our ability, which depending on our version of
+Perl may not be much.
+
+=item * name class
+
+The given class is defined as the class of the named object. The class
+must be a subclass of L<Astro::Coord::ECI|Astro::Coord::ECI>, or
+L<Astro::Coord::ECI::Sun|Astro::Coord::ECI::Sun> if the name is
+C<'Sun'>. If there are currently any background objects of the given
+name, they are replaced by objects of the new class. In addition, if the
+name is C<'Sun'> the C<'sun'> attribute of all satellites and background
+objects is replaced.
+
+=item * name -delete
+
+This special-case code (with C<-delete> in lieu of a class name) deletes
+the definition of the given name. The option can be specified with two
+dashes, and can be abbreviated. The definition of the Sun may not be
+deleted.
+
+=back
+
 'Clear' clears all background objects. It takes no arguments. Nothing is
 returned.
 
@@ -7988,14 +7982,6 @@ gotten or set via the L</dispatch> method, and therefore not by the
 F<satpass2> script.
 
 The default is the C<STDOUT> file handle.
-
-=head2 sun
-
-This string specifies the name of the class to be used for the
-L<Astro::Coord::ECI|Astro::Coord::ECI> C<sun> attribute. If you specify
-C<undef> you get the default.
-
-The default is L<Astro::Coord::ECI::Sun|Astro::Coord::ECI::Sun>.
 
 =head2 time_format
 
