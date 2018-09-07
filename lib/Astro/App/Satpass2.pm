@@ -2266,28 +2266,23 @@ sub _set_geocoder {
 }
 
 sub _set_illum_class {
-    my ( $self, $name, $val ) = @_;
-    my $class = 'Astro::Coord::ECI';
-    ref $val and $self->wail( "$name must not be a reference" );
-    if ( defined $val ) {
-	$self->_load_module( $val );
-	$val->isa( $class )
-	    or $self->wail( "$name must be an $class" );
+    my ( $self, $name, $class ) = @_;
+    my $want_class = 'Astro::Coord::ECI';
+    ref $class and $self->wail( "$name must not be a reference" );
+    if ( defined $class ) {
+	$self->load_package( { fatal => 'wail' }, $class );
+	$class->isa( $want_class )
+	    or $self->wail( "$name must be an $want_class" );
     } else {
-	$val = $class;
+	$class = $want_class;
     }
-    $self->{$name} = $val;
-    $self->{_help_module}{$name}
-	and $self->{_help_module}{$name} = $val;
+    $self->{$name} = $class;
+    $self->{_help_module}{$name} = $class;
     foreach my $body ( @{ $self->{bodies} } ) {
-	$body->set( $name => $val );
+	$body->set( $name => $class );
     }
     return;
 }
-
-#sub _set_lowercase {
-#    return ($_[0]{$_[1]} = lc $_[2]);
-#}
 
 sub _set_model {
     my ( $self, $name, $val ) = @_;
@@ -2597,7 +2592,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 		and return;
 	    my $fcn = fold_case( $name );
 	    if ( my $class = $self->{sky_class}{$fcn} ) {
-		load_package( $class );
+		$self->load_package( { fatal => 'wail' }, $class );
 		push @{ $self->{sky} }, $class->new(
 		    debug	=> $self->{debug},
 		    sun		=> $self->_sky_object( 'sun' ),
@@ -2644,7 +2639,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 		    and $self->wail( 'Can not remove in-use class' );
 		delete $self->{sky_class}{ fold_case( $name ) };
 	    } else {
-		load_package( $class );
+		$self->load_package( { fatal => 'wail' }, $class );
 		my $want_class = $name =~ m/ \A sun \z /smxi ?
 		    SUN_CLASS_DEFAULT :
 		    'Astro::Coord::ECI';
