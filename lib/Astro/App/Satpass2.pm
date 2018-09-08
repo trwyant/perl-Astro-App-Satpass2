@@ -2108,12 +2108,57 @@ EOD
 	( $self->$attribute( $opt, 'config' ) || "# none\n" );
     }
 
+    $output .= $self->_save_sky( $opt );
+
     if ($fn ne '-') {
 	my $fh = IO::File->new( $fn, '>:encoding(utf-8)')
 	    or $self->wail("Unable to open $fn: $!");
 	print { $fh } $output;
 	$output = "$fn\n";
     }
+    return $output;
+}
+
+# Formats the commands to reconstitute the sky. This is only called from
+# save(), but it is a subroutine for organizational reasons.
+sub _save_sky {
+    my ( $self, $opt ) = @_;
+
+    my $output = <<'EOD';
+
+# Astro::App::Satpass2 sky
+
+EOD
+
+    foreach my $body ( sort keys %{ $self->{sky_class} } ) {
+	$opt->{changes}
+	    and $sky_class{$body}
+	    and $sky_class{$body} eq $self->{sky_class}{$body}
+	    and next;
+	$output .= "sky class $body $self->{sky_class}{$body}\n";
+    }
+    foreach my $body ( sort keys ( %sky_class ) ) {
+	$self->{sky_class}{$body}
+	    or $output .= "sky class $body\n";
+    }
+
+    my %exclude;
+    if ( $opt->{changes} ) {
+	%exclude = map { $_ => 1 }
+	    SUN_CLASS_DEFAULT, 'Astro::Coord::ECI::Moon';
+	foreach my $name ( qw{ sun moon } ) {
+	    defined $self->_find_in_sky( $name )
+		or $output .= "sky drop $name\n";
+	}
+    } else {
+	$output .= "sky clear\n";
+    }
+    foreach my $body ( @{ $self->{sky} } ) {
+	$exclude{ ref $body }
+	    and next;
+	$output .= _sky_list_body( $body );
+    }
+
     return $output;
 }
 
@@ -2560,6 +2605,26 @@ sub _show_unmodified {
 
 use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 
+# Given a body in the sky, encodes it in 'sky add' format
+sub _sky_list_body {
+    my ( $body ) = @_;
+    if ( embodies( $body, 'Astro::Coord::ECI::TLE' ) ) {
+	return sprintf "sky tle %s\n", quoter(
+	    $body->get( 'tle' ) );
+    } elsif ( $body->isa( 'Astro::Coord::ECI::Star' ) ) {
+	my ( $ra, $dec, $rng, $pmra, $pmdec, $vr ) = $body->position();
+	$rng /= PARSEC;
+	$pmra = rad2deg( $pmra / 24 * 360 * cos( $ra ) ) * SPY2DPS;
+	$pmdec = rad2deg( $pmdec ) * SPY2DPS;
+	return sprintf
+	    "sky add %s %s %7.3f %.2f %.4f %.5f %s\n",
+	    quoter( $body->get( 'name' ) ), _rad2hms( $ra ),
+	    rad2deg( $dec ), $rng, $pmra, $pmdec, $vr;
+    } else {
+	return sprintf "sky add %s\n", quoter( $body->get( 'name' ) );
+    }
+}
+
 {
 
     my %handler = (
@@ -2572,22 +2637,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 		map { [ lc( $_->get( 'name' ) || $_->get( 'id' ) ), $_ ] }
 		@{$self->{sky}}
 	    ) {
-		if ( embodies( $body, 'Astro::Coord::ECI::TLE' ) ) {
-		    $output .= sprintf "sky tle %s\n", quoter(
-			$body->get( 'tle' ) );
-		} elsif ($body->isa ('Astro::Coord::ECI::Star')) {
-		    my ($ra, $dec, $rng, $pmra, $pmdec, $vr) = $body->position ();
-		    $rng /= PARSEC;
-		    $pmra = rad2deg ($pmra / 24 * 360 * cos ($ra)) * SPY2DPS;
-		    $pmdec = rad2deg ($pmdec) * SPY2DPS;
-		    $output .= sprintf (
-			"sky add %s %s %7.3f %.2f %.4f %.5f %s\n",
-			quoter ($body->get ('name')), _rad2hms ($ra),
-			rad2deg ($dec), $rng, $pmra, $pmdec, $vr);
-		} else {
-		    $output .= 'sky add ' . quoter (
-			$body->get ('name')) . "\n";
-		}
+		$output .= _sky_list_body( $body );
 	    }
 	    unless (@{$self->{sky}}) {
 		$self->{warn_on_empty}
