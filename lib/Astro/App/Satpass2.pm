@@ -538,10 +538,21 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter
 }
 
 sub begin : Verb() Tweak( -unsatisfied ) {
-    my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
+    my ( $self, $opt, @args ) = __arguments( @_ );
     $self->_frame_push(
 	begin => @args ? \@args : $self->{frame}[-1]{args});
+    $self->{frame}[-1]{level1} = $opt->{level1};
     return;
+}
+
+# -level1 is UNSUPPORTED and may be removed without warning. It is only
+# there for me to screw around with.
+BEGIN {
+    $ENV{SATPASS2_LEVEL1}
+	and __PACKAGE__->MODIFY_CODE_ATTRIBUTES(
+	\&begin,
+	'Verb( level1! )',
+    );
 }
 
 sub cd : Verb() {
@@ -2627,8 +2638,7 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 
 	    if ( ! defined $class ) {
 		return join '', map {
-		    join( ' ', map { quoter( $_ ) }
-			$self->_sky_class_components( $_ ) ) . "\n"
+		    $self->_sky_class_components( $_ ) . "\n"
 		    } defined $name ? ( fold_case( $name ) ) : (
 			sort keys %{ $self->{sky_class} } );
 	    } elsif ( $class =~ m/ \A --? (?:
@@ -2735,14 +2745,18 @@ use constant SPY2DPS => 3600 * 365.24219 * SECSPERDAY;
 
 }
 
-# Given the name of a potential background object, return its definition
-# as an array.
+# Given the name of a potential background object, return its
+# definition. This is an array in list context, or a quoted string in
+# scalar context.
 sub _sky_class_components {
     my ( $self, $name ) = @_;
     $name = fold_case( $name );
     $self->{sky_class}{$name}
 	or $self->weep( "No class defined for $name" );
-    return( qw{ sky class }, $name, $self->{sky_class}{$name} );
+    my @parts = ( qw{ sky class }, $name, $self->{sky_class}{$name} );
+    wantarray
+	and return @parts;
+    return join ' ', map { quoter( $_ ) } @parts;
 }
 
 # Given the name of a potential sky object, instantiate it.
