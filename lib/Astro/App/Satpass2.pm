@@ -4401,7 +4401,8 @@ sub _replace_in_sky {
 	or $self->weep( "Can not replace $name; no class defined" );
     defined( my $inx = $self->_find_in_sky( $name ) )
 	or return;
-    return splice @{ $self->{sky} }, $inx, $inx + 1, $class->new();
+    return splice @{ $self->{sky} }, $inx, $inx + 1, $self->_sky_object(
+	$name );
 }
 
 #	$self->_rewrite_level1_command( $buffer, $context );
