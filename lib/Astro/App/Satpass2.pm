@@ -397,10 +397,12 @@ my %static = (
 my %sky_class = (
     fold_case( 'Sun' ) => SUN_CLASS_DEFAULT,
     fold_case( 'Moon' ) => 'Astro::Coord::ECI::Moon',
-    # The shape of things to come -- maybe
-    ( map { fold_case( $_ ) =>
-	"Astro::Coord::ECI::VSOP87D::$_" } qw{ Mercury Venus
-	Mars Jupiter Saturn Uranus Neptune } ),
+#    # The shape of things to come -- maybe
+#    # but commented out because Astro-App-Satpass2 does not depend on
+#    # these
+#    ( map { fold_case( $_ ) =>
+#	"Astro::Coord::ECI::VSOP87D::$_" } qw{ Mercury Venus
+#	Mars Jupiter Saturn Uranus Neptune } ),
 );
 
 sub new {
