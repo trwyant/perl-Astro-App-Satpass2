@@ -23,12 +23,12 @@ our @EXPORT = qw{
     application
     check_access
     check_datetime_timezone_local
-    class
+    klass
     dump_date_manip
     dump_date_manip_init
     execute
     load_or_skip
-    method
+    call_m
     normalize_path
     same_path
     FALSE
@@ -103,7 +103,7 @@ sub check_datetime_timezone_local {
     };
 }
 
-sub class ($) {
+sub klass ($) {
     ( $app ) = @_;
     return;
 }
@@ -172,7 +172,7 @@ sub class ($) {
 
 sub execute (@) {	## no critic (RequireArgUnpacking)
     splice @_, 0, 0, 'execute';
-    goto &method;
+    goto &call_m;
 }
 
 {
@@ -222,7 +222,7 @@ sub execute (@) {	## no critic (RequireArgUnpacking)
     }
 }
 
-sub method (@) {	## no critic (RequireArgUnpacking)
+sub call_m (@) {	## no critic (RequireArgUnpacking)
     my ( $method, @args ) = @_;
     my ( $want, $title ) = splice @args, -2;
     my $got;
@@ -390,9 +390,9 @@ seeing test failures thre, where presumably the Windows machinery would
 come up with a time zone. We assume the user who really wants to use
 this machinery will sort things out.
 
-=head2 class
+=head2 klass
 
- class 'Astro::App::Satpass2';
+ klass 'Astro::App::Satpass2';
 
 This subroutine replaces the stored object (if any) with the given class
 name. The stored object is initialized to C<'Astro::App::Satpass2'>.
@@ -409,7 +409,7 @@ tests the result. The last argument is the test name; the next-to-last
 is the expected result.  All other arguments are arguments to
 C<execute()>.
 
-This is really just a convenience wrapper for L<method()|/method>.
+This is really just a convenience wrapper for L<call_m()|/call_m>.
 
 =head2 load_or_skip
 
@@ -458,11 +458,11 @@ This method enforces version limits on the following module:
 
  DateTime::Calendar::Christian  0.06
 
-=head2 method
+=head2 call_m
 
- method 'new', undef, 'Instantiate a new object';
- method get => 'twilight', 'civil', 'Confirm civil twilight';
- method set => twilight => 'astronomical', undef,
+ call_m 'new', undef, 'Instantiate a new object';
+ call_m get => 'twilight', 'civil', 'Confirm civil twilight';
+ call_m set => twilight => 'astronomical', undef,
      'Set astronomical twilight';
 
 This subroutine calls an arbitrary method on the stored object and tests
@@ -515,21 +515,21 @@ L<Astro::App::Satpass2|Astro::App::Satpass2> name space:
 
 =head2 __TEST__frame_stack_depth
 
- method __TEST__frame_stack_depth => 1, 'Stack is empty';
+ call_m __TEST__frame_stack_depth => 1, 'Stack is empty';
 
 This method returns the context frame stack depth. There is always 1
 frame, even when the stack is nominally empty.
 
 =head2 __TEST__is_exported
 
- method __TEST__is_exported => 'foo', 1, 'Foo is exported';
+ call_m __TEST__is_exported => 'foo', 1, 'Foo is exported';
 
 This method returns C<1> if the given variable is currently exported,
 and C<0> otherwise.
 
 =head2 __TEST__raw_attr
 
- method __TEST__raw_attr => '_twilight', '%.3f', -0.215,
+ call_m __TEST__raw_attr => '_twilight', '%.3f', -0.215,
      'Twilight in radians';
 
 This method bypasses the accessors and accesses attribute values
