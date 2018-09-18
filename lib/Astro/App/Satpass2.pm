@@ -395,8 +395,8 @@ my %static = (
 );
 
 my %sky_class = (
-    fold_case( 'Sun' ) => SUN_CLASS_DEFAULT,
-    fold_case( 'Moon' ) => 'Astro::Coord::ECI::Moon',
+    fold_case( 'Sun' ) => [ SUN_CLASS_DEFAULT ],
+    fold_case( 'Moon' ) => [ 'Astro::Coord::ECI::Moon' ],
 #    # The shape of things to come -- maybe
 #    # but commented out because Astro-App-Satpass2 does not depend on
 #    # these
@@ -2137,11 +2137,11 @@ EOD
 	    and $sky_class{$body}
 	    and $sky_class{$body} eq $self->{sky_class}{$body}
 	    and next;
-	$output .= "sky class $body $self->{sky_class}{$body}\n";
+	$output .= $self->_sky_class_components( $body ) . "\n";
     }
     foreach my $body ( sort keys ( %sky_class ) ) {
 	$self->{sky_class}{$body}
-	    or $output .= "sky class $body\n";
+	    or $output .= $self->_sky_class_components( $body ) . "\n";
     }
 
     my %exclude;
@@ -2653,13 +2653,8 @@ sub _sky_list_body {
 		or $self->wail( 'You did not specify what to add' );
 	    defined $self->_find_in_sky( $name )
 		and return;
-	    my $fcn = fold_case( $name );
-	    if ( my $class = $self->{sky_class}{$fcn} ) {
-		$self->load_package( { fatal => 'wail' }, $class );
-		push @{ $self->{sky} }, $class->new(
-		    debug	=> $self->{debug},
-		    sun		=> $self->_sky_object( 'sun' ),
-		);
+	    if ( my $obj = $self->_sky_object( $name, fatal => 0 ) ) {
+		push @{ $self->{sky} }, $obj;
 	    } else {
 		@args >= 2
 		    or $self->wail(
@@ -2686,7 +2681,7 @@ sub _sky_list_body {
 	    return;
 	},
 	class	=> sub {
-	    my ( $self, $name, $class ) = @_;
+	    my ( $self, $name, $class, @attr ) = @_;
 
 	    if ( ! defined $class ) {
 		return join '', map {
@@ -2708,8 +2703,9 @@ sub _sky_list_body {
 		embodies( $class, $want_class )
 		    or $self->wail(
 		    "Must be a subclass of $want_class" );
+		$class->new( @attr );	# To validate @attr
 		my $folded_name = fold_case( $name );
-		$self->{sky_class}{$folded_name} = $class;
+		$self->{sky_class}{$folded_name} = [ $class, @attr ];
 		$self->_replace_in_sky( $folded_name );
 		$self->{_help_module}{$folded_name} = $class;
 		if ( $name =~ m/ \A sun \z /smxi ) {
@@ -2805,18 +2801,26 @@ sub _sky_class_components {
     $name = fold_case( $name );
     $self->{sky_class}{$name}
 	or $self->weep( "No class defined for $name" );
-    my @parts = ( qw{ sky class }, $name, $self->{sky_class}{$name} );
+    my @parts = ( qw{ sky class }, $name, @{ $self->{sky_class}{$name} } );
     wantarray
 	and return @parts;
     return join ' ', map { quoter( $_ ) } @parts;
 }
 
-# Given the name of a potential sky object, instantiate it.
+# Given the name of a potential sky object, instantiate it. Named
+# arguments are optional; the following are supported:
+#   fatal = Whether failure to find the name is fatal. Default is true.
 sub _sky_object {
-    my ( $self, $name ) = @_;
-    my $class = $self->{sky_class}{ fold_case( $name ) }
-	or $self->weep( "No class defined for $name" );
-    return $class->new();
+    my ( $self, $name, %opt ) = @_;
+    defined $opt{fatal}
+	or $opt{fatal} = 1;
+    if ( my $info = $self->{sky_class}{ fold_case( $name ) } ) {
+	my ( $class, @attr ) = @{ $info };
+	return $class->new( @attr );
+    } elsif ( $opt{fatal} ) {
+	$self->weep( "No class defined for $name" );
+    }
+    return;
 }
 
 sub _sky_tle {
@@ -6897,7 +6901,7 @@ The definition of that object, if any, is listed. Names are case-folded
 before use to the best of our ability, which depending on our version of
 Perl may not be much.
 
-=item * name class
+=item * name class ...
 
 The given class is defined as the class of the named object. The class
 must be a subclass of L<Astro::Coord::ECI|Astro::Coord::ECI>, or
@@ -6906,6 +6910,9 @@ C<'Sun'>. If there are currently any background objects of the given
 name, they are replaced by objects of the new class. In addition, if the
 name is C<'Sun'> the C<'sun'> attribute of all satellites and background
 objects is replaced.
+
+The ellipsis represents attribute name/value pairs, which are used to
+instantiate the object.
 
 =item * name -delete
 
