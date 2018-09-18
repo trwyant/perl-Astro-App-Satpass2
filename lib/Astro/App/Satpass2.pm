@@ -2628,6 +2628,7 @@ sub _sky_list_body {
 }
 
 {
+    my %go;
 
     my %handler = (
 	list	=> sub {
@@ -2681,21 +2682,38 @@ sub _sky_list_body {
 	    return;
 	},
 	class	=> sub {
-	    my ( $self, $name, $class, @attr ) = @_;
-
-	    if ( ! defined $class ) {
-		return join '', map {
-		    $self->_sky_class_components( $_ ) . "\n"
-		    } defined $name ? ( fold_case( $name ) ) : (
-			sort keys %{ $self->{sky_class} } );
-	    } elsif ( $class =~ m/ \A --? (?:
-		d|de|del|dele|delet|delete) \z /smxi ) {
-		$name =~ m/ \A sun \z /smxi
-		    and $self->wail( 'Can not remove Sun class' );
-		defined $self->_find_in_sky( $name )
-		    and $self->wail( 'Can not remove in-use class' );
-		delete $self->{sky_class}{ fold_case( $name ) };
+	    my ( $self, @arg ) = @_;
+	    $go{class} ||= Getopt::Long::Parser->new(
+#		config	=> [ qw{ require_order } ],
+	    );
+	    my %opt;
+	    if ( HASH_REF eq ref $arg[0] ) {
+		%opt = %{ shift @arg };
 	    } else {
+		$go{class}->getoptionsfromarray(
+		    \@arg, \%opt, qw{ add! delete! } )
+		    or $self->wail( 'Invalid option' );
+	    };
+	    $opt{add}
+		and $opt{delete}
+		and $self->wail( 'May not specify both add and delete' );
+
+	    if ( $opt{delete} ) {
+		foreach my $name ( @arg ) {
+		    $name =~ m/ \A sun \z /smxi
+			and $self->wail( 'Can not remove Sun class' );
+		    defined $self->_find_in_sky( $name )
+			and $self->wail( 'Can not remove in-use class' );
+		    delete $self->{sky_class}{ fold_case( $name ) };
+		}
+	    } elsif ( @arg < 2 ) {
+		@arg
+		    or @arg = sort keys %{ $self->{sky_class} };
+		return join '', map {
+		    $self->_sky_class_components( $_ ) . "\n" }
+		    @arg;
+	    } else {
+		my ( $name, $class, @attr ) = @arg;
 		$self->load_package( { fatal => 'wail' }, $class );
 		my $want_class = $name =~ m/ \A sun \z /smxi ?
 		    SUN_CLASS_DEFAULT :
@@ -2703,10 +2721,12 @@ sub _sky_list_body {
 		embodies( $class, $want_class )
 		    or $self->wail(
 		    "Must be a subclass of $want_class" );
-		$class->new( @attr );	# To validate @attr
+		my $obj = $class->new( @attr );	# To validate @attr
 		my $folded_name = fold_case( $name );
 		$self->{sky_class}{$folded_name} = [ $class, @attr ];
-		$self->_replace_in_sky( $folded_name );
+		$self->_replace_in_sky( $folded_name )
+		    or $opt{add}
+		    and push @{ $self->{sky} }, $obj;
 		$self->{_help_module}{$folded_name} = $class;
 		if ( $name =~ m/ \A sun \z /smxi ) {
 		    foreach my $body (
@@ -6872,70 +6892,84 @@ subcommand is given, 'list' is assumed.
 
 The possible subcommands are:
 
-'Add' adds an object to the background. The first argument is the name
-of the object. 'Sun' and 'Moon' (not case-sensitive) are special cases,
-and cause the Sun or Moon to be added. Anything else is assumed to be
-the name of a star, and its coordinates must be given, in the following
-order: right ascension (in either degrees or hours, minutes, and
-seconds), declination (in degrees), range (optionally with units of
-meters ('m'), kilometers ('km'), astronomical units ('au'), light years
-('ly'), or parsecs ('pc', the default) appended), proper motion in right
-ascension and declination (in degrees per year) and in recession (in
-kilometers per second). All but right ascension and declination may be
-omitted. It is an error to attempt to add an object which is already
-listed among the background objects. Nothing is returned.
+=head3 add
 
-'Class' maintains the classes of background objects. The arguments are
-the object name and the class that represents that object. The action of
-the subcommand depends on the arguments given:
+This subcommand adds an object to the background. The first argument is
+the name of the object. If the case-insensitive name of the object
+appears in the sky class list (see below) it is instantiated and added.
+Otherwise the name is assumed to be the name of a star, and its
+coordinates must be given, in the following order: right ascension (in
+either degrees or hours, minutes, and seconds), declination (in
+degrees), range (optionally with units of meters ('m'), kilometers
+('km'), astronomical units ('au'), light years ('ly'), or parsecs ('pc',
+the default) appended), proper motion in right ascension and declination
+(in degrees per year) and in recession (in kilometers per second). All
+but right ascension and declination may be omitted. It is an error to
+attempt to add an object which is already listed among the background
+objects. Nothing is returned.
+
+=head3 class
+
+This subcommand maintains the classes of background objects. It takes
+the following subcommand-specific options:
 
 =over
 
-=item * no arguments
+=item -add
 
-All defined objects and their classes are listed.
+If this Boolean option is asserted, the object is added to the sky once
+it is successfully defined.
 
-=item * name
+You may not specify both C<-add> and C<-delete> on the same command.
 
-The definition of that object, if any, is listed. Names are case-folded
-before use to the best of our ability, which depending on our version of
-Perl may not be much.
+=item -delete
 
-=item * name class ...
+If this Boolean option is asserted, the arguments are the
+case-insensitive names of class definitions to remove. The definition
+for the Sun can not be removed, and any class actually instantiated in
+the sky can not be removed. Nothing is returned.
 
-The given class is defined as the class of the named object. The class
-must be a subclass of L<Astro::Coord::ECI|Astro::Coord::ECI>, or
-L<Astro::Coord::ECI::Sun|Astro::Coord::ECI::Sun> if the name is
-C<'Sun'>. If there are currently any background objects of the given
-name, they are replaced by objects of the new class. In addition, if the
-name is C<'Sun'> the C<'sun'> attribute of all satellites and background
-objects is replaced.
-
-The ellipsis represents attribute name/value pairs, which are used to
-instantiate the object.
-
-=item * name -delete
-
-This special-case code (with C<-delete> in lieu of a class name) deletes
-the definition of the given name. The option can be specified with two
-dashes, and can be abbreviated. The definition of the Sun may not be
-deleted.
+You may not specify both C<-add> and C<-delete> on the same command.
 
 =back
 
-'Clear' clears all background objects. It takes no arguments. Nothing is
+Options can be specified either command-line style (with leading dashes
+or double dashes, as documented above) or as an optional hash reference
+appearing immediately after the subcommand name. In the latter case
+option names must be specified in full.
+
+Unless the C<-delete> option is specified (see above), the arguments are
+the case-insensitive name of the object being defined, the name of the
+class that implements it, and optional attribute values (specified as
+name/value pairs). This information is added to the known object
+definitions, replacing the previous definition if any. Nothing is
 returned.
 
-'Drop' removes background objects. The arguments are the names of the
-background objects to be removed, or portions thereof. They are made
-into a case-insensitive regular expression to perform the removal.
+If only a name is specified, the definition of that name is returned,
+formatted as a C<'sky class'> command. If no arguments at all are
+specified, all defined classes are returned.
+
+=head3 clear
+
+This subcommand clears all background objects. It takes no arguments.
 Nothing is returned.
 
-'List' returns a string containing a list of the background objects, in
-the format of the 'sky add' commands needed to re-create them. If no
-subcommand at all is given, 'list' is assumed.
+=head3 drop
 
-'Lookup' takes as its argument a name, looks that name up in the
+This subcommand removes background objects. The arguments are the names
+of the background objects to be removed, or portions thereof. They are
+made into a case-insensitive regular expression to perform the removal.
+Nothing is returned.
+
+=head3 list
+
+This subcommand returns a string containing a list of the background
+objects, in the format of the 'sky add' commands needed to re-create
+them. If no subcommand at all is given, 'list' is assumed.
+
+=head3 lookup
+
+This subcommand takes as its argument a name, looks that name up in the
 University of Strasbourg's SIMBAD database, and adds the object to the
 background. An error occurs if the object can not be found. This
 subcommand will fail if the
