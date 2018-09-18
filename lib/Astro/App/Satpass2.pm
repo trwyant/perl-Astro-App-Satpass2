@@ -2699,12 +2699,15 @@ sub _sky_list_body {
 		and $self->wail( 'May not specify both add and delete' );
 
 	    if ( $opt{delete} ) {
-		foreach my $name ( @arg ) {
-		    $name =~ m/ \A sun \z /smxi
+		foreach my $alias ( @arg ) {
+		    $alias = fold_case( $alias );
+		    'sun' eq $alias
 			and $self->wail( 'Can not remove Sun class' );
+		    my ( undef, %attr ) = @{ $self->{sky_class}{$alias} };
+		    my $name = $attr{name} || $alias;
 		    defined $self->_find_in_sky( $name )
 			and $self->wail( 'Can not remove in-use class' );
-		    delete $self->{sky_class}{ fold_case( $name ) };
+		    delete $self->{sky_class}{$alias};
 		}
 	    } elsif ( @arg < 2 ) {
 		@arg
@@ -2713,22 +2716,24 @@ sub _sky_list_body {
 		    $self->_sky_class_components( $_ ) . "\n" }
 		    @arg;
 	    } else {
-		my ( $name, $class, @attr ) = @arg;
+		my ( $alias, $class, @attr ) = @arg;
 		$self->load_package( { fatal => 'wail' }, $class );
-		my $want_class = $name =~ m/ \A sun \z /smxi ?
+		my $want_class = $alias =~ m/ \A sun \z /smxi ?
 		    SUN_CLASS_DEFAULT :
 		    'Astro::Coord::ECI';
 		embodies( $class, $want_class )
 		    or $self->wail(
 		    "Must be a subclass of $want_class" );
+		+{ @attr }->{name}
+		    or push @attr, name => $alias;
 		my $obj = $class->new( @attr );	# To validate @attr
-		my $folded_name = fold_case( $name );
+		my $folded_name = fold_case( $alias );
 		$self->{sky_class}{$folded_name} = [ $class, @attr ];
 		$self->_replace_in_sky( $folded_name )
 		    or $opt{add}
 		    and push @{ $self->{sky} }, $obj;
 		$self->{_help_module}{$folded_name} = $class;
-		if ( $name =~ m/ \A sun \z /smxi ) {
+		if ( $alias =~ m/ \A sun \z /smxi ) {
 		    foreach my $body (
 			@{ $self->{bodies} }, @{ $self->{sky} }
 		    ) {
