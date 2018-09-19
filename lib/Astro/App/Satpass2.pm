@@ -7872,6 +7872,11 @@ you specify C<undef> you get the default.
 
 The default is L<Astro::Coord::ECI::Sun|Astro::Coord::ECI::Sun>.
 
+Note: I am less than happy about the implementation of this attribute.
+Be alert for changes.  If I decide to revoke the above implementation
+completely there will be notice, and if at all possible a deprecation
+process.
+
 =head2 latitude
 
 This numeric attribute specifies the latitude of the observer in degrees
