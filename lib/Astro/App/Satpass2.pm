@@ -395,8 +395,8 @@ my %static = (
 );
 
 my %sky_class = (
-    fold_case( 'Sun' ) => [ SUN_CLASS_DEFAULT ],
-    fold_case( 'Moon' ) => [ 'Astro::Coord::ECI::Moon' ],
+    fold_case( 'Sun' ) => [ SUN_CLASS_DEFAULT, name => 'Sun' ],
+    fold_case( 'Moon' ) => [ 'Astro::Coord::ECI::Moon', name => 'Moon' ],
 #    # The shape of things to come -- maybe
 #    # but commented out because Astro-App-Satpass2 does not depend on
 #    # these
@@ -2699,15 +2699,12 @@ sub _sky_list_body {
 		and $self->wail( 'May not specify both add and delete' );
 
 	    if ( $opt{delete} ) {
-		foreach my $alias ( @arg ) {
-		    $alias = fold_case( $alias );
-		    'sun' eq $alias
+		foreach my $name ( @arg ) {
+		    $name =~ m/ \A sun \z /smxi
 			and $self->wail( 'Can not remove Sun class' );
-		    my ( undef, %attr ) = @{ $self->{sky_class}{$alias} };
-		    my $name = $attr{name} || $alias;
 		    defined $self->_find_in_sky( $name )
 			and $self->wail( 'Can not remove in-use class' );
-		    delete $self->{sky_class}{$alias};
+		    delete $self->{sky_class}{ fold_case( $name ) };
 		}
 	    } elsif ( @arg < 2 ) {
 		@arg
@@ -2716,24 +2713,27 @@ sub _sky_list_body {
 		    $self->_sky_class_components( $_ ) . "\n" }
 		    @arg;
 	    } else {
-		my ( $alias, $class, @attr ) = @arg;
+		my ( $name, $class, @attr ) = @arg;
 		$self->load_package( { fatal => 'wail' }, $class );
-		my $want_class = $alias =~ m/ \A sun \z /smxi ?
+		my $want_class = $name =~ m/ \A sun \z /smxi ?
 		    SUN_CLASS_DEFAULT :
 		    'Astro::Coord::ECI';
 		embodies( $class, $want_class )
 		    or $self->wail(
 		    "Must be a subclass of $want_class" );
 		+{ @attr }->{name}
-		    or push @attr, name => $alias;
+		    and $self->wail( 'May not specify name explicitly' );
+		# name must be last, because _sky_class_components()
+		# needs to recover it.
+		push @attr, name => $name;
 		my $obj = $class->new( @attr );	# To validate @attr
-		my $folded_name = fold_case( $alias );
+		my $folded_name = fold_case( $name );
 		$self->{sky_class}{$folded_name} = [ $class, @attr ];
 		$self->_replace_in_sky( $folded_name )
 		    or $opt{add}
 		    and push @{ $self->{sky} }, $obj;
 		$self->{_help_module}{$folded_name} = $class;
-		if ( $alias =~ m/ \A sun \z /smxi ) {
+		if ( $name =~ m/ \A sun \z /smxi ) {
 		    foreach my $body (
 			@{ $self->{bodies} }, @{ $self->{sky} }
 		    ) {
@@ -2823,10 +2823,14 @@ sub _sky_list_body {
 # scalar context.
 sub _sky_class_components {
     my ( $self, $name ) = @_;
-    $name = fold_case( $name );
-    $self->{sky_class}{$name}
+    my $info = $self->{sky_class}{ fold_case( $name ) }
 	or $self->weep( "No class defined for $name" );
-    my @parts = ( qw{ sky class }, $name, @{ $self->{sky_class}{$name} } );
+    my ( $class, @attr ) = @{ $info };
+    # We rely on sky( class => $name, $class, ... ) keeping the name
+    # last.
+    $name = pop @attr;
+    pop @attr;	# 'name';
+    my @parts = ( qw{ sky class }, $name, $class, @attr );
     wantarray
 	and return @parts;
     return join ' ', map { quoter( $_ ) } @parts;
@@ -6944,11 +6948,12 @@ appearing immediately after the subcommand name. In the latter case
 option names must be specified in full.
 
 Unless the C<-delete> option is specified (see above), the arguments are
-the case-insensitive name of the object being defined, the name of the
+the case-preserved name of the object being defined, the name of the
 class that implements it, and optional attribute values (specified as
-name/value pairs). This information is added to the known object
-definitions, replacing the previous definition if any. Nothing is
-returned.
+name/value pairs). You may not specify the C<name> attribute, because
+this is derived from the first argument. This information is added to
+the known object definitions, replacing the previous definition if any.
+Nothing is returned.
 
 If only a name is specified, the definition of that name is returned,
 formatted as a C<'sky class'> command. If no arguments at all are
