@@ -3536,7 +3536,7 @@ sub _drop_from_sky {
     my ( $self, $name ) = @_;
     defined( my $inx = $self->_find_in_sky( $name ) )
 	or return;
-    return splice @{ $self->{sky} }, $inx, $inx + 1;
+    return splice @{ $self->{sky} }, $inx, 1;
 }
 
 #	$code = $self->_file_reader( $file, \%opt );
