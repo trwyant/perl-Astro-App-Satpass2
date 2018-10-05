@@ -66,7 +66,7 @@ use constant NULL_REF	=> ref NULL;
 
 use constant SUN_CLASS_DEFAULT	=> 'Astro::Coord::ECI::Sun';
 
-our $VERSION = '0.035';
+our $VERSION = '0.035_01';
 
 # The following 'cute' code is so that we do not determine whether we
 # actually have optional modules until we really need them, and yet do
@@ -8235,7 +8235,7 @@ find C<'start'> useful.
 This functionality was added on speculation, since there is no good way
 to test it in the initial release of the package.
 
-As of version [%% next_version %%], a value of C<'1'> causes
+As of version 0.035_01, a value of C<'1'> causes
 L<Browser::Open|Browser::Open> to be loaded, and the web command is
 taken from it. All other true values are deprecated, on the following
 schedule:
