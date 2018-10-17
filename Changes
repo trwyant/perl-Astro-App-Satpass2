@@ -1,4 +1,4 @@
-0.035_01	2018-10-05	T. R. Wyant
+0.036		2018-10-17	T. R. Wyant
     Support alternate Sun and Moon classes, and other bodies that
     contain built-in models (e.g. Astro::Coord::ECI::VSOP87D::*).
 
