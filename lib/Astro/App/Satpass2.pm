@@ -1431,6 +1431,7 @@ sub load : Verb( verbose! ) {
 
     my $attrs = {
 	illum	=> $self->get( 'illum' ),
+	model	=> $self->get( 'model' ),
 	sun	=> $self->_sky_object( 'sun' ),
     };
 
@@ -2359,6 +2360,9 @@ sub _set_model {
     Astro::Coord::ECI::TLE->is_valid_model( $val )
 	or $self->wail(
 	"'$val' is not a valid Astro::Coord::ECI::TLE model" );
+    foreach my $body ( @{ $self->{bodies} } ) {
+	$body->set( model => $val );
+    }
     return ( $self->{$name} = $val );
 }
 
