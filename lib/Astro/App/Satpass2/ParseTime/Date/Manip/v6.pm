@@ -9,7 +9,7 @@ use parent qw{ Astro::App::Satpass2::ParseTime::Date::Manip };
 
 use Astro::App::Satpass2::Utils qw{ load_package @CARP_NOT };
 
-our $VERSION = '0.037';
+our $VERSION = '0.037_01';
 
 my $invalid;
 
