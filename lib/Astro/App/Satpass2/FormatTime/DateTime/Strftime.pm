@@ -15,7 +15,7 @@ use DateTime;
 use DateTime::TimeZone;
 use POSIX ();
 
-our $VERSION = '0.037_01';
+our $VERSION = '0.038';
 
 # So superclass can ducktype the object that does the real work.
 use constant METHOD_USED => 'strftime';

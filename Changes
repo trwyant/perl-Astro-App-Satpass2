@@ -1,4 +1,4 @@
-0.037_01	2019-03-05	T. R. Wyant
+0.038		2019-03-13	T. R. Wyant
     The 'model' setting is no longer ignored. It is now actually applied
     to the TLE objects when loading them, and a change in value causes
     all loaded TLEs to be modified as well.
