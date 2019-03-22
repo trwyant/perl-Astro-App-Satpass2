@@ -13,7 +13,7 @@ use Astro::App::Satpass2::Utils qw{
     @CARP_NOT
 };
 
-our $VERSION = '0.038';
+our $VERSION = '0.038_01';
 
 use constant DEFAULT_LOCAL_COORD => 'azel_rng';
 
