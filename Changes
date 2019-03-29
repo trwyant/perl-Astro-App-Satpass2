@@ -1,4 +1,4 @@
-0.038_01	2019-03-21	T. R. Wyant
+0.039		2019-03-29	T. R. Wyant
     Fix test failures when local zone not determined. This was a single
     test in t/format_template.t that attempted to use
     DateTime::Calendar::Christian to format March 15, 44 BC. The problem
