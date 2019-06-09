@@ -140,7 +140,8 @@ This static method instantiates a new geocoder object. It may not be
 called on this class.
 
 This method takes arguments as name/value pairs. The supported arguments
-are L<geocoder|/geocoder> and L<warner|/warner>, which correspond to the
+are L<geocoder|/geocoder> and
+L<warner|Astro::App::Satpass2::Copier/warner>, which correspond to the
 same-named mutators.
 
 =head2 geocode

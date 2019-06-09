@@ -243,9 +243,9 @@ L<Astro::App::Satpass2::FormatTime|Astro::App::Satpass2::FormatTime> is
 an abstract class for formatting dates and times using
 L<DateTime|DateTime>. What you really want to use is one of its
 subclasses:
-L<Astro::App::Satpass2::FormaTime::DateTime::Cldr|Astro::App::Satpass2::FormaTime::DateTime::Cldr>
-or
-L<Astro::App::Satpass2::FormaTime::DateTime::Strftime|Astro::App::Satpass2::FormaTime::DateTime::Strftime>
+L<Astro::App::Satpass2::FormatTime::DateTime::Cldr|Astro::App::Satpass2::FormatTime::DateTime::Cldr>,
+L<Astro::App::Satpass2::FormatTime::DateTime::Strftime|Astro::App::Satpass2::FormatTime::DateTime::Strftime>, or
+L<Astro::App::Satpass2::FormatTime::POSIX::Strftime|Astro::App::Satpass2::FormatTime::POSIX::Strftime>
 
 
 =head1 METHODS
