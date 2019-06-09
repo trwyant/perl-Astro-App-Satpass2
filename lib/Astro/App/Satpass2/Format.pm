@@ -752,11 +752,6 @@ functionality.
 L<Astro::Coord::ECI|Astro::Coord::ECI> and associated modules, which are
 the intended providers of data for this functionality.
 
-L<Astro::App::Satpass2::Format::Classic|Astro::App::Satpass2::Format::Classic>, which
-is a subclass of this module. It is a templating system producing text
-output which, by default, resembles the output of the original satpass
-script.
-
 L<Astro::App::Satpass2::Format::Dump|Astro::App::Satpass2::Format::Dump>, which is a
 subclass of this module. It is intended for debugging, and simply dumps
 its arguments in Data::Dumper, JSON, or YAML format depending on how it
