@@ -1,4 +1,4 @@
-0.039_01	2019-07-05	T. R. Wyant
+0.040		2019-07-20	T. R. Wyant
     Fix broken POD links and add test to ensure they stay fixed.
 
     Remove Astro::App::Satpass2::Format::Classic refs. This module was
