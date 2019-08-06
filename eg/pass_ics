@@ -17,34 +17,45 @@
 #	because the vcalendar standard specifies UT.
 
 localize formatter
+localize output_layers
 
-# We intend to use date(units='z') to format the event begin and end. We
-# truncate the time to the previous minute.
+# An iCal file is supposed to have <cr><lf> line breaks
 
-formatter date_format %Y%m%dT%H%M00Z
+set output_layers :encoding(utf-8):crlf
+
+# We intend to use date(units='z') to format the event begin and end,
+# and the alert times.
+
+formatter date_format %Y%m%dT%H%M%SZ
 
 # We intend to use time() to format the individual event times.
 
 formatter time_format %I:%M:%S
 
-# The individual pass events get concatenated to the summary, with no newline.
+# The individual pass events get concatenated to the description, with
+# no newline between.
 
 formatter template pass <<'EOD'
+[% UNLESS data %]
+    [%- SET data = sp.pass( arg ) %]
+[%- END -%]
 BEGIN:VCALENDAR
+VERSION:2.0
 [%- FOR pass IN data %]
 [%- events = pass.events %]
 [%- CALL events.fixed_width( 0 ) %]
 [%- first = events.first %]
-[%- punct = ' -' %]
+[%- punct = '' %]
 BEGIN:VEVENT
 DTSTART:[% first.date( units = 'zulu' ) %]
-DALARM:[% first.date( delta = -360, units = 'zulu' ) %]
-DALARM:[% first.date( delta = -60, units = 'zulu' ) %]
+DALARM:[% first.date( delta = -300, units = 'zulu' ) %]
+DALARM:[% first.date( units = 'zulu' ) %]
 SUMMARY:[% first.name %]
+DESCRIPTION:
     [%- FOREACH evt IN events %][% punct %]
 	[%- evt_name = evt.event %]
-	[%- end_date = evt.date( delta = 30, units = 'z' ) %]
-	[%= evt_name %]
+	[%- end_date = evt.date( units = 'z' ) %]
+	[%- evt_name %]
 	[%- IF 'apls' == evt_name %]
             [%- appulse = evt.appulse %]
             [%= appulse.angle %]
@@ -55,7 +66,10 @@ SUMMARY:[% first.name %]
 	[%- IF 'rise' != evt_name and 'set' != evt_name %] Ele
 	    [%= evt.elevation( places = 0 ) %]
 	[%- END %]
-        [%- punct = ';' %]
+	[%- IF '' != evt.magnitude %] Mag
+	    [%= evt.magnitude %]
+	[%- END %]
+        [%- punct = '\n' %]
     [%- END %]
 DTEND:[% end_date %]
 END:VEVENT
@@ -65,5 +79,13 @@ EOD
 
 # Do the pass calculation. I do not know that the vcal format requires
 # the data to be chronological, but ...
+
+# TODO: The iCal spec (RFC 5545 section 3.1) says that content lines
+# SHOULD NOT be longer than 75 octets (NOT characters) excluding the
+# line break, and longer lines SHOULD be broken.
+
+# NOTE that at least under macOS (as they spell it these days) this must
+# be saved as a .ics file to be successfully imported into the calendar
+# application.
 
 pass -chronological "${1:-today noon}" "${2:-+8}"
