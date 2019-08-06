@@ -51,6 +51,7 @@ use Text::Abbrev;
 use Text::ParseWords ();	# Used only for {level1} stuff.
 
 use constant ASTRO_SPACETRACK_VERSION => 0.105;
+use constant DEFAULT_STDOUT_LAYERS	=> ':encoding(utf-8)';
 
 BEGIN {
     eval {
@@ -279,6 +280,7 @@ my %mutator = (
     longitude => \&_set_angle,
     model => \&_set_model,
     max_mirror_angle => \&_set_angle,
+    output_layers	=> \&_set_output_layers,
     pass_threshold => \&_set_angle_or_undef,
     pass_variant	=> \&_set_pass_variant,
     perltime => \&_set_time_parser_attribute,
@@ -393,6 +395,7 @@ my %static = (
     singleton => 0,
 #   spacetrack => undef,	# Astro::SpaceTrack object set when accessed
 #   stdout => undef,		# Set to stdout in new().
+    output_layers	=> DEFAULT_STDOUT_LAYERS,
     time_parser => 'Astro::App::Satpass2::ParseTime',	# Time parser class.
     twilight => 'civil',
     tz => $ENV{TZ},
@@ -761,10 +764,14 @@ sub execute {
 	$self->{execute_filter}->( $self, $args ) or next;
 	@{ $args } or next;
 	if ($redirect->{'>'}) {
-	    my ($mode, $name) = map {$redirect->{'>'}{$_}} qw{mode name};
-	    my $fh = IO::File->new($name, $mode)
-		or $self->wail("Unable to open $name: $!");
-	    $stdout = $fh;
+	    my ( $mode, $name ) = map { $redirect->{'>'}{$_} } qw{ mode name };
+	    my $fh;
+	    $stdout = sub {
+		my ( $output ) = @_;
+		$fh ||= $self->_file_opener( $name, $mode );
+		$fh->print( $output );
+		return;
+	    };
 	}
 
 	# {localout} is the output to be used for this command. It goes
@@ -1988,7 +1995,7 @@ sub pwd : Verb() {
 
 	# Put all the I/O into UTF-8 mode.
 	binmode STDIN, ':encoding(UTF-8)';
-	binmode STDOUT, ':encoding(UTF-8)';
+	binmode STDOUT, DEFAULT_STDOUT_LAYERS;
 	binmode STDERR, ':encoding(UTF-8)';
 
 	# If the undocumented first option is a code reference, use it to
@@ -2362,6 +2369,17 @@ sub _set_model {
 	"'$val' is not a valid Astro::Coord::ECI::TLE model" );
     foreach my $body ( @{ $self->{bodies} } ) {
 	$body->set( model => $val );
+    }
+    return ( $self->{$name} = $val );
+}
+
+sub _set_output_layers {
+    my ( $self, $name, $val ) = @_;
+
+    if ( defined $val && '' ne $val ) {
+	open my $fh, ">$val", File::Spec->devnull()
+	    or $self->wail( "Invalid $name value '$val'" );
+	close $fh;
     }
     return ( $self->{$name} = $val );
 }
@@ -3554,6 +3572,31 @@ sub _drop_from_sky {
     defined( my $inx = $self->_find_in_sky( $name ) )
 	or return;
     return splice @{ $self->{sky} }, $inx, 1;
+}
+
+#	$fh = $self->_file_opener( $name, $mode );
+#
+#	This method opens the given file, returning the handle. If the
+#	mode is output, the current value of output_layers is appended.
+#	An exception is thrown if the file can not be opened.
+
+sub _file_opener {
+    my ( $self, $name, $mode ) = @_;
+
+    my $fh = IO::File->new( $name, $mode )
+	or $self->wail( "Unable to open $name: $!" );
+
+    if ( $mode =~ m/ \A (?: [+>] | [|] - ) /smx ) {
+
+	my $layers = $self->get( 'output_layers' );
+	if ( defined $layers && '' ne $layers ) {
+	    binmode $fh, $layers
+		or $self->wail(
+		"Unable to set '$layers' on $name: $!" );
+	}
+    }
+
+    return $fh;
 }
 
 #	$code = $self->_file_reader( $file, \%opt );
@@ -8123,6 +8166,24 @@ F<satpass2> script.
 
 The default is the C<STDOUT> file handle.
 
+=head2 output_layers
+
+This attribute determines which PerlIO layers (formerly known as
+"disciplines") are to be applied to newly-opened output files.
+Already-open files are not affected.
+
+Note that in the case of redirections, the file is opened when the first
+output is done. This means that you can redirect the output of a macro
+or source file and specify the output layers in that macro or source
+file, provided you do so before any output is done.
+
+Having this setting apply to already-opened files was rejected because
+when you do multiple C<binmode()> calls, the specified layers simply
+accumulate, and there appears to be no good way to clean up unwanted
+ones.
+
+The default is C<':encoding(utf-8)'>.
+
 =head2 time_format
 
 This string attribute is deprecated. It is provided for backward
@@ -8516,6 +8577,10 @@ least not in the sense of making data appear on standard in. The first
 is replaced by the contents of the given file or URL. The second works
 like a Perl here document, and interpolates unless the here document
 terminator is enclosed in single quotes.
+
+B<Note> that in the case of output redirections, the file is not
+actually opened until output to it is done. See the documentation on the
+L<output_layers|/output_layers> attribute for the rationale for this.
 
 B<Caveat:> redirection tests fail under MSWin32 -- or at least they did
 until I bypassed them under that operating system. I do not know if this
