@@ -7738,8 +7738,7 @@ used for what it does.
 
 This string attribute specifies the format used to display
 dates. Documentation of the C<strftime (3)> subroutine may be found at
-L<http://www.openbsd.org/cgi-bin/man.cgi?query=strftime&apropos=0&sektion=0&manpath=OpenBSD+Current&arch=i386&format=html>,
-among other places.
+L<https://linux.die.net/man/3/strftime> among other places.
 
 The above is a long URL, and may be split across multiple lines. More
 than that, the formatter may have inserted a hyphen at the break, which
@@ -8252,8 +8251,7 @@ interpret the value of this attribute as a C<strftime(3)> format.
 
 This string attribute specifies the strftime(3) format used to display
 times.  Documentation of the C<strftime(3)> subroutine may be found at
-L<http://www.openbsd.org/cgi-bin/man.cgi?query=strftime&apropos=0&sektion=0&manpath=OpenBSD+Current&arch=i386&format=html>,
-among  other places.
+L<https://linux.die.net/man/3/strftime> among other places.
 
 The above is a long URL, and may be split across multiple lines. More
 than that, the formatter may have inserted a hyphen at the break, which
