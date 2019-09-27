@@ -17,11 +17,11 @@
 #	because the vcalendar standard specifies UT.
 
 localize formatter
-localize output_layers
+# localize output_layers
 
 # An iCal file is supposed to have <cr><lf> line breaks
 
-set output_layers :encoding(utf-8):crlf
+# set output_layers :encoding(utf-8):crlf
 
 # We intend to use date(units='z') to format the event begin and end,
 # and the alert times.
