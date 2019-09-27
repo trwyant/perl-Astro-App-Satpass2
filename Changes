@@ -1,3 +1,10 @@
+0.040_01	2019-09-27	T. R. Wyant
+    Fix validation error caught by Astro::Coord::ECI 0.109_01.
+
+    Validate horizon, latitude, and longitude.
+
+    Add -verbose to macro( load => ... )
+
 0.040		2019-07-20	T. R. Wyant
     Fix broken POD links and add test to ensure they stay fixed.
 
