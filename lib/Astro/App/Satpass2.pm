@@ -274,10 +274,10 @@ my %mutator = (
     height => \&_set_distance_meters,
     horizon => \&_set_angle,
     illum	=> \&_set_illum_class,
-    latitude => \&_set_angle,
+    latitude => \&_set_angle_or_undef,
     local_coord => \&_set_formatter_attribute,
     location => \&_set_unmodified,
-    longitude => \&_set_angle,
+    longitude => \&_set_angle_or_undef,
     model => \&_set_model,
     max_mirror_angle => \&_set_angle,
     output_layers	=> \&_set_output_layers,
@@ -2215,18 +2215,40 @@ sub set : Verb() {
 
 sub _set_almanac_horizon {
     my ( $self, $name, $value ) = @_;
-    my $eci = Astro::Coord::ECI->new();
     my $parsed = $self->__parse_angle( { accept => 1 }, $value );
-    $eci->set( almanac_horizon => $parsed );	# To validate.
     my $internal = looks_like_number( $parsed ) ? deg2rad( $parsed ) :
-    $parsed;
+	$parsed;
+    my $eci = Astro::Coord::ECI->new();
+    $eci->set( $name => $internal );	# To validate.
     $self->{"_$name"} = $internal;
     return( $self->{$name} = $parsed );
 }
 
-sub _set_angle {
-    my ( $self, $name, $value ) = @_;
-    return ( $self->{$name} = $self->__parse_angle( $value ) );
+{
+    my $plus_or_minus_90 = sub { $_[0] >= -90 && $_[0] <= 90 };
+    my %validate = (
+	horizon		=> $plus_or_minus_90,
+	latitude	=> $plus_or_minus_90,
+	longitude	=> sub {
+	    $_[0] > 360
+		and return 0;
+	    $_[0] > 180
+		and $_[0] -= 360;
+	    $_[0] >= -180 && $_[0] <= 180;
+	},
+    );
+    sub _set_angle {
+	my ( $self, $name, $value ) = @_;
+	my $angle = $self->__parse_angle( $value );
+	if ( my $code = $validate{$name} ) {
+	    defined $angle or $self->weep(
+		"$name angle is undef for value ", defined $value ? $value : 'undef' );
+	    $code->( $angle )
+		or $self->wail( "Value $value is invalid for $name" );
+	}
+	$self->{"_$name"} = deg2rad( $angle );
+	return ( $self->{$name} = $angle );
+    }
 }
 
 sub _set_angle_or_undef {
@@ -3090,7 +3112,7 @@ sub station {
 
     return Astro::Coord::ECI->new (
 	    almanac_horizon	=> $self->{_almanac_horizon},
-	    horizon	=> $self->get( 'horizon' ),
+	    horizon	=> deg2rad( $self->get( 'horizon' ) ),
 	    id		=> 'station',
 	    name	=> $self->{location} || '',
 	    refraction	=> 1,
