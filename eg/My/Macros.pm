@@ -200,8 +200,8 @@ successfully loaded, and passed the processed arguments of the
 C<macro load> command. That is, the first argument (after the invocant)
 will be the option hash, followed by the non-option arguments in order.
 
-This subroutine returns the options (if any) one per line, followed by
-the arguments, also one per line.
+This subroutine returns a scalar containing the options (if any) one per
+line, followed by the arguments, also one per line.
 
 =head2 angle
 
