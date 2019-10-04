@@ -1,4 +1,4 @@
-0.040_01	2019-09-27	T. R. Wyant
+0.041		2019-10-04	T. R. Wyant
     Fix validation error caught by Astro::Coord::ECI 0.109_01.
 
     Validate horizon, latitude, and longitude.
