@@ -1,3 +1,11 @@
+0.041_001	2019-10-15	T. R. Wyant
+    Handle \U and friends inside double quotes, except for \Q. And \F
+    only does something useful if the underlying Perl supports it.
+
+    Correct eg/pass_ics to alert before and at rise.
+
+    I do not intend to release this version to CPAN.
+
 0.041		2019-10-04	T. R. Wyant
     Fix validation error caught by Astro::Coord::ECI 0.109_01.
 
