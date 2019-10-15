@@ -4946,6 +4946,15 @@ sub _unescape {
 	'_' => sub { return $^X },
     );
 
+    my %case_ctl = (
+	E	=> sub { delete $_[0]->{_case_mod} },
+	F	=> sub { $_[0]->{_case_mod}{case} = sub { "\F$_[1]" } },
+	L	=> sub { $_[0]->{_case_mod}{case} = sub { "\L$_[1]" } },
+	U	=> sub { $_[0]->{_case_mod}{case} = sub { "\U$_[1]" } },
+	l	=> sub { $_[0]->{_case_mod}{single} = sub { "\l$_[1]" } },
+	u	=> sub { $_[0]->{_case_mod}{single} = sub { "\u$_[1]" } },
+    );
+
     # Leading punctuation that is equivalent to a method.
     my %command_equivalent = (
 	'.'	=> 'source',
@@ -4968,6 +4977,7 @@ sub _unescape {
 
     sub _tokenize {
 	my ($self, @parms) = @_;
+	local $self->{_case_mod} = undef;
 	my $opt = HASH_REF eq ref $parms[0] ? shift @parms : {};
 	my $in = $opt->{in};
 	my $buffer = shift @parms;
@@ -5029,7 +5039,11 @@ sub _unescape {
 		    }
 		    $len = length $buffer;
 		} elsif ( $relquote ) {
-		    $rslt[-1]{token} .= $escape{$next} || $next;
+		    if ( my $code = $case_ctl{$next} ) {
+			$code->( $self );
+		    } else {
+			$rslt[-1]{token} .= $escape{$next} || $next;
+		    }
 		} else {
 		    $rslt[-1]{token} .= $next;
 		}
@@ -5049,7 +5063,8 @@ sub _unescape {
 
 	    } elsif ($char eq '"') {
 		$rslt[-1]{token} .= '';	# Empty string, to force defined.
-		$relquote = !$relquote;
+		( $relquote = !$relquote )
+		    or delete $self->{_case_mod};
 
 	    # If we have a whitespace character and we're not inside
 	    # quotes and not in single-token mode, we start a new token.
@@ -5260,10 +5275,15 @@ sub _unescape {
 		ref $value
 		    or $value = defined $value ? [ $value ] : [];
 
-		# Do word splitting on the value, unless we are inside
-		# quotes.
-		$relquote
-		    or $value = [ map { split qr{ \s+ }smx } @{ $value } ];
+		# If we are inside quotes
+		if ( $relquote ) {
+		    # do case modification
+		    # NOTE that the argument list is modified in-place.
+		    $self->_case_mod( @{ $value } );
+		} else {
+		    # otherwise do word splitting
+		    $value = [ map { split qr{ \s+ }smx } @{ $value } ];
+		}
 
 		# If we have a value, append each element to the current
 		# token, and then create a new token for the next
@@ -5358,6 +5378,9 @@ sub _unescape {
 	    # character, whatever it is, is simply appended to it.
 
 	    } elsif (exists $rslt[-1]{token} || $relquote) {
+		# do case modification
+		# NOTE that the argument list is modified in-place.
+		$self->_case_mod( $char );
 		$rslt[-1]{token} .= $char;
 
 	    # If the character is a tilde, we flag the token for tilde
@@ -5499,6 +5522,21 @@ sub _unescape {
 
 	return;
     }
+}
+
+# Apply case modification to the arguments
+# NOTE that the argument list is modified in-place. I'm a little
+# surprised that this didn't tickle Perl::Critic.
+sub _case_mod {
+    my $self = shift;
+    foreach ( @_ ) {
+	$self->{_case_mod}{case}
+	    and $_ = $self->{_case_mod}{case}->( $self, $_ );
+	my $code;
+	$code = delete $self->{_case_mod}{single}
+	    and $_ = $code->( $self, $_ );
+    }
+    return;
 }
 
 
@@ -8539,8 +8577,11 @@ Unlike C<bash(1)>, but like C<perl(1)>, the back slash is recognized,
 but its only use is to escape a single quote or another back slash.
 
 Double quotes (C<"">) cause everything inside them to be taken as a
-single token. Unlike single quotes, all meta-characters except single
-quotes are recognized inside double quotes.
+single token. Unlike single quotes, all the usual C<C> meta-characters
+except single quotes are recognized inside double quotes. In addition,
+Perl meta-characters C<"\E">, C<"\F">, C<"\L">, C<"\U">, C<"\l">, and
+C<"\u"> (though not C<"\Q">) are recognized inside double quotes. Note,
+though, that C<"\F"> will not do anything useful before Perl 5.15.8.
 
 The dollar sign (C<$>) introduces an interpolation. If the first
 character after the dollar sign is not a left curly bracket, that
