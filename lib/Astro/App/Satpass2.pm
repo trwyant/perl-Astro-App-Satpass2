@@ -720,6 +720,14 @@ sub end : Verb() Tweak( -unsatisfied ) {
     return;
 }
 
+sub error : Verb() {
+    my ( $self, undef, @arg ) = __arguments( @_ );
+    @arg
+	or push @arg, 'An error has occurred';
+    $self->wail( @arg );
+    return;
+}
+
 # Tokenize and execute one or more commands. Optionally (and
 # unsupportedly) you can pass a code reference as the first argument.
 # This code reference will be used to fetch commands when the arguments
@@ -6028,6 +6036,16 @@ The following option may be specified:
 
 This interactive method ends a localization block. Nothing is returned.
 It is an error to have an end without a corresponding L<begin()|/begin>.
+
+=head2 error
+
+ $satpass2->error( 'Something happened' );
+ satpass2> error 'Something happened'
+
+This interactive method declares an error, terminating the processing of
+the macro or include file in which it appears. The arguments are used as
+the text of the error message. If none are provided a default (and
+unhelpful) error message is provided.
 
 =head2 execute
 

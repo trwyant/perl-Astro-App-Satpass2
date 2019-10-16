@@ -486,6 +486,11 @@ EOD
 
     execute 'if -n "$FUBAR" then echo FUBAR not empty', undef,
 	'Unsatisfied -n';
+
+    execute <<'EOD', 'Something happened', 'Error';
+error 'Something happened'
+echo 'Nothing happened'
+EOD
 }
 
 execute 'status clear', undef, 'Clear status for testing' ;
