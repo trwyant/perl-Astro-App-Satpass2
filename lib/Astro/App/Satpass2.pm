@@ -1141,6 +1141,28 @@ EOD
 		    return;
 		},
 	    },
+	    '-n' => {
+		handler => sub {
+		    # my ( $self, $def, $ctx, $tokens ) = @_;
+		    my ( undef, undef, $ctx, $tokens ) = @_;
+		    my $v = shift @{ $tokens };
+		    defined $v
+			or $v = '';
+		    push @{ $ctx->[-1]{value} }, '' ne $v;
+		},
+		validation	=> 'prefix',
+	    },
+	    '-z' => {
+		handler => sub {
+		    # my ( $self, $def, $ctx, $tokens ) = @_;
+		    my ( undef, undef, $ctx, $tokens ) = @_;
+		    my $v = shift @{ $tokens };
+		    defined $v
+			or $v = '';
+		    push @{ $ctx->[-1]{value} }, '' eq $v;
+		},
+		validation	=> 'prefix',
+	    },
 	    and	=> {
 		handler	=> sub {
 		    my ( $self, $def, $ctx, $tokens ) = @_;
@@ -6332,6 +6354,19 @@ For example (assuming OID 99999 is not loaded)
 The following operators and functions are implemented:
 
 =over
+
+=item ( ... )
+
+Parentheses perform grouping of their contents, to force precedence on
+the operations.
+
+=item -n
+
+This prefix operator is true if its operand is not the null string.
+
+=item -z
+
+This prefix operator is true if its operand is the null string.
 
 =item and
 
