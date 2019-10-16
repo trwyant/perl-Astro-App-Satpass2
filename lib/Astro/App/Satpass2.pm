@@ -1569,11 +1569,14 @@ sub _macro_define : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
 	and $name !~ m/ \A _ /smx
 	or $self->wail("Invalid macro name '$name'");
 
+    # NOTE the value of {def} used to be unescaped, but I do not now
+    # know why, and the implementation of \U and friends is more natural
+    # with this stripped out.
     $self->{macro}{$name} =
 	Astro::App::Satpass2::Macro::Command->new(
 	    name	=> $name,
 	    parent	=> $self,
-	    def		=> [ _unescape( @args ) ],
+	    def		=> \@args,
 	    generate	=> \&_macro_define_generator,
 	    level1	=> $self->{frame}[-1]{level1},
 	    warner	=> $self->{_warner},
@@ -4840,19 +4843,6 @@ EOD
     return wantarray ? @rslt : join ' ', @rslt;
 }
 
-#	@result = _unescape( @args );
-#
-#	Remove back slash escapes. Nothing fancy is done here; in
-#	particular, '\n' does not become a new line, it becomes "n".
-
-sub _unescape {
-    my ( @args ) = @_;
-    foreach ( @args ) {
-	s/ \\ (.) /$1/smxg;
-    }
-    return @args;
-}
-
 #	($tokens, $redirect) = $self->_tokenize(
 #		{option => $value}, $buffer, [$arg0 ...]);
 #
@@ -5522,6 +5512,7 @@ sub _unescape {
 
 	return;
     }
+
 }
 
 # Apply case modification to the arguments
