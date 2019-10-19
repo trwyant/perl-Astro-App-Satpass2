@@ -4968,11 +4968,11 @@ EOD
 
     my %case_ctl = (
 	E	=> sub { delete $_[0]->{_case_mod} },
-	F	=> sub { $_[0]->{_case_mod}{case} = sub { "\F$_[1]" } },
-	L	=> sub { $_[0]->{_case_mod}{case} = sub { "\L$_[1]" } },
-	U	=> sub { $_[0]->{_case_mod}{case} = sub { "\U$_[1]" } },
-	l	=> sub { $_[0]->{_case_mod}{single} = sub { "\l$_[1]" } },
-	u	=> sub { $_[0]->{_case_mod}{single} = sub { "\u$_[1]" } },
+	F	=> sub { $_[0]->{_case_mod}{case} = sub { fold_case( $_[1] ) } },
+	L	=> sub { $_[0]->{_case_mod}{case} = sub { lc $_[1] } },
+	U	=> sub { $_[0]->{_case_mod}{case} = sub { uc $_[1] } },
+	l	=> sub { $_[0]->{_case_mod}{single} = sub { lcfirst $_[1] } },
+	u	=> sub { $_[0]->{_case_mod}{single} = sub { ucfirst $_[1] } },
     );
 
     # Leading punctuation that is equivalent to a method.
@@ -8625,7 +8625,7 @@ single token. Unlike single quotes, all the usual C<C> meta-characters
 except single quotes are recognized inside double quotes. In addition,
 Perl meta-characters C<"\E">, C<"\F">, C<"\L">, C<"\U">, C<"\l">, and
 C<"\u"> (though not C<"\Q">) are recognized inside double quotes. Note,
-though, that C<"\F"> will not do anything useful before Perl 5.15.8.
+though, that before Perl 5.15.8 C<"\F"> is equivalent to C<"\L">.
 
 The dollar sign (C<$>) introduces an interpolation. If the first
 character after the dollar sign is not a left curly bracket, that
