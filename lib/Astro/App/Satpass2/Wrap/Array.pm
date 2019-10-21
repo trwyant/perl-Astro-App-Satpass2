@@ -77,7 +77,7 @@ This method returns the elements in the original array.
 =head1 SUPPORT
 
 Support is by the author. Please file bug reports at
-L<http://rt.cpan.org>, or in electronic mail to the author.
+L<https://rt.cpan.org>, or in electronic mail to the author.
 
 =head1 AUTHOR
 
