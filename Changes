@@ -1,4 +1,4 @@
-0.041_01	2019-10-27	T. R. Wyant
+0.042		2019-11-03	T. R. Wyant
     Fix redirects in POD URL links.
 
     Implement \U and friends inside double quotes, except for \Q. If run
