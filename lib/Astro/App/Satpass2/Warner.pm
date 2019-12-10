@@ -94,7 +94,7 @@ reserves the right to modify or revoke it without notice. The
 documentation is purely for the benefit of the author.
 
 This class manages the reporting of error messages, generating them by
-either C<warn> and c<die>, or C<carp> and C<croak> as the user desires.
+either C<warn> and C<die>, or C<carp> and C<croak> as the user desires.
 If the C<warn> attribute is true, you get C<warn> or C<die>. If false,
 you get C<carp> or C<croak>.
 
