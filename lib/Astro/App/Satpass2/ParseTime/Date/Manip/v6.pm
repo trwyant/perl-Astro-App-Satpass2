@@ -40,7 +40,7 @@ BEGIN {
 	or *_normalize_zone = sub{};
 }
 
-my $epoch_offset = time_gm( 0, 0, 0, 1, 0, 70 );
+my $epoch_offset = time_gm( 0, 0, 0, 1, 0, 1970 );
 
 sub delegate {
     return __PACKAGE__;

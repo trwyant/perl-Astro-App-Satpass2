@@ -30,7 +30,7 @@ my ( $default_zone ) = eval {
     grep { m{ \A TZ= }smx } Date_Init()
 };
 
-my $epoch_offset = time_gm( 0, 0, 0, 1, 0, 70 );
+my $epoch_offset = time_gm( 0, 0, 0, 1, 0, 1970 );
 
 sub delegate {
     return __PACKAGE__;
@@ -41,7 +41,9 @@ sub parse_time_absolute {
     $invalid and $self->wail( $invalid );
     my $time = UnixDate( $string, '%s' ) - $epoch_offset;
     if ( $self->perltime() ) {
-	$time = time_local( gmtime $time );
+	my @gt = gmtime $time;
+	$gt[5] += 1900;
+	$time = time_local( @gt );
     }
     return $time;
 }
