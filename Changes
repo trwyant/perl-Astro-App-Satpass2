@@ -1,4 +1,4 @@
-0.042_01	2020-01-10	T. R. Wyant
+0.043		2020-01-17	T. R. Wyant
     Fix y2020 problem when using Date::Manip for input. The ISO8601
     parser appears to be unaffected.
 
