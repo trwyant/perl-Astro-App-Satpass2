@@ -90,7 +90,7 @@ $have_time_hires = sub {
 
 my $have_astro_spacetrack;
 $have_astro_spacetrack = sub {
-    my $value = load_package( 'Astro::SpaceTrack' ) && eval {
+    my $value = load_package( { lib => undef }, 'Astro::SpaceTrack' ) && eval {
 	Astro::SpaceTrack->VERSION( ASTRO_SPACETRACK_VERSION );
 	1;
     };
@@ -6533,6 +6533,15 @@ C<.perl/> if L<File::HomeDir|File::HomeDir> thinks your documents
 directory is your home directory. The exception is on FreeDesktop.org
 systems (e.g. Linux), where the F<Perl/> directory is found by default
 in C<.config/> under your home directory.
+
+B<Note> that under macOS 10.15 Catalina this directory is not accessible
+by a C<launchd> job, even running as the owner of the directory. In
+order to work around this, an alternate location under macOS is
+C<< File::HomeDir->my_dist_data( 'Astro-App-Satpass2' ) >>, which will
+probably be F<~/Library/Application Support/Perl/dist/Astro-App-Satpass2/>.
+See L<my_dist_config()|Astro::App::Satpass2::Utils/my_dist_config> in
+L<Astro::App::Satpass2::Utils|Astro::App::Satpass2::Utils> for the gory
+details.
 
 There are two options to this method:
 
