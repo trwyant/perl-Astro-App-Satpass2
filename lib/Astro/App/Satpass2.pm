@@ -25,7 +25,7 @@ use Astro::Coord::ECI::Sun 0.077;
 use Astro::Coord::ECI::TLE 0.077 qw{:constants}; # This needs at least 0.059.
 use Astro::Coord::ECI::TLE::Set 0.077;
 # The following includes @CARP_NOT.
-use Astro::Coord::ECI::Utils 0.077 qw{ :all };	# This needs at least 0.077.
+use Astro::Coord::ECI::Utils 0.112 qw{ :all };	# This needs at least 0.112.
 
 {
     local $@ = undef;
@@ -4151,7 +4151,8 @@ sub _get_today_midnight {
     my $gmt = $self->get( 'formatter' )->gmt();
     my @time = $gmt ? gmtime() : localtime();
     $time[0] = $time[1] = $time[2] = 0;
-    return $gmt ? time_gm(@time) : time_local(@time);
+    $time[5] += 1900;
+    return $gmt ? greg_time_gm(@time) : greg_time_local(@time);
 }
 
 sub _get_today_noon {
@@ -4160,7 +4161,8 @@ sub _get_today_noon {
     my @time = $gmt ? gmtime() : localtime();
     $time[0] = $time[1] = 0;
     $time[2] = 12;
-    return $gmt ? time_gm(@time) : time_local(@time);
+    $time[5] += 1900;
+    return $gmt ? greg_time_gm(@time) : greg_time_local(@time);
 }
 
 sub _get_warner_attribute {

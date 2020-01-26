@@ -3,8 +3,8 @@ package Astro::App::Satpass2::ParseTime::Date::Manip::v5;
 use strict;
 use warnings;
 
-use Astro::Coord::ECI::Utils 0.077 qw{
-    looks_like_number time_gm time_local };
+use Astro::Coord::ECI::Utils 0.112 qw{
+    looks_like_number greg_time_gm greg_time_local };
 
 use parent qw{ Astro::App::Satpass2::ParseTime::Date::Manip };
 
@@ -30,7 +30,7 @@ my ( $default_zone ) = eval {
     grep { m{ \A TZ= }smx } Date_Init()
 };
 
-my $epoch_offset = time_gm( 0, 0, 0, 1, 0, 1970 );
+my $epoch_offset = greg_time_gm( 0, 0, 0, 1, 0, 1970 );
 
 sub delegate {
     return __PACKAGE__;
@@ -43,7 +43,7 @@ sub parse_time_absolute {
     if ( $self->perltime() ) {
 	my @gt = gmtime $time;
 	$gt[5] += 1900;
-	$time = time_local( @gt );
+	$time = greg_time_local( @gt );
     }
     return $time;
 }
