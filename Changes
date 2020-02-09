@@ -1,3 +1,7 @@
+0.043_02	2020-02-09	T. R. Wyant
+    Fix exception finding config dir under some OSes.  I hope. And I
+    think "some OSes" means any but macOS/Darwin.
+
 0.043_01	2020-02-07	T. R. Wyant
     Replace time_gm() & time_local() with greg_time_*() from
     Astro::Coord::ECI::Utils. The latter always interpret the year as
