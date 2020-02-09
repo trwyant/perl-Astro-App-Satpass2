@@ -389,7 +389,7 @@ sub my_dist_config {
     defined $ENV{ASTRO_APP_SATPASS2_CONFIG_DIR}
 	and return Cwd::abs_path( $ENV{ASTRO_APP_SATPASS2_CONFIG_DIR} );
 
-    my $code = __PACKAGE__->can( "_my_dist_config_$^O" ) || \&_my_dist_config;
+    my $code = __PACKAGE__->can( "_my_dist_config_$^O" ) || \&_my_dist_config_;
     return $code->( $opt );
 }
 
