@@ -530,7 +530,7 @@ done_testing;
 	SKIP: {
 	    $tt or skip( 'Failed to instantiate application', 1 );
 	    if ( eval {
-		    @got = $tt->_tokenize( $opt, $source, \@positional );
+		    @got = $tt->__tokenize( $opt, $source, \@positional );
 		    1;
 		} ) {
 		if ( $opt->{fail} ) {
@@ -576,7 +576,7 @@ done_testing;
 	SKIP: {
 	    $tt or skip( 'Failed to instantiate application', 1 );
 	    if ( eval {
-		    @got = $tt->_tokenize( $opt, $source, \@positional );
+		    @got = $tt->__tokenize( $opt, $source, \@positional );
 		    1;
 		} ) {
 		@_ = ( "$name succeeded unexpectedly" );

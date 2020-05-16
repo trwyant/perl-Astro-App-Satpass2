@@ -106,7 +106,6 @@ SKIP: {
 }
 
 {
-
     my $got;
 
     call_m  set => stdout => \$got, undef, 'Set output to scalar ref';
@@ -118,6 +117,34 @@ SKIP: {
 
     is $got, 'There was a young lady named Bright',
 	'Confirm scalar content';
+}
+
+{
+    my $got;
+
+    call_m  set => stdout => \$got, undef, 'Set output to scalar ref';
+
+    execute 'echo -default "Able was I ere I saw Elba" There was a young lady named Bright', undef,
+	'Echo to the scalar ref';
+
+    chomp $got;
+
+    is $got, 'There was a young lady named Bright',
+	'Default ignored if arguments provided';
+}
+
+{
+    my $got;
+
+    call_m  set => stdout => \$got, undef, 'Set output to scalar ref';
+
+    execute 'echo -default "Able was I ere I saw Elba" There', undef,
+	'Echo to the scalar ref';
+
+    chomp $got;
+
+    is $got, 'There was I ere I saw Elba',
+	'Default used if arguments not provided';
 }
 
 {

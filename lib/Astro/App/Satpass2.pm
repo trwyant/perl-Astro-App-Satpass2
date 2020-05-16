@@ -754,7 +754,7 @@ sub execute {
 	$self->{echo} and $self->whinge($self->get( 'prompt' ), $_);
 	m/ \A \s* [#] /smx and next;
 	my $stdout = $self->{frame}[-1]{stdout};
-	my ($args, $redirect) = $self->_tokenize(
+	my ($args, $redirect) = $self->__tokenize(
 	    { in => $in }, $_, $self->{frame}[-1]{args});
 	# NOTICE
 	#
@@ -4555,7 +4555,7 @@ sub _rad2hms {
 #	the prompt as an argument. If $in is not a code reference, or if
 #	it returns undef, we wail() with the error message.  Otherwise
 #	we return the line read. I expect this to be used only by
-#	_tokenize().
+#	__tokenize().
 
 sub _read_continuation {
     my ( $self, $in, $error ) = @_;
@@ -4898,7 +4898,7 @@ EOD
     return wantarray ? @rslt : join ' ', @rslt;
 }
 
-#	($tokens, $redirect) = $self->_tokenize(
+#	($tokens, $redirect) = $self->__tokenize(
 #		{option => $value}, $buffer, [$arg0 ...]);
 #
 #	This method tokenizes the buffer. The options hash may be
@@ -4951,7 +4951,7 @@ EOD
 #	environment variable is interpolated in.
 #
 #	Most of the fancier forms of interpolation are suported. In the
-#	following, word is expanded by recursively calling _tokenize
+#	following, word is expanded by recursively calling __tokenize
 #	with options {single => 1, noredirect => 1}. But unlike bash, we
 #	make no distinction between unset or null. The ':' can be
 #	omitted before the '-', '=', '?' or '+', but it does not change
@@ -5020,7 +5020,7 @@ EOD
 	e	=> "\e",
     );
 
-    sub _tokenize {
+    sub __tokenize {
 	my ($self, @parms) = @_;
 	local $self->{_case_mod} = undef;
 	my $opt = HASH_REF eq ref $parms[0] ? shift @parms : {};
@@ -5191,7 +5191,7 @@ EOD
 		    # character through the tokenizer, since further
 		    # expansion is possible here.
 
-		    my $mod = _tokenize(
+		    my $mod = __tokenize(
 			$self,
 			{ single => 1, noredirect => 1, in => $in },
 			$rest, $args);
@@ -5410,7 +5410,7 @@ EOD
 			$rslt[-1]{token} .= $buffer;
 		    }
 		    if ( $quote ne q<'> ) {
-			$rslt[-1]{token} = _tokenize(
+			$rslt[-1]{token} = __tokenize(
 			    $self,
 			    { single => 1, noredirect => 1, in => $in },
 			    $rslt[-1]{token}, $args
@@ -5855,6 +5855,17 @@ option C<bar> and string option C<baz> in any of the following ways:
  $satpass2->foo( '-bar', -baz => 'burfle' );
  $satpass2->foo( '-bar', '-baz=burfle' );
  $satpass2->foo( { bar => 1, baz => 'burfle' } );
+
+In addition to the documented options (if any) any interactive method
+will accept option C<default>. This takes a string, which is parsed to
+provide defaults for positional arguments. If calling the method from
+code you can also specify an array reference and bypass the parsing.
+This option is probably only useful in L<source|/source> files. As an
+example, a source file that does a two-day almanac starting at noon of
+the current day (but allowing the user to override this by specifying
+arguments to C<source>) might contain
+
+ almanac -default "'today noon' +2" "$@"
 
 For ease of use with templating systems such as F<Template-Toolkit> most
 interactive methods flatten array references in their argument list. The
