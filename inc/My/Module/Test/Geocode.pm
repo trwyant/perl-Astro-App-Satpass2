@@ -19,7 +19,7 @@ our @EXPORT = @EXPORT_OK;
 my $wrapper_class;
 my $wrapper_object;
 
-sub setup ($) {
+sub setup {
     ( $wrapper_class ) = @_;
 
     load_package( $wrapper_class )
@@ -50,7 +50,7 @@ sub setup ($) {
     goto &pass;
 }
 
-sub geocode ($;$) {
+sub geocode {
     my ( $loc, $tests ) = @_;
     defined $tests
 	or $tests = 1;
