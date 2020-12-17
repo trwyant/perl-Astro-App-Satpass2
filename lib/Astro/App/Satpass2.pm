@@ -285,6 +285,7 @@ my %mutator = (
     pass_variant	=> \&_set_pass_variant,
     perltime => \&_set_time_parser_attribute,
     prompt => \&_set_unmodified,
+    refraction	=> \&_set_unmodified,
     simbad_url => \&_set_unmodified,
     singleton => \&_set_unmodified,
     spacetrack => \&_set_spacetrack,
@@ -391,6 +392,7 @@ my %static = (
     pass_variant	=> PASS_VARIANT_NONE,
     perltime => 0,
     prompt => 'satpass2> ',
+    refraction	=> 1,
     simbad_url => 'simbad.u-strasbg.fr',
     singleton => 0,
 #   spacetrack => undef,	# Astro::SpaceTrack object set when accessed
@@ -3166,7 +3168,7 @@ sub station {
 	    horizon	=> deg2rad( $self->get( 'horizon' ) ),
 	    id		=> 'station',
 	    name	=> $self->{location} || '',
-	    refraction	=> 1,
+	    refraction	=> $self->{refraction} || 0,
 	)->geodetic (
 	    deg2rad( $self->{latitude} ),
 	    deg2rad( $self->{longitude} ),
@@ -8285,6 +8287,15 @@ The default will normally be 0 (i.e. false).
 This string attribute specifies the string used to prompt for commands.
 
 The default is C<< 'satpass2> ' >>.
+
+=head2 refraction
+
+This Boolean attribute specifies whether or not atmospheric refraction
+is taken into account. It should ordinarily not be changed, and was
+exposed only out of curiosity about the size of the effect on (say) the
+time of Sunset.
+
+The default is C<1> (i.e. true).
 
 =head2 simbad_url
 
