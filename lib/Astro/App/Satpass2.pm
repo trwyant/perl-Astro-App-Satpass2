@@ -9092,10 +9092,11 @@ initialization file, if C<-initialization_file> is not specified,
 C<SATPASS2INI> does not exist, and the initialization file was not found
 in its default location.
 
-=head1 BUGS
+=head1 SUPPORT
 
-Bugs can be reported to the author by mail, or through
-L<https://rt.cpan.org/>.
+Support is by the author. Please file bug reports at
+L<https://github.com/trwyant/perl-Astro-App-Satpass2/issues>, or in
+electronic mail to the author.
 
 =head1 AUTHOR
 

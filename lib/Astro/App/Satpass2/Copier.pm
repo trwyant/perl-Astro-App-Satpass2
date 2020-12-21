@@ -257,7 +257,8 @@ This convenience method simply wraps C<< $self->warner()->whinge() >>.
 =head1 SUPPORT
 
 Support is by the author. Please file bug reports at
-L<https://rt.cpan.org>, or in electronic mail to the author.
+L<https://github.com/trwyant/perl-Astro-App-Satpass2/issues>, or in
+electronic mail to the author.
 
 =head1 AUTHOR
 
