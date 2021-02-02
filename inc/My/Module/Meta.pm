@@ -19,6 +19,7 @@ sub new {
 
 sub build_requires {
     return +{
+	'Data::Dumper'	=> 0,
 	'Test::More'	=> 0.88,	# Because of done_testing().
     };
 }
@@ -42,6 +43,7 @@ sub requires {
 	'Carp'			=> 0,
 	'Clone'			=> 0,
 	'Cwd'			=> 0,
+	'Exporter'		=> 0,
 	'File::Glob'		=> 0,
 	'File::HomeDir'		=> 0.93,	# For my_dist_config
 	'File::Spec'		=> 0,
@@ -64,10 +66,12 @@ sub requires {
 	'Text::ParseWords'	=> 0,
 	'Text::Wrap'		=> 0,
 	'Time::Local'		=> 0,
-	'constant'		=> 0,
-	'parent'		=> 0,
-	'strict'		=> 0,
-	'warnings'		=> 0,
+	constant		=> 0,
+	lib			=> 0,
+	parent			=> 0,
+	strict			=> 0,
+	utf8			=> 0,
+	warnings		=> 0,
 	@extra,
     };
 }
