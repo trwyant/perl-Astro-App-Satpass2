@@ -17,10 +17,9 @@ eval {
 
 Test::Prereq::Meta->new(
     accept	=> [
-	My::Module::Recommend->optionals(), qw{
-	My::Module::Test::App My::Module::Test::Geocode
-	Test::MockTime
-    } ],
+	My::Module::Recommend->optionals(),
+	qw{ Test::MockTime },
+    ],
 )->all_prereq_ok();
 
 done_testing;
