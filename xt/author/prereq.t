@@ -1,7 +1,5 @@
 package main;
 
-use 5.010;
-
 use strict;
 use warnings;
 
@@ -15,12 +13,19 @@ eval {
     1;
 } or plan skip_all => 'Test::Prereq::Meta not available';
 
-Test::Prereq::Meta->new(
+my $tpm = Test::Prereq::Meta->new(
     accept	=> [
 	My::Module::Recommend->optionals(),
 	qw{ Test::MockTime },
     ],
-)->all_prereq_ok();
+    uses	=> [ qw{
+	IPC::System::Simple
+	} ],
+);
+
+$tpm->all_prereq_ok();
+
+$tpm->all_prereqs_used();
 
 done_testing;
 

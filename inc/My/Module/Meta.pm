@@ -19,7 +19,6 @@ sub new {
 
 sub build_requires {
     return +{
-	'Data::Dumper'	=> 0,
 	'Test::More'	=> 0.88,	# Because of done_testing().
     };
 }
@@ -37,7 +36,6 @@ sub requires {
 	'Astro::Coord::ECI::Star'	=> 0.077,
 	'Astro::Coord::ECI::Sun'	=> 0.077,
 	'Astro::Coord::ECI::TLE'	=> 0.077,
-	'Astro::Coord::ECI::TLE::Iridium'	=> 0.077,
 	'Astro::Coord::ECI::TLE::Set'	=> 0.077,
 	'Astro::Coord::ECI::Utils'	=> 0.112,	# for greg_time_gm() ...
 	'Carp'			=> 0,
@@ -60,7 +58,6 @@ sub requires {
 	'Scalar::Util'		=> 1.26,	# For isdual()
 ##	'Task::Weaken'		=> 0,
 	'Template'		=> 2.21,
-	'Template::Constants'	=> 2.21,
 	'Template::Provider'	=> 2.21,
 	'Text::Abbrev'		=> 0,
 	'Text::ParseWords'	=> 0,
