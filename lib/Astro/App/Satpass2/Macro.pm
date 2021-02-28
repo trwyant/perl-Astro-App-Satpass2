@@ -13,7 +13,7 @@ use Astro::App::Satpass2::Utils qw{
 use Astro::App::Satpass2::Warner;
 use Scalar::Util 1.26 qw{ weaken };
 
-our $VERSION = '0.046_001';
+our $VERSION = '0.046_002';
 
 sub new {
     my ( $class, %arg ) = @_;

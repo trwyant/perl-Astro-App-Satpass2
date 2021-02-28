@@ -1,3 +1,6 @@
+0.046_002	2021-02-27	T. R. Wyant
+    Fix test failure under Perl 5.8.
+
 0.046_001	2021-02-27	T. R. Wyant
     Make macros sensitive to error_out setting.  And a few other places
     like choose().
