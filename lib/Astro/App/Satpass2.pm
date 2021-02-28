@@ -34,6 +34,15 @@ use Astro::Coord::ECI::Utils 0.112 qw{ :all };	# This needs at least 0.112.
 	Astro::Coord::ECI::TLE::Iridium->VERSION( 0.077 );
 	1;
     } || 0;
+    # Unfortunately the alias code creates the alias even if the version
+    # is unacceptable; so we may have to just delete the Iridium aliases
+    unless( HAVE_TLE_IRIDIUM ) {
+	my %type_map = Astro::Coord::ECI::TLE->alias();
+	foreach my $name ( keys %type_map ) {
+	    $type_map{$name} eq 'Astro::Coord::ECI::TLE::Iridium'
+		and Astro::Coord::ECI::TLE->alias( $name, undef );
+	}
+    }
 }
 
 use Clone ();

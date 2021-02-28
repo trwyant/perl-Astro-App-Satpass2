@@ -18,7 +18,6 @@ sub execute {
     my $satpass2 = $self->parent();
     my $output;
     foreach my $cmd ( @{ $self->{def} } ) {
-	local $@ = undef;
 	eval {
 	    if ( defined( my $buffer = $satpass2->execute( $cmd ) ) ) {
 		$output .= $buffer;
