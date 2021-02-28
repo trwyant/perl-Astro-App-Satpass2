@@ -516,7 +516,7 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter
 #	appropriate.
 
     my @sky = $self->__choose( $opt->{choose}, $self->{sky} )
-	or $self->wail( 'No bodies selected' );
+	or return $self->__wail( 'No bodies selected' );
 
     foreach my $body ( @sky ) {
 	$body->can ('almanac') or do {
@@ -597,7 +597,7 @@ sub choose : Verb( epoch=s ) {
     }
     if ( @args ) {
 	my @bodies = @{ $self->__choose( \@args, $self->{bodies} ) }
-	    or $self->wail( 'No bodies chosen' );
+	    or return $self->__wail( 'No bodies chosen' );
 	@{ $self->{bodies} } = @bodies;
     }
     return;
@@ -678,7 +678,7 @@ sub drop : Verb() {
 
     my @bodies = @{
 	$self->__choose( { invert => 1 }, \@args, $self->{bodies} ) }
-	or $self->wail( 'No bodies left' );
+	or return $self->__wail( 'No bodies left' );
 
     @{ $self->{bodies} } = @bodies;
 
@@ -867,7 +867,7 @@ sub export : Verb() {
 	@args and $self->set ($name, shift @args);
 	$self->{exported}{$name} = 1;
     } else {
-	@args or $self->wail( 'You must specify a value' );
+	@args or return $self->wail( 'You must specify a value' );
 	$self->{exported}{$name} = shift @args;
     }
     return;
@@ -927,7 +927,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! q
 	);
 	push @active, $tle;
     }
-    @active or $self->wail( 'No bodies capable of flaring' );
+    @active or return $self->__wail( 'No bodies capable of flaring' );
 
     my @flares;
     foreach my $tle (@active) {
@@ -1594,12 +1594,12 @@ sub _macro_define : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, undef, $name, @args ) = __arguments( @_ );
     my $output;
     defined $name
-	or $self->wail( 'You must provide a name for the macro' );
+	or return $self->__wail( 'You must provide a name for the macro' );
     @args
-	or $self->wail( 'You must provide a definition for the macro' );
+	or return $self->__wail( 'You must provide a definition for the macro' );
     $name !~ m/ \W /smx
 	and $name !~ m/ \A _ /smx
-	or $self->wail("Invalid macro name '$name'");
+	or return $self->__wail("Invalid macro name '$name'");
 
     # NOTE the value of {def} used to be unescaped, but I do not now
     # know why, and the implementation of \U and friends is more natural
@@ -5599,6 +5599,19 @@ sub wail {
     my ($self, @args) = @_;
     $self->{_warner}->wail( @args );
     return;	# We can't hit this, but Perl::Critic does not know that.
+}
+
+#	$self->__wail(...)
+#
+#	either wail() or whinge() depending on error_out.
+sub __wail {
+    my ($self, @args) = @_;
+    if ( $self->get( 'error_out' ) ) {
+	$self->{_warner}->wail( @args );
+    } else {
+	$self->{_warner}->whinge( @args );
+    }
+    return;
 }
 
 #	$self->weep(...)

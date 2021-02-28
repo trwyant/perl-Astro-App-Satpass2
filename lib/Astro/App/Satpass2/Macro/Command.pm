@@ -18,8 +18,14 @@ sub execute {
     my $satpass2 = $self->parent();
     my $output;
     foreach my $cmd ( @{ $self->{def} } ) {
-	if ( defined( my $buffer = $satpass2->execute( $cmd ) ) ) {
-	    $output .= $buffer;
+	local $@ = undef;
+	eval {
+	    if ( defined( my $buffer = $satpass2->execute( $cmd ) ) ) {
+		$output .= $buffer;
+	    }
+	    1;
+	} or do {
+	    $satpass2->__wail( "$@" );
 	}
     }
     return $output;
