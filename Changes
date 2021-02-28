@@ -1,3 +1,10 @@
+0.046_001	2021-02-27	T. R. Wyant
+    Make macros sensitive to error_out setting.  And a few other places
+    like choose().
+
+    Get prerequisites up to snuff and add xt/author/prereq.t to ensure
+    they stay that way. Yes, this includes config_requires.
+
 0.046		2021-01-08	T. R. Wyant
     Add Travis CI testing.
 
