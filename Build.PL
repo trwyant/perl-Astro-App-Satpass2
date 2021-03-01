@@ -3,12 +3,13 @@ use 5.008;
 use strict;
 use warnings;
 
+use Module::Build;
+
 use lib qw{ inc };
 
 use My::Module::Build;
 use My::Module::Meta;
 use My::Module::Recommend;
-use Module::Build;
 
 ( my $mbv = Module::Build->VERSION() ) =~ s/_//g;
 
