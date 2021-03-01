@@ -1,3 +1,27 @@
+0.046_003	2021-03-01	T. R. Wyant
+    Use Attribute::Handlers, not low-level interface to assign custom
+    subroutine attributes.
+
+    Refactor authortest into three:
+    * functional_test is basically test, but with AUTHOR_TESTING set
+      true;
+    * optional_test is basically test, but with AUTHOR_TESTING set true
+      and PERL5OPT set to -MTest::Without::Module=the optional modules;
+    * structural_test is basically test, but with AUTHOR_TESTING set
+      true and the test files coming from STRUCTURAL_TEST_FILES (make)
+      or structural_test_files (./Build).
+    The authortest target depends on all of these.
+
+    The incentive for doing this was that I found that my old way of testing
+    without optional modules (writing a stub .t file in xt/author/optionals/
+    that called in Test::Without::Module and then did a 'do' on the
+    corresponding t/ file) did not play well with Attribute::Handlers, which
+    I am trying to convert to.
+
+    Fixed typo in xt/author/rt80435.t in which the test title and
+    diagnostic referred to the wrong RT ticket number. For eight years
+    now. And I just noticed the discrepancy.
+
 0.046_002	2021-02-27	T. R. Wyant
     Fix test failure under Perl 5.8.
 
