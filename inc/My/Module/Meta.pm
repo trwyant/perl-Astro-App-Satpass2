@@ -116,6 +116,7 @@ sub requires {
 	'Astro::Coord::ECI::TLE'	=> 0.077,
 	'Astro::Coord::ECI::TLE::Set'	=> 0.077,
 	'Astro::Coord::ECI::Utils'	=> 0.112,	# for greg_time_gm() ...
+	'Attribute::Handlers'	=> 0,
 	'Carp'			=> 0,
 	'Clone'			=> 0,
 	'Cwd'			=> 0,

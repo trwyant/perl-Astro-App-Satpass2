@@ -45,6 +45,7 @@ use Astro::Coord::ECI::Utils 0.112 qw{ :all };	# This needs at least 0.112.
     }
 }
 
+use Attribute::Handlers;
 use Clone ();
 use Cwd ();
 use File::Glob qw{ :glob };
@@ -183,69 +184,62 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 #	-baz; the latter takes a string value.
 
 {
-    my (%attr, %want);
-    BEGIN {
-	my $hash = sub {
-	    my ( $name, $arg, @legal ) = @_;
-	    my $gol = Getopt::Long::Parser->new();
-	    my %opt;
-	    $gol->getoptionsfromarray(
-		[ split qr{ \s+ }smx, $arg ],
-		\%opt,
-		@legal,
-	    ) or do {
-		require Carp;
-		Carp::croak( "Bad $name option" );
-	    };
-	    return \%opt;
-	};
-	my $list = sub {
-	    return [ split qr{ \s+ }smx, $_[0] ];
-	};
-	%want = (
-	    Configure	=> $list,
-	    Tokenize	=> sub {
-		my ( $arg ) = @_;
-		my $opt = $hash->( Tokenize => $arg,
-		    qw{ expand_tilde! } );
-		exists $opt->{expand_tilde}
-		    or $opt->{expand_tilde} = 1;
-		return $opt;
-	    },
-	    Tweak	=> sub {
-		my ( $arg ) = @_;
-		return $hash->( Tweak => $arg,
-		    qw{ unsatisfied! } );
-	    },
-	    Verb	=> $list,
-	);
+    my %attr;
+
+    sub Configure : ATTR(CODE,RAWDATA) {
+	my ( undef, undef, $code, $name, $data ) = @_;
+	$attr{$code}{$name} = _attr_list( $data );
+	return;
     }
 
-    sub FETCH_CODE_ATTRIBUTES {
-	return $attr{$_[0]};
+    sub Tokenize : ATTR(CODE,RAWDATA) {
+	my ( undef, undef, $code, $name, $data ) = @_;
+	my $opt = _attr_hash( $name, $data, qw{ expand_tilde|expand-tilde! } );
+	exists $opt->{expand_tilde}
+	    or $opt->{expand_tilde} = 1;
+	$attr{$code}{$name} = $opt;
+	return;
     }
 
-    sub MODIFY_CODE_ATTRIBUTES {
-	my ( undef, $code, @args ) = @_;	# $pkg unused
-	my @rslt;
-	foreach (@args) {
-	    m{ ( [^(]* ) (?: [(] \s* (.*?) \s* [)] )? \z }smx or do {
-		push @rslt, $_;
-		next;
-	    };
-	    if ( my $hdlr = $want{$1} ) {
-		$attr{$code}{$1} = $hdlr->( defined $2 ? $2 : '' );
-	    } else {
-		push @rslt, $_;
-	    }
-	}
-	return @rslt;
+    sub Tweak : ATTR(CODE,RAWDATA) {
+	my ( undef, undef, $code, $name, $data ) = @_;
+	$attr{$code}{$name} = _attr_hash( $name, $data, qw{ unsatisfied! } );
+	return;
+    }
+
+    sub Verb : ATTR(CODE,RAWDATA) {
+	my ( undef, undef, $code, $name, $data ) = @_;
+	$attr{$code}{$name} = _attr_list( $data );
+	return;
+    }
+
+
+    sub _attr_hash {
+	my ( $name, $arg, @legal ) = @_;
+	my $gol = Getopt::Long::Parser->new();
+	my %opt;
+	$gol->getoptionsfromarray(
+	    _attr_list( $arg ),
+	    \%opt,
+	    @legal,
+	) or do {
+	    require Carp;
+	    Carp::croak( "Bad $name option" );
+	};
+	return \%opt;
+    }
+
+    sub _attr_list {
+	defined( local $_ = $_[0] )
+	    or return [];
+	s/ \A \s+ //smx;
+	return [ split qr< \s+ >smx ];
     }
 
     sub __get_attr {
 	my ( undef, $code, $name, $dflt ) = @_;	# $pkg unused
 	defined $code
-	    or return;
+	    or return \%attr;
 	defined $name
 	    or return $attr{$code};
 	exists $attr{$code}{$name}

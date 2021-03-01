@@ -9,6 +9,7 @@ use parent qw{ Astro::App::Satpass2 };
 
 use Astro::App::Satpass2::Utils qw{ __arguments };
 use Astro::Coord::ECI::Utils 0.059 qw{ rad2deg };
+use Attribute::Handlers;
 use Scalar::Util 1.26 qw{ refaddr };
 
 our $VERSION = '0.046_002';
@@ -16,22 +17,15 @@ our $VERSION = '0.046_002';
 {
     my %operands;
 
-    sub MODIFY_CODE_ATTRIBUTES {
-	my ( $pkg, $code, @args ) = @_;
-	my @rslt;
-	foreach ( @args ) {
-	    if ( m{ \A Operands [(] ( \d+ ) [)] \z }smx ) {
-		$operands{ refaddr( $code ) } = $1;
-	    } else {
-		push @rslt, $_;
-	    }
-	}
-	return $pkg->SUPER::MODIFY_CODE_ATTRIBUTES( $code, @rslt );
+    sub Operands : ATTR(CODE,RAWDATA) {
+	my ( undef, undef, $code, $name, $data ) = @_;
+	$operands{$code}{$name} = 0 + $data;
+	return;
     }
 
     sub operands {
 	my ( $code ) = @_;
-	return $operands{ refaddr( $code ) } || 0;
+	return defined $code ? $operands{$code} || 0 : \%operands;
     }
 }
 
