@@ -110,7 +110,6 @@ sub my_depends_on {
     return;
 }
 
-
 sub harness_switches {
     my ( $self ) = @_;
     my @res = $self->SUPER::harness_switches();
@@ -194,6 +193,7 @@ L<Module::Build|Module::Build> version C<0.26>.
 =head1 SUPPORT
 
 Support is by the author. Please file bug reports at
+L<https://rt.cpan.org/Public/Dist/Display.html?Name=Astro-App-Satpass2>,
 L<https://github.com/trwyant/perl-Astro-App-Satpass2/issues>, or in
 electronic mail to the author.
 

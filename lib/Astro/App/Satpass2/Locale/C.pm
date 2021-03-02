@@ -145,7 +145,6 @@ EOD
     [%= data.longitude( arg ) %] [% data.altitude( arg ) -%]
 EOD
 
-
 	location	=> <<'EOD',
 [% UNLESS data %]
     [%- SET data = sp.location( arg ) %]
@@ -640,6 +639,7 @@ L<Astro::App::Satpass2::Locale|Astro::App::Satpass2::Locale>
 =head1 SUPPORT
 
 Support is by the author. Please file bug reports at
+L<https://rt.cpan.org/Public/Dist/Display.html?Name=Astro-App-Satpass2>,
 L<https://github.com/trwyant/perl-Astro-App-Satpass2/issues>, or in
 electronic mail to the author.
 

@@ -93,10 +93,10 @@ This manifest constant returns a date format designed to produce a time
 in the format hour:minute:second.  Since this format is intended to be
 used with C<CLDR>, it is C<'HH:mm:ss'>.
 
-
 =head1 SUPPORT
 
 Support is by the author. Please file bug reports at
+L<https://rt.cpan.org/Public/Dist/Display.html?Name=Astro-App-Satpass2>,
 L<https://github.com/trwyant/perl-Astro-App-Satpass2/issues>, or in
 electronic mail to the author.
 

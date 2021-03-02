@@ -104,6 +104,7 @@ L<Astro::App::Satpass2::ParseTime|Astro::App::Satpass2::ParseTime>.
 =head1 SUPPORT
 
 Support is by the author. Please file bug reports at
+L<https://rt.cpan.org/Public/Dist/Display.html?Name=Astro-App-Satpass2>,
 L<https://github.com/trwyant/perl-Astro-App-Satpass2/issues>, or in
 electronic mail to the author.
 

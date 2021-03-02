@@ -5,7 +5,6 @@ use 5.008;
 use strict;
 use warnings;
 
-
 use Astro::App::Satpass2::Locale qw{ __localize };
 use Astro::App::Satpass2::Macro::Command;
 use Astro::App::Satpass2::Macro::Code;
@@ -212,7 +211,6 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 	$attr{$code}{$name} = _attr_list( $data );
 	return;
     }
-
 
     sub _attr_hash {
 	my ( $name, $arg, @legal ) = @_;
@@ -611,7 +609,6 @@ sub clear : Verb() {
     @{$self->{bodies}} = ();
     return;
 }
-
 
 sub dispatch {
     my ($self, $verb, @args) = @_;
@@ -1375,7 +1372,6 @@ sub init {
     return;
 }
 
-
 sub initfile : Verb( create-directory! quiet! ) {
     my ( $self, $opt ) = __arguments( @_ );	# @args unused
 
@@ -1937,7 +1933,6 @@ sub position : Verb( choose=s@ questionable|spare! quiet! ) {
     } else {
 	$time = time;
     }
-
 
 #	Define the observing station.
 
@@ -2718,7 +2713,6 @@ sub _show_unmodified {
     return ( 'set', $name, $val );
 }
 
-
 # For proper motion, we need to convert arc seconds per year to degrees
 # per second. Perl::Critic does not like 'use constant' because they do
 # not interpolate, but they really do: "@{[SPY2DPS]}".
@@ -3307,7 +3301,6 @@ sub __tle_options {
     return \@lgl;
 }
 
-
 sub unexport : Verb() {
     my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
 
@@ -3316,7 +3309,6 @@ sub unexport : Verb() {
     }
     return;
 }
-
 
 sub validate : Verb( quiet! ) {
     my ( $self, $opt, @args ) = __arguments( @_ );
@@ -3342,7 +3334,6 @@ sub validate : Verb( quiet! ) {
 
     return;
 }
-
 
 sub version : Verb() {
     return <<"EOD";
@@ -3588,8 +3579,6 @@ sub _apply_boolean_default {
     }
 
 }
-
-
 
 #	$self->_deprecation_notice( $type, $name );
 #
@@ -4040,7 +4029,6 @@ sub _get_browser_command {
 #	Gets the Astro::App::Satpass2::Format object. If $opt->{dump} is true,
 #	returns a dumper object; otherwise returns the currently-set
 #	formatter object.
-
 
 sub _get_formatter_object {
     my ( $self, $opt ) = @_;
@@ -4525,7 +4513,6 @@ sub __parse_time {
     $self->wail( "Invalid time '$time'" );
     return;
 }
-
 
 #	Reset the last time set. This is called from __arguments() in
 #	::Utils if the invocant is an Astro::App::Satpass2.
@@ -5348,7 +5335,6 @@ EOD
 		    pop @rslt;
 		}
 
-
 		# Here ends the variable expansion code.
 
 	    # If the character is an angle bracket or a pipe, we have a
@@ -5589,7 +5575,6 @@ sub _case_mod {
     }
     return;
 }
-
 
 #	$self->wail(...)
 #
@@ -9111,6 +9096,7 @@ in its default location.
 =head1 SUPPORT
 
 Support is by the author. Please file bug reports at
+L<https://rt.cpan.org/Public/Dist/Display.html?Name=Astro-App-Satpass2>,
 L<https://github.com/trwyant/perl-Astro-App-Satpass2/issues>, or in
 electronic mail to the author.
 
