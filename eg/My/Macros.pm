@@ -249,16 +249,16 @@ There are no options.
 
 =head2 test
 
- $output = $satpass2->spaceflight( qw{ -all -effective } );
+ $output = $satpass2->spacetrack( celestrak => 'stations' );
  $output .= $satpass2->dispatch(
      qw{ test 25544 choose else spacetrack retrieve 25544 } );
  
- satpass2> spaceflight -all -full
+ satpass2> spacetrack celestrak stations
  satpass2> test 25544 choose else spacetrack retrieve 25544
  
  # In either of the above cases, the orbital elements come
  # from Space Track only if they could not be retrieved from
- # the NASA's Human Space Flight web site.
+ # Celestrak
 
 This subroutine implements conditional logic. Its arguments are a
 logical expression expressed in reverse Polish notation, and a command

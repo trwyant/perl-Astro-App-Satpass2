@@ -5643,8 +5643,10 @@ Astro::App::Satpass2 - Forecast satellite visibility.
      longitude => -77.037684,  # degrees
      height => 16.68,          # meters
  );
- # Acquire ISS data from NASA
- $satpass2->spacetrack( qw{ spaceflight -all } );
+ # Acquire ISS data from Celestrak
+ $satpass2->spacetrack( qw{ celestrak stations } );
+ # Remove other bodies in the Celestrak 'stations' catalog
+ $satpass2->choose( 25544 );
  # Display our location
  $satpass2->location();
  # Display visible ISS passes over our location
@@ -5659,8 +5661,10 @@ this package,
  satpass2> set location '1600 Pennsylvania Ave, Washington DC'
  satpass2> set latitude 38.898748 longitude -77.037684
  satpass2> set height 16.68
- satpass2> # Acquire ISS data from NASA
- satpass2> spacetrack spaceflight -all
+ satpass2> # Acquire ISS data from Celestrak
+ satpass2> spacetrack celestrak stations
+ satpass2> # Remove other bodies in the Celestrak 'stations' catalog
+ satpass2> choose 25544
  satpass2> # Display our location
  satpass2> location
  satpass2> # Display visible ISS passes over our location
@@ -7261,9 +7265,9 @@ number of sources. See L</SPECIFYING INPUT DATA> for the details.
 
 This interactive method takes as its arguments the name of a method, and
 any arguments to be passed to that method. This method is called on the
-object which is stored in the L<spacetrack attribute|/spacetrack
-attribute>, and any results returned. Normally it will be used to
-configure the spacetrack object. See the
+object which is stored in the
+L<spacetrack attribute|/spacetrack attribute>, and any results returned.
+Normally it will be used to configure the spacetrack object. See the
 L<Astro::SpaceTrack|Astro::SpaceTrack> documentation for further
 details.
 
@@ -7341,7 +7345,6 @@ whatever the method returns.
 
 The following options are allowed on any retrieval:
 
- -all specifies the retrieval of all manned spaceflight elements;
  -descending specifies the return of data in descending order;
  -last5 specifies the return of the last 5 elements;
  -end specifies the end time for the data to be fetched;
