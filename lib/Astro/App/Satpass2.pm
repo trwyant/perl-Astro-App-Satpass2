@@ -3661,7 +3661,14 @@ sub _drop_from_sky {
 sub _file_opener {
     my ( $self, $name, $mode ) = @_;
 
-    my $fh = IO::File->new( $name, $mode )
+    # NOTE special case for &1 (stdout) and &2 (stderr).
+    my $fh = ( $name =~ m/ \A & ( [12] ) \z /smx ) ?
+	[
+	    undef,
+	    $self->{frame}[-1]{localout} || \*STDOUT,
+	    \*STDERR,
+	]->[ $1 ] :
+	IO::File->new( $name, $mode )
 	or $self->wail( "Unable to open $name: $!" );
 
     if ( $mode =~ m/ \A (?: [+>] | [|] - ) /smx ) {
