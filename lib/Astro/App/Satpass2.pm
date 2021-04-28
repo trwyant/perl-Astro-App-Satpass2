@@ -2567,7 +2567,7 @@ sub _set_time_parser {
 
     if ( CODE_REF eq ref $val ) {
 	$val = _set_time_parser_code( $val );
-    } elsif ( my $macro = $self->{macro}{$val} ) {
+    } elsif ( defined $val and my $macro = $self->{macro}{$val} ) {
 	$val = _set_time_parser_code(
 	    $macro->implements( $val, required => 1 ),
 	    $val,
