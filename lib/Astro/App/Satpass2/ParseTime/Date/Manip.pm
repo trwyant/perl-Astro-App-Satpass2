@@ -6,8 +6,10 @@ use warnings;
 use parent qw{ Astro::App::Satpass2::ParseTime };
 
 use Astro::App::Satpass2::Utils qw{
+    back_end
     load_package
     __date_manip_backend
+    __parse_class_and_args
     @CARP_NOT
 };
 
@@ -17,11 +19,48 @@ sub __class_name {
     return __PACKAGE__;
 }
 
+sub attribute_names {
+    my ( $self ) = @_;
+    return ( $self->SUPER::attribute_names(), qw{ back_end station } );
+}
+
 sub delegate {
     my $back_end;
     defined ( $back_end = __date_manip_backend() )
 	or return $back_end;
     return __PACKAGE__ . "::v$back_end";
+}
+
+sub station {
+    my ( $self, @args ) = @_;
+    if ( @args > 0 ) {
+	not defined $args[0]
+	    or $args[0]->isa( 'Astro::Coord::ECI' )
+	    or $self->wail( 'Station must be an Astro::Coord::ECI' );
+	$self->{station} = $args[0];
+	if ( my $dm = $self->_get_dm_field( 'object' ) ) {
+	    # NOTE that we have no way to introspect Date::Manip to see
+	    # if it has the 'location' config, so since Date::Manip uses
+	    # warn() to report errors, we just blindly set it and
+	    # swallow the possible warning.
+	    local $SIG{__WARN__} = sub {};
+	    $dm->config( location => $args[0] );
+	}
+	return $self;
+    }
+    return $self->{station};
+}
+
+sub __back_end_default {
+    my ( undef, $cls ) = @_;
+    return defined $cls ? $cls : 'Date::Manip::Date';
+}
+
+sub __back_end_validate {
+    my ( $self, $cls ) = @_;
+    $cls->isa( 'Date::Manip::Date' )
+	or $self->wail( "$cls is not a Date::Manip::Date" );
+    return;
 }
 
 1;
@@ -46,6 +85,15 @@ determine which Date::Manip class to use.
 
 This class supports the following public methods:
 
+=head2 back_end
+
+ $pt->back_end( 'Date::Manip::Date' );
+ my $back_end = $pt->back_end();
+
+This method is both accessor and mutator for the object's back end class
+name. This class must be a subclass of
+L<Date::Manip::Date|Date::Manip::Date>.
+
 =head2 delegate
 
  my $delegate = Astro::App::Satpass2::ParseTime::Date::Manip->delegate();
@@ -58,6 +106,19 @@ is returned. If it returns 6 or greater,
 'L<Astro::App::Satpass2::ParseTime::Date::Manip::v6|Astro::App::Satpass2::ParseTime::Date::Manip::v6>'
 is returned. If L<Date::Manip|Date::Manip> can not be loaded, C<undef>
 is returned.
+
+=head2 station
+
+ $pt->station( $satpass2->station() );
+ my $station = $pt->station();
+
+This method is both accessor and mutator for the object's station
+attribute. This must be an L<Astro::Coord::ECI|Astro::Coord::ECI>
+object, or C<undef>.
+
+This attribute is used to set the back end's C<location> config item. If
+the back end does not have this config item, the fact is ignored --
+silently, with any luck.
 
 =head1 SUPPORT
 

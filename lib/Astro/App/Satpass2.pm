@@ -340,7 +340,7 @@ my %shower = (
     local_coord => \&_show_formatter_attribute,
     pass_variant	=> \&_show_pass_variant,
     sun		=> \&_show_sun_class,	# only in {level1}
-    time_parser => \&_show_copyable,
+    time_parser => \&_show_time_parser,
     time_format => \&_show_formatter_attribute,
     time_formatter	=> \&_show_formatter_attribute,
 );
@@ -2722,6 +2722,16 @@ sub _show_sun_class {
     return $self->_sky_class_components( $name );
 }
 
+sub _show_time_parser {
+    my ( $self, $name ) = @_;
+    my $obj = $self->get( $name );
+    my $val = $obj->class_name_of_record();
+    if ( my $back_end = $obj->back_end() ) {
+	$val = "$val,back_end=$back_end";
+    }
+    return ( set => $name, $val );
+}
+
 sub _show_unmodified {
     my ($self, $name) = @_;
     my $val = $self->get( $name );
@@ -4528,7 +4538,11 @@ sub __parse_angle {
 
 sub __parse_time {
     my ($self, $time, $default) = @_;
-    my $pt = $self->{time_parser};
+    my $pt = $self->{time_parser}
+	or $self->wail( 'No time parser available' );
+    $self->{time_parser}->can( 'station' )
+	and $self->_set_time_parser_attribute(
+	station => $self->station() );
     if ( defined( my $time = $pt->parse( $time, $default ) ) ) {
 	return $time;
     }

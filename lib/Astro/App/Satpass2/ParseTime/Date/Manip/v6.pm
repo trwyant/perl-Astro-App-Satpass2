@@ -83,11 +83,12 @@ sub tz {
 
 sub _get_dm_field {
     my ( $self, $field ) = @_;
-    my $info = $self->{+__PACKAGE__} ||= _make_dm_hash();
+    my $info = $self->{+__PACKAGE__} ||= $self->_make_dm_hash();
     return $info->{$field};
 }
 
 sub _make_dm_hash {
+    my ( $self ) = @_;
 
     # Workaround for bug (well, _I_ think it's a bug) introduced into
     # Date::Manip with 6.34, while fixing RT #78566. My bug report is RT
@@ -95,7 +96,8 @@ sub _make_dm_hash {
     my $path = $ENV{PATH};
     local $ENV{PATH} = $path;
 
-    my $dm = Date::Manip::Date->new();
+    my $back_end = $self->back_end() || 'Date::Manip::Date';
+    my $dm = $back_end->new();
     return {
 	default_zone	=> scalar $dm->tz->zone(),
 	object		=> $dm,
