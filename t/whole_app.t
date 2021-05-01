@@ -522,6 +522,16 @@ EOD
 error 'Something happened'
 echo 'Nothing happened'
 EOD
+
+    call_m( qw{ set events 0 }, undef, 'Clear events accumulator' );
+
+    execute( <<'EOD', 'No events', 'if ... then begin, else, end' );
+if attr events then begin
+echo Have events
+else
+echo No events
+end
+EOD
 }
 
 execute( 'status clear', undef, 'Clear status for testing'  );

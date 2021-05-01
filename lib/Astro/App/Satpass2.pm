@@ -621,7 +621,7 @@ sub dispatch {
 
     defined $verb or return;
 
-    my $unsatisfied = $self->{_unsatisfied_if};
+    my $unsatisfied = $self->_in_unsatisfied_if();
 
     if ( $self->{macro}{$verb} ) {
 	$unsatisfied
@@ -691,25 +691,41 @@ sub drop : Verb() {
     return;
 }
 
-sub dump : method Verb() {	## no critic (ProhibitBuiltInHomonyms)
+sub dump : method Verb() Tweak( -unsatisfied ) {	## no critic (ProhibitBuiltInHomonyms)
     my ( $self, undef, @arg ) = __arguments( @_ );	# $opt unused
-    my @dump;
-    @arg
-	or push @dump, $self;
+
     local $self->{time_parser} = ref $self->{time_parser};
-    foreach ( @arg ) {
-	if ( ref ) {
-	    push @dump, $_;
-	} elsif ( 'twilight' eq $_ ) {
-	    push @dump, { map { $_ => $self->{$_} } qw{ twilight _twilight } };
-	} else {
-	    push @dump, $self->__choose( [ $_ ], $self->{bodies} );
-	    if ( defined( my $inx = $self->_find_in_sky( $_ ) ) ) {
-		push @dump, $self->{sky}[$inx];
-	    }
-	}
+
+    my $dumper = $self->_get_dumper();
+
+    @arg
+	or return $dumper->( $self );
+
+    local $_ = shift @arg;
+
+    ref
+	and return $dumper->( $_ );
+
+    m/ \A frames? \z /smxi
+	and return $dumper->( $self->{frame} );
+
+    m/ \A tokens? \z /smxi
+	and return $dumper->( $self->__tokenize( @arg ) );
+
+    m/ \A twilight \z /smxi
+	and return $dumper->(
+	{ map { $_ => $self->{$_} } qw{ twilight _twilight } } );
+
+    my @stuff = $self->__choose( [ $_ ], $self->{bodies} );
+    if ( defined( my $inx = $self->_find_in_sky( $_ ) ) ) {
+	push @stuff, $self->{sky}[$inx];
     }
-    return $self->_get_dumper()->( @dump );
+    @stuff
+	and return $dumper->( @stuff );
+
+    $self->whinge( "Dump argument '$_' not recognized" );
+ 
+    return;
 }
 
 sub echo : Verb( n! ) {
@@ -717,6 +733,37 @@ sub echo : Verb( n! ) {
     my $output = join( ' ', @args );
     $opt->{n} or $output .= "\n";
     return $output;
+}
+
+sub else : method Verb() Tweak( -unsatisfied ) {	## no critic (ProhibitBuiltInHomonyms)
+    my ( $self ) = __arguments( @_ );	# $opt, @args unused
+
+    @{ $self->{frame} } > 1
+	and 'begin' eq $self->{frame}[-1]{type}
+	and 'if' eq $self->{frame}[-2]{type}
+	or $self->wail( 'Else without if ... then begin' );
+
+    $self->{frame}[-1]{in_else}++
+	and $self->wail( 'Only one else may follow an if' );
+
+    # Here is where I pay for the convenience of the if()
+    # implementation. The if() itself is a frame because I do not yet
+    # know if it will entail a begin(). But I can't do an else() unless
+    # there is in fact a begin(), which creates another frame. So I end
+    # up twiddling values in both frames.
+
+    $self->{frame}[-1]{unsatisfied_if} =
+	$self->{frame}[-2]{unsatisfied_if} =
+	$self->{frame}[-2]{condition} || (
+	    @{ $self->{frame} } > 2 ?
+		$self->{frame}[-3]{unsatisfied_if} :
+		0
+	    );
+    $self->{frame}[-1]{condition} =
+	$self->{frame}[-2]{condition} =
+	! $self->{frame}[-2]{condition};
+
+    return;
 }
 
 sub end : Verb() Tweak( -unsatisfied ) {
@@ -1295,15 +1342,14 @@ EOD
 		    my @arg = splice @{ $tokens }, 0
 			or return;
 		    $self->_dispatch_check( if => $arg[0] );
-		    unless ( $last->{value}[-1] ) {
-			$self->{_unsatisfied_if} = 1;
-			$self->_add_post_dispatch( sub {
-				my ( $self ) = @_;
-				delete $self->{_unsatisfied_if};
-				return;
-			    },
-			);
-		    }
+		    $self->_frame_push( if => [], {
+			    condition	=> $last->{value}[-1],
+			},
+		    );
+		    $self->_add_post_dispatch( sub {
+			    $self->_frame_pop( if => undef );
+			},
+		    );
 		    return $self->dispatch( @arg );
 		},
 		validation	=> 'infix',
@@ -1393,6 +1439,11 @@ sub initfile : Verb( create-directory! quiet! ) {
     };
 
     return File::Spec->catfile( $init_dir, 'satpass2rc' );
+}
+
+sub _in_unsatisfied_if {
+    my ( $self ) = @_;
+    return @{ $self->{frame} } ? $self->{frame}[-1]{unsatisfied_if} : 0;
 }
 
 # This is a generalized infix expression engine. It does not implement
@@ -3281,7 +3332,7 @@ sub time : method Verb() Tweak( -unsatisfied ) {	## no critic (ProhibitBuiltInHo
     my $start = Time::HiRes::time();
     # If we're inside an unsatisfied if() we do not do the timing,
     # because dispatch() is probably a no-op.
-    $self->{_unsatisfied_if}
+    $self->_in_unsatisfied_if()
 	or $self->_add_post_dispatch(
 	sub {
 	    return sprintf "%.3f seconds\n", Time::HiRes::time() - $start;
@@ -3905,27 +3956,31 @@ sub __format_data {
 #	was added.
 
 sub _frame_push {
-    my $self = shift;
-    my $type = shift;
-    my $args = shift || [];
+    my ( $self, $type, $args, $opt ) = @_;
+    $args ||= [];
+    $opt ||= {};
     my $frames = scalar @{$self->{frame} ||= []};
-    my $stdout;
-    @{$self->{frame}}
-	and $stdout = exists $self->{frame}[-1]{localout} ?
-	    $self->{frame}[-1]{localout} :
-	    $self->{frame}[-1]{stdout};
+    my $prior = $frames ? $self->{frame}[-1] : {
+	condition	=> 1,
+	stdout		=> select(),
+    };
+    my $condition = exists $opt->{condition} ?
+	$opt->{condition} :
+	$prior->{condition};
 ####    defined $stdout or $stdout = select();
     my ( undef, $filename, $line ) = caller;
     push @{$self->{frame}}, {
 	type => $type,
 	args => $args,
+	condition	=> $condition,
 	define => {},		# Macro defaults done with :=
 	local => {},
 	localout => undef,	# Output for statement.
 	macro => {},
 	pushed_by => "$filename line $line",
 	spacetrack => {},
-	stdout => $stdout,
+	stdout => $prior->{localout} || $prior->{stdout},
+	unsatisfied_if	=> $prior->{unsatisfied_if} || ! $condition,
     };
     return $frames;
 }
@@ -3954,7 +4009,9 @@ sub _frame_push {
 	my ($self, @args) = @_;
 ##	my $type = @args > 1 ? shift @args : undef;
 	@args > 1 and shift @args;	# Currently unused
-	my $frames = @args ? shift @args : @{$self->{frame}} - 1;
+	my $frames = ( @args && defined $args[0] ) ?
+	    shift @args :
+	    @{$self->{frame}} - 1;
 	while (@{$self->{frame}} > $frames) {
 	    my $frame = pop @{$self->{frame}}
 		or $self->weep( 'No frame to pop' );
@@ -6095,6 +6152,25 @@ purposes. It may disappear, or its functionality change, without notice.
 Currently it loads a dumper class (either some C<YAML> module or
 C<Data::Dumper>) and returns a dump of the C<Astro::App::Satpass2> object.
 
+If it is given arguments, those arguments are dumped. Specifically:
+
+=over
+
+=item A reference specifies that the referent is dumped;
+
+=item C<'frame'> specifies that the frame stack is dumped;
+
+=item C<'tokens'> specifies that the next argument is tokenized and dumped;
+
+=item C<'twilight'> specifies the twilight settings are dumped;
+
+=item Anything else causes the specified body to be dumped.
+
+=back
+
+This interactive method will be executed even inside an unsatisfied
+L<if()|/if>.
+
 =head2 echo
 
  $output = $satpass2->echo( 'Hello, sailor!' );
@@ -6107,6 +6183,15 @@ anticipated that the caller will print the result.
 The following option may be specified:
 
  -n to suppress the newline at the end of the echoed text.
+
+=head2 else
+
+ $satpass2->else();
+ satpass2> else
+
+This interactive method can appear only after an C<if ... then begin>.
+It inverts the sense of the original test, so that if it was true
+statements after the C<else> are B<not> executed, and vice versa.
 
 =head2 end
 
