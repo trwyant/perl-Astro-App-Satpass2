@@ -8,7 +8,7 @@ use warnings;
 use Astro::App::Satpass2::Locale qw{ __message };
 use Astro::App::Satpass2::Utils qw{ @CARP_NOT };
 
-our $VERSION = '0.047_001';
+our $VERSION = '0.047_002';
 
 sub new {
     my ( $class, @arg ) = @_;
