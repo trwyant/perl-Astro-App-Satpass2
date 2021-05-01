@@ -1355,6 +1355,12 @@ EOD
 		validation	=> 'infix',
 	    },
 	},
+	val	=> sub {
+	    # my ( $self, $def, $ctx, $tkn, $tokens ) = @_;
+	    my ( undef, undef, $ctx, $tkn ) = @_;
+	    push @{ $ctx->[-1]{value} }, $tkn;
+	    return;
+	},
 	vld	=> {
 	    infix	=> sub {
 		# my ( $self, $def, $ctx, $tkn, $tokens ) = @_;
@@ -1450,14 +1456,34 @@ sub _in_unsatisfied_if {
 # operator precedence and is therefore very small. The arguments are:
 #   - $self is the invocant, which must be an
 #     Astro::App::Satpass2::Copier.
-#   - $def is the hash that defines the grammar. This needs keys {oper}
-#     and {validation}. Key {oper} defines operators, and needs key
-#     {handler} to be a code reference, and {vld} to be the name of a
-#     validation style, meaning a string that must be a key in the
-#     {validation} sub-hash. The values in {validation} are code
-#     references.
-#   - $ctx is context for the operations and is not used by the engine
-#     itself. See if() for an example.
+#   - $def is the hash that defines the grammar. This provides the
+#     following keys:
+#     {done} is an optional code reference. If present, the code
+#	 reference is called once the parse is complete, and passed
+#	 ( $self, $def, $ctx, \@tokens ). It returns nothing. The intent
+#	 is to throw an exception if the parse is incomplete.
+#     {oper} defines the operators. This is a hash keyed by the literal
+#        operator (i.e. '+' to implement a '+' operator), and having the
+#        following values:
+#        {handler} is a required code reference, which implements the
+#           operator. It is passed ( $self, $def, $ctx, \@tokens ). The
+#           @tokens do not include the operator itself.
+#        {validation} is an optional validation specification. If
+#           present it is a key in the {vld} (see below).
+#     {val} is an optional code reference. If present, it is called if a
+#        token is not recognized as an operator, and passed ( $self,
+#        $def, $ctx, \@tokens ). The @tokens include the unrecognized
+#        token, which is presumed to be a value, and must be removed
+#        from @tokens.
+#     {vld} is a hash of validators. The keys are values in the
+#        {validation} key documented under {oper} (above), and the
+#        values are code references which are called with ( $self, $ctx,
+#        $tkn, \@tokens ) where $tkn is the token being validated, and
+#        @tokens is the rest of the tokens. This hash must exist if the
+#        {validation} key is used in {oper}; otherwise it is optional.
+#   - $ctx is context for the operations. It is not used by the engine
+#     itself, but the individual operator code will need to use it as
+#     context for the parse.  See if() for an example.
 #   - @tokens are the tokens to be evaluated by the engine.
 sub __infix_engine {
     my ( $self, $def, $ctx, @tokens ) = @_;
@@ -1477,12 +1503,17 @@ sub _infix_engine_dispatch {
     @{ $tokens }
 	or return;
     my $tkn = shift @{ $tokens };
-    my $info = $def->{oper}{$tkn}
-	or $self->wail( "Unrecognized token '$tkn'" );
-    $info->{validation}
-	and $def->{vld}{ $info->{validation} }->(
-	$self, $def, $ctx, $tkn, $tokens );
-    return $info->{handler}->( $self, $def, $ctx, $tokens );
+    if ( my $info = $def->{oper}{$tkn} ) {
+	$info->{validation}
+	    and $def->{vld}{ $info->{validation} }->(
+	    $self, $def, $ctx, $tkn, $tokens );
+	return $info->{handler}->( $self, $def, $ctx, $tokens );
+    } elsif ( $def->{val} ) {
+	return $def->{val}->( $self, $def, $ctx, $tkn, $tokens );
+    } else {
+	$self->wail( "Unrecognized token '$tkn'" );
+    }
+    return;	# We can't get here, but Perl::Critic does not know this.
 }
 
 #	$file_name = _init_file_01()
@@ -6495,14 +6526,17 @@ In any case, nothing is returned.
  $output = $satpass2->if(
      qw{ env FUBAR then echo FUBAR is defined } );
  satpass2> if env FUBAR then echo FUBAR is defined
+ satpass2> if "$FUBAR" then echo FUBAR is defined
 
 This interactive method performs a test, and executes the specified
 method if the test is true. The test is an infix expression, with prefix
 operators binding more tightly than infix operators, but otherwise all
 operators having the same precedence. You can use parentheses to group
-operations.
+operations. Anything that is not an operator is assumed to be a value.
+Values coming from substitution may need to be quoted to guard against
+embedded white space.
 
-The method name after C<'then'> may not be C<'end'>.
+The method name after C<'then'> may not be C<'else'> or C<'end'>.
 
 The method name after C<'then'> may be C<'begin'> only if C<if()> was
 called interactively. If you do this and the C<if()> is not satisfied,

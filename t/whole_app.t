@@ -532,6 +532,8 @@ else
 echo No events
 end
 EOD
+    execute( 'if not $events then echo No events', 'No events',
+	'Literal value in if()' );
 }
 
 execute( 'status clear', undef, 'Clear status for testing'  );
