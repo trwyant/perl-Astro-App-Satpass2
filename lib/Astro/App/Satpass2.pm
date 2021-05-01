@@ -746,6 +746,12 @@ sub else : method Verb() Tweak( -unsatisfied ) {	## no critic (ProhibitBuiltInHo
     $self->{frame}[-1]{in_else}++
 	and $self->wail( 'Only one else may follow an if' );
 
+    return $self->_twiddle_condition( ! $self->{frame}[-2]{condition} );
+}
+
+sub _twiddle_condition {
+    my ( $self, $cond ) = @_;
+
     # Here is where I pay for the convenience of the if()
     # implementation. The if() itself is a frame because I do not yet
     # know if it will entail a begin(). But I can't do an else() unless
@@ -754,14 +760,14 @@ sub else : method Verb() Tweak( -unsatisfied ) {	## no critic (ProhibitBuiltInHo
 
     $self->{frame}[-1]{unsatisfied_if} =
 	$self->{frame}[-2]{unsatisfied_if} =
-	$self->{frame}[-2]{condition} || (
+	! $cond || (
 	    @{ $self->{frame} } > 2 ?
 		$self->{frame}[-3]{unsatisfied_if} :
 		0
 	    );
+
     $self->{frame}[-1]{condition} =
-	$self->{frame}[-2]{condition} =
-	! $self->{frame}[-2]{condition};
+	$self->{frame}[-2]{condition} = $cond;
 
     return;
 }
@@ -1339,20 +1345,23 @@ EOD
 		    1 == @{ $ctx }
 			or $self->wail( 'Unclosed left parentheses' );
 		    my $last = pop @{ $ctx };
-		    my @arg = splice @{ $tokens }, 0
-			or return;
-		    $self->_dispatch_check( if => $arg[0] );
-		    $self->_frame_push( if => [], {
-			    condition	=> $last->{value}[-1],
-			},
-		    );
-		    $self->_add_post_dispatch( sub {
-			    $self->_frame_pop( if => undef );
-			},
-		    );
-		    return $self->dispatch( @arg );
+		    my @arg = splice @{ $tokens };
+		    if ( $last->{dispatch} ) {
+			$self->_dispatch_check( if => $arg[0] );
+			$self->_frame_push( if => [], {
+				condition	=> $last->{value}[-1],
+			    },
+			);
+			$self->_add_post_dispatch( sub {
+				$self->_frame_pop( if => undef );
+			    },
+			);
+			return $self->dispatch( @arg );
+		    } else {
+			$self->_twiddle_condition( $last->{value}[-1] );
+		    }
 		},
-		validation	=> 'infix',
+		validation	=> 'terminal',
 	    },
 	},
 	val	=> sub {
@@ -1378,14 +1387,51 @@ EOD
 		    or $self->wail( "'$tkn' requires an argument" );
 		return;
 	    },
+	    terminal	=> sub {
+		# my ( $self, $def, $ctx, $tkn, $tokens ) = @_;
+		my ( $self, undef, $ctx, $tkn, $tokens ) = @_;
+		@{ $ctx->[-1]{value} }
+		    or $self->wail( "'$tkn' requires a left argument" );
+		if ( $ctx->[-1]{dispatch} ) {
+		    @{ $tokens }
+			or $self->wail( "Command required after '$tkn'" );
+		} else {
+		    @{ $tokens }
+			and $self->wail( "Command not allowed after '$tkn'" );
+		}
+		return;
+	    }
 	},
     );
+
+    sub elsif : method Verb() Tweak( -unsatisfied ) {	## no critic (ProhibitBuiltInHomonyms)
+	my ( $self, @args ) = @_;
+	@args
+	    or $self->wail( 'Arguments required' );
+
+	@{ $self->{frame} } > 1
+	    and 'begin' eq $self->{frame}[-1]{type}
+	    and 'if' eq $self->{frame}[-2]{type}
+	    or $self->wail( 'Elsif without if ... then begin' );
+
+	my @ctx = ( {
+		dispatch	=> 0,
+		value	=> [],
+	    } );
+
+	# If any previous if() or elsif() evaluates true, we do not
+	# evaluate subsequent elsif() calls.
+	$self->{frame}[-2]{condition}
+	    and return;
+	return $self->__infix_engine( \%define, \@ctx, @args );
+    }
 
     sub if : method Verb() Tweak( -unsatisfied ) {	## no critic (ProhibitBuiltInHomonyms)
 	my ( $self, @args ) = @_;
 	@args
 	    or $self->wail( 'Arguments required' );
 	my @ctx = ( {
+		dispatch	=> 1,
 		value	=> [],
 	    } );
 	return $self->__infix_engine( \%define, \@ctx, @args );
@@ -6214,6 +6260,16 @@ anticipated that the caller will print the result.
 The following option may be specified:
 
  -n to suppress the newline at the end of the echoed text.
+
+=head2 elsif
+
+ $output = $satpass2->elsif( qw{ env FUBAR then } );
+ satpass2> elsif env FUBAR then
+
+This interactive method can appear only after an C<if ... then begin> or
+another C<elsif ... then>. It is not evaluated if the previous C<if()>
+or any previous C<elsif()> was true, and causes all subsequent
+C<elsif()> or C<else()> not to be evaluated until the closing C<end()>.
 
 =head2 else
 

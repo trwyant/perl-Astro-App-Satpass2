@@ -534,6 +534,18 @@ end
 EOD
     execute( 'if not $events then echo No events', 'No events',
 	'Literal value in if()' );
+
+    execute( <<'EOD', 'No events', 'if ... elsif' );
+if $events then begin
+    echo Have events
+elsif 0 then
+    echo Have nothing
+elsif not $events then
+    echo No events
+else
+    echo Default
+end
+EOD
 }
 
 execute( 'status clear', undef, 'Clear status for testing'  );
