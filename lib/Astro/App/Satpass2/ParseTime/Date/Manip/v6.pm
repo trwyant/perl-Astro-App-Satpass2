@@ -81,6 +81,13 @@ sub tz {
     return $self->SUPER::tz( @args );
 }
 
+sub __back_end_validate {
+    my ( $self, $cls ) = @_;
+    $cls->can( 'parse' )
+	or $self->wail( "$cls does not have a parse() method" );
+    return;
+}
+
 sub _get_dm_field {
     my ( $self, $field ) = @_;
     my $info = $self->{+__PACKAGE__} ||= $self->_make_dm_hash();
