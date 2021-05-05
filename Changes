@@ -1,3 +1,8 @@
+0.047_003	2021-05-05	T. R. Wyant
+    Use duck typing to validate DM6 parser.  The reason for this is that
+    the correct implementation path for Date::ManipX::Almanac::Date
+    turned out not to be subclassing.
+
 0.047_002	2021-05-01	T. R. Wyant
     Implement interactive method elsif(). Unlike if(), this does not
     take anything after 'then'.
