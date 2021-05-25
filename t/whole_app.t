@@ -594,11 +594,13 @@ execute( 'list', undef, 'Confirm that the list is empty again' );
 
 execute( 'load t/data.tle', undef, 'Load the TLE file again' );
 
+# Note that the t/data.tle has the TLEs in the opposite order, but the
+# 'tle' command/method sorts them.
 execute( 'tle', <<'EOD', 'List the loaded TLEs' );
-1 88888U          80275.98708465  .00073094  13844-3  66816-4 0    8
-2 88888  72.8435 115.9689 0086731  52.6988 110.5714 16.05824518  105
 1 11801U          80230.29629788  .01431103  00000-0  14311-1
 2 11801  46.7916 230.4354 7318036  47.4722  10.4117  2.28537848
+1 88888U          80275.98708465  .00073094  13844-3  66816-4 0    8
+2 88888  72.8435 115.9689 0086731  52.6988 110.5714 16.05824518  105
 EOD
 
 execute( 'drop 88888', undef, 'Drop object 88888' );

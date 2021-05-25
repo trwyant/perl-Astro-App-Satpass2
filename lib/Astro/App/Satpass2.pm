@@ -3430,6 +3430,10 @@ sub tle : Verb( :compute ) {
 	and $opt->{choose} = \@args;
 
     my $bodies = $self->__choose( $opt->{choose}, $self->{bodies} );
+    @{ $bodies } = map { $_->[0] }
+	sort { $a->[1] <=> $b->[1] || $a->[2] <=> $b->[2] }
+	map { [ $_, $_->get( 'id' ), $_->get( 'epoch' ) ] }
+	@{ $bodies };
     my $tplt_name = delete $opt->{_template};
     return $self->__format_data( $tplt_name => $bodies, $opt );
 }
