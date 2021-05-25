@@ -1,3 +1,8 @@
+0.047_004	2021-05-25	T. R. Wyant
+    Have tle() sort on OID and epoch.
+
+    Add tools/intrinsic-magnitude
+
 0.047_003	2021-05-05	T. R. Wyant
     Use duck typing to validate DM6 parser.  The reason for this is that
     the correct implementation path for Date::ManipX::Almanac::Date
