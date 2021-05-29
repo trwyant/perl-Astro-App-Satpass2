@@ -1,3 +1,12 @@
+0.047_005	2021-05-28	T. R. Wyant
+    Astro::App::Satpass2::Warner no longer tries to format
+    Template::Exception objects. This is because the macro code was
+    flattening them and then re-throwing them. The second time through
+    the ::Warner was trying to execute the template code embedded in the
+    message, which was by definition erroneous.
+
+    Expand usage notes in eg/*.tt
+
 0.047_004	2021-05-25	T. R. Wyant
     Have tle() sort on OID and epoch.
 
