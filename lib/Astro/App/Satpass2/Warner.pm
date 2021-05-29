@@ -27,6 +27,8 @@ sub new {
 sub wail {
     my ($self, @args) = @_;
     my $msg = __message( @args );
+    ref $msg
+	and die $msg;
     chomp $msg;
     if ($self->warning()) {
 	$msg =~ m/[.?!]\z/msx or $msg .= '.';
@@ -59,6 +61,11 @@ sub weep {
 sub whinge {
     my ($self, @args) = @_;
     my $msg = __message( @args );
+    ref $msg
+	and do {
+	warn $msg;
+	return;
+    };
     chomp $msg;
     if ($self->warning()) {
 	$msg =~ m/ [.?!] \z /msx or $msg .= '.';

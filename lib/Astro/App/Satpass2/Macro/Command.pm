@@ -24,7 +24,7 @@ sub execute {
 	    }
 	    1;
 	} or do {
-	    $satpass2->__wail( "$@" );
+	    $satpass2->__wail( $@ );
 	}
     }
     return $output;
