@@ -1,3 +1,8 @@
+0.047_006	2021-05-30	T. R. Wyant
+    Add pass() option -ics to generate iCal output. As a side effect of
+    this, adding template pass_fubar automatically adds pass() option
+    -fubar to select that template.
+
 0.047_005	2021-05-28	T. R. Wyant
     Astro::App::Satpass2::Warner no longer tries to format
     Template::Exception objects. This is because the macro code was
