@@ -224,6 +224,54 @@ EOD
 [% END -%]
 EOD
 
+	pass_ics	=> <<'EOD',
+[% UNLESS data %]
+    [%- SET data = sp.pass( arg ) %]
+[%- END -%]
+BEGIN:VCALENDAR
+VERSION:2.0
+[%- FOR pass IN data %]
+[%- events = pass.events %]
+[%- CALL events.fixed_width( 0 ) %]
+[%- first = events.first %]
+[%- punct = '' %]
+BEGIN:VEVENT
+DTSTART:[% first.date( format = '%Y%m%dT%H%M%SZ', units = 'zulu' ) %]
+BEGIN:VALARM
+TRIGGER:-PT5M
+ACTION:DISPLAY
+END:VALARM
+BEGIN:VALARM
+TRIGGER:PT0M
+ACTION:DISPLAY
+END:VALARM
+SUMMARY:[% first.name %]
+DESCRIPTION:
+    [%- FOREACH evt IN events %][% punct %]
+	[%- evt_name = evt.event %]
+	[%- end_date = evt.date( format = '%Y%m%dT%H%M%SZ', units = 'z' ) %]
+	[%- evt_name %]
+	[%- IF 'apls' == evt_name %]
+            [%- appulse = evt.appulse %]
+            [%= appulse.angle %]
+	    [%= appulse.name %]
+	[%- END %]
+	[%= evt.time %] Az
+	[%= evt.azimuth( places = 0, bearing = 2 ) %]
+	[%- IF 'rise' != evt_name and 'set' != evt_name %] Ele
+	    [%= evt.elevation( places = 0 ) %]
+	[%- END %]
+	[%- IF '' != evt.magnitude %] Mag
+	    [%= evt.magnitude %]
+	[%- END %]
+        [%- punct = '\n' %]
+    [%- END %]
+DTEND:[% end_date %]
+END:VEVENT
+[%- END %]
+END:VCALENDAR
+EOD
+
 	phase	=> <<'EOD',
 [% UNLESS data %]
     [%- SET data = sp.phase( arg ) %]

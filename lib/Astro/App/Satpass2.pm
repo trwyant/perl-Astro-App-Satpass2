@@ -1855,8 +1855,7 @@ sub magnitude_table : Verb( name! reload! ) {
 
 # Attributes must all be on one line to process correctly under Perl
 # 5.8.8.
-sub pass : Verb( choose=s@ am! appulse! brightest|magnitude! chronological! dump! events! horizon|rise|set! illumination! pm! quiet! transit|maximum|culmination! )
-{
+sub pass : Verb( :compute ) {
     my ( $self, $opt, @args ) = __arguments( @_ );
 
     $self->_apply_boolean_default(
@@ -1955,23 +1954,29 @@ sub pass : Verb( choose=s@ am! appulse! brightest|magnitude! chronological! dump
 	}
     }
 
-    my $template;
-
-    if ( $opt->{events} ) {
-	$template = 'pass_events';
-    } else {
-	$template = 'pass';
-	$opt->{chronological}
-	    and @accumulate = sort { $a->{time} <=> $b->{time} }
-		@accumulate;
-    }
+    $opt->{chronological}
+	and @accumulate = sort { $a->{time} <=> $b->{time} }
+	    @accumulate;
 
     # Record number of events found
 
     $self->{events} += @accumulate;
 
     return $self->__format_data(
-	$template => \@accumulate, $opt );
+	$opt->{_template} => \@accumulate, $opt );
+
+}
+
+sub __pass_options {
+    my ( $self, $opt ) = @_;
+    return [
+	qw{
+	    choose=s@ am! appulse! brightest|magnitude!
+	    chronological! dump! horizon|rise|set! illumination! pm!
+	    quiet! transit|maximum|culmination!
+	},
+	$self->_templates_to_options( pass => $opt ),
+    ];
 }
 
 # Compute local time of day in seconds since midnight.
@@ -3440,22 +3445,10 @@ sub tle : Verb( :compute ) {
 
 sub __tle_options {
     my ( $self, $opt ) = @_;
-    my @lgl = qw{ choose=s@ };
-    $opt->{_template} = 'tle';
-    my $code = sub {
-	my ( $name, $value ) = @_;
-	$opt->{_template} = $value ? "tle_$name" : 'tle';
-	return;
-    };
-    my $fmtr = $self->get( 'formatter' );
-    if ( $fmtr->can( '__list_templates' ) ) {
-	foreach ( $fmtr->__list_templates() ) {
-	    m/ \A tle_ ( \w+ ) \z /smx
-		or next;
-	    push @lgl, "$1!", $code;
-	}
-    }
-    return \@lgl;
+    return [
+	qw{ choose=s@ },
+	$self->_templates_to_options( tle => $opt ),
+    ];
 }
 
 sub unexport : Verb() {
@@ -5062,6 +5055,27 @@ EOD
     $rslt[3] and $rslt[3] /= 1000;
     $rslt[4] and $rslt[4] /= 1000;
     return wantarray ? @rslt : join ' ', @rslt;
+}
+
+sub _templates_to_options {
+    my ( $self, $name, $opt ) = @_;
+    $opt->{_template} = $name;
+    my $code = sub {
+	my ( $opt_name, $opt_value ) = @_;
+	$opt->{_template} = $opt_value ? "${name}_$opt_name" : $name;
+	return;
+    };
+    my $re = qr< \A \Q$name\E _ ( \w+ ) \z >smx;
+    my @rslt;
+    my $fmtr = $self->get( 'formatter' );
+    if ( $fmtr->can( '__list_templates' ) ) {
+	foreach ( $fmtr->__list_templates() ) {
+	    $_ =~ $re
+		or next;
+	    push @rslt, "$1!", $code;
+	}
+    }
+    return @rslt;
 }
 
 #	($tokens, $redirect) = $self->__tokenize(
@@ -7055,12 +7069,16 @@ notice.
 
 C<-events> causes the output to be individual events rather than passes.
 These events will be displayed in chronological order irrespective of
-satellite. The C<-chronological> option is not needed for this.
+satellite. This is implemented by template C<pass_events>. The
+C<-chronological> option is not needed for this.
 
 C<-horizon> selects the satellite rise and set for display. Synonyms are
 C<-rise> and C<-set> -- that is C<-rise> selects both rise and set, as
 does C<-set>. This can be negated by specifying C<-nohorizon>,
 C<-norise>, or C<-noset>.
+
+C<-ics> causes the output to be in iCal format, as implemented by
+template C<pass_ics>.
 
 C<-illumination> selects passage of the satellite into or out of the
 Earth's shadow for display. This can be negated by specifying
@@ -7089,6 +7107,12 @@ default. Otherwise, unspecified options are considered to be negated.
 The C<-am> and C<-pm> select morning or evening passes for output. By
 default, both are selected. These can be negated: C<-noam> is equivalent
 to C<-pm>, and vice versa.
+
+Actually, the presence of any template whose name begins with C<'pass_'>
+causes the trailing part of the name to be valid as an option selecting
+that template. For example, loading F<eg/pass_json.tt> as template
+C<'pass_json'> makes C<-json> a valid option that uses template
+C<'pass_json'> to format the TLE.
 
 B<Note well> that unlike the F<satpass> script, the output from this
 method does not normally include location. The location is included only
