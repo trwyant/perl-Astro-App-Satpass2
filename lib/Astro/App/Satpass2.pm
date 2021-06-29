@@ -8760,7 +8760,7 @@ The default is 1 (i.e. true).
 
 This string attribute specifies the system command to spawn to display a
 web page. If not the empty string, the L<help|/help> method uses it to
-display L<https://metacpan.org/release/Astro-App-Satpass2>. Mac OS
+display L<https://metacpan.org/dist/Astro-App-Satpass2>. Mac OS
 X users will find C<'open'> a useful setting, and Windows users will
 find C<'start'> useful.
 
