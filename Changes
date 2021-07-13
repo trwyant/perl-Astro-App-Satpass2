@@ -1,28 +1,28 @@
-0.047_006	2021-05-30	T. R. Wyant
+0.047_01	2021-07-13	T. R. Wyant
+    Correct generation of 'provides' metadata.  Thanks to Favio Poletti
+    for blogging
+    https://github.polettix.it/ETOOBUSY/2021/06/15/the-real-pause-workaround/,
+    and ultimately to Joel Berger for the pointer to
+    https://metacpan.org/pod/CPAN::Meta::Spec#no_index
+
     Add pass() option -ics to generate iCal output. As a side effect of
     this, adding template pass_fubar automatically adds pass() option
     -fubar to select that template.
 
-0.047_005	2021-05-28	T. R. Wyant
     Astro::App::Satpass2::Warner no longer tries to format
     Template::Exception objects. This is because the macro code was
     flattening them and then re-throwing them. The second time through
     the ::Warner was trying to execute the template code embedded in the
     message, which was by definition erroneous.
 
-    Expand usage notes in eg/*.tt
-
-0.047_004	2021-05-25	T. R. Wyant
     Have tle() sort on OID and epoch.
 
     Add tools/intrinsic-magnitude
 
-0.047_003	2021-05-05	T. R. Wyant
     Use duck typing to validate DM6 parser.  The reason for this is that
     the correct implementation path for Date::ManipX::Almanac::Date
     turned out not to be subclassing.
 
-0.047_002	2021-05-01	T. R. Wyant
     Implement interactive method elsif(). Unlike if(), this does not
     take anything after 'then'.
 
@@ -31,7 +31,6 @@
 
     Implement interactive method else().
 
-0.047_001	2021-04-30	T. R. Wyant
     Support back_end, station on ParseTime::Date::Manip.  This is for
     the possible module Date::ManipX::Almanac::Date, so we can specify
     times as (e.g.) 'today sunset'.
