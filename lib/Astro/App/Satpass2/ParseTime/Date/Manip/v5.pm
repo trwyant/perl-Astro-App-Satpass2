@@ -78,6 +78,10 @@ sub tz {
     return $self->SUPER::tz( @args );
 }
 
+sub __set_back_end_location {
+    return;
+};
+
 1;
 
 =head1 NAME

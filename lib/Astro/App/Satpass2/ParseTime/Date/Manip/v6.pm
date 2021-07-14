@@ -88,6 +88,19 @@ sub __back_end_validate {
     return;
 }
 
+sub __set_back_end_location {
+    my ( $self, $location ) = @_;
+    if ( my $dm = $self->_get_dm_field( 'object' ) ) {
+	# NOTE that we have no way to introspect Date::Manip::Date (or
+	# any other back end) to see if it has the 'location' config, so
+	# since Date::Manip uses warn() to report errors, we just
+	# blindly set it and swallow the possible warning.
+	local $SIG{__WARN__} = sub {};
+	$dm->config( location => $location );
+    }
+    return;
+}
+
 sub _get_dm_field {
     my ( $self, $field ) = @_;
     my $info = $self->{+__PACKAGE__} ||= $self->_make_dm_hash();

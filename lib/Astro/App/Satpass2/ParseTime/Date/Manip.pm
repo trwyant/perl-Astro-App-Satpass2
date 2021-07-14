@@ -38,14 +38,7 @@ sub station {
 	    or $args[0]->isa( 'Astro::Coord::ECI' )
 	    or $self->wail( 'Station must be an Astro::Coord::ECI' );
 	$self->{station} = $args[0];
-	if ( my $dm = $self->_get_dm_field( 'object' ) ) {
-	    # NOTE that we have no way to introspect Date::Manip to see
-	    # if it has the 'location' config, so since Date::Manip uses
-	    # warn() to report errors, we just blindly set it and
-	    # swallow the possible warning.
-	    local $SIG{__WARN__} = sub {};
-	    $dm->config( location => $args[0] );
-	}
+	$self->__set_back_end_location( $args[0] );
 	return $self;
     }
     return $self->{station};
