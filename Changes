@@ -1,9 +1,8 @@
-0.047_02	2021-07-14	T. R. Wyant
+0.048		2021-07-24	T. R. Wyant
     Fix sloppy ParseTime::Date::Manip back-end implementation where the
     back end may (or may not) have a 'location' configuration.  Thanks
     to Slaven Rezić, whose CPAN tester caught this. CPAN TESTERS RULE!
 
-0.047_01	2021-07-13	T. R. Wyant
     Correct generation of 'provides' metadata.  Thanks to Favio Poletti
     for blogging
     https://github.polettix.it/ETOOBUSY/2021/06/15/the-real-pause-workaround/,
