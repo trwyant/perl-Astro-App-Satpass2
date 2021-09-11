@@ -346,10 +346,21 @@ sub _get_my_lib {
     # - inc/My/Module/Recommend.pm
     # - inc/My/Module/Test/App.pm
     # These all need to stay the same. Sigh.
+    # Any such should be in xt/author/consistent_module_versions.t
 
     my %version = (
 	'DateTime::Calendar::Christian'	=> 0.06,
     );
+
+    # Expose the module version so we can test for consistent definition.
+    # IM(NS)HO the following annotation silences a false positive.
+    sub __module_version {	## no critic (RequireArgUnpacking)
+	my $module = $_[-1];
+	require Carp;
+	exists $version{$module}
+	    or Carp::confess( "Bug - Module $module has no defined version" );
+	return $version{$module};
+    }
 
 #    my %valid_complaint = map { $_ => 1 } qw{ whinge wail weep };
 

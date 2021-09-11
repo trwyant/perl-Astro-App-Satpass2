@@ -74,6 +74,7 @@ EOD
     # - inc/My/Module/Recommend.pm
     # - inc/My/Module/Test/App.pm
     # These all need to stay the same. Sigh.
+    # Any such should be in xt/author/consistent_module_versions.t
 
     __any( 'DateTime::Calendar::Christian=0.06'	=> <<'EOD' ),
       This module is used to parse (maybe) and format dates that might
@@ -125,6 +126,18 @@ EOD
       you do not plan to use this method you do not need this module.
 EOD
 );
+
+# Expose the module version so we can test for consistent definition.
+sub __module_version {
+    my $module = $_[-1];
+    foreach my $opt ( @optionals ) {
+	foreach my $m ( $opt->__modules() ) {
+	    $module eq $m->[0]
+		and return $m->[1];
+	}
+    }
+    confess "Bug - Module $module is not optional";
+}
 
 sub optionals {
     return ( map { $_->modules() } @optionals );

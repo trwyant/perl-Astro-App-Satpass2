@@ -193,10 +193,19 @@ sub execute {	## no critic (RequireArgUnpacking)
     # - inc/My/Module/Recommend.pm
     # - inc/My/Module/Test/App.pm
     # These all need to stay the same. Sigh.
+    # Any such should be in xt/author/consistent_module_versions.t
 
     my %version = (
 	'DateTime::Calendar::Christian'	=> 0.06,
     );
+
+    # Expose the module version so we can test for consistent definition.
+    sub __module_version {
+	my $module = $_[-1];
+	exists $version{$module}
+	    or confess "Bug - Module $module has no defined version";
+	return $version{$module};
+    }
 
     # skip() actually jumps out via 'goto SKIP', but Perl::Critic does
     # not know this.
