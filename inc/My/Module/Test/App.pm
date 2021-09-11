@@ -148,6 +148,13 @@ sub klass {
 		and diag 'dmd_zone = ', $app->dmd_zone();
 	}
 
+	if ( eval { require DateTime::TimeZone; 1; } ) {
+	    my $dt_zone = DateTime::TimeZone->new( name => 'local')->name();
+	    diag "DateTime::TimeZone is '$dt_zone'";
+	} else {
+	    diag 'DateTime::TimeZone not available';
+	}
+
 	diag strftime(
 	    q<POSIX zone: %z ('%Z')>, localtime( $time_tested || 0 ) );
 
