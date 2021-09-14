@@ -2897,195 +2897,17 @@ sub _sky_list_body {
     }
 }
 
-{
-    my %go;
+sub sky : Verb() {
+    my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
 
-    my %handler = (
-	list	=> sub {
-	    my ( $self ) = @_;		# Arguments unused
-	    my $output;
-	    foreach my $body (
-		map { $_->[1] }
-		sort { $a->[0] cmp $b->[0] }
-		map { [ lc( $_->get( 'name' ) || $_->get( 'id' ) ), $_ ] }
-		@{$self->{sky}}
-	    ) {
-		$output .= _sky_list_body( $body );
-	    }
-	    unless (@{$self->{sky}}) {
-		$self->{warn_on_empty}
-		    and $self->whinge( 'The sky is empty' );
-	    }
-	    return $output;
-	},
-	add	=> sub {
-	    my ( $self, @args ) = @_;
-	    my $name = shift @args
-		or $self->wail( 'You did not specify what to add' );
-	    defined $self->_find_in_sky( $name )
-		and return;
-	    if ( my $obj = $self->_sky_object( $name, fatal => 0 ) ) {
-		push @{ $self->{sky} }, $obj;
-	    } else {
-		@args >= 2
-		    or $self->wail(
-		    'You must give at least right ascension and declination' );
-		my $ra = deg2rad( $self->__parse_angle( shift @args ) );
-		my $dec = deg2rad( $self->__parse_angle( shift @args ) );
-		my $rng = @args ?
-		    $self->__parse_distance( shift @args, '1pc' ) :
-		    10000 * PARSEC;
-		my $pmra = @args ? do {
-		    my $angle = shift @args;
-		    $angle =~ s/ s \z //smxi
-			or $angle *= 24 / 360 / cos( $ra );
-		    deg2rad( $angle / SPY2DPS );
-		} : 0;
-		my $pmdec = @args ? deg2rad( shift( @args ) / SPY2DPS ) : 0;
-		my $pmrec = @args ? shift @args : 0;
-		push @{ $self->{sky} }, Astro::Coord::ECI::Star->new(
-		    debug	=> $self->{debug},
-		    name	=> $name,
-		    sun		=> $self->_sky_object( 'sun' ),
-		)->position( $ra, $dec, $rng, $pmra, $pmdec, $pmrec );
-	    }
-	    return;
-	},
-	class	=> sub {
-	    my ( $self, @arg ) = @_;
-	    $go{class} ||= Getopt::Long::Parser->new(
-#		config	=> [ qw{ require_order } ],
-	    );
-	    my %opt;
-	    if ( HASH_REF eq ref $arg[0] ) {
-		%opt = %{ shift @arg };
-	    } else {
-		$go{class}->getoptionsfromarray(
-		    \@arg, \%opt, qw{ add! delete! } )
-		    or $self->wail( 'Invalid option' );
-	    };
-	    $opt{add}
-		and $opt{delete}
-		and $self->wail( 'May not specify both add and delete' );
+    my $verb = lc ( shift @args || 'list' );
 
-	    if ( $opt{delete} ) {
-		foreach my $name ( @arg ) {
-		    $name =~ m/ \A sun \z /smxi
-			and $self->wail( 'Can not remove Sun class' );
-		    defined $self->_find_in_sky( $name )
-			and $self->wail( 'Can not remove in-use class' );
-		    delete $self->{sky_class}{ fold_case( $name ) };
-		}
-	    } elsif ( @arg < 2 ) {
-		@arg
-		    or @arg = sort keys %{ $self->{sky_class} };
-		return join '', map {
-		    $self->_sky_class_components( $_ ) . "\n" }
-		    @arg;
-	    } else {
-		my ( $name, $class, @attr ) = @arg;
-		$self->load_package( { fatal => 'wail' }, $class );
-		my $want_class = $name =~ m/ \A sun \z /smxi ?
-		    SUN_CLASS_DEFAULT :
-		    'Astro::Coord::ECI';
-		embodies( $class, $want_class )
-		    or $self->wail(
-		    "Must be a subclass of $want_class" );
-		+{ @attr }->{name}
-		    and $self->wail( 'May not specify name explicitly' );
-		# name must be last, because _sky_class_components()
-		# needs to recover it.
-		push @attr, name => $name;
-		my $obj = $class->new( @attr );	# To validate @attr
-		my $folded_name = fold_case( $name );
-		$self->{sky_class}{$folded_name} = [ $class, @attr ];
-		$self->_replace_in_sky( $folded_name )
-		    or $opt{add}
-		    and push @{ $self->{sky} }, $obj;
-		$self->{_help_module}{$folded_name} = $class;
-		if ( $name =~ m/ \A sun \z /smxi ) {
-		    foreach my $body (
-			@{ $self->{bodies} }, @{ $self->{sky} }
-		    ) {
-			$body->set(
-			    sun => $self->_sky_object( 'sun' ),
-			);
-		    }
-		}
-	    }
-
-	    return;
-	},
-	clear	=> sub {
-	    my ( $self ) = @_;		# Arguments unused
-	    @{ $self->{sky} } = ();
-	    return;
-	},
-	drop	=> sub {
-	    my ( $self, @args ) = @_;
-	    @args or $self->wail(
-		'You must specify at least one name to drop' );
-	    foreach my $name ( @args ) {
-		$self->_drop_from_sky( $name );
-	    }
-	    return;
-	},
-	load	=> sub {	# Undocumented. That means I can revoke
-				# at any time, without notice. If you
-				# need this functionality, please
-				# contact me.
-	    my ( $self, @args ) = @_;
-	    my $tle;
-	    foreach my $fn ( @args ) {
-		local $/ = undef;
-		open my $fh, '<', $fn
-		    or $self->wail( "Failed to open $fn: $!" );
-		$tle .= <$fh>;
-		close $fh;
-	    }
-	    return $self->_sky_tle( $tle );
-	},
-	lookup	=> sub {
-	    my ( $self, @args ) = @_;
-	    my $output;
-	    my $name = shift @args;
-	    defined $self->_find_in_sky( $name )
-		and $self->wail( "Duplicate sky entry '$name'" );
-	    my ($ra, $dec, $rng, $pmra, $pmdec, $pmrec) =
-		$self->_simbad4 ($name);
-	    $rng = sprintf '%.2f', $rng;
-	    $output .= 'sky add ' . quoter ($name) .
-		" $ra $dec $rng $pmra $pmdec $pmrec\n";
-	    $ra = deg2rad ($self->__parse_angle ($ra));
-	    my $body = Astro::Coord::ECI::Star->new(
-		name	=> $name,
-		sun	=> $self->_sky_object( 'sun' ),
-	      );
-	    $body->position ($ra, deg2rad ($self->__parse_angle ($dec)),
-		$rng * PARSEC, deg2rad ($pmra * 24 / 360 / cos ($ra) / SPY2DPS),
-		deg2rad ($pmdec / SPY2DPS), $pmrec);
-	    push @{$self->{sky}}, $body;
-	    return $output;
-	},
-	tle	=> \&_sky_tle,	# Undocumented. That means I can revoke
-				# at any time, without notice. If you
-				# need this functionality, please
-				# contact me.
-    );
-
-    sub sky : Verb() {
-	my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
-
-	my $verb = lc ( shift @args || 'list' );
-
-	if ( my $code = $handler{$verb} ) {
-	    return $code->( $self, @args );
-	} else {
-	    $self->wail("'sky' subcommand '$verb' not known");
-	}
-	return;	# We can't get here, but Perl::Critic does not know this.
+    if ( my $code = $self->can( "_sky_sub_$verb") ) {
+	return $code->( $self, @args );
+    } else {
+	$self->wail("'sky' subcommand '$verb' not known");
     }
-
+    return;	# We can't get here, but Perl::Critic does not know this.
 }
 
 # Given the name of a potential background object, return its
@@ -3122,8 +2944,177 @@ sub _sky_object {
     return;
 }
 
-sub _sky_tle {
-    my ( $self, $tle ) = @_;
+# Calls to the following _macro_sub_... methods are generated dynamically
+# above, so there is no way Perl::Critic can find them.
+sub _sky_sub_add : Verb()  {	## no critic (ProhibitUnusedPrivateSubroutines)
+    my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
+    my $name = shift @args
+	or $self->wail( 'You did not specify what to add' );
+    defined $self->_find_in_sky( $name )
+	and return;
+    if ( my $obj = $self->_sky_object( $name, fatal => 0 ) ) {
+	push @{ $self->{sky} }, $obj;
+    } else {
+	@args >= 2
+	    or $self->wail(
+	    'You must give at least right ascension and declination' );
+	my $ra = deg2rad( $self->__parse_angle( shift @args ) );
+	my $dec = deg2rad( $self->__parse_angle( shift @args ) );
+	my $rng = @args ?
+	    $self->__parse_distance( shift @args, '1pc' ) :
+	    10000 * PARSEC;
+	my $pmra = @args ? do {
+	    my $angle = shift @args;
+	    $angle =~ s/ s \z //smxi
+		or $angle *= 24 / 360 / cos( $ra );
+	    deg2rad( $angle / SPY2DPS );
+	} : 0;
+	my $pmdec = @args ? deg2rad( shift( @args ) / SPY2DPS ) : 0;
+	my $pmrec = @args ? shift @args : 0;
+	push @{ $self->{sky} }, Astro::Coord::ECI::Star->new(
+	    debug	=> $self->{debug},
+	    name	=> $name,
+	    sun		=> $self->_sky_object( 'sun' ),
+	)->position( $ra, $dec, $rng, $pmra, $pmdec, $pmrec );
+    }
+    return;
+}
+
+sub _sky_sub_class : Verb( add! delete! ) {	## no critic (ProhibitUnusedPrivateSubroutines)
+    my ( $self, $opt, @arg ) = __arguments( @_ );
+
+    $opt->{add}
+	and $opt->{delete}
+	and $self->wail( 'May not specify both add and delete' );
+
+    if ( $opt->{delete} ) {
+	foreach my $name ( @arg ) {
+	    $name =~ m/ \A sun \z /smxi
+		and $self->wail( 'Can not remove Sun class' );
+	    defined $self->_find_in_sky( $name )
+		and $self->wail( 'Can not remove in-use class' );
+	    delete $self->{sky_class}{ fold_case( $name ) };
+	}
+    } elsif ( @arg < 2 ) {
+	@arg
+	    or @arg = sort keys %{ $self->{sky_class} };
+	return join '', map {
+	    $self->_sky_class_components( $_ ) . "\n" }
+	    @arg;
+    } else {
+	my ( $name, $class, @attr ) = @arg;
+	$self->load_package( { fatal => 'wail' }, $class );
+	my $want_class = $name =~ m/ \A sun \z /smxi ?
+	    SUN_CLASS_DEFAULT :
+	    'Astro::Coord::ECI';
+	embodies( $class, $want_class )
+	    or $self->wail(
+	    "Must be a subclass of $want_class" );
+	+{ @attr }->{name}
+	    and $self->wail( 'May not specify name explicitly' );
+	# name must be last, because _sky_class_components()
+	# needs to recover it.
+	push @attr, name => $name;
+	my $obj = $class->new( @attr );
+	my $folded_name = fold_case( $name );
+	$self->{sky_class}{$folded_name} = [ $class, @attr ];
+	$self->_replace_in_sky( $folded_name, $obj )
+	    or $opt->{add}
+	    and push @{ $self->{sky} }, $obj;
+	$self->{_help_module}{$folded_name} = $class;
+	if ( $obj->isa( 'Astro::Coord::ECI::Sun' ) ) {
+	    foreach my $body (
+		@{ $self->{bodies} }, @{ $self->{sky} }
+	    ) {
+		$body->set(
+		    sun => $self->_sky_object( 'sun' ),
+		);
+	    }
+	}
+    }
+
+    return;
+}
+
+sub _sky_sub_clear : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
+    my ( $self ) = __arguments( @_ );	# $opt and args unused
+    @{ $self->{sky} } = ();
+    return;
+}
+
+sub _sky_sub_drop : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
+    my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
+    @args or $self->wail(
+	'You must specify at least one name to drop' );
+    foreach my $name ( @args ) {
+	$self->_drop_from_sky( $name );
+    }
+    return;
+}
+
+sub _sky_sub_list : Verb( verbose! ) {	## no critic (ProhibitUnusedPrivateSubroutines)
+    my ( $self, $opt ) = __arguments( @_ );	# args unused
+    my $output;
+    foreach my $body (
+	map { $_->[1] }
+	sort { $a->[0] cmp $b->[0] }
+	map { [ lc( $_->get( 'name' ) || $_->get( 'id' ) ), $_ ] }
+	@{$self->{sky}}
+    ) {
+	$output .= _sky_list_body( $body );
+	if ( $opt->{verbose} ) {
+	    $output .= "#   Class: @{[ ref $body ]}\n";
+	}
+    }
+    unless (@{$self->{sky}}) {
+	$self->{warn_on_empty}
+	    and $self->whinge( 'The sky is empty' );
+    }
+    return $output;
+}
+
+# Undocumented. That means I can revoke at any time, without notice. If
+# you need this functionality, please contact me.
+sub _sky_sub_load : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
+    my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
+    my $tle;
+    foreach my $fn ( @args ) {
+	local $/ = undef;
+	open my $fh, '<', $fn
+	    or $self->wail( "Failed to open $fn: $!" );
+	$tle .= <$fh>;
+	close $fh;
+    }
+    return $self->_sky_sub_tle( $tle );
+}
+
+sub _sky_sub_lookup : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
+    my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
+    my $output;
+    my $name = shift @args;
+    defined $self->_find_in_sky( $name )
+	and $self->wail( "Duplicate sky entry '$name'" );
+    my ($ra, $dec, $rng, $pmra, $pmdec, $pmrec) =
+	$self->_simbad4 ($name);
+    $rng = sprintf '%.2f', $rng;
+    $output .= 'sky add ' . quoter ($name) .
+	" $ra $dec $rng $pmra $pmdec $pmrec\n";
+    $ra = deg2rad ($self->__parse_angle ($ra));
+    my $body = Astro::Coord::ECI::Star->new(
+	name	=> $name,
+	sun	=> $self->_sky_object( 'sun' ),
+      );
+    $body->position ($ra, deg2rad ($self->__parse_angle ($dec)),
+	$rng * PARSEC, deg2rad ($pmra * 24 / 360 / cos ($ra) / SPY2DPS),
+	deg2rad ($pmdec / SPY2DPS), $pmrec);
+    push @{$self->{sky}}, $body;
+    return $output;
+}
+
+# Undocumented. That means I can revoke at any time, without notice. If
+# you need this functionality, please contact me.
+sub _sky_sub_tle : Verb() {
+    my ( $self, undef, $tle ) = __arguments( @_ );	# $opt unused
     my @bodies = Astro::Coord::ECI::TLE::Set->aggregate(
 	Astro::Coord::ECI::TLE->parse( $tle ) );
     my %extant = map { $_->get( 'id' ) => 1 }
@@ -4731,18 +4722,20 @@ sub _read_continuation {
     return $more;
 }
 
-# my ( $obj ) = $self->_replace_in_sky( $name );
+# my ( $old_obj ) = $self->_replace_in_sky( $name, $new_obj );
 # This is restricted to objects constructed via {sky_class}.
 # The return is an array containing the replaced body, or nothing if
-# the body was not found.
+# the body was not found. The $new_obj is optional; if not provided a
+# new object is created.
 sub _replace_in_sky {
-    my ( $self, $name, $class ) = @_;
-    ( $class ||= $self->{sky_class}{ fold_case( $name ) } )
+    my ( $self, $name, $new_obj ) = @_;
+    $new_obj
+	or $self->{sky_class}{ fold_case( $name ) }
 	or $self->weep( "Can not replace $name; no class defined" );
     defined( my $inx = $self->_find_in_sky( $name ) )
 	or return;
-    return splice @{ $self->{sky} }, $inx, $inx + 1, $self->_sky_object(
-	$name );
+    return splice @{ $self->{sky} }, $inx, $inx + 1,
+	$new_obj || $self->_sky_object( $name );
 }
 
 #	$self->_rewrite_level1_command( $buffer, $context );
