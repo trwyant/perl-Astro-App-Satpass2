@@ -1,3 +1,12 @@
+0.048_001	2021-09-14	T. R. Wyant
+    Add command completion. It's undocumented, though.
+
+    Redo sky() subcommand dispatching to be like macro().
+
+    Add author test to ensure consistent module version requirements.
+
+    Add DateTime::TimeZone to DM6 test failure dump.
+
 0.048		2021-07-24	T. R. Wyant
     Fix sloppy ParseTime::Date::Manip back-end implementation where the
     back end may (or may not) have a 'location' configuration.  Thanks
