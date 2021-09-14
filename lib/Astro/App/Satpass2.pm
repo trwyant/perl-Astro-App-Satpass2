@@ -11,7 +11,8 @@ use Astro::App::Satpass2::Macro::Code;
 use Astro::App::Satpass2::ParseTime;
 use Astro::App::Satpass2::Utils qw{
     :ref
-    __arguments expand_tilde find_package_pod
+    __arguments __legal_options
+    expand_tilde find_package_pod
     has_method instance load_package
     my_dist_config quoter
     __parse_class_and_args
@@ -58,6 +59,8 @@ use POSIX qw{ floor };
 use Scalar::Util 1.26 qw{ blessed isdual openhandle };
 use Text::Abbrev;
 use Text::ParseWords ();	# Used only for {level1} stuff.
+
+our $READLINE_OBJ;	# Used for readline completion.
 
 use constant ASTRO_SPACETRACK_VERSION => 0.105;
 use constant DEFAULT_STDOUT_LAYERS	=> ':encoding(utf-8)';
@@ -171,6 +174,16 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 #		attribute. These are begin() and end(), and anything
 #		that might dispatch either of these. At the moment this
 #		means if() and time().
+#	  -completion - Requires as argument the name of the command
+#	        completion method. This can not be checked at compile
+#	        time. It will be called with the following arguments:
+#	        $code - the relevant code reference
+#	        $text - the text being completed
+#	        $line - the line being completed
+#	        $start - the current position in the line.
+#	        It should return either a reference to an array
+#	        containing possible completions, or nothing to fall
+#	        through to standard completion
 #
 #	Verb(options)
 #
@@ -202,7 +215,8 @@ my %twilight_abbr = abbrev (keys %twilight_def);
 
     sub Tweak : ATTR(CODE,RAWDATA) {
 	my ( undef, undef, $code, $name, $data ) = @_;
-	$attr{$code}{$name} = _attr_hash( $name, $data, qw{ unsatisfied! } );
+	$attr{$code}{$name} = _attr_hash( $name, $data,
+	    qw{ completion=s unsatisfied! } );
 	return;
     }
 
@@ -1691,9 +1705,10 @@ sub location : Verb( dump! ) {
     }
 
     # NOTE that we must not define command options here, but on the
-    # individual _macro_sub_* methods. Or at least we must not define any
-    # command options here that get passed to the _macro_sub_* methods.
-    sub macro : Verb() {
+    # individual _macro_sub_* methods. Or at least we must not define
+    # any command options here that get passed to the _macro_sub_*
+    # methods.
+    sub macro : Verb() Tweak( -completion _readline_complete_subcommand ) {
 	my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
 	my $cmd;
 	if (!@args) {
@@ -1710,12 +1725,11 @@ sub location : Verb( dump! ) {
 	    or $self->wail( "Subcommand '$cmd' unknown" );
 	return $code->( $self, @args );
     }
-
 }
 
 # Calls to the following _macro_sub_... methods are generated dynamically
 # above, so there is no way Perl::Critic can find them.
-sub _macro_sub_brief : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
+sub _macro_sub_brief : Verb() Tweak( -completion _macro_list_complete ) {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, undef, @args ) = __arguments( @_ );
     my $output;
     foreach my $name (sort @args ? @args : keys %{$self->{macro}}) {
@@ -1770,7 +1784,7 @@ sub _macro_sub_delete : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
     return $output;
 }
 
-sub _macro_sub_list : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
+sub _macro_sub_list : Verb() Tweak( -completion _macro_list_complete ) {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, undef, @args ) = __arguments( @_ );
     my $output;
     foreach my $name (sort @args ? @args : keys %{$self->{macro}}) {
@@ -1779,6 +1793,23 @@ sub _macro_sub_list : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
 	$output .= $self->{macro}{$name}->generator( $name );
     }
     return $output;
+}
+
+sub _macro_list_complete {	## no critic (ProhibitUnusedPrivateSubroutines)
+    # my ( $invocant, $code, $text, $line, $start ) = @_;
+    my ( $invocant, undef, undef, $line, undef ) = @_;
+    ref $invocant
+	or return;
+    my @part = _readline_line_to_parts( $line );
+    3 == @part
+	or return;
+    my $re = qr< \A \Q$part[2]\E >smx;
+    my @rslt;
+    foreach ( sort keys %{ $invocant->{macro} } ) {
+	m/$re/smx
+	    and push @rslt, $_;
+    }
+    return \@rslt;
 }
 
 sub _macro_sub_load : Verb( lib=s verbose! ) {	## no critic (ProhibitUnusedPrivateSubroutines)
@@ -1855,7 +1886,7 @@ sub magnitude_table : Verb( name! reload! ) {
 
 # Attributes must all be on one line to process correctly under Perl
 # 5.8.8.
-sub pass : Verb( :compute ) {
+sub pass : Verb( :compute __pass_options ) {
     my ( $self, $opt, @args ) = __arguments( @_ );
 
     $self->_apply_boolean_default(
@@ -2897,7 +2928,7 @@ sub _sky_list_body {
     }
 }
 
-sub sky : Verb() {
+sub sky : Verb() Tweak( -completion _readline_complete_subcommand ) {
     my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
 
     my $verb = lc ( shift @args || 'list' );
@@ -3419,7 +3450,7 @@ sub time_parser : Verb() {
     goto &_helper_handler;
 }
 
-sub tle : Verb( :compute ) {
+sub tle : Verb( :compute __tle_options ) {
     my ( $self, $opt, @args ) = __arguments( @_ );
     @args
 	and not $opt->{choose}
@@ -4258,9 +4289,17 @@ sub _get_interactive {
 		eval {
 		    load_package( 'Term::ReadLine' )
 			or return;
-		    $rl ||= Term::ReadLine->new('satpass2');
+		    unless ( $rl ) {
+			$rl = Term::ReadLine->new( 'satpass2' );
+			if ( $INC{'Term/ReadLine/readline.pm'} ) {
+			    no warnings qw{ once };
+			    $readline::rl_completion_function = join '::',
+				__PACKAGE__, '__readline_completer_function';
+			}
+		    }
 		    sub {
 			defined $buffer or return $buffer;
+			local $READLINE_OBJ = $self;
 			return ( $buffer = $rl->readline($_[0]) );
 		    }
 		} || sub {
@@ -4280,6 +4319,151 @@ sub _get_interactive {
 	    }
 	};
     }
+}
+
+sub __readline_completer_function {
+    my ( $text, $line, $start ) = @_;
+
+    my $invocant = $READLINE_OBJ || __PACKAGE__;
+
+    $start
+	or return $invocant->_readline_complete_command( $text );
+
+    my ( $cmd ) = split qr< \s+ >smx, $line, 2;
+    my $code;
+    ref $invocant
+	and $invocant->{macro}{$cmd}
+	and $code = $invocant->{macro}{$cmd}->implements( $cmd );
+    $code ||= $invocant->can( $cmd );
+
+    if ( CODE_REF eq ref $code ) {
+	# builtins and code macros go here
+
+	my $rslt;
+
+	if ( my $method = $invocant->__get_attr( $code, Tweak => {}
+	    )->{completion} ) {
+	    $rslt = $invocant->$method( $code, $text, $line, $start )
+		and return @{ $rslt };
+	}
+
+	$rslt = $invocant->_readline_complete_options( $code, $text,
+	    $line, $start )
+	    and @{ $rslt }
+	    and return @{ $rslt };
+
+    } else {
+	# command macros go here, but at the moment I have nothing for
+	# them
+    }
+
+    my @files = bsd_glob( "$text*" );
+    if ( $readline::var_CompleteAddsuffix ) {
+	foreach ( @files ) {
+	    if (-l $_) {
+##		$_ .= '@';
+	    } elsif (-d _) {
+		$_ .= '/';
+		$readline::rl_completer_terminator_character = '';
+	    } elsif (-x _) {
+##		$_ .= '*';
+	    } elsif (-S _ || -p _) {
+##		$_ .= '=';
+	    }
+	}
+    }
+    return @files;
+}
+
+{
+    my @builtins;
+    sub _readline_complete_command {
+	my ( $invocant, $text ) = @_;
+	defined $text
+	    or do {
+	    require Carp;
+	    Carp::confess( '$text undefined' );
+	};
+	unless ( @builtins ) {
+	    my $stash = ( ref $invocant || $invocant ) . '::';
+	    no strict qw{ refs };
+	    foreach my $sym ( keys %$stash ) {
+		$sym =~ m/ \A _ /smx
+		    and next;
+		my $code = $invocant->can( $sym )
+		    or next;
+		$invocant->__get_attr( $code, 'Verb' )
+		    or next;
+		push @builtins, $sym;
+	    }
+	    @builtins = sort @builtins;
+	}
+	my $match = qr< \A \Q$text\E >smx;
+	ref $invocant
+	    or return grep { $_ =~ $match } @builtins;
+	return grep { $_ =~ $match } sort @builtins, keys %{ $invocant->{macro} };
+    }
+}
+
+sub _readline_complete_options {
+    # my ( $invocant, $code, $text, $line, $start ) = @_;
+    my ( $invocant, $code, $text ) = @_;
+    $text =~ m/ \A ( --? ) ( .* ) /smx
+	or return;
+    my ( $prefix, $match ) = ( $1, $2 );
+    my $lgl = $invocant->__legal_options( $code );
+    my $re = qr< \A \Q$match\E >smx;
+    my @rslt;
+    foreach ( @{ $lgl } ) {
+	next if ref;
+	# De-alias before modifying
+	( my $o = $_ ) =~ s/ [!=?] .* //smx;
+	push @rslt, grep { m/$re/ } split qr< \| >smx, $o;
+    }
+    @rslt
+	and return [ map { "$prefix$_" } sort @rslt ];
+    return;
+}
+
+# The following subroutine is called dynamically
+sub _readline_complete_subcommand { ## no critic (ProhibitUnusedPrivateSubroutines)
+    my ( $invocant, $code, $text, $line, $start ) = @_;
+    my @part = _readline_line_to_parts( $line );
+    my @rslt;
+    if ( 2 == @part ) {
+	my $re = qr< \A _$part[0]_sub_ ( \Q$part[1]\E \w* ) >smx;
+	my $stash = ( ref $invocant || $invocant ) . '::';
+	no strict qw{ refs };
+	foreach my $key ( keys %$stash ) {
+	    $key =~ m/$re/smx
+		and push @rslt, "$1";
+	}
+	return [ sort @rslt ];
+    }
+
+    $code = $invocant->can( "_$part[0]_sub_$part[1]" )
+	or return;
+
+    my $r;
+    $r = $invocant->_readline_complete_options( $code, $text, $line,
+	$start )
+	and return $r;
+
+    my $complete = $invocant->__get_attr( $code, Tweak => {} )->{completion}
+	or return;
+
+    $r = $invocant->$complete( $code, $text, $line, $start )
+	and return $r;
+
+    return;
+}
+
+sub _readline_line_to_parts {
+    my ( $line ) = @_;
+    my @parts = split qr< \s+ >smx, $line;
+    $line =~ m/ \s+ \z /smx	# Trailing spaces do not produce an
+	and push @parts, '';	# empty part, so we force one.
+    return @parts;
 }
 
 sub _get_time_parser_attribute {

@@ -56,6 +56,7 @@ our @EXPORT_OK = qw{
     expand_tilde find_package_pod
     has_method instance load_package merge_hashes my_dist_config quoter
     __date_manip_backend
+    __legal_options
     __parse_class_and_args
     ARRAY_REF CODE_REF HASH_REF REGEXP_REF SCALAR_REF
     @CARP_NOT
@@ -93,6 +94,8 @@ use constant SCALAR_REF	=> ref \1;
 	    return( $self, $opt, @args );
 	}
 
+=begin comment
+
 	my @data = caller(1);
 	my $code = \&{$data[3]};
 
@@ -106,6 +109,16 @@ use constant SCALAR_REF	=> ref \1;
 	    }
 	    $lgl = $self->$method( \%opt, $lgl );
 	}
+
+=end comment
+
+=cut
+
+
+	my ( $err, %opt );
+	my $code = \&{ ( caller 1 )[3] };
+	my $lgl = $self->__legal_options( $code, \%opt );
+
 	local $SIG{__WARN__} = sub {$err = $_[0]};
 	my $config =
 	    $self->__get_attr($code, 'Configure') || \@default_config;
@@ -119,6 +132,21 @@ use constant SCALAR_REF	=> ref \1;
 
 	return ( $self, \%opt, @args );
     }
+}
+
+sub __legal_options {
+    my ( $self, $code, $opt ) = @_;
+    $code ||= \&{ ( caller 1 )[3] };
+    CODE_REF eq ref $code
+	or __error_out( $self, weep => "$code not a CODE ref" );
+    $opt ||= {};
+    my $lgl = $self->__get_attr( $code, Verb => [] );
+    if ( @{ $lgl } && ':compute' eq $lgl->[0] ) {
+	my $method = $lgl->[1]
+	    or __error_out( $self, weep => ':compute did not specify method' );
+	$lgl = $self->$method( $opt, $lgl );
+    }
+    return $lgl;
 }
 
 sub _apply_default {
@@ -614,6 +642,17 @@ This exportable subroutine returns a true value if C<$object> is an
 instance of C<$class>, and false otherwise. The C<$object> argument need
 not be a reference, nor need it be blessed, though in these cases the
 return is false.
+
+=head2 __legal_options
+
+ my $lgl = $self->__legal_options( $code, $opt );
+
+This method takes as its arguments a code reference and an optional hash
+reference. It returns a reference to an array of
+L<Getopt::Long|Getopt::Long> option specifications derived from the
+code's C<Verb()> attribute. If the attributes are computed and the
+C<$opt> hash reference is supplied, it may be modified by the
+computation.
 
 =head2 load_package
 

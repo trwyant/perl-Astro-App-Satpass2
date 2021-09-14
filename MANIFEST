@@ -58,6 +58,7 @@ META.yml
 README
 script/satpass2
 t/basic.t
+t/complete.t
 t/data.tle
 t/format.t
 t/format_dump.t
