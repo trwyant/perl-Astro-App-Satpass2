@@ -1674,7 +1674,7 @@ sub location : Verb( dump! ) {
 	{
 	    no strict qw{ refs };
 	    foreach my $entry ( keys %{ $stb } ) {
-		$entry =~ m/ \A _macro_ ( \w+ ) /smx
+		$entry =~ m/ \A _macro_sub_ ( \w+ ) /smx
 		    or next;
 		# Strictly speaking I should make sure the {CODE} slot
 		# is occupied here.
@@ -1691,8 +1691,8 @@ sub location : Verb( dump! ) {
     }
 
     # NOTE that we must not define command options here, but on the
-    # individual _macro_* methods. Or at least we must not define any
-    # command options here that get passed to the _macro_* methods.
+    # individual _macro_sub_* methods. Or at least we must not define any
+    # command options here that get passed to the _macro_sub_* methods.
     sub macro : Verb() {
 	my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
 	my $cmd;
@@ -1706,16 +1706,16 @@ sub location : Verb( dump! ) {
 	    $cmd = 'list';
 	}
 
-	my $code = $self->can( "_macro_$cmd" )
+	my $code = $self->can( "_macro_sub_$cmd" )
 	    or $self->wail( "Subcommand '$cmd' unknown" );
 	return $code->( $self, @args );
     }
 
 }
 
-# Calls to the following _macro_... methods are generated dynamically
+# Calls to the following _macro_sub_... methods are generated dynamically
 # above, so there is no way Perl::Critic can find them.
-sub _macro_brief : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
+sub _macro_sub_brief : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, undef, @args ) = __arguments( @_ );
     my $output;
     foreach my $name (sort @args ? @args : keys %{$self->{macro}}) {
@@ -1724,7 +1724,7 @@ sub _macro_brief : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
     return $output;
 }
 
-sub _macro_define : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
+sub _macro_sub_define : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, undef, $name, @args ) = __arguments( @_ );
     my $output;
     defined $name
@@ -1761,7 +1761,7 @@ sub _macro_define_generator {
     return $output;
 }
 
-sub _macro_delete : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
+sub _macro_sub_delete : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, undef, @args ) = __arguments( @_ );
     my $output;
     foreach my $name (@args ? @args : keys %{$self->{macro}}) {
@@ -1770,7 +1770,7 @@ sub _macro_delete : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
     return $output;
 }
 
-sub _macro_list : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
+sub _macro_sub_list : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, undef, @args ) = __arguments( @_ );
     my $output;
     foreach my $name (sort @args ? @args : keys %{$self->{macro}}) {
@@ -1781,7 +1781,7 @@ sub _macro_list : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
     return $output;
 }
 
-sub _macro_load : Verb( lib=s verbose! ) {	## no critic (ProhibitUnusedPrivateSubroutines)
+sub _macro_sub_load : Verb( lib=s verbose! ) {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $opt, $name, @args ) = __arguments( @_ );
     my $output;
     defined $name
