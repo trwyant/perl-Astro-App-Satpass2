@@ -12,17 +12,28 @@ BEGIN {
 use Astro::App::Satpass2;
 use Test::More 0.88;	# Because of done_testing();
 
+eval {
+    require Term::ReadLine;
+    Term::ReadLine->new( 'test' );  # Done to get Term::ReadLine::readline
+				    # loaded correctly.
+    $INC{'Term/ReadLine/readline.pm'};
+} or plan skip_all => 'Term::ReadLine::readline not available';
+
 my $app = $Astro::App::Satpass2::READLINE_OBJ = Astro::App::Satpass2->new();
 
-complete( '', get_builtins() );
+complete( '', get_builtins( 0 ) );
+
+complete( 'core.', get_builtins( 1 ) );
 
 $app->macro( define => hi => 'echo hello world' );
 $app->macro( define => bye => 'echo goodbye cruel world' );
 
-complete( '', [ sort @{ get_builtins() }, qw{ bye hi } ],
+complete( '', get_builtins( 0, qw{ bye hi } ),
     q<Complete '' after defining macros> );
 
 complete( 'a', [ qw{ alias almanac } ] );
+
+complete( 'core.a', [ qw{ core.alias core.almanac } ] );
 
 complete( 'al', [ qw{ alias almanac } ] );
 
@@ -36,13 +47,23 @@ complete( 'almanac --h', [ qw{ --horizon } ] );
 
 complete( 'macro ', [ qw{ brief define delete list load } ] );
 
+complete( 'core.macro ', [ qw{ brief define delete list load } ] );
+
 complete( 'macro l', [ qw{ list load } ] );
+
+complete( 'core.macro l', [ qw{ list load } ] );
 
 complete( 'macro lo', [ qw{ load } ] );
 
+complete( 'core.macro lo', [ qw{ load } ] );
+
 complete( 'macro load -', [ qw{ -lib -verbose } ] );
 
+complete( 'core.macro load -', [ qw{ -lib -verbose } ] );
+
 complete( 'macro load --', [ qw{ --lib --verbose } ] );
+
+complete( 'core.macro load --', [ qw{ --lib --verbose } ] );
 
 complete( 'macro list ', [ qw{ bye hi } ] );
 
@@ -81,18 +102,30 @@ sub complete {
     goto &is_deeply;
 }
 
-sub get_builtins {
-    my @rslt;
-    foreach ( sort keys %Astro::App::Satpass2:: ) {
-	m/ \A _ /smx
-	    and next;
-	my $code = Astro::App::Satpass2->can( $_ )
-	    or next;
-	Astro::App::Satpass2->__get_attr( $code, 'Verb' )
-	    or next;
-	push @rslt, $_;
+{
+    my @core;
+
+    # If $add_core is true, you get 'core.' prefixed to the names of all
+    # built-ins. If it is false, there is no prefix, but 'core.' is
+    # added to the returned data.
+    sub get_builtins {
+	my ( $add_core, @extra ) = @_;
+	unless ( @core ) {
+	    foreach ( keys %Astro::App::Satpass2:: ) {
+		m/ \A _ /smx
+		    and next;
+		my $code = Astro::App::Satpass2->can( $_ )
+		    or next;
+		Astro::App::Satpass2->__get_attr( $code, 'Verb' )
+		    or next;
+		push @core, $_;
+	    }
+	}
+	my @rslt = $add_core ?
+	    sort map { "core.$_" } @core, @extra :
+	    sort @core, 'core.', @extra;
+	return \@rslt;
     }
-    return \@rslt;
 }
 
 1;

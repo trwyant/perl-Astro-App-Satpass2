@@ -4293,6 +4293,8 @@ sub _get_interactive {
 #	Note that the return from this subroutine may or may not be
 #	chomped.
 
+my $readline_word_break_re;
+
 {
     my $rl;
 
@@ -4346,12 +4348,17 @@ sub __readline_completer_function {
 
     my $invocant = $READLINE_OBJ || __PACKAGE__;
 
+    $readline_word_break_re ||= qr<
+	[\Q$readline::rl_completer_word_break_characters\E]+
+    >smx;
+
     $start
 	or return $invocant->_readline_complete_command( $text );
 
-    my ( $cmd ) = split qr< \s+ >smx, $line, 2;
+    my ( $cmd ) = split $readline_word_break_re, $line, 2;
     my $code;
-    ref $invocant
+    not $cmd =~ s/ \A core [.] //smx
+	and ref $invocant
 	and $invocant->{macro}{$cmd}
 	and $code = $invocant->{macro}{$cmd}->implements( $cmd );
     $code ||= $invocant->can( $cmd );
@@ -4399,11 +4406,6 @@ sub __readline_completer_function {
     my @builtins;
     sub _readline_complete_command {
 	my ( $invocant, $text ) = @_;
-	defined $text
-	    or do {
-	    require Carp;
-	    Carp::confess( '$text undefined' );
-	};
 	unless ( @builtins ) {
 	    my $stash = ( ref $invocant || $invocant ) . '::';
 	    no strict qw{ refs };
@@ -4418,10 +4420,19 @@ sub __readline_completer_function {
 	    }
 	    @builtins = sort @builtins;
 	}
-	my $match = qr< \A \Q$text\E >smx;
-	ref $invocant
-	    or return grep { $_ =~ $match } @builtins;
-	return grep { $_ =~ $match } sort @builtins, keys %{ $invocant->{macro} };
+	my @rslt;
+	if ( $text =~ s/ \A core [.] //smx ) {
+	    my $match = qr< \A \Q$text\E >smx;
+	    @rslt = map { "core.$_" } grep { $_ =~ $match } @builtins;
+	} else {
+	    my $match = qr< \A \Q$text\E >smx;
+	    @rslt = grep { $_ =~ $match } @builtins, 'core.',
+		ref $invocant ? keys %{ $invocant->{macro} } : ();
+	}
+	1 == @rslt
+	    and $rslt[0] =~ m/ \W \z /smx
+	    and $readline::rl_completer_terminator_character = '';
+	return ( sort @rslt );
     }
 }
 
@@ -4480,9 +4491,14 @@ sub _readline_complete_subcommand { ## no critic (ProhibitUnusedPrivateSubroutin
 
 sub _readline_line_to_parts {
     my ( $line ) = @_;
-    my @parts = split qr< \s+ >smx, $line;
+    my @parts = split $readline_word_break_re, $line;
     $line =~ m/ \s+ \z /smx	# Trailing spaces do not produce an
 	and push @parts, '';	# empty part, so we force one.
+    # NOTE that we strip the leading 'core.' if any, so the return from
+    # this method does not distinguish between a core command and the
+    # same-named macro if any.
+    @parts
+	and $parts[0] =~ s/ \A core [.] //smx;
     return @parts;
 }
 
