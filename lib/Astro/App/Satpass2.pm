@@ -3073,7 +3073,7 @@ sub _sky_sub_clear : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
     return;
 }
 
-sub _sky_sub_drop : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
+sub _sky_sub_drop : Verb() Tweak( -completion _sky_body_complete ) {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
     @args or $self->wail(
 	'You must specify at least one name to drop' );
@@ -3081,6 +3081,26 @@ sub _sky_sub_drop : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
 	$self->_drop_from_sky( $name );
     }
     return;
+}
+
+sub _sky_body_complete {	## no critic (ProhibitUnusedPrivateSubroutines)
+    # my ( $invocant, $code, $text, $line, $start ) = @_;
+    my ( $invocant, undef, undef, $line, undef ) = @_;
+    ref $invocant
+	or return;
+    my @part = _readline_line_to_parts( $line );
+    3 == @part
+	or return;
+    my $re = qr< \A \Q$part[2]\E >smxi;
+    my @rslt;
+    foreach my $body ( @{ $invocant->{sky} } ) {
+	if ( ( my $name = $body->get( 'name' ) ) =~ $re ) {
+	    push @rslt, $name;
+	} elsif ( ( my $id = $body->get( 'id' ) ) =~ $re ) {
+	    push @rslt, $id;
+	}
+    }
+    return [ sort @rslt ];
 }
 
 sub _sky_sub_list : Verb( verbose! ) {	## no critic (ProhibitUnusedPrivateSubroutines)
