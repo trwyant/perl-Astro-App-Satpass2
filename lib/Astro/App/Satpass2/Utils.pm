@@ -14,7 +14,7 @@ use Getopt::Long 2.33;
 use Scalar::Util 1.26 qw{ blessed looks_like_number };
 use Text::ParseWords ();
 
-our $VERSION = '0.048_001';
+our $VERSION = '0.048_002';
 
 our @CARP_NOT = qw{
     Astro::App::Satpass2

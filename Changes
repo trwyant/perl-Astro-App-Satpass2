@@ -1,3 +1,12 @@
+0.048_002	2021-09-16	T. R. Wyant
+    Complete 'core.*' interactive commands.
+    
+    Use Term::ReadLine::readline's word break characters, not just '\s'.
+    
+    Add Term::ReadLine to the optional modules list.
+
+    Add 'sky drop' body name completion
+
 0.048_001	2021-09-14	T. R. Wyant
     Add command completion. It's undocumented, though.
 
