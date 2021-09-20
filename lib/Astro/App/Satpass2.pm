@@ -1775,7 +1775,7 @@ sub _macro_define_generator {
     return $output;
 }
 
-sub _macro_sub_delete : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
+sub _macro_sub_delete : Verb() Tweak( -completion _macro_list_complete ) {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, undef, @args ) = __arguments( @_ );
     my $output;
     foreach my $name (@args ? @args : keys %{$self->{macro}}) {
@@ -4315,8 +4315,8 @@ my $readline_word_break_re;
 			$rl = Term::ReadLine->new( 'satpass2' );
 			if ( $INC{'Term/ReadLine/readline.pm'} ) {
 			    no warnings qw{ once };
-			    $readline::rl_completion_function = join '::',
-				__PACKAGE__, '__readline_completer_function';
+			    $readline::rl_completion_function =
+				__PACKAGE__->can( '__readline_completer_function' );
 			}
 		    }
 		    sub {
