@@ -1681,6 +1681,9 @@ sub location : Verb( dump! ) {
     # TODO the %mac_cmd hash is only needed for level1 compatibility.
     # Once that goes away, it can too PROVIDED we also drop the
     # subcommand defaulting functionality.
+    # Subcommand defaulting dropped 2021-09-20 unless explicitly level1,
+    # after I discovered that my init file defined an unwanted macro
+    # when I mistyped 'define' as 'defined'.
     my %mac_cmd;
     {
 	my $stb = __PACKAGE__ . '::';
@@ -1713,12 +1716,18 @@ sub location : Verb( dump! ) {
 	my $cmd;
 	if (!@args) {
 	    $cmd = 'brief';
-	} elsif ($mac_cmd{$args[0]}) {
-	    $cmd = $mac_cmd{shift @args};
-	} elsif (@args > 1) {
-	    $cmd = 'define';
+	} elsif ( $self->{frame}[-1]{level1} ) {
+	    if ($mac_cmd{$args[0]}) {
+		$cmd = $mac_cmd{shift @args};
+	    } elsif (@args > 1) {
+		$cmd = 'define';
+	    } else {
+		$cmd = 'list';
+	    }
 	} else {
-	    $cmd = 'list';
+	    defined( $cmd = $mac_cmd{ $args[0] } )
+		or $cmd = $args[0];
+	    shift @args;
 	}
 
 	my $code = $self->can( "_macro_sub_$cmd" )
