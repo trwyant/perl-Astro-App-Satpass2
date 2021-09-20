@@ -1,3 +1,13 @@
+0.048_003	2021-09-20	T. R. Wyant
+    Remove macro subcommand defaults unless in level1 mode.  The problem
+    was I mistyped 'macro define ...' as 'macro defined ...' in my init
+    file, and got a macro named 'defined'. Didn't realize it for a long
+    time because I didn't use that one much. And then didn't remember
+    the subcommand defaulting mechanism and so couldn't figure out why I
+    didn't get an error. So it's gone now.
+
+    Complete macro name in 'macro delete'.
+
 0.048_002	2021-09-16	T. R. Wyant
     Complete 'core.*' interactive commands.
     
