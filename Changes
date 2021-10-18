@@ -1,3 +1,8 @@
+0.048_004	2021-10-18	T. R. Wyant
+    Add rudimentary command macro completion by adding a --completion
+    option to the macro define subcommand, which lists all possible
+    completions.
+
 0.048_003	2021-09-20	T. R. Wyant
     Remove macro subcommand defaults unless in level1 mode.  The problem
     was I mistyped 'macro define ...' as 'macro defined ...' in my init
