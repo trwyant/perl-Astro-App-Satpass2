@@ -1747,13 +1747,14 @@ sub _macro_sub_brief : Verb() Tweak( -completion _macro_list_complete ) {	## no 
     return $output;
 }
 
-sub _macro_sub_define : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
-    my ( $self, undef, $name, @args ) = __arguments( @_ );
+sub _macro_sub_define : Verb( completion=s@ ) {	## no critic (ProhibitUnusedPrivateSubroutines)
+    my ( $self, $opt, $name, @args ) = __arguments( @_ );
     my $output;
     defined $name
 	or return $self->__wail( 'You must provide a name for the macro' );
     @args
 	or return $self->__wail( 'You must provide a definition for the macro' );
+
     $name !~ m/ \W /smx
 	and $name !~ m/ \A _ /smx
 	or return $self->__wail("Invalid macro name '$name'");
@@ -1765,6 +1766,7 @@ sub _macro_sub_define : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
 	Astro::App::Satpass2::Macro::Command->new(
 	    name	=> $name,
 	    parent	=> $self,
+	    completion	=> $opt->{completion},
 	    def		=> \@args,
 	    generate	=> \&_macro_define_generator,
 	    level1	=> $self->{frame}[-1]{level1},
@@ -1774,11 +1776,17 @@ sub _macro_sub_define : Verb() {	## no critic (ProhibitUnusedPrivateSubroutines)
 }
 
 sub _macro_define_generator {
-    my ( $self, @args ) = @_;
+    my ( $self, @args ) = @_;	# $self if Macro object
     my $output;
     foreach my $macro ( @args ) {
-	$output .= "macro define $macro \\\n    " .
-	    join( " \\\n    ", map { quoter( $_ ) } $self->def() ) .
+	if ( my $comp = $self->completion() ) {
+	    $output .= "macro define \\\n    " .
+		"--completion '@$comp' \\\n    " .
+		"$macro \\\n    ";
+	} else {
+	    $output .= "macro define $macro \\\n    ";
+	}
+	$output .= join( " \\\n    ", map { quoter( $_ ) } $self->def() ) .
 	    "\n";
     }
     return $output;
@@ -4388,9 +4396,12 @@ sub __readline_completer_function {
 	    and @{ $rslt }
 	    and return @{ $rslt };
 
-    } else {
-	# command macros go here, but at the moment I have nothing for
-	# them
+    } elsif ( my $macro = $invocant->{macro}{$cmd} ) {
+	# command macros go here
+
+	my $rslt;
+	$rslt = $macro->completion( $text )
+	    and return @{ $rslt };
     }
 
     my @files = bsd_glob( "$text*" );
@@ -7162,13 +7173,25 @@ example, 'say' can be defined in terms of 'echo' by
 
  $satpass2->macro( define => say => 'echo $@' );
 
+The C<'define'>> subcommand supports the following options:
+
+=over
+
+=item -completion
+
+This option specifies a space-delimited list of completions for the
+macro arguments. It can be specified more than once, in which case all
+completion specifications will be concatenated.
+
+=back
+
 The first argument of the C<'load'> subcommand is the name of a Perl
 module (e.g. C<My::Macros>) that implements one or more code macros.
 Subsequent arguments, if any, are the names of macros to load from the
 module. If no subsequent arguments are given, all macros defined by the
 macro are loaded.
 
-The following options are supported:
+The C<'load'> subcommand supports the following options:
 
 =over
 

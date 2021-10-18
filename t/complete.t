@@ -27,8 +27,10 @@ complete( 'core.', get_builtins( 1 ) );
 
 $app->macro( define => hi => 'echo hello world' );
 $app->macro( define => bye => 'echo goodbye cruel world' );
+$app->macro( define => '--completion', 'mercury venus mars', planet =>
+    'echo "\\L\\u$1"' );
 
-complete( '', get_builtins( 0, qw{ bye hi } ),
+complete( '', get_builtins( 0, qw{ bye hi planet } ),
     q<Complete '' after defining macros> );
 
 complete( 'a', [ qw{ alias almanac } ] );
@@ -65,11 +67,17 @@ complete( 'macro load --', [ qw{ --lib --verbose } ] );
 
 complete( 'core.macro load --', [ qw{ --lib --verbose } ] );
 
-complete( 'macro list ', [ qw{ bye hi } ] );
+complete( 'macro list ', [ qw{ bye hi planet } ] );
 
 complete( 'macro list h', [ qw{ hi } ] );
 
 complete( 'macro list z', [] );
+
+complete( 'planet ', [ qw{ mars mercury venus } ] );
+
+complete( 'planet m', [ qw{ mars mercury } ] );
+
+complete( 'planet v', [ qw{ venus } ] );
 
 complete( 'sky ', [ qw{ add class clear drop list load lookup tle } ] );
 
