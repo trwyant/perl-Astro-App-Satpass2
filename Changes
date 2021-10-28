@@ -1,35 +1,11 @@
-0.048_004	2021-10-18	T. R. Wyant
-    Add rudimentary command macro completion by adding a --completion
-    option to the macro define subcommand, which lists all possible
-    completions.
+0.048_01	2021-10-28	T. R. Wyant
+    Add command completion if Term::ReadLine::Perl is available. This
+    adds command, macro, and option completion to Term::ReadLine::Perl's
+    file name completion. The macro() and sky() commands also do
+    subcommand name completion.
 
-0.048_003	2021-09-20	T. R. Wyant
-    Remove macro subcommand defaults unless in level1 mode.  The problem
-    was I mistyped 'macro define ...' as 'macro defined ...' in my init
-    file, and got a macro named 'defined'. Didn't realize it for a long
-    time because I didn't use that one much. And then didn't remember
-    the subcommand defaulting mechanism and so couldn't figure out why I
-    didn't get an error. So it's gone now.
-
-    Complete macro name in 'macro delete'.
-
-0.048_002	2021-09-16	T. R. Wyant
-    Complete 'core.*' interactive commands.
-    
-    Use Term::ReadLine::readline's word break characters, not just '\s'.
-    
-    Add Term::ReadLine to the optional modules list.
-
-    Add 'sky drop' body name completion
-
-0.048_001	2021-09-14	T. R. Wyant
-    Add command completion. It's undocumented, though.
-
-    Redo sky() subcommand dispatching to be like macro().
-
-    Add author test to ensure consistent module version requirements.
-
-    Add DateTime::TimeZone to DM6 test failure dump.
+    The macro() command no longer does a 'list' if it does not recognize
+    the given subcommand, unless in 'satpass' compatibility mode.
 
 0.048		2021-07-24	T. R. Wyant
     Fix sloppy ParseTime::Date::Manip back-end implementation where the
