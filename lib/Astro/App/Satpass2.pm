@@ -6228,6 +6228,11 @@ This module is only used directly if you are specifying URLs as input
 (see L</SPECIFYING INPUT DATA>). It is implied, though, by a number of
 the other optional modules.
 
+=item L<Term::ReadLine|Term::ReadLine>
+
+If this can be loaded B<and> it can load C<Term::ReadLine::Perl> you get
+interactive command editing and completion.
+
 =item L<Time::HiRes|Time::HiRes>
 
 This module is only used by the L<time()|/time> method. If you are not
@@ -7551,10 +7556,17 @@ these is the C<exit> command, the run will end at this step.
 By default, commands come from C<STDIN>, but any commands passed as
 arguments are executed first. How commands are read from C<STDIN>
 depends on a number of factors. If C<STDIN> is a terminal and
-Term::ReadLine can be loaded, a Term::ReadLine object is instantiated
-and used to read input.  If C<STDIN> is a terminal and Term::ReadLine
+L<Term::ReadLine|Term::ReadLine> can be loaded, a
+L<Term::ReadLine|Term::ReadLine> object is instantiated and used to read
+input.  If C<STDIN> is a terminal and L<Term::ReadLine|Term::ReadLine>
 can not be loaded, the prompt is printed to C<STDERR> and C<STDIN> is
 read.  If C<STDIN> is not a terminal, it is read.
+
+If L<Term::ReadLine|Term::ReadLine> is in use and can load
+C<Term::ReadLine::Perl>, command editing, history, and completion are
+available. Completion will include at least command, macro, and option
+names, in addition to the file name completion built into
+C<Term::ReadLine::Perl>.
 
 The default command acquisition behavior can be changed by passing, as
 the first argument, a code reference. This should refer to a subroutine
