@@ -1,4 +1,4 @@
-0.048_01	2021-10-28	T. R. Wyant
+0.049		2021-11-04	T. R. Wyant
     Add command completion if Term::ReadLine::Perl is available. This
     adds command, macro, and option completion to Term::ReadLine::Perl's
     file name completion. The macro() and sky() commands also do
