@@ -19,7 +19,7 @@ eval {
     $INC{'Term/ReadLine/readline.pm'};
 } or plan skip_all => 'Term::ReadLine::readline not available';
 
-my $app = $Astro::App::Satpass2::READLINE_OBJ = Astro::App::Satpass2->new();
+my $app = Astro::App::Satpass2->new();
 
 complete( '', get_builtins( 0 ) );
 
@@ -104,8 +104,9 @@ sub complete {
     } else {
 	$text = '';
     }
-    my @rslt = Astro::App::Satpass2::__readline_completer_function(
-	$text, $line, $start );
+
+    my @rslt = $app->__readline_completer( $text, $line, $start );
+
     @_ = ( \@rslt, $want, $name || "Complete '$line'" );
     goto &is_deeply;
 }

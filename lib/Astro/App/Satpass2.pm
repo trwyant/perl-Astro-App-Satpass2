@@ -60,8 +60,6 @@ use Scalar::Util 1.26 qw{ blessed isdual openhandle };
 use Text::Abbrev;
 use Text::ParseWords ();	# Used only for {level1} stuff.
 
-our $READLINE_OBJ;	# Used for readline completion.
-
 use constant ASTRO_SPACETRACK_VERSION => 0.105;
 use constant DEFAULT_STDOUT_LAYERS	=> ':encoding(utf-8)';
 
@@ -4310,8 +4308,6 @@ sub _get_interactive {
 #	Note that the return from this subroutine may or may not be
 #	chomped.
 
-my $readline_word_break_re;
-
 {
     my $rl;
 
@@ -4330,15 +4326,17 @@ my $readline_word_break_re;
 			or return;
 		    unless ( $rl ) {
 			$rl = Term::ReadLine->new( 'satpass2' );
-			if ( $INC{'Term/ReadLine/readline.pm'} ) {
+			if ( 'Term::ReadLine::Perl' eq $rl->ReadLine() ) {
 			    no warnings qw{ once };
-			    $readline::rl_completion_function =
-				__PACKAGE__->can( '__readline_completer_function' );
+			    $readline::rl_completion_function = sub {
+				my ( $text, $line, $start ) = @_;
+				return $self->__readline_completer(
+				    $text, $line, $start );
+			    };
 			}
 		    }
 		    sub {
 			defined $buffer or return $buffer;
-			local $READLINE_OBJ = $self;
 			return ( $buffer = $rl->readline($_[0]) );
 		    }
 		} || sub {
@@ -4360,43 +4358,43 @@ my $readline_word_break_re;
     }
 }
 
-sub __readline_completer_function {
-    my ( $text, $line, $start ) = @_;
+my $readline_word_break_re;
 
-    my $invocant = $READLINE_OBJ || __PACKAGE__;
+sub __readline_completer {
+    my ( $app, $text, $line, $start ) = @_;
 
     $readline_word_break_re ||= qr<
 	[\Q$readline::rl_completer_word_break_characters\E]+
     >smx;
 
     $start
-	or return $invocant->_readline_complete_command( $text );
+	or return $app->_readline_complete_command( $text );
 
     my ( $cmd ) = split $readline_word_break_re, $line, 2;
     my $code;
     not $cmd =~ s/ \A core [.] //smx
-	and ref $invocant
-	and $invocant->{macro}{$cmd}
-	and $code = $invocant->{macro}{$cmd}->implements( $cmd );
-    $code ||= $invocant->can( $cmd );
+	and ref $app
+	and $app->{macro}{$cmd}
+	and $code = $app->{macro}{$cmd}->implements( $cmd );
+    $code ||= $app->can( $cmd );
 
     if ( CODE_REF eq ref $code ) {
 	# builtins and code macros go here
 
 	my $rslt;
 
-	if ( my $method = $invocant->__get_attr( $code, Tweak => {}
+	if ( my $method = $app->__get_attr( $code, Tweak => {}
 	    )->{completion} ) {
-	    $rslt = $invocant->$method( $code, $text, $line, $start )
+	    $rslt = $app->$method( $code, $text, $line, $start )
 		and return @{ $rslt };
 	}
 
-	$rslt = $invocant->_readline_complete_options( $code, $text,
+	$rslt = $app->_readline_complete_options( $code, $text,
 	    $line, $start )
 	    and @{ $rslt }
 	    and return @{ $rslt };
 
-    } elsif ( my $macro = $invocant->{macro}{$cmd} ) {
+    } elsif ( my $macro = $app->{macro}{$cmd} ) {
 	# command macros go here
 
 	my $rslt;
@@ -4425,16 +4423,16 @@ sub __readline_completer_function {
 {
     my @builtins;
     sub _readline_complete_command {
-	my ( $invocant, $text ) = @_;
+	my ( $app, $text ) = @_;
 	unless ( @builtins ) {
-	    my $stash = ( ref $invocant || $invocant ) . '::';
+	    my $stash = ( ref $app || $app ) . '::';
 	    no strict qw{ refs };
 	    foreach my $sym ( keys %$stash ) {
 		$sym =~ m/ \A _ /smx
 		    and next;
-		my $code = $invocant->can( $sym )
+		my $code = $app->can( $sym )
 		    or next;
-		$invocant->__get_attr( $code, 'Verb' )
+		$app->__get_attr( $code, 'Verb' )
 		    or next;
 		push @builtins, $sym;
 	    }
@@ -4447,7 +4445,7 @@ sub __readline_completer_function {
 	} else {
 	    my $match = qr< \A \Q$text\E >smx;
 	    @rslt = grep { $_ =~ $match } @builtins, 'core.',
-		ref $invocant ? keys %{ $invocant->{macro} } : ();
+		ref $app ? keys %{ $app->{macro} } : ();
 	}
 	1 == @rslt
 	    and $rslt[0] =~ m/ \W \z /smx
@@ -4457,12 +4455,12 @@ sub __readline_completer_function {
 }
 
 sub _readline_complete_options {
-    # my ( $invocant, $code, $text, $line, $start ) = @_;
-    my ( $invocant, $code, $text ) = @_;
+    # my ( $app, $code, $text, $line, $start ) = @_;
+    my ( $app, $code, $text ) = @_;
     $text =~ m/ \A ( --? ) ( .* ) /smx
 	or return;
     my ( $prefix, $match ) = ( $1, $2 );
-    my $lgl = $invocant->__legal_options( $code );
+    my $lgl = $app->__legal_options( $code );
     my $re = qr< \A \Q$match\E >smx;
     my @rslt;
     foreach ( @{ $lgl } ) {
@@ -4478,12 +4476,12 @@ sub _readline_complete_options {
 
 # The following subroutine is called dynamically
 sub _readline_complete_subcommand { ## no critic (ProhibitUnusedPrivateSubroutines)
-    my ( $invocant, $code, $text, $line, $start ) = @_;
+    my ( $app, $code, $text, $line, $start ) = @_;
     my @part = _readline_line_to_parts( $line );
     my @rslt;
     if ( 2 == @part ) {
 	my $re = qr< \A _$part[0]_sub_ ( \Q$part[1]\E \w* ) >smx;
-	my $stash = ( ref $invocant || $invocant ) . '::';
+	my $stash = ( ref $app || $app ) . '::';
 	no strict qw{ refs };
 	foreach my $key ( keys %$stash ) {
 	    $key =~ m/$re/smx
@@ -4492,18 +4490,18 @@ sub _readline_complete_subcommand { ## no critic (ProhibitUnusedPrivateSubroutin
 	return [ sort @rslt ];
     }
 
-    $code = $invocant->can( "_$part[0]_sub_$part[1]" )
+    $code = $app->can( "_$part[0]_sub_$part[1]" )
 	or return;
 
     my $r;
-    $r = $invocant->_readline_complete_options( $code, $text, $line,
+    $r = $app->_readline_complete_options( $code, $text, $line,
 	$start )
 	and return $r;
 
-    my $complete = $invocant->__get_attr( $code, Tweak => {} )->{completion}
+    my $complete = $app->__get_attr( $code, Tweak => {} )->{completion}
 	or return;
 
-    $r = $invocant->$complete( $code, $text, $line, $start )
+    $r = $app->$complete( $code, $text, $line, $start )
 	and return $r;
 
     return;
