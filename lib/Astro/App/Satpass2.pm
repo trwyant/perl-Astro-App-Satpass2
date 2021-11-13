@@ -1810,23 +1810,6 @@ sub _macro_sub_list : Verb() Tweak( -completion _macro_list_complete ) {	## no c
     return $output;
 }
 
-sub _macro_list_complete {	## no critic (ProhibitUnusedPrivateSubroutines)
-    # my ( $invocant, $code, $text, $line, $start ) = @_;
-    my ( $invocant, undef, undef, $line, undef ) = @_;
-    ref $invocant
-	or return;
-    my @part = _readline_line_to_parts( $line );
-    3 == @part
-	or return;
-    my $re = qr< \A \Q$part[2]\E >smx;
-    my @rslt;
-    foreach ( sort keys %{ $invocant->{macro} } ) {
-	m/$re/smx
-	    and push @rslt, $_;
-    }
-    return \@rslt;
-}
-
 sub _macro_sub_load : Verb( lib=s verbose! ) {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $opt, $name, @args ) = __arguments( @_ );
     my $output;
@@ -3098,26 +3081,6 @@ sub _sky_sub_drop : Verb() Tweak( -completion _sky_body_complete ) {	## no criti
     return;
 }
 
-sub _sky_body_complete {	## no critic (ProhibitUnusedPrivateSubroutines)
-    # my ( $invocant, $code, $text, $line, $start ) = @_;
-    my ( $invocant, undef, undef, $line, undef ) = @_;
-    ref $invocant
-	or return;
-    my @part = _readline_line_to_parts( $line );
-    3 == @part
-	or return;
-    my $re = qr< \A \Q$part[2]\E >smxi;
-    my @rslt;
-    foreach my $body ( @{ $invocant->{sky} } ) {
-	if ( ( my $name = $body->get( 'name' ) ) =~ $re ) {
-	    push @rslt, $name;
-	} elsif ( ( my $id = $body->get( 'id' ) ) =~ $re ) {
-	    push @rslt, $id;
-	}
-    }
-    return [ sort @rslt ];
-}
-
 sub _sky_sub_list : Verb( verbose! ) {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $opt ) = __arguments( @_ );	# args unused
     my $output;
@@ -4308,6 +4271,8 @@ sub _get_interactive {
 #	Note that the return from this subroutine may or may not be
 #	chomped.
 
+my $readline_word_break_re;
+
 {
     my $rl;
 
@@ -4327,6 +4292,11 @@ sub _get_interactive {
 		    unless ( $rl ) {
 			$rl = Term::ReadLine->new( 'satpass2' );
 			if ( 'Term::ReadLine::Perl' eq $rl->ReadLine() ) {
+
+			    $readline_word_break_re ||= qr<
+				[\Q$readline::rl_completer_word_break_characters\E]+
+			    >smx;
+
 			    no warnings qw{ once };
 			    $readline::rl_completion_function = sub {
 				my ( $text, $line, $start ) = @_;
@@ -4358,14 +4328,8 @@ sub _get_interactive {
     }
 }
 
-my $readline_word_break_re;
-
 sub __readline_completer {
     my ( $app, $text, $line, $start ) = @_;
-
-    $readline_word_break_re ||= qr<
-	[\Q$readline::rl_completer_word_break_characters\E]+
-    >smx;
 
     $start
 	or return $app->_readline_complete_command( $text );
@@ -4403,20 +4367,22 @@ sub __readline_completer {
     }
 
     my @files = bsd_glob( "$text*" );
-    if ( $readline::var_CompleteAddsuffix ) {
+    if ( 1 == @files ) {
+	$files[0] .= -d $files[0] ? '/' : ' ';
+    } elsif ( $readline::var_CompleteAddsuffix ) {
 	foreach ( @files ) {
-	    if (-l $_) {
-##		$_ .= '@';
-	    } elsif (-d _) {
+	    if ( -l $_ ) {
+		$_ .= '@';
+	    } elsif ( -d $_ ) {
 		$_ .= '/';
-		$readline::rl_completer_terminator_character = '';
-	    } elsif (-x _) {
-##		$_ .= '*';
-	    } elsif (-S _ || -p _) {
-##		$_ .= '=';
+	    } elsif ( -x _) {
+		$_ .= '*';
+	    } elsif ( -S _ || -p _ ) {
+		$_ .= '=';
 	    }
 	}
     }
+    $readline::rl_completer_terminator_character = '';
     return @files;
 }
 
@@ -4476,7 +4442,8 @@ sub _readline_complete_options {
 
 # The following subroutine is called dynamically
 sub _readline_complete_subcommand { ## no critic (ProhibitUnusedPrivateSubroutines)
-    my ( $app, $code, $text, $line, $start ) = @_;
+    # my ( $app, $code, $text, $line, $start ) = @_;
+    my ( $app, undef, $text, $line, $start ) = @_;
     my @part = _readline_line_to_parts( $line );
     my @rslt;
     if ( 2 == @part ) {
@@ -4490,7 +4457,7 @@ sub _readline_complete_subcommand { ## no critic (ProhibitUnusedPrivateSubroutin
 	return [ sort @rslt ];
     }
 
-    $code = $app->can( "_$part[0]_sub_$part[1]" )
+    my $code = $app->can( "_$part[0]_sub_$part[1]" )
 	or return;
 
     my $r;
@@ -4507,11 +4474,48 @@ sub _readline_complete_subcommand { ## no critic (ProhibitUnusedPrivateSubroutin
     return;
 }
 
+sub _macro_list_complete {	## no critic (ProhibitUnusedPrivateSubroutines)
+    # my ( $app, $code, $text, $line, $start ) = @_;
+    my ( $app, undef, undef, $line, undef ) = @_;
+    ref $app
+	or return;
+    my @part = _readline_line_to_parts( $line );
+    3 == @part
+	or return;
+    my $re = qr< \A \Q$part[2]\E >smx;
+    my @rslt;
+    foreach ( sort keys %{ $app->{macro} } ) {
+	m/$re/smx
+	    and push @rslt, $_;
+    }
+    return \@rslt;
+}
+
+sub _sky_body_complete {	## no critic (ProhibitUnusedPrivateSubroutines)
+    # my ( $app, $code, $text, $line, $start ) = @_;
+    my ( $app, undef, undef, $line, undef ) = @_;
+    ref $app
+	or return;
+    my @part = _readline_line_to_parts( $line );
+    3 == @part
+	or return;
+    my $re = qr< \A \Q$part[2]\E >smxi;
+    my @rslt;
+    foreach my $body ( @{ $app->{sky} } ) {
+	if ( ( my $name = $body->get( 'name' ) ) =~ $re ) {
+	    push @rslt, $name;
+	} elsif ( ( my $id = $body->get( 'id' ) ) =~ $re ) {
+	    push @rslt, $id;
+	}
+    }
+    return [ sort @rslt ];
+}
+
 sub _readline_line_to_parts {
     my ( $line ) = @_;
-    my @parts = split $readline_word_break_re, $line;
-    $line =~ m/ \s+ \z /smx	# Trailing spaces do not produce an
-	and push @parts, '';	# empty part, so we force one.
+    # NOTE that the field count of -1 causes a trailing separator to
+    # result in a trailing empty field.
+    my @parts = split $readline_word_break_re, $line, -1;
     # NOTE that we strip the leading 'core.' if any, so the return from
     # this method does not distinguish between a core command and the
     # same-named macro if any.

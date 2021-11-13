@@ -12,14 +12,11 @@ BEGIN {
 use Astro::App::Satpass2;
 use Test::More 0.88;	# Because of done_testing();
 
-eval {
-    require Term::ReadLine;
-    Term::ReadLine->new( 'test' );  # Done to get Term::ReadLine::readline
-				    # loaded correctly.
-    $INC{'Term/ReadLine/readline.pm'};
-} or plan skip_all => 'Term::ReadLine::readline not available';
-
 my $app = Astro::App::Satpass2->new();
+$app->_get_readline();	# To initialize internals.
+$INC{'Term/ReadLine/Perl.pm'}
+    or plan skip_all => 'Term::ReadLine::Perl not available';
+
 
 complete( '', get_builtins( 0 ) );
 
