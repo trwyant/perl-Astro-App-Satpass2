@@ -30,6 +30,5 @@ CVS/
 ^t/appulse\.tle$
 ^TODO$
 ^tplt/
-^\.travis\.yml$
 ^usual\.dat$
 ^xt/author/optionals/
