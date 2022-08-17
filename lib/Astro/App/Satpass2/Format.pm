@@ -666,7 +666,7 @@ ad-hoc.
 The C<$data> argument is expected to be a reference to an array of
 L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE> objects. The output
 should be compatible with the normal TLE format as documented at
-L<http://celestrak.com>.
+L<http://celestrak.org>.
 
 =item tle_verbose
 
