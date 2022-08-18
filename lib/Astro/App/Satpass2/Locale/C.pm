@@ -227,7 +227,8 @@ EOD
 	pass_ics	=> <<'EOD',
 [% UNLESS data %]
     [%- SET data = sp.pass( arg ) %]
-[%- END -%]
+[%- END %]
+[%- SET do_mag = sp.want_pass_variant( 'brightest' ) -%]
 BEGIN:VCALENDAR
 VERSION:2.0
 [%- FOR pass IN data %]
@@ -261,7 +262,7 @@ DESCRIPTION:
 	[%- IF 'rise' != evt_name and 'set' != evt_name %] Ele
 	    [%= evt.elevation( places = 0 ) %]
 	[%- END %]
-	[%- IF '' != evt.magnitude %] Mag
+	[%- IF do_mag && '' != evt.magnitude %] Mag
 	    [%= evt.magnitude %]
 	[%- END %]
         [%- punct = '\n' %]
