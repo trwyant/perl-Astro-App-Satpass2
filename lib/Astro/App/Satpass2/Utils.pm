@@ -88,8 +88,32 @@ use constant SCALAR_REF	=> ref \1;
 	    has_method( $_, 'dereference' ) ?  $_->dereference() : $_
 	} @args;
 
+	my $code = \&{ ( caller 1 )[3] };
+
 	if ( HASH_REF eq ref $args[0] ) {
 	    my $opt = shift @args;
+	    my @orig_keys = sort keys %{ $opt };
+	    my $lgl = $self->__legal_options( $code, $opt );
+	    my %opt_name = (
+		level1	=> 1,
+	    );
+	    my $name;
+	    foreach my $inx ( 0 .. $#$lgl ) {
+		if ( CODE_REF eq ref $lgl->[$inx] ) {
+		    defined $name
+			or die "Bug - \$name undefined. Inx $inx; lgl @$lgl";
+		    if ( exists $opt->{$name} ) {
+			$lgl->[$inx]->( $name, $opt->{$name} );
+		    }
+		} else {
+		    ( $name = $lgl->[ $inx ] ) =~ s/ \W .* //smx;
+		    $opt_name{$name} = 1;
+		}
+	    }
+	    foreach my $key ( @orig_keys ) {
+		$opt_name{$key}
+		    or __error_out( $self, wail => "Illegal option '$key'" );
+	    }
 	    _apply_default( $self, $opt, \@args );
 	    return( $self, $opt, @args );
 	}
@@ -116,7 +140,6 @@ use constant SCALAR_REF	=> ref \1;
 
 
 	my ( $err, %opt );
-	my $code = \&{ ( caller 1 )[3] };
 	my $lgl = $self->__legal_options( $code, \%opt );
 
 	local $SIG{__WARN__} = sub {$err = $_[0]};
