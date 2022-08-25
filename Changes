@@ -1,3 +1,6 @@
+0.049_002	2022-08-25	T. R. Wyant
+    Add completion for formatter command.
+
 0.049_001	2022-08-18	T. R. Wyant
     Correct processing of options specified as hash refs to be more like
     the processing of command-style options.
