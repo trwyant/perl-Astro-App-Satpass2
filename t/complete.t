@@ -44,6 +44,34 @@ complete( 'almanac -h', [ qw{ -horizon } ] );
 
 complete( 'almanac --h', [ qw{ --horizon } ] );
 
+complete( 'formatter ', [ qw{
+	date_format
+	desired_equinox_dynamical
+	gmt
+	local_coord
+	template
+	time_format
+	tz
+	} ] );
+
+complete( 'formatter d', [ qw{
+	date_format
+	desired_equinox_dynamical
+	} ] );
+
+complete( 'formatter te', [ qw{
+	template
+	} ] );
+
+complete( 'formatter template -', [ qw{
+	-changes
+	-raw
+	} ] );
+
+complete( 'formatter template lo', [ qw{
+	location
+	} ] );
+
 complete( 'macro ', [ qw{ brief define delete list load } ] );
 
 complete( 'core.macro ', [ qw{ brief define delete list load } ] );

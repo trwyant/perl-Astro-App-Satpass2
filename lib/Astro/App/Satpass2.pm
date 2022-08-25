@@ -1022,9 +1022,54 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! q
     return $self->__format_data( flare => \@flares, $opt );
 }
 
-sub formatter : Verb() {
+sub formatter : Verb() Tweak( -completion _readline_complete_subcommand ) {
     splice @_, ( HASH_REF eq ref $_[1] ? 2 : 1 ), 0, 'formatter';
     goto &_helper_handler;
+}
+
+# Calls to the following _formatter_sub method are generated dynamically
+# above, so there is no way Perl::Critic can find them.
+
+sub _formatter_sub {	## no critic (ProhibitUnusedPrivateSubroutines)
+    my ( $app, $text, $line, $start, @arg ) = @_;
+    my $fmtr = $app->get( 'formatter' );
+    if ( @arg == 2 ) {
+	my @list = qw{
+	    date_format
+	    desired_equinox_dynamical
+	    gmt
+	    local_coord
+	    time_format
+	    tz
+	};
+	$fmtr->can( '__list_templates' )
+	    and push @list, 'template';
+	my $re = qr/ \A \Q$arg[1]\E /smx;
+	return [ grep { $_ =~ $re } sort @list ];
+    }
+    my $code = $app->can( "_formatter_complete_$arg[1]" )
+	or return;
+
+    my $r;
+    $r = $app->_readline_complete_options( $code, $text, $line,
+	$start )
+	and return $r;
+
+    return $code->( $app, @arg );
+}
+
+# Calls to the following _formatter_complete_... methods are generated
+# dynamically above, so there is no way Perl::Critic can find them.
+# The Verb attribute must aggree with _helper_handler().
+
+sub _formatter_complete_template : Verb( changes! raw! ) {	## no critic (ProhibitUnusedPrivateSubroutines)
+    my ( $app, undef, @arg ) = __arguments( @_ );
+    my $fmtr = $app->get( 'formatter' );
+    my $re = qr/ \A \Q$arg[2]\E /smx;
+    return [
+	grep { $_ =~ $re }
+	sort( $fmtr->__list_templates() )
+    ];
 }
 
 sub geocode : Verb( debug! ) {
@@ -2973,8 +3018,9 @@ sub _sky_object {
     return;
 }
 
-# Calls to the following _macro_sub_... methods are generated dynamically
+# Calls to the following _sky_sub_... methods are generated dynamically
 # above, so there is no way Perl::Critic can find them.
+#
 sub _sky_sub_add : Verb()  {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, undef, @args ) = __arguments( @_ );	# $opt unused
     my $name = shift @args
@@ -4445,6 +4491,9 @@ sub _readline_complete_subcommand { ## no critic (ProhibitUnusedPrivateSubroutin
     # my ( $app, $code, $text, $line, $start ) = @_;
     my ( $app, undef, $text, $line, $start ) = @_;
     my @part = _readline_line_to_parts( $line );
+    if ( my $code = $app->can( "_$part[0]_sub" ) ) {
+	return $code->( $app, $text, $line, $start, @part );
+    }
     my @rslt;
     if ( 2 == @part ) {
 	my $re = qr< \A _$part[0]_sub_ ( \Q$part[1]\E \w* ) >smx;
