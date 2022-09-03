@@ -1,14 +1,10 @@
-0.049_002	2022-08-25	T. R. Wyant
+0.049_01	2022-09-03	T. R. Wyant
     Add completion for formatter command.
 
-0.049_001	2022-08-18	T. R. Wyant
     Correct processing of options specified as hash refs to be more like
     the processing of command-style options.
 
     Have template pass_ics pay attention to --magnitude.
-
-    Don't exclude Time::HiRes from optionals_test because as of
-    Test-Simple 1.302190 (March 4 2022) Test::Builder uses it.
 
 0.049		2021-11-04	T. R. Wyant
     Add command completion if Term::ReadLine::Perl is available. This
