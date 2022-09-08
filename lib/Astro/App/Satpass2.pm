@@ -78,7 +78,13 @@ BEGIN {
 # The following is returned by method _attribute_value() when a
 # non-existent attribute is specified. We can't use undef for this,
 # because the attribute might really be undef.
-use constant NULL	=> bless \( my $x = undef ), 'Null';
+# NOTE that this used to be just bless \( $x = undef ) ..., but blead
+# Perl 6a011f13d7690dbe2e03ad7500756c983bcb1834 did not like this
+# (modificatoin of read-only variable).
+use constant NULL	=> do {
+    my $x = undef;
+    bless \$x, 'Null';
+};
 # The canonical way to see if $rslt actually contains the above is
 # NULL_REF eq ref $rslt
 use constant NULL_REF	=> ref NULL;
