@@ -26,6 +26,8 @@ our @EXPORT = qw{
     klass
     dump_date_manip
     dump_date_manip_init
+    dump_zones
+    dump_zones_init
     execute
     load_or_skip
     call_m
@@ -109,7 +111,6 @@ sub klass {
 }
 
 {
-
     my $dumped;
 
     sub dump_date_manip {
@@ -146,35 +147,73 @@ sub klass {
 	    # Only displays for Date::Manip v6 interface
 	    $app->can( 'dmd_zone' )
 		and diag 'dmd_zone = ', $app->dmd_zone();
+	    $app->can( '__epoch_offset' )
+		and diag 'epoch_offset = ', $app->__epoch_offset();
 	}
 
-	if ( eval { require DateTime::TimeZone; 1; } ) {
-	    my $dt_zone = DateTime::TimeZone->new( name => 'local')->name();
-	    diag "DateTime::TimeZone is '$dt_zone'";
-	} else {
-	    diag 'DateTime::TimeZone not available';
+	{
+	    local $ENV{DATE_MANIP_DEBUG} = 1;
+	    use Date::Manip::TZ;
+	    my $text;
+	    open my $fh, '>', \$text;
+	    local *STDOUT = $fh;
+	    Date::Manip::TZ->new();
+	    close $fh;
+	    diag $text;
 	}
 
-	diag strftime(
-	    q<POSIX zone: %z ('%Z')>, localtime( $time_tested || 0 ) );
-
-	eval {
-	    no strict qw{ refs };
-	    my $class = defined $Time::y2038::VERSION ? 'Time::y2038' :
-		'Time::Local';
-	    diag sprintf 'Time to epoch uses %s %s', $class,
-		$class->VERSION();
-	};
-
-	diag q<$ENV{TZ} = >, defined $ENV{TZ} ? "'$ENV{TZ}'" : 'undef';
-
-	return;
+	goto &__dump_zones;
     }
 
     sub dump_date_manip_init {
 	$dumped = undef;
 	return;
     }
+}
+
+{
+    my $dumped;
+
+    sub dump_zones {
+	my ( $time_tested ) = @_;
+	$dumped++
+	    and return;
+
+	goto &__dump_zones;
+    }
+
+    sub dump_zones_init {
+	$dumped = undef;
+	return;
+    }
+}
+
+sub __dump_zones {
+    my ( $time_tested ) = @_;
+
+    if ( eval { require DateTime::TimeZone; 1; } ) {
+	my $dt_zone = DateTime::TimeZone->new( name => 'local')->name();
+	diag "DateTime::TimeZone is '$dt_zone'";
+    } else {
+	diag 'DateTime::TimeZone not available';
+    }
+
+    diag strftime(
+	q<POSIX zone: %z ('%Z')>, localtime( $time_tested || 0 ) );
+
+    eval {
+	no strict qw{ refs };
+	my $class = defined $Time::y2038::VERSION ? 'Time::y2038' :
+	    'Time::Local';
+	diag sprintf 'Time to epoch uses %s %s', $class,
+	    $class->VERSION();
+    };
+
+    diag '$main::TZ is ', defined $main::TZ ? "'$main::TZ'" : 'undef';
+
+    diag q<$ENV{TZ} = >, defined $ENV{TZ} ? "'$ENV{TZ}'" : 'undef';
+
+    return;
 }
 
 sub execute {	## no critic (RequireArgUnpacking)

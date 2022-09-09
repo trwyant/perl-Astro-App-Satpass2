@@ -127,7 +127,6 @@ call_m( perltime => 1, TRUE, 'Set perltime true' );
 my $time_local = greg_time_local( 0, 0, 0, 1, 0, 2009 );
 call_m( parse => '20090101T000000',
     $time_local,
-    greg_time_local( 0, 0, 0, 1, 0, 2009 ),
     'Parse ISO-8601 20090101T000000' )
     or dump_date_manip( $time_local );
 

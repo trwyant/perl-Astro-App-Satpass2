@@ -12,6 +12,7 @@ use Astro::App::Satpass2::Utils qw{
     __parse_class_and_args
     @CARP_NOT
 };
+use Astro::Coord::ECI::Utils 0.112 qw{ greg_time_gm };
 
 our $VERSION = '0.049_01';
 
@@ -29,6 +30,14 @@ sub delegate {
     defined ( $back_end = __date_manip_backend() )
 	or return $back_end;
     return __PACKAGE__ . "::v$back_end";
+}
+
+{
+    my $epoch_offset = greg_time_gm( 0, 0, 0, 1, 0, 1970 );
+
+    sub __epoch_offset {
+	return $epoch_offset;
+    }
 }
 
 sub station {
