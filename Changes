@@ -1,3 +1,8 @@
+0.049_02	2022-09-09	T. R. Wyant
+    Try to get more information out of testers' parse errors.
+
+    Fix Blead error, as of 6a011f13d7690dbe2e03ad7500756c983bcb1834
+
 0.049_01	2022-09-03	T. R. Wyant
     Add completion for formatter command.
 

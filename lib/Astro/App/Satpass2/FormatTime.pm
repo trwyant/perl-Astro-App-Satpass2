@@ -11,7 +11,7 @@ use parent qw{ Astro::App::Satpass2::Copier };
 
 use Astro::App::Satpass2::Utils qw{ @CARP_NOT };
 
-our $VERSION = '0.049_01';
+our $VERSION = '0.049_02';
 
 use constant ROUND_TIME => 1;
 
