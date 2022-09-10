@@ -42,8 +42,9 @@ BEGIN {
     # If I should need to write a test that uses a dirty environment (or
     # at least wants something in $ENV{TZ}) the plan is to handle it via
     # the import mechanism. See @EXPORT_FAIL, which is good back to at
-    # least 5.12.
-    delete $ENV{TZ};
+    # least 5.12. Except this may be causing problems with CPAN Testers
+    # machines set up correctly for zones other than their default.
+    # delete $ENV{TZ};
 
     # Note that we have to load Astro::App::Satpass2 this way because we
     # need to clean up the environment before we do the load.
@@ -153,13 +154,16 @@ sub klass {
 
 	{
 	    local $ENV{DATE_MANIP_DEBUG} = 1;
-	    use Date::Manip::TZ;
-	    my $text;
-	    open my $fh, '>', \$text;
-	    local *STDOUT = $fh;
-	    Date::Manip::TZ->new();
-	    close $fh;
-	    diag $text;
+	    local $@ = undef;
+	    eval {
+		require Date::Manip::TZ;
+		my $text;
+		open my $fh, '>', \$text;
+		local *STDOUT = $fh;
+		Date::Manip::TZ->new();
+		close $fh;
+		diag $text;
+	    };
 	}
 
 	goto &__dump_zones;
