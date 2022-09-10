@@ -1,3 +1,8 @@
+0.049_03	2022-09-10	T. R. Wyant
+    Silence DM5 deprecation warnings.
+
+    Fix (I hope!) egregious test failures in favor of more informative ones.
+
 0.049_02	2022-09-09	T. R. Wyant
     Try to get more information out of testers' parse errors.
 
