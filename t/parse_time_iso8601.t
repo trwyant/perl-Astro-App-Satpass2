@@ -20,7 +20,7 @@ use constant TEST_MOCKTIME	=> do {
 
 use My::Module::Test::App;
 
-use Astro::Coord::ECI::Utils 0.112 qw{ greg_time_gm greg_time_local };
+# use Astro::Coord::ECI::Utils 0.112 qw{ greg_time_gm greg_time_local };
 
 # >>>> THIS MUST BE DONE BEFORE ANY TESTS <<<<
 #

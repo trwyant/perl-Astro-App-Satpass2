@@ -29,6 +29,8 @@ our @EXPORT = qw{
     dump_zones
     dump_zones_init
     execute
+    greg_time_gm
+    greg_time_local
     load_or_skip
     call_m
     normalize_path
@@ -70,6 +72,51 @@ use constant TRUE => sub {
     shift;
     goto &ok;
 };
+
+BEGIN {
+    local $@ = undef;
+
+    use constant HAVE_DATETIME => eval {
+	require DateTime;
+	1;
+    } || 0;
+
+    if ( HAVE_DATETIME ) {
+	my $tz_utc;
+	my $tz_local;
+	sub _dtz_to_epoch {
+	    my ( $sec, $min, $hr, $day, $mon, $yr, $zone ) = @_;
+	    ( $sec, my $nano ) = POSIX::modf( $sec );
+	    $nano *= 1_000_000_000;
+	    return DateTime->new(
+		year	=> $yr,
+		month	=> $mon + 1,
+		day	=> $day,
+		hour	=> $hr,
+		minute	=> $min,
+		second	=> $sec,
+		nanosecond	=> $nano,
+		time_zone	=> $zone,
+	    )->epoch();
+	};
+	*greg_time_gm = sub {
+	    my ( $sec, $min, $hr, $day, $mon, $yr ) = @_;
+	    $tz_utc ||= DateTime::TimeZone->new( name => 'UTC' );
+	    return _dtz_to_epoch( $sec, $min, $hr, $day, $mon, $yr, $tz_utc );
+	};
+	*greg_time_local = sub {
+	    my ( $sec, $min, $hr, $day, $mon, $yr ) = @_;
+	    $tz_local ||= DateTime::TimeZone->new( name => 'local' );
+	    return _dtz_to_epoch( $sec, $min, $hr, $day, $mon, $yr, $tz_local );
+	};
+    } else {
+	require Astro::Coord::ECI::Utils;
+	Astro::Coord::ECI::Utils->VERSION( 0.112 );
+	Astro::Coord::ECI::Utils->import(
+	    qw{ greg_time_gm greg_time_local } );
+    }
+
+}
 
 sub application {
     return $app;
