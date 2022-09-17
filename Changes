@@ -1,3 +1,11 @@
+0.049_04	2022-09-17	T. R. Wyant
+    Try to use consistent times for t/parse_time_iso8601.t
+    What I think was happening was that I was running into setups where the
+    POSIX zone and DateTime zone were inconsistent. The ::ParseTime::ISO8601
+    module uses DateTime to build a time if it is available, otherwise
+    Time::Local. But the test was always using Time::Local. This (I think)
+    produced test failures.
+
 0.049_03	2022-09-10	T. R. Wyant
     Silence DM5 deprecation warnings.
 
