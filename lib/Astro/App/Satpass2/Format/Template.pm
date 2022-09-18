@@ -27,7 +27,7 @@ use Template::Provider;
 use Text::Abbrev;
 use Text::Wrap qw{ wrap };
 
-our $VERSION = '0.049_04';
+our $VERSION = '0.049_05';
 
 sub new {
     my ($class, @args) = @_;

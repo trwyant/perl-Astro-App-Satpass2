@@ -1,3 +1,6 @@
+0.049_05	2022-09-18	T. R. Wyant
+    Correct ISO-8601 parse testing against DateTime.
+
 0.049_04	2022-09-17	T. R. Wyant
     Try to use consistent times for t/parse_time_iso8601.t
     What I think was happening was that I was running into setups where the
