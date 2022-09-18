@@ -120,7 +120,7 @@ call_m( parse => '20090701T000000Z',
     or dump_zones( $time_gm );
 
 $time_local = greg_time_local( 37, 23, 16, 2, 6, 2009 );
-call_m( parse => '20090702162337',
+call_m( parse => '20090702T162337',
     $time_local,
     q{Parse ISO-8601 '20090702162337'} )
     or dump_zones( $time_local );

@@ -21,9 +21,10 @@ use constant REGEXP_REF	=> ref qr{};
 
 our @EXPORT = qw{
     application
+    call_m
+    call_m_result
     check_access
     check_datetime_timezone_local
-    klass
     dump_date_manip
     dump_date_manip_init
     dump_zones
@@ -31,8 +32,8 @@ our @EXPORT = qw{
     execute
     greg_time_gm
     greg_time_local
+    klass
     load_or_skip
-    call_m
     normalize_path
     same_path
     FALSE
@@ -86,11 +87,12 @@ BEGIN {
 	my $tz_local;
 	sub _dtz_to_epoch {
 	    my ( $sec, $min, $hr, $day, $mon, $yr, $zone ) = @_;
-	    ( $sec, my $nano ) = POSIX::modf( $sec );
+	    $mon += 1;
+	    ( my $nano, $sec ) = POSIX::modf( $sec );
 	    $nano *= 1_000_000_000;
 	    return DateTime->new(
 		year	=> $yr,
-		month	=> $mon + 1,
+		month	=> $mon,
 		day	=> $day,
 		hour	=> $hr,
 		minute	=> $min,
@@ -144,6 +146,7 @@ sub check_access {
 sub check_datetime_timezone_local {
     local $@ = undef;
     eval {
+	require DateTime;
 	require DateTime::TimeZone;
 	1;
     } or return 1;
@@ -163,6 +166,9 @@ sub klass {
 
     sub dump_date_manip {
 	my ( $time_tested ) = @_;
+
+	diag 'Difference is ', $time_tested - call_m_result();
+
 	$dumped++
 	    and return;
 
@@ -227,6 +233,9 @@ sub klass {
 
     sub dump_zones {
 	my ( $time_tested ) = @_;
+
+	diag 'Difference is ', $time_tested - call_m_result();
+
 	$dumped++
 	    and return;
 
@@ -241,6 +250,12 @@ sub klass {
 
 sub __dump_zones {
     my ( $time_tested ) = @_;
+
+    if ( HAVE_DATETIME ) {
+	diag 'Have DateTime ', DateTime->VERSION();
+    } else {
+	diag 'DateTime not available';
+    }
 
     if ( eval { require DateTime::TimeZone; 1; } ) {
 	my $dt_zone = DateTime::TimeZone->new( name => 'local')->name();
@@ -328,31 +343,38 @@ sub execute {	## no critic (RequireArgUnpacking)
     }
 }
 
-sub call_m {	## no critic (RequireArgUnpacking)
-    my ( $method, @args ) = @_;
-    my ( $want, $title ) = splice @args, -2;
+{
     my $got;
-    if ( eval { $got = $app->$method( @args ); 1 } ) {
 
-	if ( CODE_REF eq ref $want ) {
-	    @_ = ( $want, $got, $title );
-	    goto &$want;
-	}
+    sub call_m {	## no critic (RequireArgUnpacking)
+	my ( $method, @args ) = @_;
+	my ( $want, $title ) = splice @args, -2;
+	if ( eval { $got = $app->$method( @args ); 1 } ) {
 
-	foreach ( $want, $got ) {
-	    defined and not ref and chomp;
+	    if ( CODE_REF eq ref $want ) {
+		@_ = ( $want, $got, $title );
+		goto &$want;
+	    }
+
+	    foreach ( $want, $got ) {
+		defined and not ref and chomp;
+	    }
+	    @_ = ( $got, $want, $title );
+	    REGEXP_REF eq ref $want ? goto &like :
+		ref $want ? goto &is_deeply : goto &is;
+	} else {
+	    $got = $@;
+	    chomp $got;
+	    defined $want or $want = 'Unexpected error';
+	    REGEXP_REF eq ref $want
+		or $want = qr<\Q$want>smx;
+	    @_ = ( $got, $want, $title );
+	    goto &like;
 	}
-	@_ = ( $got, $want, $title );
-	REGEXP_REF eq ref $want ? goto &like :
-	    ref $want ? goto &is_deeply : goto &is;
-    } else {
-	$got = $@;
-	chomp $got;
-	defined $want or $want = 'Unexpected error';
-	REGEXP_REF eq ref $want
-	    or $want = qr<\Q$want>smx;
-	@_ = ( $got, $want, $title );
-	goto &like;
+    }
+
+    sub call_m_result {
+	return $got;
     }
 }
 
@@ -590,6 +612,14 @@ the actual result is logically inverted before the test.
 If the desired result is a C<Regexp>, the results are tested with
 C<like()>. If it is any other reference, the test is done with
 C<is_deeply()>. Otherwise, they are tested with C<is()>.
+
+=head2 call_m_result
+
+ call_m get => 'twilight', 'civil', 'Confirm civil twilight';
+ say call_m_result;
+
+This subroutine returns whatever value was returned by the method call
+executed by the most-recent C<call_m()>.
 
 =head2 normalize_path
 
