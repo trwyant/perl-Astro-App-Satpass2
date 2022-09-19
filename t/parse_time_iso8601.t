@@ -18,9 +18,22 @@ use constant TEST_MOCKTIME	=> do {
 
 };
 
+use Astro::App::Satpass2::Utils qw{ HAVE_DATETIME };
+
 use My::Module::Test::App;
 
-# use Astro::Coord::ECI::Utils 0.112 qw{ greg_time_gm greg_time_local };
+BEGIN {
+    local $@ = undef;
+    if ( HAVE_DATETIME ) {
+	*greg_time_gm = \&dt_greg_time_gm;
+	*greg_time_local = \&dt_greg_time_local;
+    } else {
+	require Astro::Coord::ECI::Utils;
+	Astro::Coord::ECI::Utils->VERSION( 0.112 );
+	Astro::Coord::ECI::Utils->import(
+	    qw{ greg_time_gm greg_time_local } );
+    }
+}
 
 # >>>> THIS MUST BE DONE BEFORE ANY TESTS <<<<
 #

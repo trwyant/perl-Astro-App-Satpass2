@@ -25,13 +25,13 @@ our @EXPORT = qw{
     call_m_result
     check_access
     check_datetime_timezone_local
+    dt_greg_time_gm
+    dt_greg_time_local
     dump_date_manip
     dump_date_manip_init
     dump_zones
     dump_zones_init
     execute
-    greg_time_gm
-    greg_time_local
     klass
     load_or_skip
     normalize_path
@@ -74,52 +74,6 @@ use constant TRUE => sub {
     goto &ok;
 };
 
-BEGIN {
-    local $@ = undef;
-
-    use constant HAVE_DATETIME => eval {
-	require DateTime;
-	1;
-    } || 0;
-
-    if ( HAVE_DATETIME ) {
-	my $tz_utc;
-	my $tz_local;
-	sub _dtz_to_epoch {
-	    my ( $sec, $min, $hr, $day, $mon, $yr, $zone ) = @_;
-	    $mon += 1;
-	    ( my $nano, $sec ) = POSIX::modf( $sec );
-	    $nano *= 1_000_000_000;
-	    return DateTime->new(
-		year	=> $yr,
-		month	=> $mon,
-		day	=> $day,
-		hour	=> $hr,
-		minute	=> $min,
-		second	=> $sec,
-		nanosecond	=> $nano,
-		time_zone	=> $zone,
-	    )->epoch();
-	};
-	*greg_time_gm = sub {
-	    my ( $sec, $min, $hr, $day, $mon, $yr ) = @_;
-	    $tz_utc ||= DateTime::TimeZone->new( name => 'UTC' );
-	    return _dtz_to_epoch( $sec, $min, $hr, $day, $mon, $yr, $tz_utc );
-	};
-	*greg_time_local = sub {
-	    my ( $sec, $min, $hr, $day, $mon, $yr ) = @_;
-	    $tz_local ||= DateTime::TimeZone->new( name => 'local' );
-	    return _dtz_to_epoch( $sec, $min, $hr, $day, $mon, $yr, $tz_local );
-	};
-    } else {
-	require Astro::Coord::ECI::Utils;
-	Astro::Coord::ECI::Utils->VERSION( 0.112 );
-	Astro::Coord::ECI::Utils->import(
-	    qw{ greg_time_gm greg_time_local } );
-    }
-
-}
-
 sub application {
     return $app;
 }
@@ -161,13 +115,50 @@ sub klass {
     return;
 }
 
+sub _dtz_to_epoch {
+    my ( $sec, $min, $hr, $day, $mon, $yr, $zone ) = @_;
+    $mon += 1;
+    ( my $nano, $sec ) = POSIX::modf( $sec );
+    $nano *= 1_000_000_000;
+    return DateTime->new(
+	year	=> $yr,
+	month	=> $mon,
+	day	=> $day,
+	hour	=> $hr,
+	minute	=> $min,
+	second	=> $sec,
+	nanosecond	=> $nano,
+	time_zone	=> $zone,
+    )->epoch();
+}
+
+{
+    my $tz_utc;
+
+    sub dt_greg_time_gm {
+	my ( $sec, $min, $hr, $day, $mon, $yr ) = @_;
+	$tz_utc ||= DateTime::TimeZone->new( name => 'UTC' );
+	return _dtz_to_epoch( $sec, $min, $hr, $day, $mon, $yr, $tz_utc );
+    }
+}
+
+{
+    my $tz_local;
+
+    sub dt_greg_time_local {
+	my ( $sec, $min, $hr, $day, $mon, $yr ) = @_;
+	$tz_local ||= DateTime::TimeZone->new( name => 'local' );
+	return _dtz_to_epoch( $sec, $min, $hr, $day, $mon, $yr, $tz_local );
+    }
+}
+
 {
     my $dumped;
 
     sub dump_date_manip {
 	my ( $time_tested ) = @_;
 
-	diag 'Difference is ', $time_tested - call_m_result();
+	diag '  difference: ', $time_tested - call_m_result();
 
 	$dumped++
 	    and return;
@@ -234,7 +225,7 @@ sub klass {
     sub dump_zones {
 	my ( $time_tested ) = @_;
 
-	diag 'Difference is ', $time_tested - call_m_result();
+	diag '  difference: ', $time_tested - call_m_result();
 
 	$dumped++
 	    and return;
@@ -251,13 +242,14 @@ sub klass {
 sub __dump_zones {
     my ( $time_tested ) = @_;
 
-    if ( HAVE_DATETIME ) {
+    if ( eval { require DateTime; 1; } ) {
 	diag 'Have DateTime ', DateTime->VERSION();
     } else {
 	diag 'DateTime not available';
     }
 
     if ( eval { require DateTime::TimeZone; 1; } ) {
+	diag 'Have DateTime::TimeZone ', DateTime::TimeZone->VERSION();
 	my $dt_zone = DateTime::TimeZone->new( name => 'local')->name();
 	diag "DateTime::TimeZone is '$dt_zone'";
     } else {
@@ -522,6 +514,18 @@ this machinery will sort things out.
 
 This subroutine replaces the stored object (if any) with the given class
 name. The stored object is initialized to C<'Astro::App::Satpass2'>.
+
+=head2 dt_greg_time_gm
+
+This has the same signature and return as C<greg_time_gm> in
+L<Astro::Coord::ECI::Utils|Astro::Coord::ECI::Utils>, but the heavy
+lifting is done by L<DateTime|DateTime>.
+
+=head2 dt_greg_time_local
+
+This has the same signature and return as C<greg_time_local> in
+L<Astro::Coord::ECI::Utils|Astro::Coord::ECI::Utils>, but the heavy
+lifting is done by L<DateTime|DateTime>.
 
 =head2 execute
 

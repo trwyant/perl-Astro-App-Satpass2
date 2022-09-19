@@ -59,6 +59,7 @@ our @EXPORT_OK = qw{
     __legal_options
     __parse_class_and_args
     ARRAY_REF CODE_REF HASH_REF REGEXP_REF SCALAR_REF
+    HAVE_DATETIME
     @CARP_NOT
 };
 
@@ -71,6 +72,17 @@ use constant CODE_REF	=> ref sub {};
 use constant HASH_REF	=> ref {};
 use constant REGEXP_REF	=> ref qr{};
 use constant SCALAR_REF	=> ref \1;
+
+{
+    local $@ = undef;
+
+    use constant HAVE_DATETIME => eval {
+	require DateTime;
+	require DateTime::TimeZone;
+	1;
+    } || 0;
+
+}
 
 # Documented in POD
 
@@ -878,6 +890,12 @@ This constant is simply C<ref qr{}>.
 =head2 SCALAR_REF
 
 This constant is simply C<ref \1>.
+
+=head2 HAVE_DATETIME
+
+This Boolean constant is true if L<DateTime|DateTime> and
+L<DateTime::TimeZone|DateTime::TimeZone> can be loaded, and false if
+not.
 
 =head1 GLOBALS
 

@@ -5,6 +5,7 @@ use warnings;
 
 use Astro::App::Satpass2::Utils qw{
     back_end __back_end_class_name_of_record __parse_class_and_args
+    HAVE_DATETIME
     @CARP_NOT
 };
 use Astro::Coord::ECI::Utils 0.112 qw{
@@ -15,16 +16,6 @@ use parent qw{ Astro::App::Satpass2::ParseTime };
 our $VERSION = '0.049_05';
 
 my $package = __PACKAGE__;
-
-{
-    local $@ = undef;
-
-    use constant HAVE_DATETIME => eval {
-	require DateTime;
-	1;
-    } || 0;
-
-}
 
 sub attribute_names {
     my ( $self ) = @_;
