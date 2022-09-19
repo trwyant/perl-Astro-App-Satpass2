@@ -14,7 +14,7 @@ use Astro::App::Satpass2::Utils qw{
 };
 use Astro::App::Satpass2::Warner;
 
-our $VERSION = '0.049_05';
+our $VERSION = '0.049_06';
 
 sub new {
     my ( $class, %args ) = @_;
