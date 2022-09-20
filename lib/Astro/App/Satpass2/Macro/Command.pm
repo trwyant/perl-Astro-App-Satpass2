@@ -9,7 +9,7 @@ use parent qw{ Astro::App::Satpass2::Macro };
 
 use Astro::App::Satpass2::Utils qw{ quoter ARRAY_REF @CARP_NOT };
 
-our $VERSION = '0.049_06';
+our $VERSION = '0.049_07';
 
 sub execute {
     my ( $self, $name ) = @_;

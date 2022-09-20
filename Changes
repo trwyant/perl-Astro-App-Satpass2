@@ -1,3 +1,6 @@
+0.049_07	2022-09-20	T. R. Wyant
+    Re-fix t/parse_time_date_manip_6.t. Sigh.
+
 0.049_06	2022-09-19	T. R. Wyant
     Clean up time parsing code and tests.  Without breaking anything, I
     hope.

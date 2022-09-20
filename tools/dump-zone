@@ -21,7 +21,7 @@ use lib 'inc';
 
 use My::Module::Test::App qw{ dump_date_manip dump_zones klass };
 
-our $VERSION = '0.049_06';
+our $VERSION = '0.049_07';
 
 my %opt;
 

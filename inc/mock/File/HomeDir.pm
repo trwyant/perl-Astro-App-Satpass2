@@ -9,7 +9,7 @@ use Carp;
 
 use constant HASH_REF	=> ref {};
 
-our $VERSION = '0.049_06';
+our $VERSION = '0.049_07';
 
 our $MOCK_FILE_HOMEDIR_MY_DIST_CONFIG;
 our $MOCK_FILE_HOMEDIR_MY_HOME;

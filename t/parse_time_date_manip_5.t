@@ -10,6 +10,8 @@ use My::Module::Test::App;
 
 BEGIN {
 
+    local $@ = undef;
+
     eval {
 
 	no warnings qw{ deprecated once };
