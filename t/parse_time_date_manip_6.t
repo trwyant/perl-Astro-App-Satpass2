@@ -7,6 +7,7 @@ use lib qw{ inc };
 
 use Test::More 0.88;
 use My::Module::Test::App;
+use Astro::App::Satpass2::Utils qw{ HAVE_DATETIME };
 
 BEGIN {
 
@@ -36,11 +37,13 @@ BEGIN {
 	or plan skip_all =>
 	    "Date::Manip version 6 backend not available under Perl $]";
 
-    require Astro::Coord::ECI::Utils;
-    Astro::Coord::ECI::Utils->VERSION( '0.112' );
-    Astro::Coord::ECI::Utils->import( qw{ greg_time_gm greg_time_local } );
+    if ( HAVE_DATETIME ) {
 
-    {
+	*greg_time_gm = \&dt_greg_time_gm;
+	*greg_time_local = \&dt_greg_time_local;
+
+	local $@ = undef;
+
 	my ( $dm_zone, $dt_zone );
 	eval {
 	    $dm_zone = Date::Manip::Date_TimeZone();
@@ -50,6 +53,13 @@ BEGIN {
 	} and lc $dm_zone ne lc $dt_zone
 	    and plan skip_all =>
 	    "Date::Manip zone is '$dm_zone' but DateTime zone is '$dt_zone'";
+
+    } else {
+
+	require Astro::Coord::ECI::Utils;
+	Astro::Coord::ECI::Utils->VERSION( '0.112' );
+	Astro::Coord::ECI::Utils->import( qw{ greg_time_gm greg_time_local } );
+
     }
 
 }
