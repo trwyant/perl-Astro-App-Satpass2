@@ -1,32 +1,11 @@
-0.049_07	2022-09-20	T. R. Wyant
-    Re-fix t/parse_time_date_manip_6.t. Sigh.
-
-0.049_06	2022-09-19	T. R. Wyant
-    Clean up time parsing code and tests.  Without breaking anything, I
-    hope.
-
-0.049_05	2022-09-18	T. R. Wyant
-    Correct ISO-8601 parse testing against DateTime.
-
-0.049_04	2022-09-17	T. R. Wyant
-    Try to use consistent times for t/parse_time_iso8601.t
-    What I think was happening was that I was running into setups where the
-    POSIX zone and DateTime zone were inconsistent. The ::ParseTime::ISO8601
-    module uses DateTime to build a time if it is available, otherwise
-    Time::Local. But the test was always using Time::Local. This (I think)
-    produced test failures.
-
-0.049_03	2022-09-10	T. R. Wyant
+0.050		2022-09-28	T. R. Wyant
     Silence DM5 deprecation warnings.
 
-    Fix (I hope!) egregious test failures in favor of more informative ones.
-
-0.049_02	2022-09-09	T. R. Wyant
-    Try to get more information out of testers' parse errors.
+    More consistent testing of time parsing, primarily of DM6 and the
+    hand-rolled ISO parsing.
 
     Fix Blead error, as of 6a011f13d7690dbe2e03ad7500756c983bcb1834
 
-0.049_01	2022-09-03	T. R. Wyant
     Add completion for formatter command.
 
     Correct processing of options specified as hash refs to be more like
