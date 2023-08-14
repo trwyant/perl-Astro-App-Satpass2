@@ -122,6 +122,7 @@ sub _format_datetime_width_try {
 	hour	=> 3600,
 	minute	=> 60,
 	second	=> 1,
+	none	=> undef,
     );
 
     sub round_time {
@@ -145,7 +146,7 @@ sub __round_time_value {
     my ( $self, $time ) = @_;
     ref $time
 	and return $time;
-    if ( defined( my $round = $self->round_time() ) ) {
+    if ( my $round = $self->round_time() ) {
 	$time = POSIX::floor( ( $time + $round / 2 ) / $round ) * $round;
     }
     return $time;
@@ -263,12 +264,12 @@ arguments.
 If called with an argument, the argument becomes the new rounding
 specification, in seconds. The argument must be an integer number of
 seconds, the special-cased strings C<'second'>, C<'minute'> or C<'hour'>
-(which specify C<1>, C<60> and C<3600> respectively), or C<undef> to
-turn off rounding. Be aware that if rounding is turned off the time
-formatter may truncate the time.
+(which specify C<1>, C<60> and C<3600> respectively), or C<undef> or
+C<'none'> to turn off rounding. Be aware that if rounding is turned off
+the time formatter may truncate the time.
 
 If called without an argument, the current value of the C<round_time>
-attribute is returned. This will always be an integer.
+attribute is returned. This will always be an integer or C<undef>.
 
 The default value is C<1>.
 
