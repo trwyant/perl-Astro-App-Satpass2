@@ -520,7 +520,7 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter
 	$opt, 0, qw{ horizon transit twilight quarter } );
 
     my $almanac_start = $self->__parse_time(
-	shift @args, $self->_get_today_midnight());
+	shift @args, $self->_get_day_midnight());
     my $almanac_end = $self->__parse_time (shift @args || '+1');
 
     $almanac_start >= $almanac_end
@@ -2024,21 +2024,14 @@ sub pass : Verb( :compute __pass_options ) {
 	};
     }
 
-    unless ( $opt->{am} && $opt->{pm} ) {
-	if ( $opt->{am} ) {
-	    @accumulate = map { $_->[0] } grep { $_->[1] < 43200 } map {
-		[ $_, _local_tod( $_->{time} ) ] } @accumulate;
-	} else {
-	    @accumulate = map { $_->[0] } grep { $_->[1] >= 43200 } map {
-		[ $_, _local_tod( $_->{time} ) ] } @accumulate;
-	}
-    }
+    @accumulate = $self->__pass_filter_am_pm( $opt, @accumulate );
 
     $opt->{chronological}
 	and @accumulate = sort { $a->{time} <=> $b->{time} }
 	    @accumulate;
 
-    # Record number of events found
+    # Record number of events found.
+    # NOTE that in this case an event is an entire pass.
 
     $self->{events} += @accumulate;
 
@@ -2047,11 +2040,54 @@ sub pass : Verb( :compute __pass_options ) {
 
 }
 
+{
+    my %desired = map { $_ => 1 } qw{ horizon twilight };
+
+    sub __pass_almanac {
+	my ( $self, $pass, $opt ) = @_;
+
+	$pass
+	    or return;
+
+	my $body = $pass->{body};
+	my $sun = $body->get( 'illum' );
+	my $sta = $body->get( 'station' );
+	my $day = $self->_get_day_midnight( $pass->{time} );
+	return $self->__pass_filter_am_pm(
+	    $opt,
+	    map { {
+		    body	=> $sun,
+		    status	=> $_->[3],
+		    time	=> $_->[0],
+		} }
+	    grep { $desired{$_->[1]} } $sun->almanac( $sta, $day ),
+	);
+    }
+}
+
+sub __pass_filter_am_pm {
+    my ( undef, $opt, @accumulate ) = @_;
+    $opt ||= {};
+    $opt->{am}
+	and not $opt->{pm}
+	and return (
+	    map { $_->[0] } grep { $_->[1] < 43200 } map {
+		[ $_, _local_tod( $_->{time} ) ] } @accumulate
+	);
+    not $opt->{am}
+	and $opt->{pm}
+	and return (
+	    map { $_->[0] } grep { $_->[1] >= 43200 } map {
+		[ $_, _local_tod( $_->{time} ) ] } @accumulate
+	);
+    return @accumulate;
+}
+
 sub __pass_options {
     my ( $self, $opt ) = @_;
     return [
 	qw{
-	    choose=s@ am! appulse! brightest|magnitude!
+	    almanac! choose=s@ am! appulse! brightest|magnitude!
 	    chronological! dump! horizon|rise|set! illumination! pm!
 	    quiet! transit|maximum|culmination!
 	},
@@ -2214,7 +2250,7 @@ sub pwd : Verb() {
 	my ( $self, $opt, @args ) = __arguments( @_ );
 
 	my $start = $self->__parse_time (
-	    $args[0], $self->_get_today_midnight() );
+	    $args[0], $self->_get_day_midnight() );
 	my $end = $self->__parse_time ($args[1] || '+30');
 
 	$self->_apply_boolean_default( $opt, 0, map { "q$_" } 0 .. 3 );
@@ -4086,7 +4122,8 @@ sub __format_data {
     return $self->_get_formatter_object( $opt )->format(
 	sp	=> $self,
 	template => $action,
-	data => $data
+	data	=> $data,
+	opt	=> $opt,
     );
 }
 
@@ -4613,10 +4650,12 @@ sub _get_spacetrack_default {
     );
 }
 
-sub _get_today_midnight {
-    my $self = shift;
+sub _get_day_midnight {
+    my ( $self, $day ) = @_;
+    defined $day
+	or $day = time;
     my $gmt = $self->get( 'formatter' )->gmt();
-    my @time = $gmt ? gmtime() : localtime();
+    my @time = $gmt ? gmtime( $day ) : localtime( $day );
     $time[0] = $time[1] = $time[2] = 0;
     $time[5] += 1900;
     return $gmt ? greg_time_gm(@time) : greg_time_local(@time);
@@ -7345,6 +7384,10 @@ of the prediction (defaulting to C<'+7'>). See L</SPECIFYING TIMES> for
 how to specify times.
 
 The following options are available:
+
+C<-almanac> requests the inclusion of illuminating body rise/set and
+begin/end twilight times. This only does anything if the template
+supports it.
 
 C<-am> selects morning passes (i.e. between midnight and noon).
 

@@ -31,6 +31,9 @@ use Astro::Coord::ECI::Utils 0.112 qw{ deg2rad greg_time_gm };
 use Cwd ();
 use Time::Local;
 
+use constant APRIL_FOOL_2023	=> greg_time_gm( 0, 0, 0, 1, 3, 2023 );
+use constant FORMAT_VALUE	=> 'Astro::App::Satpass2::FormatValue';
+
 my $sta = Astro::Coord::ECI->new()->geodetic(
     deg2rad( 38.898748 ),
     deg2rad( -77.037684 ),
@@ -67,6 +70,35 @@ is_deeply
     'Check our implementation of uniq()';
 
 ok $ft, 'Instantiate Astro::App::Satpass2::Format::Template';
+
+# Protected method __wrap_method_call
+
+{
+    my $data = {
+	time	=> APRIL_FOOL_2023,
+    };
+
+    my $rslt = $ft->__wrap_method_call(
+	__PACKAGE__, 'april_fool', {} );
+
+    isa_ok $rslt, FORMAT_VALUE;
+
+    is_deeply $rslt->data, $data, 'Time was added to raw hash';
+
+    $rslt = $ft->__wrap_method_call(
+	__PACKAGE__, 'april_fool', FORMAT_VALUE->new( data => {} ) );
+
+    isa_ok $rslt, FORMAT_VALUE;
+
+    is_deeply $rslt->data, $data, 'Time was added to wrapped hash';
+}
+
+sub april_fool {
+    my ( undef, $hash ) = @_;
+    $hash ||= {};
+    $hash->{time} = APRIL_FOOL_2023;
+    return $hash;
+}
 
 ok $ft->template( fubar => <<'EOD' ), 'Can set custom template';
 Able was [% arg.0 %] ere [% arg.0 %] saw Elba

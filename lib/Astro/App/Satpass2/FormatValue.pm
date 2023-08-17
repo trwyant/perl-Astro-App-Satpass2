@@ -139,6 +139,11 @@ sub body {	# Required for template 'list', which needs to figure
     return $self->_get_eci( 'body' );
 }
 
+sub data {
+    my ( $self ) = @_;
+    return $self->_get( 'data' );
+}
+
 #	Mutators. These should be kept to a minimum.
 
 sub fixed_width {
@@ -2655,6 +2660,12 @@ This accessor exists because the
 L<Astro::App::Satpass2::Format::Template|Astro::App::Satpass2::Format::Template>
 L<list()|Astro::App::Satpass2::Format::Template/list> method needs to
 look at the body to decide what to display.
+
+=head3 data
+
+ $fmt->data();
+
+This accessor returns the original C<data> argument.
 
 =head2 Mutators
 

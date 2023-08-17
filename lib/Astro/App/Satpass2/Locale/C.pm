@@ -162,6 +162,7 @@ EOD
 [% UNLESS data %]
     [%- SET data = sp.pass( arg ) %]
 [%- END %]
+[%- SET prev_pass_date = '' %]
 [%- CALL title.title_gravity( TITLE_GRAVITY_BOTTOM ) %]
 [%- SET do_mag = sp.want_pass_variant( 'brightest' ) %]
 [%- WHILE title.more_title_lines %]
@@ -178,6 +179,19 @@ EOD
 
 [%- END %]
 [%- FOR pass IN data %]
+    [%- IF opt.almanac %]
+	[%- SET curr_pass_date = pass.date %]
+	[%- IF curr_pass_date != prev_pass_date %]
+	    [%- SET prev_pass_date = curr_pass_date %]
+	    [%- SET sun_events = wrap_method_call( sp, '__pass_almanac', pass, opt ) %]
+	    [%- SET evt = sun_events.first %]
+[% evt.date %]
+	    [%- FOREACH evt IN sun_events %]
+[% evt.time %] [% evt.status %]
+	    [%- END %]
+
+	[%- END %]
+    [%- END %]
     [%- events = pass.events %]
     [%- evt = events.first %]
 

@@ -29,6 +29,8 @@ use Text::Wrap qw{ wrap };
 
 our $VERSION = '0.050';
 
+use constant FORMAT_VALUE	=> 'Astro::App::Satpass2::FormatValue';
+
 sub new {
     my ($class, @args) = @_;
     my $self = $class->SUPER::new( @args );
@@ -79,7 +81,7 @@ sub add_formatter_method {
     $self->{formatter_method}{$fmtr_name}
 	and $self->{warner}->wail(
 	"Formatter method $fmtr_name already exists" );
-    Astro::App::Satpass2::FormatValue->can( $fmtr_name )
+    FORMAT_VALUE->can( $fmtr_name )
 	and $self->{warner}->wail(
 	"Formatter $fmtr_name can not override built-in formatter" );
     $self->{formatter_method}{$fmtr_name} =
@@ -386,6 +388,8 @@ sub _process {
     ARRAY_REF eq ref $arg{arg}
 	and $arg{arg} = Astro::App::Satpass2::Wrap::Array->new(
 	$arg{arg} );
+    $arg{wrap_method_call} = sub {
+	$self->__wrap_method_call( @_ ) };
     my $output;
     my $tt = $self->{tt};
 
@@ -418,7 +422,7 @@ sub _wrap {
     $data ||= {};
     $default ||= $self->__default();
 
-    if ( instance( $data, 'Astro::App::Satpass2::FormatValue' ) ) {
+    if ( instance( $data, FORMAT_VALUE ) ) {
 	# Do nothing
     } elsif ( ! defined $data || HASH_REF eq ref $data ) {
 	my $value_formatter = $self->value_formatter();
@@ -474,6 +478,31 @@ sub _wrap {
     }
 
     return $data;
+}
+
+#	__wrap_method_call
+#
+#	$rslt = $self->__wrap_method_call(
+#	    $invocant, $method, @args );
+#
+#	This subroutine extracts the data from any members of @args that
+#	are Astro::App::Satpass2::FormatValue objects, calls the given
+#	method in scalar context, wraps the returned value in an
+#	Astro::App::Satpass2::FormatValue, and returns that object.
+#
+#	This will be made available to templates as 'call_and_wrap'.
+
+sub __wrap_method_call {
+    my ( $self, $invocant, $method, @args ) = @_;
+    foreach ( @args ) {
+	instance( $_, FORMAT_VALUE )
+	    and $_ = $_->data();
+    }
+    if ( wantarray ) {
+	return $self->_wrap( data => [ $invocant->$method( @args ) ] );
+    } else {
+	return $self->_wrap( data => scalar $invocant->$method( @args ) );
+    }
 }
 
 __PACKAGE__->create_attribute_methods();

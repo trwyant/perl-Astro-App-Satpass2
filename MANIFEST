@@ -78,6 +78,7 @@ t/parse_time_date_manip_5.t
 t/parse_time_date_manip_6.t
 t/parse_time_epoch.t
 t/parse_time_iso8601.t
+t/pass_almanac.t
 t/printenv.pl
 t/read_file.t
 t/rewrite.t
