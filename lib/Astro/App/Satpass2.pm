@@ -2066,21 +2066,19 @@ sub pass : Verb( :compute __pass_options ) {
 }
 
 sub __pass_filter_am_pm {
-    my ( undef, $opt, @accumulate ) = @_;
+    my ( $self, $opt, @accumulate ) = @_;
     $opt ||= {};
-    $opt->{am}
-	and not $opt->{pm}
-	and return (
-	    map { $_->[0] } grep { $_->[1] < 43200 } map {
-		[ $_, _local_tod( $_->{time} ) ] } @accumulate
-	);
-    not $opt->{am}
-	and $opt->{pm}
-	and return (
-	    map { $_->[0] } grep { $_->[1] >= 43200 } map {
-		[ $_, _local_tod( $_->{time} ) ] } @accumulate
-	);
-    return @accumulate;
+    $opt->{am} xor $opt->{pm}
+	or return @accumulate;
+    my $tf = $self->{formatter}->time_formatter();
+    return (
+	map { $_->[0] }
+	grep { $opt->{am} xor $_->[1] }
+	map { [
+	    $_,
+	    $tf->format_datetime( '%H', $_->{time} ) >= 12,
+	    ] } @accumulate
+    );
 }
 
 sub __pass_options {
@@ -2093,12 +2091,6 @@ sub __pass_options {
 	},
 	$self->_templates_to_options( pass => $opt ),
     ];
-}
-
-# Compute local time of day in seconds since midnight.
-sub _local_tod {
-    my @tl = localtime $_[0];
-    return ( $tl[2] * 60 + $tl[1] ) * 60 + $tl[0];
 }
 
 {
