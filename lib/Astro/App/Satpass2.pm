@@ -958,7 +958,7 @@ sub flare : Verb( algorithm=s am! choose=s@ day! dump! pm! questionable|spare! q
     HAVE_TLE_IRIDIUM
 	or $self->wail( 'Astro::Coord::ECI::TLE::Iridium not available' );
     my $pass_start = $self->__parse_time (
-	shift @args, $self->_get_today_noon());
+	shift @args, $self->_get_day_noon());
     my $pass_end = $self->__parse_time (shift @args || '+7');
     $pass_start >= $pass_end
 	and $self->wail( 'End time must be after start time' );
@@ -1938,12 +1938,20 @@ sub magnitude_table : Verb( name! reload! ) {
 sub pass : Verb( :compute __pass_options ) {
     my ( $self, $opt, @args ) = __arguments( @_ );
 
+    $opt->{ephemeris}
+	and $opt->{almanac} = 1;
+    $opt->{almanac}
+	and not defined $opt->{ephemeris}
+	and $opt->{ephemeris} = {
+	pass_ics	=> 1,
+    }->{$opt->{_template}};
+
     $self->_apply_boolean_default(
 	$opt, 0, qw{ horizon illumination transit appulse } );
     $self->_apply_boolean_default( $opt, 0, qw{ am pm } );
     $opt->{am} or $opt->{pm} or $opt->{am} = $opt->{pm} = 1;
     my $pass_start = $self->__parse_time (
-	shift @args, $self->_get_today_noon());
+	shift @args, $self->_get_day_noon());
     my $pass_end = $self->__parse_time (shift @args || '+7');
     $pass_start >= $pass_end
 	and $self->wail( 'End time must be after start time' );
@@ -2035,34 +2043,72 @@ sub pass : Verb( :compute __pass_options ) {
 
     $self->{events} += @accumulate;
 
+    if ( $opt->{almanac} ) {
+	my %almanac;
+	foreach my $pass ( @accumulate ) {
+	    my $illum = $pass->{body}->get( 'illum' );
+	    my $noon = $self->_get_day_noon( $pass->{time} );
+	    $almanac{$noon}{$illum} ||= do {
+		my @day;
+		foreach my $evt ( $illum->almanac(
+			$self->_get_day_midnight( $pass->{time} ) ) ) {
+		    {
+			horizon		=> 1,
+			twilight	=> 1,
+		    }->{$evt->[1]}
+			or next;
+		    my $pm = $evt->[0] >= $noon ? 1 : 0;
+		    push @{ $day[$pm] }, {
+			event	=> 'almanac',
+			body	=> $illum,
+			status	=> $evt->[3],
+			time	=> $evt->[0],
+		    };
+		}
+		\@day;
+	    };
+
+	    $pass->{_pm} = my $pm = $pass->{time} >= $noon ? 1 : 0;
+	    # TODO this way ALL passes get the almanac events. Is this
+	    # what I want? It varies. For --ics it is. For --events it
+	    # is not. For neither it's probably not.
+	    if ( $opt->{ephemeris} ) {
+		@{ $pass->{events} } = sort { $a->{time} <=> $b->{time}
+		    } @{ $pass->{events} }, @{ $almanac{$noon}{$illum}[$pm] };
+	    }
+	}
+
+	unless( $opt->{ephemeris} ) {
+	    foreach my $pass ( @accumulate ) {
+		$pass->{_pm}
+		    or next;
+		my $illum = $pass->{body}->get( 'illum' );
+		my $noon = $self->_get_day_noon( $pass->{time} );
+		$almanac{$noon}{$illum}[1]
+		    or next;
+		@{ $pass->{events} } = sort { $a->{time} <=> $b->{time} }
+		    @{ $pass->{events} },
+		    @{ $almanac{$noon}{$illum}[1] };
+		$almanac{$noon}{$illum}[1] = undef;
+	    }
+	    foreach my $pass ( reverse @accumulate ) {
+		$pass->{_pm}
+		    and next;
+		my $illum = $pass->{body}->get( 'illum' );
+		my $noon = $self->_get_day_noon( $pass->{time} );
+		$almanac{$noon}{$illum}[0]
+		    or next;
+		@{ $pass->{events} } = sort { $a->{time} <=> $b->{time} }
+		    @{ $pass->{events} },
+		    @{ $almanac{$noon}{$illum}[0] };
+		$almanac{$noon}{$illum}[0] = undef;
+	    }
+	}
+    }
+
     return $self->__format_data(
 	$opt->{_template} => \@accumulate, $opt );
 
-}
-
-{
-    my %desired = map { $_ => 1 } qw{ horizon twilight };
-
-    sub __pass_almanac {
-	my ( $self, $pass, $opt ) = @_;
-
-	$pass
-	    or return;
-
-	my $body = $pass->{body};
-	my $sun = $body->get( 'illum' );
-	my $sta = $body->get( 'station' );
-	my $day = $self->_get_day_midnight( $pass->{time} );
-	return $self->__pass_filter_am_pm(
-	    $opt,
-	    map { {
-		    body	=> $sun,
-		    status	=> $_->[3],
-		    time	=> $_->[0],
-		} }
-	    grep { $desired{$_->[1]} } $sun->almanac( $sta, $day ),
-	);
-    }
 }
 
 sub __pass_filter_am_pm {
@@ -2070,13 +2116,12 @@ sub __pass_filter_am_pm {
     $opt ||= {};
     $opt->{am} xor $opt->{pm}
 	or return @accumulate;
-    my $tf = $self->{formatter}->time_formatter();
     return (
 	map { $_->[0] }
 	grep { $opt->{am} xor $_->[1] }
 	map { [
 	    $_,
-	    $tf->format_datetime( '%H', $_->{time} ) >= 12,
+	    $_->{time} >= $self->_get_day_noon( $_->{time} )
 	    ] } @accumulate
     );
 }
@@ -2085,8 +2130,9 @@ sub __pass_options {
     my ( $self, $opt ) = @_;
     return [
 	qw{
-	    almanac! choose=s@ am! appulse! brightest|magnitude!
-	    chronological! dump! horizon|rise|set! illumination! pm!
+	    almanac! am! appulse! brightest|magnitude! choose=s@
+	    chronological! ephemeris! dump! horizon|rise|set!
+	    illumination! pm!
 	    quiet! transit|maximum|culmination!
 	},
 	$self->_templates_to_options( pass => $opt ),
@@ -3564,7 +3610,7 @@ sub validate : Verb( quiet! ) {
     my ( $self, $opt, @args ) = __arguments( @_ );
 
     my $pass_start = $self->__parse_time (
-	shift @args, $self->_get_today_noon());
+	shift @args, $self->_get_day_noon());
     my $pass_end = $self->__parse_time (shift @args || '+7');
     $pass_start >= $pass_end
 	and $self->wail( 'End time must be after start time' );
@@ -4653,10 +4699,12 @@ sub _get_day_midnight {
     return $gmt ? greg_time_gm(@time) : greg_time_local(@time);
 }
 
-sub _get_today_noon {
-    my $self = shift;
+sub _get_day_noon {
+    my ( $self, $day ) = @_;
+    defined $day
+	or $day = time;
     my $gmt = $self->get( 'formatter' )->gmt();
-    my @time = $gmt ? gmtime() : localtime();
+    my @time = $gmt ? gmtime( $day ) : localtime( $day );
     $time[0] = $time[1] = 0;
     $time[2] = 12;
     $time[5] += 1900;
@@ -7378,8 +7426,11 @@ how to specify times.
 The following options are available:
 
 C<-almanac> requests the inclusion of illuminating body rise/set and
-begin/end twilight times. This only does anything if the template
-supports it.
+begin/end twilight times. These will be applied only to the last AM
+event of the day, and the first PM event of the day. Unless the
+L<visible|/visible> attribute is true, this may not do what you want.
+What it really should do is apply them to the last event before Sunrise
+and the first event after Sunset.
 
 C<-am> selects morning passes (i.e. between midnight and noon).
 
@@ -7408,6 +7459,12 @@ chronological for a particular satellite.
 C<-dump> is a debugging tool. It is unsupported in the sense that the
 author reserves the right to change or revoke its functionality without
 notice.
+
+C<-ephemeris> should probably be called something like
+C<-almanac-verbose>, but that was too long. The relevant almanac
+information (AM or PM) is applied to all events. If C<-almanac> is also
+specified, C<-ephemeris> trumps it. If not specified, this defaults to
+true if C<-ics> is specified; otherwise it defaults to false.
 
 C<-events> causes the output to be individual events rather than passes.
 These events will be displayed in chronological order irrespective of

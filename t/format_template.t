@@ -71,28 +71,6 @@ is_deeply
 
 ok $ft, 'Instantiate Astro::App::Satpass2::Format::Template';
 
-# Protected method __wrap_method_call
-
-{
-    my $data = {
-	time	=> APRIL_FOOL_2023,
-    };
-
-    my $rslt = $ft->__wrap_method_call(
-	__PACKAGE__, 'april_fool', {} );
-
-    isa_ok $rslt, FORMAT_VALUE;
-
-    is_deeply $rslt->data, $data, 'Time was added to raw hash';
-
-    $rslt = $ft->__wrap_method_call(
-	__PACKAGE__, 'april_fool', FORMAT_VALUE->new( data => {} ) );
-
-    isa_ok $rslt, FORMAT_VALUE;
-
-    is_deeply $rslt->data, $data, 'Time was added to wrapped hash';
-}
-
 sub april_fool {
     my ( undef, $hash ) = @_;
     $hash ||= {};

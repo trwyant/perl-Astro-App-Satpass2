@@ -834,6 +834,8 @@ execute( 'show events', "set events 0\n", 'Generated 0 events' );
 call_m( set => pass_threshold => 60, undef,
     q{Set pass_threshold to 60 degrees} );
 
+# execute( 'show', "\n", 'Dump settings' );
+
 execute( 'pass 19801012T000000Z', <<'EOD',
     Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
@@ -849,6 +851,46 @@ execute( 'pass 19801012T000000Z', <<'EOD',
 05:34:08   0.0  25.1 NE     1789.5  64.9426   15.6750   228.8 lit   set
 EOD
     'Calculate passes over Greenwich which are over 60 degrees' );
+
+execute( 'pass --almanac 19801012T000000Z', <<'EOD',
+    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+
+1980/10/14     88888 -
+05:32:49   0.0 204.8 SW     1691.2  37.6261   -7.7957   205.5 lit   rise
+05:36:32  85.6 111.4 E       215.0  51.4245    0.2141   214.4 lit   max
+05:40:27   0.0  27.3 NE     1782.5  64.5101   16.6694   226.8 lit   set
+05:48:43  begin twilight
+06:22:19  Sunrise
+
+1980/10/15     88888 -
+05:26:29   0.0 210.3 SW     1693.5  38.1313   -9.4884   206.3 shdw  rise
+05:27:33   4.7 212.0 SW     1220.0  42.1574   -7.5648   208.7 lit   lit
+05:30:12  63.7 297.6 NW      239.9  51.8981   -1.3250   215.8 lit   max
+05:34:08   0.0  25.1 NE     1789.5  64.9426   15.6750   228.8 lit   set
+05:50:22  begin twilight
+06:24:01  Sunrise
+EOD
+    'Calculate passes over Greenwich which are over 60 degrees, with almanac' );
+
+execute( 'pass --ephemeris 19801012T000000Z', <<'EOD',
+    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+
+1980/10/14     88888 -
+05:32:49   0.0 204.8 SW     1691.2  37.6261   -7.7957   205.5 lit   rise
+05:36:32  85.6 111.4 E       215.0  51.4245    0.2141   214.4 lit   max
+05:40:27   0.0  27.3 NE     1782.5  64.5101   16.6694   226.8 lit   set
+05:48:43  begin twilight
+06:22:19  Sunrise
+
+1980/10/15     88888 -
+05:26:29   0.0 210.3 SW     1693.5  38.1313   -9.4884   206.3 shdw  rise
+05:27:33   4.7 212.0 SW     1220.0  42.1574   -7.5648   208.7 lit   lit
+05:30:12  63.7 297.6 NW      239.9  51.8981   -1.3250   215.8 lit   max
+05:34:08   0.0  25.1 NE     1789.5  64.9426   15.6750   228.8 lit   set
+05:50:22  begin twilight
+06:24:01  Sunrise
+EOD
+    'Calculate passes over Greenwich which are over 60 degrees, with ephemeris' );
 
 call_m( set => pass_threshold => undef, undef,
     q{Set pass_threshold to undef} );
@@ -871,6 +913,17 @@ Date       Time     OID    Event Illum Eleva  Azimuth      Range
 1980/10/15 05:34:08  88888 set   lit     0.0  25.1 NE     1789.5
 EOD
     'Calculate pass events over Greenwich' );
+
+execute( 'pass -events --almanac 19801015T000000Z +1', <<'EOD',
+Date       Time     OID    Event Illum Eleva  Azimuth      Range
+1980/10/15 05:26:29  88888 rise  shdw    0.0 210.3 SW     1693.5
+1980/10/15 05:27:33  88888 lit   lit     4.7 212.0 SW     1220.0
+1980/10/15 05:30:12  88888 max   lit    63.7 297.6 NW      239.9
+1980/10/15 05:34:08  88888 set   lit     0.0  25.1 NE     1789.5
+1980/10/15 05:50:22 begin twilight
+1980/10/15 06:24:01 Sunrise
+EOD
+    'Calculate pass events over Greenwich, with almanac' );
 
 call_m( pass => {
 	chronological	=> 1,
@@ -899,6 +952,36 @@ END:VCALENDAR
 EOD
     q{Generate iCal event for pass},
 );
+
+call_m( pass => {
+	chronological	=> 1,
+	ics		=> 1,
+	almanac		=> 1,
+    },
+    '19801015T000000Z',
+    '+1',
+    <<'EOD',
+BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:19801015T052629Z
+BEGIN:VALARM
+TRIGGER:-PT5M
+ACTION:DISPLAY
+END:VALARM
+BEGIN:VALARM
+TRIGGER:PT0M
+ACTION:DISPLAY
+END:VALARM
+SUMMARY:
+DESCRIPTION:rise 05:26:29 Az 210 SW\nlit 05:27:33 Az 212 SW Ele 5\nmax 05:30:12 Az 298 NW Ele 64\nset 05:34:08 Az 25 NE\nbegin twilight 05:50:22\nSunrise 06:24:01
+DTEND:19801015T053408Z
+END:VEVENT
+END:VCALENDAR
+EOD
+    q{Generate iCal event for pass, with almanac},
+);
+
 execute( 'pass -horizon -transit 19801015T000000Z +1', <<'EOD',
     Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 

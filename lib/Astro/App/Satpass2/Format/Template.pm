@@ -388,8 +388,6 @@ sub _process {
     ARRAY_REF eq ref $arg{arg}
 	and $arg{arg} = Astro::App::Satpass2::Wrap::Array->new(
 	$arg{arg} );
-    $arg{wrap_method_call} = sub {
-	$self->__wrap_method_call( @_ ) };
     my $output;
     my $tt = $self->{tt};
 
@@ -478,31 +476,6 @@ sub _wrap {
     }
 
     return $data;
-}
-
-#	__wrap_method_call
-#
-#	$rslt = $self->__wrap_method_call(
-#	    $invocant, $method, @args );
-#
-#	This subroutine extracts the data from any members of @args that
-#	are Astro::App::Satpass2::FormatValue objects, calls the given
-#	method in scalar context, wraps the returned value in an
-#	Astro::App::Satpass2::FormatValue, and returns that object.
-#
-#	This will be made available to templates as 'call_and_wrap'.
-
-sub __wrap_method_call {
-    my ( $self, $invocant, $method, @args ) = @_;
-    foreach ( @args ) {
-	instance( $_, FORMAT_VALUE )
-	    and $_ = $_->data();
-    }
-    if ( wantarray ) {
-	return $self->_wrap( data => [ $invocant->$method( @args ) ] );
-    } else {
-	return $self->_wrap( data => scalar $invocant->$method( @args ) );
-    }
 }
 
 __PACKAGE__->create_attribute_methods();
