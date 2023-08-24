@@ -298,7 +298,7 @@ is $ft->format(
 		time => greg_time_gm( 0, 8, 10, 13, 9, 1980 ),
 	    },
 	] ), <<'EOD', 'Pass';
-    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+Time     Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980-10-13     88888 - None
 10:07:14  20.1 156.2 SE      537.9  34.8367  -74.8798   204.0 lit   rise

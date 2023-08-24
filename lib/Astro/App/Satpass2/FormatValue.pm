@@ -269,6 +269,18 @@ sub events {
     return [ map { $self->clone( data => $_ ) } $self->__raw_events() ];
 }
 
+sub tle_events {
+    my ( $self ) = @_;
+    my @rslt;
+
+    foreach my $evt ( $self->__raw_events() ) {
+	embodies( $evt->{body}, 'Astro::Coord::ECI::TLE' )
+	    or next;
+	push @rslt, $self->clone( data => $evt );
+    }
+    return \@rslt;
+}
+
 sub __raw_events {
     my ( $self ) = @_;
 
@@ -2815,6 +2827,19 @@ With this,
  $fmt->latitude()
 
 would get you the latitude of the orbiting body.
+
+=head3 tle_events
+
+ foreach my $event ( @{ $fmt->tle_events() || [] } ) {
+     ... do something with the event ...
+ }
+
+This method returns a reference to an array of
+C<Astro::App::Satpass2::FormatValue> objects manufactured out of the
+contents of the C<{events}> key of the invocant's data, but only those
+elements whose C<{body}> key contains an
+L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE> or equivalent. If you
+want all elements in C<{events}>, call L<events()|/events>.
 
 =head2 Formatters
 

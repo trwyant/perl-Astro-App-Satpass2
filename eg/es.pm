@@ -50,6 +50,13 @@ my @sun_quarters = (
 	    'height'		=> 'altura',
 	},
     },
+    '-pass_ics'	=> {
+	string	=> {
+	    'Az'	=> 'az',
+	    'Ele'	=> 'ele',
+	    'Mag'	=> 'mag',
+	},
+    },
     almanac	=> {
 	title	=> 'Almanaque',
 	Moon	=> {

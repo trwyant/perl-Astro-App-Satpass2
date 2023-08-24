@@ -560,14 +560,7 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter
 
     # Localize the event descriptions if appropriate.
 
-    foreach my $event ( @almanac ) {
-	$event->{almanac}{description} = __localize(
-	    text	=> [ almanac => $event->{body}->get( 'name' ),
-		$event->{almanac}{event}, $event->{almanac}{detail} ],
-	    default	=> $event->{almanac}{description},
-	    argument	=> $event->{body},
-	);
-    }
+    _almanac_localize( @almanac );
 
 #	Sort the almanac data by date, and display the results.
 
@@ -577,6 +570,18 @@ sub almanac : Verb( choose=s@ dump! horizon|rise|set! transit! twilight! quarter
 	    @almanac
 	], $opt );
 
+}
+sub _almanac_localize {
+    my @almanac = @_;
+    foreach my $event ( @almanac ) {
+	$event->{almanac}{description} = __localize(
+	    text	=> [ almanac => $event->{body}->get( 'name' ),
+		$event->{almanac}{event}, $event->{almanac}{detail} ],
+	    default	=> $event->{almanac}{description},
+	    argument	=> $event->{body},
+	);
+    }
+    return;
 }
 
 sub begin : Verb() Tweak( -unsatisfied ) {
@@ -2050,21 +2055,22 @@ sub pass : Verb( :compute __pass_options ) {
 	    my $noon = $self->_get_day_noon( $pass->{time} );
 	    $almanac{$noon}{$illum} ||= do {
 		my @day;
-		foreach my $evt ( $illum->almanac(
-			$self->_get_day_midnight( $pass->{time} ) ) ) {
-		    {
+
+		my @events = grep { {
 			horizon		=> 1,
 			twilight	=> 1,
-		    }->{$evt->[1]}
-			or next;
-		    my $pm = $evt->[0] >= $noon ? 1 : 0;
-		    push @{ $day[$pm] }, {
-			event	=> 'almanac',
-			body	=> $illum,
-			status	=> $evt->[3],
-			time	=> $evt->[0],
-		    };
+		    }->{$_->{almanac}{event}}
+		} $illum->almanac_hash(
+		    $self->_get_day_midnight( $pass->{time} ) );
+
+		_almanac_localize( @events );
+
+		foreach my $evt ( @events ) {
+		    $evt->{event} = 'almanac';
+		    my $pm = $evt->{time} >= $noon ? 1 : 0;
+		    push @{ $day[$pm] }, $evt;
 		}
+
 		\@day;
 	    };
 

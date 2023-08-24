@@ -739,7 +739,7 @@ execute( 'load t/data.tle', undef, 'Load our usual set of TLEs' );
 execute( 'set events 0', undef, 'Clear events accumulator' );
 
 execute( 'pass 19801012T000000Z', <<'EOD',
-    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+Time     Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13     88888 -
 05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
@@ -782,7 +782,7 @@ execute( 'show events', "set events 6\n", 'Accumulated 6 events' );
 call_m( qw{ set events 0 }, undef, 'Clear events accumulator' );
 
 execute( 'pass -am 19801012T000000Z', <<'EOD',
-    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+Time     Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13     88888 -
 05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
@@ -825,7 +825,7 @@ execute( 'show events', "set events 6\n", 'Generated 6 events' );
 call_m( qw{ set events 0 }, undef, 'Clear events accumulator' );
 
 execute( 'pass -pm 19801012T000000Z', <<'EOD',
-    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+Time     Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 EOD
     'Calculate evening passes over Greenwich' );
 
@@ -837,7 +837,7 @@ call_m( set => pass_threshold => 60, undef,
 # execute( 'show', "\n", 'Dump settings' );
 
 execute( 'pass 19801012T000000Z', <<'EOD',
-    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+Time     Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/14     88888 -
 05:32:49   0.0 204.8 SW     1691.2  37.6261   -7.7957   205.5 lit   rise
@@ -853,7 +853,7 @@ EOD
     'Calculate passes over Greenwich which are over 60 degrees' );
 
 execute( 'pass --almanac 19801012T000000Z', <<'EOD',
-    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+Time     Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/14     88888 -
 05:32:49   0.0 204.8 SW     1691.2  37.6261   -7.7957   205.5 lit   rise
@@ -873,7 +873,7 @@ EOD
     'Calculate passes over Greenwich which are over 60 degrees, with almanac' );
 
 execute( 'pass --ephemeris 19801012T000000Z', <<'EOD',
-    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+Time     Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/14     88888 -
 05:32:49   0.0 204.8 SW     1691.2  37.6261   -7.7957   205.5 lit   rise
@@ -896,7 +896,7 @@ call_m( set => pass_threshold => undef, undef,
     q{Set pass_threshold to undef} );
 
 execute( 'pass -noillumination 19801015T000000Z +1', <<'EOD',
-    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+Time     Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/15     88888 -
 05:26:29   0.0 210.3 SW     1693.5  38.1313   -9.4884   206.3 shdw  rise
@@ -983,7 +983,7 @@ EOD
 );
 
 execute( 'pass -horizon -transit 19801015T000000Z +1', <<'EOD',
-    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+Time     Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/15     88888 -
 05:26:29   0.0 210.3 SW     1693.5  38.1313   -9.4884   206.3 shdw  rise
@@ -996,7 +996,7 @@ execute( 'set local_coord equatorial_rng', undef, 'Specify equatorial + range' )
 
 execute( 'pass 19801013T000000Z +1', <<'EOD',
             Right
-    Time Ascensio Decli      Range Latitude Longitude Altitud Illum Event
+Time     Ascensio Decli      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13     88888 -
 05:39:02 05:30:58 -36.6     1687.8  37.2228   -6.0197   204.9 lit   rise
@@ -1008,7 +1008,7 @@ EOD
 execute( 'set local_coord azel_rng', undef, 'Specify azel + range' );
 
 execute( 'pass 19801013T000000Z +1', <<'EOD',
-    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+Time     Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13     88888 -
 05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
@@ -1020,7 +1020,7 @@ EOD
 execute( 'set local_coord azel', undef, 'Specify azel only' );
 
 execute( 'pass 19801013T000000Z +1', <<'EOD',
-    Time Eleva  Azimuth Latitude Longitude Altitud Illum Event
+Time     Eleva  Azimuth Latitude Longitude Altitud Illum Event
 
 1980/10/13     88888 -
 05:39:02   0.0 199.0 S   37.2228   -6.0197   204.9 lit   rise
@@ -1032,7 +1032,7 @@ EOD
 execute( 'set local_coord az_rng', undef, 'Specify azimuth + range' );
 
 execute( 'pass 19801013T000000Z +1', <<'EOD',
-    Time  Azimuth      Range Latitude Longitude Altitud Illum Event
+Time      Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13     88888 -
 05:39:02 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
@@ -1045,7 +1045,7 @@ execute( 'set local_coord equatorial', undef, 'Specify equatorial only' );
 
 execute( 'pass 19801013T000000Z +1', <<'EOD',
             Right
-    Time Ascensio Decli Latitude Longitude Altitud Illum Event
+Time     Ascensio Decli Latitude Longitude Altitud Illum Event
 
 1980/10/13     88888 -
 05:39:02 05:30:58 -36.6  37.2228   -6.0197   204.9 lit   rise
@@ -1057,7 +1057,7 @@ EOD
 execute( 'set local_coord', undef, 'Clear local coordinates' );
 
 execute( 'pass 19801013T000000Z +1', <<'EOD',
-    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+Time     Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13     88888 -
 05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
@@ -1067,7 +1067,7 @@ EOD
     'Ensure we get old coordinates back' );
 
 execute( 'pass -chronological 19801013T000000Z +1', <<'EOD',
-    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+Time     Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13     88888 -
 05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
@@ -1083,7 +1083,7 @@ SKIP: {
     execute( 'set pass_variant brightest', undef, 'Set pass variant brightest' );
 
     execute( 'pass 19801013T000000Z +1', <<'EOD',
-    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Magn Event
+Time     Eleva  Azimuth      Range Latitude Longitude Altitud Illum Magn Event
 
 1980/10/13     88888 -
 05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit    7.9 rise
@@ -1094,7 +1094,7 @@ EOD
     'Pass with brightest event' );
 
     execute( 'pass -nobrightest 19801013T000000Z +1', <<'EOD',
-    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+Time     Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13     88888 -
 05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit   rise
@@ -1116,7 +1116,7 @@ SKIP:{
 	or skip 'Astro::Coord::ECI::TLE::Iridium not installed', 1;
 
     execute( 'pass -brightest 19801013T000000Z +1', <<'EOD',
-    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Magn Event
+Time     Eleva  Azimuth      Range Latitude Longitude Altitud Illum Magn Event
 
 1980/10/13     88888 -
 05:39:02   0.0 199.0 S      1687.8  37.2228   -6.0197   204.9 lit    7.9 rise
@@ -1250,7 +1250,7 @@ execute( 'source -optional t/missing.dat', undef,
 execute( 'set horizon 20 geometric 0', undef, 'Set horizon and geometric' );
 
 execute( 'pass 19801013T000000Z +1', <<'EOD',
-    Time Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
+Time     Eleva  Azimuth      Range Latitude Longitude Altitud Illum Event
 
 1980/10/13     88888 -
 05:41:38  20.0 188.3 S       555.1  46.9747   -0.9601   210.3 lit   rise
