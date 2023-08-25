@@ -1,3 +1,12 @@
+0.050_01	2023-08-25	T. R. Wyant
+    Add --almanac to pass(). This adds almanac data to appropriate
+    passes. --ephemeris is more verbose, adding almanac data to all
+    passes. This change involved refactoring event formatting to use
+    sub-templates, rather than if-elsif-else chains.
+
+    Add 'none' as valid argument to FormatTime->round_time(). It is
+    equivalent to specifying undef, i.e. no rounding.
+
 0.050		2022-09-28	T. R. Wyant
     Silence DM5 deprecation warnings.
 
