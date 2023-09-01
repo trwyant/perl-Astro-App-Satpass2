@@ -219,7 +219,10 @@ foreach my $attribute (
 		    $self->__parse_class_and_args( $fmtr ), @args );
 		my $class = $self->load_package(
 		    { fatal => 'wail' }, $pkg, $prefix );
-		$fmtr = $class->new( @fmtr_arg );
+		$fmtr = $class->new(
+		    warner	=> scalar $self->warner(),
+		    @fmtr_arg,
+		);
 		ref $old
 		    and $old->copy( $fmtr, @fmtr_arg );
 	    };
