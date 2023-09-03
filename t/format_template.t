@@ -9,6 +9,7 @@ use Test::More 0.88;
 
 use lib qw{ inc };
 use My::Module::Test::App;	# For environment clean-up.
+use My::Module::Test::Mock_App;
 
 use Astro::App::Satpass2::Format::Template;
 
@@ -34,6 +35,8 @@ use Time::Local;
 use constant APRIL_FOOL_2023	=> greg_time_gm( 0, 0, 0, 1, 3, 2023 );
 use constant FORMAT_VALUE	=> 'Astro::App::Satpass2::FormatValue';
 
+my $app = My::Module::Test::Mock_App->new();
+
 my $sta = Astro::Coord::ECI->new()->geodetic(
     deg2rad( 38.898748 ),
     deg2rad( -77.037684 ),
@@ -58,7 +61,9 @@ EOD
 
 HAVE_TLE_IRIDIUM and $sat->rebless( 'iridium' );
 
-my $ft = Astro::App::Satpass2::Format::Template->new()->gmt( 1 );
+my $ft = Astro::App::Satpass2::Format::Template->new(
+    parent	=> $app,
+)->gmt( 1 );
 
 # Encapsulation violation. The _uniq() subroutine may be moved or
 # retracted without notice of any kind.

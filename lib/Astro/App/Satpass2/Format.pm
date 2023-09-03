@@ -8,10 +8,12 @@ use parent qw{ Astro::App::Satpass2::Copier };
 use Clone ();
 use Astro::App::Satpass2::FormatTime;
 use Astro::App::Satpass2::Utils qw{
+    instance
     load_package __parse_class_and_args
     CODE_REF
     @CARP_NOT
 };
+use Scalar::Util 1.26 qw{ weaken };
 
 our $VERSION = '0.050_01';
 
@@ -42,6 +44,16 @@ sub new {
 	and 'My::Module::Test::App' ne caller
 	and $self->wail( __PACKAGE__,
 	    ' may not be instantiated. Use a subclass' );
+
+    $self->{parent} = delete $args{parent};
+
+    # FIXME the below is verbatim from
+    # Astro::App::Satpass2::Macro->init(), ca. line 63.
+    defined $self->{parent}
+	or $self->wail( q{Attribute 'parent' is required} );
+    instance( $self->{parent}, 'Astro::App::Satpass2' )
+	or $self->wail( q{Attribute 'parent' must be an Astro::App::Satpass2} );
+    weaken( $self->{parent} );
 
     exists $args{tz} or $args{tz} = $ENV{TZ};
 
@@ -79,7 +91,7 @@ sub attribute_names {
     my ( $self ) = @_;
     return ( $self->SUPER::attribute_names(),
 	qw{ date_format desired_equinox_dynamical gmt
-	    local_coord provider round_time
+	    local_coord parent provider round_time
 	    time_format time_formatter tz
 	    value_formatter
 	} );
@@ -105,7 +117,7 @@ sub attribute_names {
 	};
     }
 
-    my %not_part_of_config = map { $_ => 1 } qw{ warner };
+    my %not_part_of_config = map { $_ => 1 } qw{ parent warner };
 
     sub config {
 	my ( $self, %args ) = @_;
@@ -217,8 +229,11 @@ foreach my $attribute (
 	    ref $fmtr or do {
 		my ( $pkg, @fmtr_arg ) = (
 		    $self->__parse_class_and_args( $fmtr ), @args );
+		my $fatal = $self->parent()->get( 'error_out' ) ?
+		    'wail' : 'whinge';
 		my $class = $self->load_package(
-		    { fatal => 'wail' }, $pkg, $prefix );
+		    { fatal => $fatal }, $pkg, $prefix )
+		    or return $self;
 		$fmtr = $class->new(
 		    warner	=> scalar $self->warner(),
 		    @fmtr_arg,

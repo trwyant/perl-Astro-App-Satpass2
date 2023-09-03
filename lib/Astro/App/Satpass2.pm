@@ -2670,6 +2670,8 @@ sub _set_copyable {
 	    "$cls is missing methods. This can happen on a ",
 	    'case-tolerant system if you specify the class ',
 	    'name in the wrong case.' );
+	$cls->can( 'parent' )
+	    and push @args, parent => $self;
 	$obj = $cls->new(
 	    warner	=> $self->{_warner},
 	    @args,
