@@ -31,6 +31,10 @@ sub wail {
 	and die $msg;
     chomp $msg;
     if ($self->warning()) {
+	if ( $Carp::Verbose ) {
+	    require Carp;	# Paranoia
+	    Carp::confess( $msg );
+	}
 	$msg =~ m/[.?!]\z/msx or $msg .= '.';
 	die $msg, "\n";
     } else {
