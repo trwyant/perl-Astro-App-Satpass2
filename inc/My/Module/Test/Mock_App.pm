@@ -7,7 +7,7 @@ use warnings;
 
 use Carp;
 
-our $VERSION = '0.051';
+our $VERSION = '0.051_01';
 
 sub isa {
     my ( undef, $class ) = @_;
