@@ -228,6 +228,7 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
 
     local $Template::Stash::LIST_OPS->{events} = sub {
 	my @args = @_;
+	$DB::single = 1;
 	return $self->_all_events( $args[0] );
     };
 
@@ -241,6 +242,16 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
 	return;
     };
 
+    local $Template::Stash::LIST_OPS->{first_tle} = sub {
+	my ( $list ) = @_;
+	$DB::single = 1;
+	foreach my $item ( @{ $list } ) {
+	    embodies( $item->body(), 'Astro::Coord::ECI::TLE' )
+		and return $item;
+	}
+	return;
+    };
+
     $data{localize} = sub {
 	return _localize( $tplt_name, @_ );
     };
@@ -250,7 +261,7 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
     $data{format_detail} = sub {
 	my ( $kind, $evt ) = @_;
 
-	instance( $evt, 'Astro::App::Satpass2::FormatValue' )
+	instance( $evt, FORMAT_VALUE )
 	    or return;
 	defined ( my $type = $evt->$kind( width => '' ) )
 	    or return;

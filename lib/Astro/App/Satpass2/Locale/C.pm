@@ -169,7 +169,7 @@ EOD
 [%- END %]
 [%- FOR pass IN data %]
     [%- events = pass.events %]
-    [%- evt = events.first %]
+    [%- evt = events.first_tle %]
 
     [%- evt.date %]    [% evt.oid %] - [% evt.name( width = '' ) %]
 
