@@ -791,6 +791,17 @@ You may specify an argument to C<fixed_width()>.
 
 Nothing is returned.
 
+=item first_tle
+
+If called on an array of
+L<Astro::App::Satpass2::FormatValue|Astro::App::Satpass2::FormatValue>
+objects, returns the first whose C<body()> method is an
+L<Astro::Coord::ECI::TLE|Astro::Coord::ECI::TLE> or
+L<Astro::Coord::ECI::TLE::Set|Astro::Coord::ECI::TLE::Set>. If none is
+found, nothing is returned.
+
+If called on an array of anything else the results are undefined.
+
 =back
 
 Also, the following subroutines are defined:
