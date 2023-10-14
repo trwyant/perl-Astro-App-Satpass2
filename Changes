@@ -1,4 +1,6 @@
-0.051_01	2023-10-07	T. R. Wyant
+0.052		2023-10-14	T. R. Wyant
+    Document the first_tle() Template array method.
+
     Fix pass() --almanac for evening passes.
 
 0.051		2023-09-11	T. R. Wyant

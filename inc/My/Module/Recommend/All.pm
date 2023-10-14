@@ -11,7 +11,7 @@ our @ISA = qw{ My::Module::Recommend::Any };
 use Carp;
 use Exporter qw{ import };
 
-our $VERSION = '0.051_01';
+our $VERSION = '0.052';
 
 our @EXPORT_OK = qw{ __all };
 
