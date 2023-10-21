@@ -37,7 +37,7 @@ sub setup {
     my $rslt = LWP::UserAgent->new()->get( $url )
 	or plan skip_all => "No access to $url: " . $@ || 'Unknown error';
     $rslt->is_success
-	or plan skip_all => "No access to $url: ", $rslt->status_line();
+	or plan skip_all => "No access to $url: " . $rslt->status_line();
 
     eval {
 	$wrapper_object = $wrapper_class->new();
