@@ -228,7 +228,6 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
 
     local $Template::Stash::LIST_OPS->{events} = sub {
 	my @args = @_;
-	$DB::single = 1;
 	return $self->_all_events( $args[0] );
     };
 
@@ -244,7 +243,6 @@ sub format : method {	## no critic (ProhibitBuiltInHomonyms)
 
     local $Template::Stash::LIST_OPS->{first_tle} = sub {
 	my ( $list ) = @_;
-	$DB::single = 1;
 	foreach my $item ( @{ $list } ) {
 	    embodies( $item->body(), 'Astro::Coord::ECI::TLE' )
 		and return $item;

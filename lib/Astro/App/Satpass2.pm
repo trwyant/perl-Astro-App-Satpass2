@@ -2206,9 +2206,14 @@ sub perl : Tokenize( -noexpand_tilde ) : Verb( eval! setup! ) {
     my $data = $opt->{eval} ?
 	$file :
 	$self->_file_reader( $file, { glob => 1 } );
-    my $rslt = eval $data; ## no critic (BuiltinFunctions::ProhibitStringyEval)
-    $@
-	and $self->wail( "Failed to eval '$file': $@" );
+    my $rslt;
+    {
+	# "random" package to prevent whoopsies in our own name space
+	package qq_eval_namespace; ## no critic (Modules::ProhibitMultiplePackages)
+	$rslt = eval $data; ## no critic (BuiltinFunctions::ProhibitStringyEval)
+	$@
+	    and $self->wail( "Failed to eval '$file': $@" );
+    }
     instance( $rslt, 'Astro::App::Satpass2' )
 	or return $rslt;
     return;
