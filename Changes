@@ -1,3 +1,8 @@
+0.052_02	2023-12-05	T. R. Wyant
+    Factor misc. Gregorian time subs into My::Module::Test::App.
+
+    Remove require_ok from tests other than t/basic.t.
+
 0.052_01	2023-11-26	T. R. Wyant
     Fix clobbering of $VERSION by casual stringy eval.
 
