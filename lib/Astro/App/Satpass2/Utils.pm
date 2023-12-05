@@ -81,7 +81,6 @@ use constant SCALAR_REF	=> ref \1;
 	require DateTime::TimeZone;
 	1;
     } || 0;
-
 }
 
 # Documented in POD

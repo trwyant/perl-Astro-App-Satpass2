@@ -20,6 +20,8 @@ use constant CODE_REF	=> ref sub {};
 use constant REGEXP_REF	=> ref qr{};
 
 our @EXPORT = qw{
+    any_greg_time_gm
+    any_greg_time_local
     call_m
     call_m_result
     check_access
@@ -40,6 +42,16 @@ our @EXPORT = qw{
     INSTANTIATE
     TRUE
 };
+
+{
+    local $@ = undef;
+
+    use constant HAVE_DATETIME => eval {
+	require DateTime;
+	require DateTime::TimeZone;
+	1;
+    } || 0;
+}
 
 BEGIN {
     # If I should need to write a test that uses a dirty environment (or
@@ -73,6 +85,16 @@ use constant TRUE => sub {
     shift;
     goto &ok;
 };
+
+if ( HAVE_DATETIME ) {
+    *any_greg_time_gm = \&dt_greg_time_gm;
+    *any_greg_time_local = \&dt_greg_time_local;
+} else {
+    require Astro::Coord::ECI::Utils;
+    Astro::Coord::ECI::Utils->VERSION( 0.112 );
+    *any_greg_time_gm = \&Astro::Coord::ECI::Utils::greg_time_gm;
+    *any_greg_time_local = \&Astro::Coord::ECI::Utils::greg_time_local;
+}
 
 sub invocant {
     return $app;
@@ -471,6 +493,20 @@ perform tests on this object.
 =head1 SUBROUTINES
 
 This module exports the following subroutines:
+
+=head2 any_greg_time_gm
+
+If the L<DateTime|DateTime> module can be loaded, this subroutine is an
+alias for L<dt_greg_time_gm()|/dt_greg_time_gm>. Otherwise, it is an
+alias for
+L<Astro::Coord::ECI::Utils::greg_time_gm()|Astro::Coord::ECI::Utils>.
+
+=head2 any_greg_time_local
+
+If the L<DateTime|DateTime> module can be loaded, this subroutine is an
+alias for L<dt_greg_time_local()|/dt_greg_time_local>. Otherwise, it is an
+alias for
+L<Astro::Coord::ECI::Utils::greg_time_local()|Astro::Coord::ECI::Utils>.
 
 =head2 check_access
 

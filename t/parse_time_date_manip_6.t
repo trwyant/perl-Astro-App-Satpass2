@@ -41,9 +41,6 @@ BEGIN {
 
     if ( HAVE_DATETIME ) {
 
-	*greg_time_gm = \&dt_greg_time_gm;
-	*greg_time_local = \&dt_greg_time_local;
-
 	local $@ = undef;
 
 	my ( $dm_zone, $dt_zone );
@@ -55,13 +52,6 @@ BEGIN {
 	} and lc $dm_zone ne lc $dt_zone
 	    and plan skip_all =>
 	    "Date::Manip zone is '$dm_zone' but DateTime zone is '$dt_zone'";
-
-    } else {
-
-	require Astro::Coord::ECI::Utils;
-	Astro::Coord::ECI::Utils->VERSION( '0.112' );
-	Astro::Coord::ECI::Utils->import( qw{ greg_time_gm greg_time_local } );
-
     }
 
 }
@@ -99,10 +89,10 @@ call_m( 'delegate',
 call_m( 'use_perltime', FALSE, 'Does not use perltime' );
 
 call_m( parse => '20100202T120000Z',
-    greg_time_gm( 0, 0, 12, 2, 1, 2010 ),
+    any_greg_time_gm( 0, 0, 12, 2, 1, 2010 ),
     'Parse noon on Groundhog Day 2010' );
 
-my $base = greg_time_gm( 0, 0, 0, 1, 3, 2009 );	# April 1, 2009 GMT;
+my $base = any_greg_time_gm( 0, 0, 0, 1, 3, 2009 );	# April 1, 2009 GMT;
 use constant ONE_DAY => 86400;			# One day, in seconds.
 use constant HALF_DAY => 43200;			# 12 hours, in seconds.
 
@@ -132,13 +122,13 @@ call_m( parse => '-0 12', $base - HALF_DAY,
 
 call_m( perltime => 1, TRUE, 'Set perltime true' );
 
-my $time_local = greg_time_local( 0, 0, 0, 1, 0, 2009 );
+my $time_local = any_greg_time_local( 0, 0, 0, 1, 0, 2009 );
 call_m( parse => '20090101T000000',
     $time_local,
     'Parse ISO-8601 20090101T000000' )
     or dump_date_manip( $time_local );
 
-$time_local = greg_time_local( 0, 0, 0, 1, 6, 2009 );
+$time_local = any_greg_time_local( 0, 0, 0, 1, 6, 2009 );
 call_m( parse => '20090701T000000',
     $time_local,
     'Parse ISO-8601 20090701T000000' )
@@ -146,25 +136,25 @@ call_m( parse => '20090701T000000',
 
 call_m( perltime => 0, TRUE, 'Set perltime false' );
 
-$time_local = greg_time_local( 0, 0, 0, 1, 0, 2009 );
+$time_local = any_greg_time_local( 0, 0, 0, 1, 0, 2009 );
 call_m( parse => '20090101T000000',
     $time_local,
     'Parse ISO-8601 20090101T000000, no help from perltime' )
     or dump_date_manip( $time_local );
 
-$time_local = greg_time_local( 0, 0, 0, 1, 6, 2009 );
+$time_local = any_greg_time_local( 0, 0, 0, 1, 6, 2009 );
 call_m( parse => '20090701T000000',
     $time_local,
     'Parse ISO-8601 20090701T000000, no help from perltime' )
     or dump_date_manip( $time_local );
 
-my $time_gm = greg_time_gm( 0, 0, 0, 1, 0, 2009 );
+my $time_gm = any_greg_time_gm( 0, 0, 0, 1, 0, 2009 );
 call_m( parse => '20090101T000000Z',
     $time_gm,
     'Parse ISO-8601 20090101T000000Z' )
     or dump_date_manip( $time_gm );
 
-$time_gm = greg_time_gm( 0, 0, 0, 1, 6, 2009 );
+$time_gm = any_greg_time_gm( 0, 0, 0, 1, 6, 2009 );
 call_m( parse => '20090701T000000Z',
     $time_gm,
     'Parse ISO-8601 20090701T000000Z' )
