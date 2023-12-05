@@ -3,10 +3,8 @@ package main;
 use strict;
 use warnings;
 
-use lib qw{ inc };
-
-use Test::More 0.88;
-
+# NOTE that this must be loaded BEFORE anything that might actually use
+# the time.
 use constant TEST_MOCKTIME	=> do {
     local $@ = undef;
 
@@ -19,6 +17,10 @@ use constant TEST_MOCKTIME	=> do {
 };
 
 use Astro::App::Satpass2::Utils qw{ HAVE_DATETIME };
+use Astro::App::Satpass2::ParseTime;
+use Test::More 0.88;
+
+use lib qw{ inc };
 
 use My::Module::Test::App;
 
@@ -44,18 +46,14 @@ check_datetime_timezone_local()
 
 dump_zones_init();
 
-require_ok 'Astro::App::Satpass2::ParseTime';
-
 klass( 'Astro::App::Satpass2::ParseTime' );
 
 call_m( new => class => 'Astro::App::Satpass2::ParseTime::ISO8601',
     INSTANTIATE, 'Instantiate' );
 
-call_m( isa => 'Astro::App::Satpass2::ParseTime::ISO8601', TRUE,
-    'Object isa Astro::App::Satpass2::ParseTime::ISO8601' );
+isa_ok invocant, 'Astro::App::Satpass2::ParseTime::ISO8601';
 
-call_m( isa => 'Astro::App::Satpass2::ParseTime', TRUE,
-    'Object isa Astro::App::Satpass2::ParseTime' );
+isa_ok invocant, 'Astro::App::Satpass2::ParseTime';
 
 call_m( 'delegate',
     'Astro::App::Satpass2::ParseTime::ISO8601',

@@ -20,7 +20,6 @@ use constant CODE_REF	=> ref sub {};
 use constant REGEXP_REF	=> ref qr{};
 
 our @EXPORT = qw{
-    application
     call_m
     call_m_result
     check_access
@@ -32,6 +31,7 @@ our @EXPORT = qw{
     dump_zones
     dump_zones_init
     execute
+    invocant
     klass
     load_or_skip
     normalize_path
@@ -74,7 +74,7 @@ use constant TRUE => sub {
     goto &ok;
 };
 
-sub application {
+sub invocant {
     return $app;
 }
 
@@ -472,10 +472,6 @@ perform tests on this object.
 
 This module exports the following subroutines:
 
-=head2 application
-
-This subroutine returns the current application object.
-
 =head2 check_access
 
  SKIP: {
@@ -540,6 +536,10 @@ is the expected result.  All other arguments are arguments to
 C<execute()>.
 
 This is really just a convenience wrapper for L<call_m()|/call_m>.
+
+=head2 invocant
+
+This subroutine returns the current stored object.
 
 =head2 load_or_skip
 

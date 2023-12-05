@@ -3,11 +3,13 @@ package main;
 use strict;
 use warnings;
 
+use Astro::App::Satpass2::ParseTime;
+use Astro::App::Satpass2::Utils qw{ HAVE_DATETIME };
+use Test::More 0.88;
+
 use lib qw{ inc };
 
-use Test::More 0.88;
 use My::Module::Test::App;
-use Astro::App::Satpass2::Utils qw{ HAVE_DATETIME };
 
 BEGIN {
 
@@ -67,8 +69,6 @@ BEGIN {
 dump_date_manip_init();
 my $path = $ENV{PATH};
 
-require_ok 'Astro::App::Satpass2::ParseTime';
-
 note <<'EOD';
 The following test is to make sure we have worked around RT ticket
 #80435: [patch] Date::Manip clobbers $ENV{PATH} on *nix
@@ -88,11 +88,9 @@ EOD
 
 is $ENV{PATH}, $path, 'Ensure that the PATH is prorected at instantiation';
 
-call_m( isa => 'Astro::App::Satpass2::ParseTime::Date::Manip::v6', TRUE,
-    'Object is an Astro::App::Satpass2::ParseTime::Date::Manip::v6' );
+isa_ok invocant, 'Astro::App::Satpass2::ParseTime::Date::Manip::v6';
 
-call_m( isa => 'Astro::App::Satpass2::ParseTime', TRUE,
-    'Object is an Astro::App::Satpass2::ParseTime' );
+isa_ok invocant, 'Astro::App::Satpass2::ParseTime';
 
 call_m( 'delegate',
     'Astro::App::Satpass2::ParseTime::Date::Manip::v6',
