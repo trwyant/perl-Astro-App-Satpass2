@@ -31,7 +31,10 @@ sub author {
 
 sub build_requires {
     return +{
-	'Test::More'	=> 0.88,	# Because of done_testing().
+	'Test2::V0'			=> 0,
+	'Test2::Plugin::BailOnFail'	=> 0,
+	'Test2::Tools::Explain'		=> 0,
+	'Test2::Tools::LoadModule'	=> 0,
     };
 }
 

@@ -14,7 +14,7 @@ use Cwd qw{ abs_path };
 use Getopt::Long 2.39 ();
 use POSIX qw{ strftime };
 use Scalar::Util 1.26 qw{ blessed };
-use Test::More 0.52;
+use Test2::V0;
 
 use constant CODE_REF	=> ref sub {};
 use constant REGEXP_REF	=> ref qr{};
@@ -352,7 +352,7 @@ sub execute {	## no critic (RequireArgUnpacking)
 	$display .= ' not available';
 	$skip
 	    and $skip =~ m/ \A all \z /smxi
-	    and plan skip_all => $display;
+	    and skip_all $display;
 	skip $display, $skip;
     }
 }
@@ -374,8 +374,7 @@ sub execute {	## no critic (RequireArgUnpacking)
 		defined and not ref and chomp;
 	    }
 	    @_ = ( $got, $want, $title );
-	    REGEXP_REF eq ref $want ? goto &like :
-		ref $want ? goto &is_deeply : goto &is;
+	    REGEXP_REF eq ref $want ? goto &like : goto &is;
 	} else {
 	    $got = $@;
 	    chomp $got;

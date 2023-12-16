@@ -5,7 +5,7 @@ use 5.008;
 use strict;
 use warnings;
 
-use Test::More 0.88;
+use Test2::V0;
 
 use lib qw{ inc };
 use My::Module::Test::App;	# For environment clean-up.
@@ -68,7 +68,7 @@ my $ft = Astro::App::Satpass2::Format::Template->new(
 # Encapsulation violation. The _uniq() subroutine may be moved or
 # retracted without notice of any kind.
 
-is_deeply
+is
     [ Astro::App::Satpass2::Format::Template::_uniq(
 	    qw{ Able was I ere I saw Elba } ) ],
     [ qw{ Able was I ere saw Elba } ],

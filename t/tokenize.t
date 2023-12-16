@@ -3,7 +3,8 @@ package main;
 use strict;
 use warnings;
 
-use Test::More 0.88;
+use Test2::V0;
+use Test2::Tools::Explain;
 
 use Cwd qw{ cwd };
 
@@ -524,7 +525,7 @@ done_testing;
 		    goto &fail;
 		} else {
 		    @_ = ( \@got, $tokens, $name );
-		    goto &is_deeply;
+		    goto &is;
 		}
 	    } else {
 		my $err = $@;
