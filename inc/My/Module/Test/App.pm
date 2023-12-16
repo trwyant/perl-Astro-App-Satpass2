@@ -38,6 +38,7 @@ our @EXPORT = qw{
     load_or_skip
     normalize_path
     same_path
+    setup_app_mocker
     FALSE
     INSTANTIATE
     TRUE
@@ -437,6 +438,26 @@ sub execute {	## no critic (RequireArgUnpacking)
     }
 }
 
+sub setup_app_mocker {
+    return mock 'Astro::App::Satpass2' => (
+    override	=> [
+	new	=> sub {
+	    my ( $class, %self ) = @_;
+	    return bless \%self, $class;
+	},
+	get	=> sub { return $_[0]{$_[1]}; },
+	set	=> sub {
+	    my ( $self, @args ) = @_;
+	    while ( @args ) {
+		my ( $name, $value ) = splice @args, 0, 2;
+		$self->{$name} = $value;
+	    }
+	    return $self;
+	},
+    ],
+);
+}
+
 sub Astro::App::Satpass2::__TEST__frame_stack_depth {
     my ( $self ) = @_;
     return scalar @{ $self->{frame} };
@@ -668,6 +689,26 @@ This subroutine normalizes paths. It converts them to absolute using
 C<Cwd::cwd()>, then it performs OS-specific normalization on them.
 Typically this consists of changing slash direction (MSWin32 and
 friends) and lopping off trailing slashes (DragonFly BSD).
+
+=head2 setup_app_mocker
+
+ my $mocker = setup_app_mocker();
+
+This subroutine sets up to mock
+L<Astro::App::Satpass2|Astro::App::Satpass2> using the tools provided by
+L<Test2::Tools::Mock|Test2::Tools::Mock>. The C<new()>, C<get()>, and
+C<set()> methods are mocked, but behind them is a hash that just stores
+and returns values.
+
+The return is not a mock L<Astro::App::Satpass2|Astro::App::Satpass2>
+object, but an object that manages the mocking. This object needs to be
+retained because it is also a sentinel that tears down the mock when it
+is destroyed. See L<Test2::Tools::Mock|Test2::Tools::Mock> for details.
+
+You actually get a new application object in the normal way:
+
+  my $app = Astro::App::Satpass2->new();
+
 
 =head2 same_path
 

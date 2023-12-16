@@ -9,7 +9,7 @@ use Test2::Tools::LoadModule ':more';
 
 use lib 'inc';
 
-use My::Module::Test::Mock_App;
+use My::Module::Test::App qw{ setup_app_mocker };
 
 delete $ENV{TZ};
 
@@ -30,8 +30,6 @@ my @geocode_methods = ( @copier_methods,
 my @parse_time_methods = ( @copier_methods,
     qw{ new base config delegate decode parse parse_time_absolute reset
     tz use_perltime } );
-
-my $app = My::Module::Test::Mock_App->new();
 
 defined $ENV{TZ}
     and diag "\$ENV{TZ} is '$ENV{TZ}'";
@@ -172,43 +170,48 @@ can_ok 'Astro::App::Satpass2::FormatValue', qw{
 
 instantiate( 'Astro::App::Satpass2::FormatValue' );
 
-require_ok 'Astro::App::Satpass2::Format';
+{
+    my $mocker = setup_app_mocker;
+    my $app = Astro::App::Satpass2->new();
 
-isa_ok 'Astro::App::Satpass2::Format', 'Astro::App::Satpass2::Copier';
+    require_ok 'Astro::App::Satpass2::Format';
 
-can_ok 'Astro::App::Satpass2::Format', @format_methods;
+    isa_ok 'Astro::App::Satpass2::Format', 'Astro::App::Satpass2::Copier';
 
-require_ok 'Astro::App::Satpass2::Format::Dump';
+    can_ok 'Astro::App::Satpass2::Format', @format_methods;
 
-isa_ok 'Astro::App::Satpass2::Format::Dump', 'Astro::App::Satpass2::Format';
+    require_ok 'Astro::App::Satpass2::Format::Dump';
 
-instantiate(
-    'Astro::App::Satpass2::Format::Dump',
-    parent	=> $app,
-    'Astro::App::Satpass2::Format',
-);
+    isa_ok 'Astro::App::Satpass2::Format::Dump', 'Astro::App::Satpass2::Format';
 
-can_ok 'Astro::App::Satpass2::Format::Dump', @format_methods;
+    instantiate(
+	'Astro::App::Satpass2::Format::Dump',
+	parent	=> $app,
+	'Astro::App::Satpass2::Format',
+    );
 
-require_ok 'Astro::App::Satpass2::Wrap::Array';
+    can_ok 'Astro::App::Satpass2::Format::Dump', @format_methods;
 
-can_ok 'Astro::App::Satpass2::Wrap::Array', qw{ new dereference };
+    require_ok 'Astro::App::Satpass2::Wrap::Array';
 
-instantiate( 'Astro::App::Satpass2::Wrap::Array', [],
-    'Astro::App::Satpass2::Wrap::Array' );
+    can_ok 'Astro::App::Satpass2::Wrap::Array', qw{ new dereference };
 
-require_ok 'Astro::App::Satpass2::Format::Template';
+    instantiate( 'Astro::App::Satpass2::Wrap::Array', [],
+	'Astro::App::Satpass2::Wrap::Array' );
 
-isa_ok 'Astro::App::Satpass2::Format::Template',
-    'Astro::App::Satpass2::Format';
+    require_ok 'Astro::App::Satpass2::Format::Template';
 
-can_ok 'Astro::App::Satpass2::Format', @format_methods;
+    isa_ok 'Astro::App::Satpass2::Format::Template',
+	'Astro::App::Satpass2::Format';
 
-instantiate(
-    'Astro::App::Satpass2::Format::Template',
-    parent	=> $app,
-    'Astro::App::Satpass2::Format',
-);
+    can_ok 'Astro::App::Satpass2::Format', @format_methods;
+
+    instantiate(
+	'Astro::App::Satpass2::Format::Template',
+	parent	=> $app,
+	'Astro::App::Satpass2::Format',
+    );
+}
 
 require_ok 'Astro::App::Satpass2::ParseTime';
 
