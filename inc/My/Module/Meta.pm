@@ -99,16 +99,12 @@ sub provides {
 
     eval {
 	require CPAN::Meta;
-	require ExtUtils::Manifest;
 	require Module::Metadata;
 
-	my $manifest;
-	{
-	    local $SIG{__WARN__} = sub {};
-	    $manifest = ExtUtils::Manifest::maniread();
-	}
-	keys %{ $manifest || {} }
-	    or return;
+	$provides = Module::Metadata->provides(
+	    version	=> 2,
+	    dir		=> 'lib',
+	);
 
 	# Skeleton so we can use should_index_file() and
 	# should_index_package().
@@ -119,21 +115,11 @@ sub provides {
 	    },
 	);
 
-	# The Module::Metadata docs say not to use
-	# package_versions_from_directory() directly, but the 'files =>'
-	# version of provides() is broken, and has been known to be so
-	# since 2014, so it's not getting fixed any time soon. So:
-
-	foreach my $fn ( sort keys %{ $manifest } ) {
-	    $fn =~ m/ [.] pm \z /smx
-		or next;
-	    my $pvd = Module::Metadata->package_versions_from_directory(
-		undef, [ $fn ] );
-	    foreach my $pkg ( keys %{ $pvd } ) {
-		$meta->should_index_package( $pkg )
-		    and $meta->should_index_file( $pvd->{$pkg}{file} )
-		    and $provides->{$pkg} = $pvd->{$pkg};
-	    }
+	# Remove things that are not to be indexed, if any.
+	foreach my $module ( keys %{ $provides } ) {
+	    $meta->should_index_package( $module )
+		and $meta->should_index_file( $provides->{$module}{file} )
+		    or delete $provides->{$module};
 	}
 
 	1;
