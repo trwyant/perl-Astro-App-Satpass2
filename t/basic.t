@@ -9,7 +9,7 @@ use Test2::Tools::LoadModule ':more';
 
 use lib 'inc';
 
-use My::Module::Test::App qw{ setup_app_mocker };
+use My::Module::Test::App qw{ dependencies_table setup_app_mocker };
 
 delete $ENV{TZ};
 
@@ -30,6 +30,8 @@ my @geocode_methods = ( @copier_methods,
 my @parse_time_methods = ( @copier_methods,
     qw{ new base config delegate decode parse parse_time_absolute reset
     tz use_perltime } );
+
+diag $_ for dependencies_table();
 
 defined $ENV{TZ}
     and diag "\$ENV{TZ} is '$ENV{TZ}'";

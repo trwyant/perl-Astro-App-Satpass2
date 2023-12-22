@@ -93,6 +93,11 @@ sub no_index {
     };
 }
 
+sub optional_modules {
+    require My::Module::Recommend;
+    return My::Module::Recommend->optional_modules();
+}
+
 sub provides {
     my $provides;
     local $@ = undef;
@@ -295,6 +300,11 @@ on.
 
 This method returns the names of things which are not to be indexed
 by CPAN.
+
+=head2 optional_modules
+
+This method is just a convenience wrapper for C<optional_modules()> in
+C<My::Module::Recommend>.
 
 =head2 provides
 

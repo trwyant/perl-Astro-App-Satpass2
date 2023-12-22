@@ -44,7 +44,8 @@ EOD
 sub ACTION_optionals_test {
     my ( $self ) = @_;
 
-    my $optionals = join ',', My::Module::Recommend->optionals();
+    my $optionals = join ',',
+	My::Module::Recommend->optional_modules_to_hide();
     local $ENV{AUTHOR_TESTING} = 1;
     local $ENV{PERL5OPT} = "-MTest::Without::Module=$optionals";
 
