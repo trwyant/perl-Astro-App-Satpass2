@@ -172,49 +172,6 @@ can_ok 'Astro::App::Satpass2::FormatValue', qw{
 
 instantiate( 'Astro::App::Satpass2::FormatValue' );
 
-{
-    my $mocker = setup_app_mocker;
-    my $app = Astro::App::Satpass2->new();
-
-    require_ok 'Astro::App::Satpass2::Format';
-
-    isa_ok 'Astro::App::Satpass2::Format', 'Astro::App::Satpass2::Copier';
-
-    can_ok 'Astro::App::Satpass2::Format', @format_methods;
-
-    require_ok 'Astro::App::Satpass2::Format::Dump';
-
-    isa_ok 'Astro::App::Satpass2::Format::Dump', 'Astro::App::Satpass2::Format';
-
-    instantiate(
-	'Astro::App::Satpass2::Format::Dump',
-	parent	=> $app,
-	'Astro::App::Satpass2::Format',
-    );
-
-    can_ok 'Astro::App::Satpass2::Format::Dump', @format_methods;
-
-    require_ok 'Astro::App::Satpass2::Wrap::Array';
-
-    can_ok 'Astro::App::Satpass2::Wrap::Array', qw{ new dereference };
-
-    instantiate( 'Astro::App::Satpass2::Wrap::Array', [],
-	'Astro::App::Satpass2::Wrap::Array' );
-
-    require_ok 'Astro::App::Satpass2::Format::Template';
-
-    isa_ok 'Astro::App::Satpass2::Format::Template',
-	'Astro::App::Satpass2::Format';
-
-    can_ok 'Astro::App::Satpass2::Format', @format_methods;
-
-    instantiate(
-	'Astro::App::Satpass2::Format::Template',
-	parent	=> $app,
-	'Astro::App::Satpass2::Format',
-    );
-}
-
 require_ok 'Astro::App::Satpass2::ParseTime';
 
 isa_ok 'Astro::App::Satpass2::ParseTime', 'Astro::App::Satpass2::Copier';
@@ -344,6 +301,53 @@ can_ok 'Astro::App::Satpass2', qw{
 };
 
 instantiate( 'Astro::App::Satpass2' );
+
+{
+    my $mocker = setup_app_mocker;
+    my $app;
+    my $exception = dies {
+	$app = Astro::App::Satpass2->new();
+    };
+    is $exception, undef, 'Can instantiate Astro::App::Satpass2';
+
+    require_ok 'Astro::App::Satpass2::Format';
+
+    isa_ok 'Astro::App::Satpass2::Format', 'Astro::App::Satpass2::Copier';
+
+    can_ok 'Astro::App::Satpass2::Format', @format_methods;
+
+    require_ok 'Astro::App::Satpass2::Format::Dump';
+
+    isa_ok 'Astro::App::Satpass2::Format::Dump', 'Astro::App::Satpass2::Format';
+
+    instantiate(
+	'Astro::App::Satpass2::Format::Dump',
+	parent	=> $app,
+	'Astro::App::Satpass2::Format',
+    );
+
+    can_ok 'Astro::App::Satpass2::Format::Dump', @format_methods;
+
+    require_ok 'Astro::App::Satpass2::Wrap::Array';
+
+    can_ok 'Astro::App::Satpass2::Wrap::Array', qw{ new dereference };
+
+    instantiate( 'Astro::App::Satpass2::Wrap::Array', [],
+	'Astro::App::Satpass2::Wrap::Array' );
+
+    require_ok 'Astro::App::Satpass2::Format::Template';
+
+    isa_ok 'Astro::App::Satpass2::Format::Template',
+	'Astro::App::Satpass2::Format';
+
+    can_ok 'Astro::App::Satpass2::Format', @format_methods;
+
+    instantiate(
+	'Astro::App::Satpass2::Format::Template',
+	parent	=> $app,
+	'Astro::App::Satpass2::Format',
+    );
+}
 
 done_testing;
 
