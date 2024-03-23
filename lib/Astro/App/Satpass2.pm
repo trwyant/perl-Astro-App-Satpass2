@@ -6304,8 +6304,8 @@ install them later. The optional modules are:
 =item L<Astro::SIMBAD::Client|Astro::SIMBAD::Client>
 
 This module looks up the positions of astronomical bodies in the SIMBAD
-database at L<http://simbad.u-strasbg.fr/simbad/>. This is only used by the
-C<lookup> subcommand of the L<sky()|/sky> method.
+database at L<https://simbad.cds.unistra.fr/simbad/>. This is only used
+by the C<lookup> subcommand of the L<sky()|/sky> method.
 
 =item L<Astro::SpaceTrack|Astro::SpaceTrack>
 
@@ -9676,9 +9676,9 @@ without an incentive.
 =item simbad_version
 
 This attribute was used to select the version of the SIMBAD protocol to
-use to access L<http://simbad.u-strasbg.fr/simbad/>. Since only version 4 is
-currently supported, and this has been the default in F<satpass> for
-some time, this attribute is eliminated.
+use to access L<https://simbad.cds.unistra.fr/simbad/>. Since only
+version 4 is currently supported, and this has been the default in
+F<satpass> for some time, this attribute is eliminated.
 
 =back
 
