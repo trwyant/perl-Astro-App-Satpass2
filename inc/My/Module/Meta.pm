@@ -136,13 +136,13 @@ sub provides {
 sub requires {
     my ( undef, @extra ) = @_;		# Invocant unused
     return {
-	'Astro::Coord::ECI'		=> 0.077,
-	'Astro::Coord::ECI::Moon'	=> 0.077,
-	'Astro::Coord::ECI::Star'	=> 0.077,
-	'Astro::Coord::ECI::Sun'	=> 0.077,
-	'Astro::Coord::ECI::TLE'	=> 0.077,
-	'Astro::Coord::ECI::TLE::Set'	=> 0.077,
-	'Astro::Coord::ECI::Utils'	=> 0.112,	# for greg_time_gm() ...
+	'Astro::Coord::ECI'		=> 0.131,
+	'Astro::Coord::ECI::Moon'	=> 0.131,
+	'Astro::Coord::ECI::Star'	=> 0.131,
+	'Astro::Coord::ECI::Sun'	=> 0.131,
+	'Astro::Coord::ECI::TLE'	=> 0.131,
+	'Astro::Coord::ECI::TLE::Set'	=> 0.131,
+	'Astro::Coord::ECI::Utils'	=> 0.131,	# for gm_strftime() ...
 	'Attribute::Handlers'	=> 0,
 	'Carp'			=> 0,
 	'Clone'			=> 0,
