@@ -44,15 +44,23 @@ sub init {
     foreach my $name ( keys %$stb ) {
 	my $val = $stb->{$name};
 
-	# We are only interested in symbols that start with word
-	# characters, excluding '_'
-	$name =~ m/ \A \w /smx
-	    and not $name =~ m/ \A _ /smx
+	# We are only interested in symbols that start with alphabetics.
+	$name =~ m/ \A [[:alpha:]] /smx
+	    or next;
+
+	# We do not want symbols unless they contain at least one
+	# lower-case character.
+	$name =~ m/ [[:lower:]] /smx
 	    or next;
 
 	# We need a reference to the entry's glob, which we obtain by
 	# symbolic reference.
 	my $glob = \$val;
+
+	# If $name refers to an inlineable function, $val is going to be
+	# its value. This is not what we want, so ...
+	'GLOB' eq ref $glob
+	    or next;
 
 	# If the code slot is empty we ignore it.
 	*{$glob}{CODE}
