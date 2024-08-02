@@ -3847,7 +3847,7 @@ sub _apply_boolean_default {
 	defined $choice
 	    or $choice = [];
 	ARRAY_REF eq ref $choice
-	    or $self->weep( 'Choice invalid' );
+	    or $self->weep( 'Choice must be an ARRAY ref' );
 	my @rslt;
 	my @selector;
 	foreach my $sel ( @{ $choice } ) {
@@ -8537,7 +8537,7 @@ used for what it does.
 
 This string attribute specifies the format used to display
 dates. Documentation of the C<strftime (3)> subroutine may be found at
-L<https://linux.die.net/man/3/strftime> among other places.
+L<https://man7.org/linux/man-pages/man3/strftime.3.html> among other places.
 
 The above is a long URL, and may be split across multiple lines. More
 than that, the formatter may have inserted a hyphen at the break, which
@@ -9072,7 +9072,7 @@ interpret the value of this attribute as a C<strftime(3)> format.
 
 This string attribute specifies the strftime(3) format used to display
 times.  Documentation of the C<strftime(3)> subroutine may be found at
-L<https://linux.die.net/man/3/strftime> among other places.
+L<https://man7.org/linux/man-pages/man3/strftime.3.html> among other places.
 
 The above is a long URL, and may be split across multiple lines. More
 than that, the formatter may have inserted a hyphen at the break, which
