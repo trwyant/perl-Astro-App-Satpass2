@@ -257,7 +257,7 @@ BEGIN:VALARM
 TRIGGER:PT0M
 ACTION:DISPLAY
 END:VALARM
-SUMMARY:[% first.name %]
+SUMMARY:[% first.name( width = '' ) %]
 DESCRIPTION:
     [%- FOREACH evt IN events %][% punct %]
 	[%- format_detail( 'event', evt ) %]
