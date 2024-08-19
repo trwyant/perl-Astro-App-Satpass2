@@ -84,7 +84,7 @@ sub cmd_environment {
 # core module. But we need at least Pod::Man 2.16 to cope with
 # t/manifypods_with_utf8.t, and Perl 5.10 only comes with 2.16. So ..
 sub cmd_install_podlators {
-    my ( undef, undef, $perl_ver ) = @_;
+    my ( $opt, undef, $perl_ver ) = @_;
     defined $perl_ver
 	or $perl_ver = THIS_PERL;
     $perl_ver ge PERL_5_12
@@ -93,7 +93,7 @@ sub cmd_install_podlators {
     my $podlator = $perl_ver lt PERL_5_10 ?
     'RRA/podlators-4.14.tar.gz' : 'Pod::Man';
 
-    my_exec( CPANM, $podlator );
+    my_exec( $opt, CPANM, $podlator );
     return;
 }
 
@@ -102,9 +102,7 @@ sub cmd_make {
     our %Config;
     require Config;
     Config->import();
-    $opt->{verbose}
-	and print "\$ $Config{make} @arg\n";
-    my_exec( $Config{make}, @arg );
+    my_exec( $opt, $Config{make}, @arg );
     return;
 }
 
@@ -113,18 +111,26 @@ sub cmd_make {
 sub cmd_show_log {
     require File::Glob;
     require File::Spec;
-    my ( $path ) = File::Glob::bsd_glob( File::Spec->catfile(
-	    get_home(), qw{ .cpanm work * build.log } ) );
-    defined $path
+    my @path = File::Glob::bsd_glob( File::Spec->catfile(
+	    get_home(), qw{ .cpanm work * build.log } ) )
 	or die "Unable to find build.log\n";
-    print "$path\n";
-    open my $fh, '<', $path
-	or die "Unable to open $path: $!\n";
-    local $_ = undef;
-    while ( <$fh> ) {
-	print;
+
+    @path = map { $_->[0] }
+	sort { $a->[1] <=> $b->[1] }
+	map { [ $_, ( stat $_ )[9] ] }
+	@path;
+
+    foreach ( @path ) {
+	print "\n$_\n";
+	open my $fh, '<', $_
+	    or die "Unable to open $_: $!\n";
+	local $_ = undef;
+	while ( <$fh> ) {
+	    print;
+	}
+	close $fh;
     }
-    close $fh;
+
     return;
 }
 
@@ -149,7 +155,10 @@ sub cmd_show_log {
 }
 
 sub my_exec {
-    my ( $cmd, @arg ) = @_;
+    my ( $opt, $cmd, @arg ) = @_;
+    $opt ||= {};
+    $opt->{verbose}
+	and print "\$ $cmd @arg\n";
     exec { $cmd } $cmd, @arg;
     die "Exec $cmd failed: $!\n";
 }
