@@ -110,9 +110,8 @@ sub cmd_make {
 # https://perlmaven.com/install-developer-dependencies-first-test-css
 sub cmd_show_log {
     require File::Glob;
-    File::Glob->import( qw{ :bsd_glob } );
     require File::Spec;
-    my ( $path ) = bsd_glob( File::Spec->catfile(
+    my ( $path ) = File::Glob::bsd_glob( File::Spec->catfile(
 	    get_home(), qw{ .cpanm work * build.log } ) );
     defined $path
 	or die "Unable to find build.log\n";
