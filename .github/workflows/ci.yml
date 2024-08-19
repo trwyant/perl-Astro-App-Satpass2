@@ -106,6 +106,10 @@ jobs:
         cpanm Module::Build
         cpanm --with-configure --notest --installdeps .
 
+    - name: Show cpanm install log on failure to install dependencies
+      if: failure()
+      run: perl ${{ env.MY_TOOLS }} show_log
+
     - name: Run ExtUtils::MakeMaker tests
       run: |
         perl Makefile.PL

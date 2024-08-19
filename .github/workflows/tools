@@ -19,8 +19,6 @@ use constant THIS_PERL  => version->parse( $] );
 
 our $VERSION = '0.054';
 
-my %opt;
-
 unless ( caller ) {
     require Getopt::Long;
     Getopt::Long->VERSION( 2.33 );
@@ -95,15 +93,19 @@ sub cmd_install_podlators {
     my $podlator = $perl_ver lt PERL_5_10 ?
     'RRA/podlators-4.14.tar.gz' : 'Pod::Man';
 
-    exec { CPANM } CPANM, $podlator;
+    my_exec( CPANM, $podlator );
+    return;
 }
 
 sub cmd_make {
-    my ( undef, undef, @arg ) = @_;
+    my ( $opt, undef, @arg ) = @_;
     our %Config;
     require Config;
     Config->import();
-    exec { $Config{make} } $Config{make}, @arg;
+    $opt->{verbose}
+	and print "\$ $Config{make} @arg\n";
+    my_exec( $Config{make}, @arg );
+    return;
 }
 
 # The following technique from Gabor Szabo. Thanks:
@@ -144,6 +146,12 @@ sub cmd_show_log {
 	return $my_home;
     }
 
+}
+
+sub my_exec {
+    my ( $cmd, @arg ) = @_;
+    exec { $cmd } $cmd, @arg;
+    die "Exec $cmd failed: $!\n";
 }
 
 sub my_pod2usage {
