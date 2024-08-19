@@ -91,7 +91,8 @@ sub cmd_install_podlators {
 	and return;
 
     my $podlator = $perl_ver lt PERL_5_10 ?
-    'RRA/podlators-4.14.tar.gz' : 'Pod::Man';
+	'RRA/podlators-4.14.tar.gz' :
+	'RRA/podlators-5.01.tar.gz';
 
     my_exec( $opt, CPANM, $podlator );
     return;
