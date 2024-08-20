@@ -4070,10 +4070,7 @@ sub _file_reader_ {	## no critic (ProhibitUnusedPrivateSubroutines)
 	    $opt,
 	);
     } else {
-	my $encoding = $opt->{encoding} || 'utf-8';
-	$encoding = ":encoding($encoding)";
-	OS_IS_WINDOWS
-	    and substr $encoding, 0, 0, ':crlf';
+	my $encoding = $self->_file_reader__encoding( $opt );
 	open my $fh, "<$encoding", $self->expand_tilde( $file )	## no critic (RequireBriefOpen)
 	    or do {
 	    $opt->{optional} and return;
@@ -4085,6 +4082,17 @@ sub _file_reader_ {	## no critic (ProhibitUnusedPrivateSubroutines)
 	return scalar <$fh>;
     }
 }
+
+sub _file_reader__encoding {
+    my ( undef, $opt ) = @_;
+    $opt ||= {};
+    my $encoding = $opt->{encoding} || 'utf-8';
+    $encoding = ":encoding($encoding)";
+    OS_IS_WINDOWS
+	and substr $encoding, 0, 0, ':crlf';
+    return $encoding;
+}
+
 
 sub _file_reader__validate_url {
     my ( undef, $url ) = @_;		# Invocant unused
@@ -4143,14 +4151,16 @@ sub _file_reader_CODE {		## no critic (ProhibitUnusedPrivateSubroutines)
 sub _file_reader_SCALAR {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $file, $opt ) = @_;
 
+    my $encoding = $self->_file_reader__encoding( $opt );
+    open my $fh, "<$encoding", $file	## no critic (RequireBriefOpen)
+	or do {
+	$opt->{optional} and return;
+	$self->wail( "Failed to open SCALAR reference: $!" );
+    };
     $opt->{glob}
-	and return ${ $file };
-    my $mode = $opt->{encoding} ? "<:encoding($opt->{encoding})" : '<';
-
-    my $fh = IO::File->new( $file, $mode )	# Needs IO::File 1.14.
-	or $self->wail( "Failed to open SCALAR ref: $!" );
-
-    return sub { return scalar <$fh> };
+	or return sub { return scalar <$fh> };
+    local $/ = undef;
+    return scalar <$fh>;
 }
 
 # $inx = $self->_find_in_sky( $name )
