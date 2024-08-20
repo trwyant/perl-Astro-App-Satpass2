@@ -22,6 +22,7 @@ our @CARP_NOT = qw{
     Astro::App::Satpass2::Format
     Astro::App::Satpass2::Format::Dump
     Astro::App::Satpass2::Format::Template
+    Astro::App::Satpass2::Format::Template::Provider
     Astro::App::Satpass2::FormatTime
     Astro::App::Satpass2::FormatTime::Cldr
     Astro::App::Satpass2::FormatTime::DateTime

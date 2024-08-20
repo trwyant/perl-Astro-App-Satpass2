@@ -22,6 +22,7 @@ lib/Astro/App/Satpass2/Copier.pm
 lib/Astro/App/Satpass2/Format.pm
 lib/Astro/App/Satpass2/Format/Dump.pm
 lib/Astro/App/Satpass2/Format/Template.pm
+lib/Astro/App/Satpass2/Format/Template/Provider.pm
 lib/Astro/App/Satpass2/FormatTime.pm
 lib/Astro/App/Satpass2/FormatTime/Cldr.pm
 lib/Astro/App/Satpass2/FormatTime/DateTime.pm

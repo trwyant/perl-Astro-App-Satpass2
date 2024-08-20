@@ -16,6 +16,7 @@ use Astro::App::Satpass2::Utils qw{
     @CARP_NOT
 };
 use Astro::App::Satpass2::Wrap::Array;
+use Astro::App::Satpass2::Format::Template::Provider;
 use Astro::Coord::ECI::TLE 0.059 qw{ :constants };
 use Astro::Coord::ECI::Utils 0.059 qw{
     deg2rad embodies julianday PI rad2deg TWOPI
@@ -23,7 +24,6 @@ use Astro::Coord::ECI::Utils 0.059 qw{
 use Clone qw{ };
 use POSIX qw{ floor };
 use Template;
-use Template::Provider;
 use Text::Abbrev;
 use Text::Wrap qw{ wrap };
 
@@ -53,7 +53,7 @@ sub _new_tt {
     $self->{tt} = Template->new(
 	{
 	    LOAD_TEMPLATES => [
-		Template::Provider->new(
+		Astro::App::Satpass2::Format::Template::Provider->new(
 		    ABSOLUTE	=> $permissive,
 		    RELATIVE	=> $permissive,
 		),
