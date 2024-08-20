@@ -61,10 +61,12 @@ our @EXPORT_OK = qw{
     __parse_class_and_args
     ARRAY_REF CODE_REF HASH_REF REGEXP_REF SCALAR_REF
     HAVE_DATETIME
+    OS_IS_WINDOWS
     @CARP_NOT
 };
 
 our %EXPORT_TAGS = (
+    os	=> [ grep { m/ \A OS_ /smx } @EXPORT_OK ],
     ref	=> [ grep { m/ _REF \z /smx } @EXPORT_OK ],
 );
 
@@ -83,6 +85,11 @@ use constant SCALAR_REF	=> ref \1;
 	1;
     } || 0;
 }
+
+use constant OS_IS_WINDOWS	=> {
+    dos		=> 1,
+    MSWin32	=> 1,
+}->{$^O} || 0;
 
 # Documented in POD
 
@@ -868,8 +875,7 @@ otherwise C<Carp> is loaded and C<Carp::croak()> is called.
 
 =head1 CONSTANTS
 
-This module supports the following exportable constants. You can export
-them all using tag C<':ref'>.
+This module supports the following exportable constants.
 
 =head2 ARRAY_REF
 
@@ -897,6 +903,11 @@ This Boolean constant is true if L<DateTime|DateTime> and
 L<DateTime::TimeZone|DateTime::TimeZone> can be loaded, and false if
 not.
 
+=head2 OS_IS_WINDOWS
+
+This Boolean constant is true if C<%^O> is C<'dos'> or C<'MSWin32'>.
+Otherwise it is false.
+
 =head1 GLOBALS
 
 This module exports the following globals:
@@ -904,6 +915,18 @@ This module exports the following globals:
 =head2 @CARP_NOT
 
 This global contains all modules in this package.
+
+=head1 EXPORT TAGS
+
+The following export tags are supported:
+
+=head2 :os
+
+This exports all manifest constants beginning with C<'OS_'>.
+
+=head2 :ref
+
+This exports all manifest constants ending with C<'_REF'>.
 
 =head1 SUPPORT
 

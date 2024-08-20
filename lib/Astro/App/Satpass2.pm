@@ -10,6 +10,7 @@ use Astro::App::Satpass2::Macro::Command;
 use Astro::App::Satpass2::Macro::Code;
 use Astro::App::Satpass2::ParseTime;
 use Astro::App::Satpass2::Utils qw{
+    :os
     :ref
     __arguments __legal_options
     expand_tilde find_package_pod
@@ -4044,6 +4045,7 @@ sub _file_reader {
 
 sub _file_reader_ {	## no critic (ProhibitUnusedPrivateSubroutines)
     my ( $self, $file, $opt ) = @_;
+    $opt ||= {};
 
     defined $file
 	and chomp $file;
@@ -4062,7 +4064,6 @@ sub _file_reader_ {	## no critic (ProhibitUnusedPrivateSubroutines)
 	    $self->wail( "Failed to retrieve $file: ",
 		$resp->status_line() );
 	};
-	$opt->{glob} and return $resp->decoded_content();
 	$opt = { %{ $opt }, encoding => $resp->content_charset() };
 	return $self->_file_reader(
 	    \( scalar $resp->content() ),
@@ -4070,10 +4071,11 @@ sub _file_reader_ {	## no critic (ProhibitUnusedPrivateSubroutines)
 	);
     } else {
 	my $encoding = $opt->{encoding} || 'utf-8';
-	my $fh = IO::File->new(
-	    $self->expand_tilde( $file ),
-	    "<:encoding($encoding)",
-	) or do {
+	$encoding = ":encoding($encoding)";
+	OS_IS_WINDOWS
+	    and substr $encoding, 0, 0, ':crlf';
+	open my $fh, "<$encoding", $self->expand_tilde( $file )	## no critic (RequireBriefOpen)
+	    or do {
 	    $opt->{optional} and return;
 	    $self->wail( "Failed to open $file: $!" );
 	};

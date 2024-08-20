@@ -7,13 +7,13 @@ use warnings;
 
 use parent qw{ Template::Provider };
 
-use Astro::App::Satpass2::Utils qw{ @CARP_NOT };
+use Astro::App::Satpass2::Utils qw{ :os @CARP_NOT };
 
 our $VERSION = '0.054';
 
-use constant ENCODING	=> {
-    MSWin32	=> ':crlf:encoding(utf-8)',
-}->{$^O} || ':encoding(utf-8)';
+use constant ENCODING	=> OS_IS_WINDOWS ?
+    ':crlf:encoding(utf-8)' :
+    ':encoding(utf-8)';
 
 # Cribbed **ALMOST** verbatim from Template::Provider. The only
 # difference is the binmode() call, which applies I/O layers as
