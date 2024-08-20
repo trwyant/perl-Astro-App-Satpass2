@@ -206,13 +206,12 @@ EOD
  88888 None
 EOD
 
+    my $list = slurp( 't/list.txt' );
+
     is $ft->format(
 	template	=> 't/list.tt',
 	data		=> [ $sat ],
-    ), <<'EOD', 'List (format from relative path)';
-                    Name OID
-                    None  88888
-EOD
+    ), $list, 'List (format from relative path)';
 
     my $abs = Cwd::abs_path( 't/list.tt' );
 
@@ -236,10 +235,7 @@ EOD
     is $ft->format(
 	template	=> $abs,
 	data		=> [ $sat ],
-    ), <<'EOD', 'List (format from absolute path, permissive)';
-                    Name OID
-                    None  88888
-EOD
+    ), $list, 'List (format from absolute path, permissive)';
 
 }
 

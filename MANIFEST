@@ -69,6 +69,7 @@ t/format_time_posix_strftime.t
 t/format_value.t
 t/geocode_osm.t
 t/list.tt
+t/list.txt
 t/locale.t
 t/locale/fu_BAR.pm
 t/macro_code.t

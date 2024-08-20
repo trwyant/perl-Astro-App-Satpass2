@@ -41,6 +41,7 @@ our @EXPORT = qw{
     normalize_path
     same_path
     setup_app_mocker
+    slurp
     FALSE
     INSTANTIATE
     TRUE
@@ -523,6 +524,14 @@ sub setup_app_mocker {
 );
 }
 
+sub slurp {
+    my ( $fn ) = @_;
+    open my $fh, '<:encoding(utf-8)', $fn
+	or die "Failed to open $fn: $!\n";
+    local $/ = undef;	# Slurp mode
+    return <$fh>;
+}
+
 sub Astro::App::Satpass2::__TEST__frame_stack_depth {
     my ( $self ) = @_;
     return scalar @{ $self->{frame} };
@@ -799,6 +808,13 @@ inode results from C<stat()> (that is, MSWin32 and friends, riscos, and
 VMS) the test is simply a comparison of normalized paths. On systems
 that support (or are suspected to support) reliable inodes, if the
 normalized paths are different the inode numbers are compared.
+
+=head2 slurp
+
+ print slurp( 'some_file.txt' )
+
+This subroutine opens a file and returns its contents. The file is
+assumed to be text, UTF-8 encoded.
 
 =head1 METHODS
 
