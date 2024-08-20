@@ -10,8 +10,9 @@
 CVS/
 ^date_manip_v5/
 ^foo
-^.git/
-^.gitignore$
+^\.git/
+^\.github/
+^\.gitignore$
 ^html/
 ^iridium\.dat$
 ^Makefile$
