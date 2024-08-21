@@ -109,7 +109,6 @@ jobs:
     - name: Run ExtUtils::MakeMaker tests
       run: |
         perl Makefile.PL
-        perl ${{ env.MY_TOOLS }} --verbose make
         perl ${{ env.MY_TOOLS }} --verbose make test
 
     - name: Run Module::Build tests
