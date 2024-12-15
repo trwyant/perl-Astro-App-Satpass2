@@ -2962,7 +2962,7 @@ sub _set_webcmd {
     return ($self->{$name} = $val);
 }
 
-sub show : Verb( changes! deprecated! readonly! ) {
+sub show : Verb( changes! deprecated! readonly! ) Tweak( -completion _readline_complete_subcommand ) {
     my ( $self, $opt, @args ) = __arguments( @_ );
 
     foreach my $name ( qw{ deprecated readonly } ) {
@@ -3015,6 +3015,18 @@ sub _show_formatter_attribute {
     my ( $self, $name ) = @_;
     my $val = $self->{formatter}->decode( $name );
     return ( qw{ formatter }, $name, $val );
+}
+
+# Calls to the following _show_sub method are generated dynamically
+# above, so there is no way Perl::Critic can find them.
+
+sub _show_sub {	## no critic (ProhibitUnusedPrivateSubroutines)
+    # my ( $app, $text, $line, $start, @arg ) = @_;
+    my ( undef, undef, undef, undef, @arg ) = @_;
+    @arg > 1
+	or return;
+    my $re = qr/ \A \Q$arg[-1]\E /smx;
+    return [ grep { $_ =~ $re } sort keys %accessor ];
 }
 
 sub _show_sun_class {
