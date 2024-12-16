@@ -9,7 +9,7 @@ use parent qw{ Template::Provider };
 
 use Astro::App::Satpass2::Utils qw{ :os @CARP_NOT };
 
-our $VERSION = '0.054';
+our $VERSION = '0.054_01';
 
 use constant ENCODING	=> OS_IS_WINDOWS ?
     ':crlf:encoding(utf-8)' :
