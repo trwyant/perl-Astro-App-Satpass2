@@ -4711,8 +4711,7 @@ sub _get_spacetrack {
 #	$st = $satpass2->_get_spacetrack_default();
 #
 #	Returns a new Astro::SpaceTrack object, initialized with this
-#	object's webcmd, and with its filter attribute set to 1 and its
-#	iridium_status_format set to 'kelso'.
+#	object's webcmd, and with its filter attribute set to 1.
 
 sub _get_spacetrack_default {
     my ( $self ) = @_;
@@ -4721,7 +4720,6 @@ sub _get_spacetrack_default {
     return Astro::SpaceTrack->new (
 	webcmd => $self->{webcmd},
 	filter => 1,
-	iridium_status_format => 'kelso',
     );
 }
 
