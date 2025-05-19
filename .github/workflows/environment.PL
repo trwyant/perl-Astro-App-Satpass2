@@ -8,6 +8,14 @@ use warnings;
 use Getopt::Long;
 use version;
 
+BEGIN {
+    use constant HAVE_CPAN_META => eval{
+        require CPAN::Meta;
+        CPAN::Meta->import();
+        1;
+    } || 0;
+}
+
 use constant THIS_PERL  => version->parse( $] );
 use constant PERL_5_10  => version->parse( 'v5.10.0' );
 use constant PERL_5_12  => version->parse( 'v5.12.0' );
@@ -57,12 +65,13 @@ sub compute_environment {
             print "Home from \$HOME\n";
         };
     }
+    my @want_modules = want_modules();
     my %env = (
         MY_HOME             => $my_home,
         MY_IS_GITHUB_ACTION => 1,
         MY_IS_UNIX          => $is_unix,
         MY_IS_WINDOWS       => $is_windows,
-        MY_WANT_MODULES     => want_modules(),
+        MY_WANT_MODULES     => "@want_modules",
     );
 
     $is_windows
@@ -72,22 +81,23 @@ sub compute_environment {
 }
 
 # FIXME Not all my distros need HTML-Tagset. Figure out a way to handle
-# this other than by bashing this script.
+# this other than by bashing this script. This is not straightforward
+# because HTML-Tagset is probably not a direct dependency.
 sub want_modules {
     my ( $perl_ver ) = @_;
     defined $perl_ver
         or $perl_ver = THIS_PERL;
-    $perl_ver < PERL_5_10
-        and return join ' ', qw{
+    if ( $perl_ver >= PERL_5_12 ) {
+        return;
+    } elsif ( $perl_ver >= PERL_5_10 ) {
+        return 'POD::Man';
+    } else {
+        return qw{
             SMUELLER/ExtUtils-ParseXS-3.30.tar.gz
             PETDANCE/HTML-Tagset-3.20.tar.gz
             RRA/podlators-4.14.tar.gz
         };
-    $perl_ver < PERL_5_12
-        and return join ' ', qw{
-            Pod::Man
-        };
-    return '';
+    }
 }
 
 1;
@@ -138,16 +148,13 @@ True (i.e. C<1>) if running under Windows, and false (i.e. C<''>)
 othewise. At the moment this is true if C<$^O> is C<'MSWin32'> or
 C<'dos'>.
 
-=head2 MY_PERL_IS_5_10
+=head2 MY_WANT_MODUKES
 
-True (i.e. C<1>) if running under at least Perl 5.10.0, and false
-(i.e. C<''>) otherwise.
-
-=head2 MY_WANT_POD_MAN
-
-The specification of the C<podlators> distribution to install.
-Emptu if the version that comes with the running Perl is OK. This
-is needed because Module::Build requires it.
+A space-delimited list of modules or repositories to install B<before>
+installing dependencies. This is computed in an admittedly ad-hoc manner
+based on the version of Perl being used, and is intended to cover the
+case where old Perls (typically before C<5.10> can not execute the
+current version of a module.
 
 =head1 INVOCATION AS MODULINO
 
@@ -159,26 +166,13 @@ this, the following subroutines get loaded into C<main::>:
 This subroutine takes no arguments. It returns a reference to a hash
 that describes the environment variables to be added to the environment.
 
-=head2 want_extutils_parsexs
+=head2 want_modules
 
-This subroutine takes as its argument a L<version|version> object. It
-returns the computed value of the C<MY_WANT_EXTUTILS_PARSEXS>
-environment variable. If no argument is given, the computation is for
-the running Perl.
-
-=head2 want_html_tagset
-
-This subroutine takes as its argument a L<version|version> object. It
-returns the computed value of the C<MY_WANT_HTML_TAGSET> environment
-variable. If no argument is given, the computation is for the running
-Perl.
-
-=head2 want_pod_man
-
-This subroutine takes as its argument a L<version|version> object. It
-returns the computed value of the C<MY_WANT_POD_MAN> environment
-variable. If no argument is given, the computation is for the running
-Perl.
+This subroutine takes an optional L<version|version> object representing
+a Perl version, and returns a list of modules or distributions to be
+installed that version B<before> module prerequisites are
+processed. If no argument is provided, the version of the
+currently-running Perl is assumed.
 
 =head1 AUTHOR
 
