@@ -62,9 +62,7 @@ sub compute_environment {
         MY_IS_GITHUB_ACTION => 1,
         MY_IS_UNIX          => $is_unix,
         MY_IS_WINDOWS       => $is_windows,
-        MY_WANT_EXTUTILS_PARSEXS    => want_extutils_parsexs(),
-        MY_WANT_HTML_TAGSET         => want_html_tagset(),
-        MY_WANT_POD_MAN             => want_pod_man(),
+        MY_WANT_MODULES     => want_modules(),
     );
 
     $is_windows
@@ -73,41 +71,22 @@ sub compute_environment {
     return \%env;
 }
 
-sub want_extutils_parsexs {
+# FIXME Not all my distros need HTML-Tagset. Figure out a way to handle
+# this other than by bashing this script.
+sub want_modules {
     my ( $perl_ver ) = @_;
     defined $perl_ver
         or $perl_ver = THIS_PERL;
-
-    # NOTE that if we need to play this game with higher versions of
-    # Perl, the github-actions script needs to be modified too,
     $perl_ver < PERL_5_10
-        and return 'SMUELLER/ExtUtils-ParseXS-3.30.tar.gz';
-    return '';
-}
-
-sub want_html_tagset {
-    my ( $perl_ver ) = @_;
-    defined $perl_ver
-        or $perl_ver = THIS_PERL;
-
-    # NOTE that if we need to play this game with higher versions of
-    # Perl, the github-actions script needs to be modified too,
-    $perl_ver < PERL_5_10
-        and return 'PETDANCE/HTML-Tagset-3.20.tar.gz';
-    return '';
-}
-
-sub want_pod_man {
-    my ( $perl_ver ) = @_;
-    defined $perl_ver
-        or $perl_ver = THIS_PERL;
-
-    # NOTE that if we need to play this game with higher versions of
-    # Perl, the github-actions script needs to be modified too,
-    $perl_ver < PERL_5_10
-        and return 'RRA/podlators-4.14.tar.gz';
+        and return join ' ', qw{
+            SMUELLER/ExtUtils-ParseXS-3.30.tar.gz
+            PETDANCE/HTML-Tagset-3.20.tar.gz
+            RRA/podlators-4.14.tar.gz
+        };
     $perl_ver < PERL_5_12
-        and return 'Pod::Man';
+        and return join ' ', qw{
+            Pod::Man
+        };
     return '';
 }
 
