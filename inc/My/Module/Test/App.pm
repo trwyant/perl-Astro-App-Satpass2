@@ -38,6 +38,7 @@ our @EXPORT = qw{
     invocant
     klass
     load_or_skip
+    mock_usgs
     normalize_path
     same_path
     setup_app_mocker
@@ -455,6 +456,29 @@ sub execute {	## no critic (RequireArgUnpacking)
 
 	return @tables;
     }
+}
+
+sub mock_usgs {
+    my ( $ele ) = @_;
+    my $attr = {
+	error	=> ( defined( $ele ) ?
+	    'Unexpected error' :
+	    'Forced error for testing' ),
+    };
+    return mock 'Geo::WebService::Elevation::USGS' => (
+	override	=> [
+	    elevation	=> sub { return {
+		    Elevation	=> $ele,
+		    Units	=> 'Meters',
+		} },
+	    get		=> sub {
+		my ( undef, $name ) = @_;
+		exists $attr->{$name}
+		    or confess "Bug - Attribute '$name' not mocked";
+		return $attr->{$name};
+	    },
+	],
+    );
 }
 
 {
