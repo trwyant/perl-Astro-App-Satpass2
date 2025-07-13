@@ -1390,9 +1390,9 @@ EOD
 
 }
 
-execute( 'perl -eval Fubar', '"Fubar"', 'perl -eval' );
+execute( 'perl --eval Fubar', q/Failed to eval 'Fubar'/, 'perl --eval' );
 
-execute( 'perl t/whole_app_file', 'OK', 'perl -noeval' );
+execute( 'perl t/whole_app_file', 'OK', 'perl --no-eval' );
 
 call_m( __TEST__frame_stack_depth => 1, 'Object frame stack is clean' );
 
