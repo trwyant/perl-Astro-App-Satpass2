@@ -106,6 +106,9 @@ EOD
       This module is required for interactive command recall and
       editing.
 EOD
+    __any( qw{ Term::ReadLine::Perl } => <<'EOD' ),
+      This module is required for interactive command completion.
+EOD
 	$is_5_012 ? () : __any( 'Time::y2038' => <<'EOD' .
       This module is not required, but if installed allows you to do
       computations for times outside the usual range of system epoch to
