@@ -379,6 +379,17 @@ EOD
 [% END -%]
 EOD
 
+	tle_json	=> <<'EOD',
+[% UNLESS data %]
+    [%- SET data = sp.tle( arg ) %]
+[%- END %]
+[%- data.bodies.to_json -%]
+EOD
+
+	# NOTE that templates that consist entirely of an outline-tag
+	# INCLUDE are special-cased.
+	tle_tle		=> '%% INCLUDE tle',
+
 	tle_verbose	=> <<'EOD',
 [% UNLESS data %]
     [%- SET data = sp.tle( arg ) %]
@@ -423,6 +434,8 @@ EOD
 [% END -%]
 EOD
     },
+
+    # By convention, -report_name is localizations of headings
     '-flare'	=> {
 	string	=> {
 	    'Degrees From Sun'	=> 'Degrees From Sun',
@@ -446,6 +459,7 @@ EOD
 	    'Mag'	=> 'Mag',
 	},
     },
+
     almanac	=> {
 	title	=> 'Almanac',
 	Moon	=> {
