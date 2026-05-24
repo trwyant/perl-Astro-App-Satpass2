@@ -194,7 +194,7 @@ electronic mail to the author.
 
 =head1 AUTHOR
 
-Tom Wyant (wyant at cpan dot org)
+Tom Wyant (harryfmudd at comcast dot net)
 
 =head1 COPYRIGHT AND LICENSE
 
