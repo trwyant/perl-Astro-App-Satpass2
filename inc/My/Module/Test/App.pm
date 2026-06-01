@@ -816,7 +816,6 @@ You actually get a new application object in the normal way:
 
   my $app = Astro::App::Satpass2->new();
 
-
 =head2 same_path
 
  same_path $got, $want, 'Got the same path';
@@ -865,8 +864,7 @@ L<Astro::App::Satpass2|Astro::App::Satpass2>.
 =head1 SUPPORT
 
 Support is by the author. Please file bug reports at
-L<https://rt.cpan.org/Public/Dist/Display.html?Name=Astro-App-Satpass2>,
-L<https://github.com/trwyant/perl-Astro-App-Satpass2/issues>, or in
+L<https://github.com/trwyant/perl-Astro-UTDF/issues> or in
 electronic mail to the author.
 
 =head1 AUTHOR
