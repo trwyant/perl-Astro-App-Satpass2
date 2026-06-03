@@ -11,7 +11,7 @@ our @ISA = qw{ Exporter };
 use Astro::App::Satpass2::Utils qw{ load_package };
 use Test2::V0;
 
-our $VERSION = '0.057_02';
+our $VERSION = '0.057_03';
 
 our @EXPORT_OK = qw{ setup geocode };
 our @EXPORT = @EXPORT_OK;

@@ -1,3 +1,7 @@
+0.057_03	2026-06-03	T. R. Wyant
+    Correct GitHub bug reporting link. Missed a spot in the mass change
+    in the previous development release.
+
 0.057_02	2026-06-01	T. R. Wyant
     Remove references to the RT bug tracking system.
 
