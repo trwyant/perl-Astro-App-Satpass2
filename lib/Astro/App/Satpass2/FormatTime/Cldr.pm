@@ -96,7 +96,7 @@ used with C<CLDR>, it is C<'HH:mm:ss'>.
 =head1 SUPPORT
 
 Support is by the author. Please file bug reports at
-L<https://github.com/trwyant/perl-Astro-UTDF/issues> or in
+L<https://github.com/trwyant/perl-Astro-App-Satpass2/issues> or in
 electronic mail to the author.
 
 =head1 AUTHOR
