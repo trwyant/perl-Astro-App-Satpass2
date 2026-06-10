@@ -15,7 +15,7 @@ use Astro::App::Satpass2::Utils qw{
 };
 use File::Spec;
 
-our $VERSION = '0.057_03';
+our $VERSION = '0.058';
 
 sub init {
     my ( $self ) = @_;

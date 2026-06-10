@@ -28,7 +28,7 @@ use Template;
 use Text::Abbrev;
 use Text::Wrap qw{ wrap };
 
-our $VERSION = '0.057_03';
+our $VERSION = '0.058';
 
 use constant FORMAT_VALUE	=> 'Astro::App::Satpass2::FormatValue';
 
